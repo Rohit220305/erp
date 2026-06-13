@@ -1,0 +1,29 @@
+export const USER_INSERT_FIELDS = [
+  'companyId',
+  'groupId',
+  'userName',
+  'firstName',
+  'lastName',
+  'email',
+  'password',
+  'dialCode',
+  'phone',
+  'profilePhoto',
+  'status',
+  'addedBy',
+];
+
+export const USER_UPDATE_FIELDS = [
+  'companyId',
+  'groupId',
+  'userName',
+  'firstName',
+  'lastName',
+  'email',
+  'password',
+  'dialCode',
+  'phone',
+  'profilePhoto',
+  'status',
+  'updatedBy',
+];
