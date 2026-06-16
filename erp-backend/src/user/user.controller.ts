@@ -30,7 +30,7 @@ import { multerConfig } from 'src/package/config/multer.config';
 import { CommonFileDto } from 'src/package/dto/common-file.dto';
 import { CommonFileService } from 'src/package/service/common-file.service';
 
-@Controller('user')
+@Controller('admin')
 export class UserController {
   constructor(
     private readonly userService: UserService,

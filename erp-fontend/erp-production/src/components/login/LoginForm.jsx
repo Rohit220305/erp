@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/context/AuthContext";
-import { loginUser } from "@/lib/api/api";
+import { loginUser } from "@/lib/api/company-api";
 
 import { Mail, Eye, EyeOff, LockKeyhole, Lock, LockOpen } from "lucide-react";
 import { loginSchema } from "@/lib/validation/login.schema";

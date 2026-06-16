@@ -45,7 +45,7 @@ export default function Header() {
 
         <div className="flex items-center">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center hover:cursor-pointer" onClick={() => router.push("/")}>
             <Image
               src="/images/production-logo.png"
               alt="logo"

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { ChevronRight, ChevronsRight } from "lucide-react";
+import { ChevronRight, ChevronsRight, Pencil } from "lucide-react";
 
 import { useHeader } from "@/context/HeaderContext";
 
@@ -16,8 +16,8 @@ export default function Navbar() {
   }
 
   return (
-    <div className="h-[80px] bg-[#ebe9e9e8] ">
-      <div className="h-full   px-10 py-4">
+    <div className="h-[80px] bg-[#ebe9e9e8] flex  justify-between px-10  ">
+      <div className="h-full    py-4">
         {/* LEFT */}
         <div className="flex items-center gap-5">
           {navbar.breadcrumbs.length > 0 && (
@@ -45,6 +45,29 @@ export default function Navbar() {
         </div>
         {navbar.title && (
           <h2 className="font-semibold text-xl ">{navbar.title}</h2>
+        )}
+      </div>
+      <div className="h-px bg-gray-300 mt-4 me-3.5">
+        {navbar.actionButton && (
+          <button
+            type="button"
+            onClick={navbar.actionButton.onClick}
+            className="
+                flex items-center gap-2
+                bg-[#1565c0]
+                text-white
+                px-8
+                py-2
+                rounded-md
+                hover:bg-[#0f57a6]
+                transition
+                cursor-pointer
+              "
+          >
+            
+
+            <span>{navbar.actionButton.label}</span>
+          </button>
         )}
       </div>
     </div>

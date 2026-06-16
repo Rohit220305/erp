@@ -1,28 +1,30 @@
-import TableView from "./TableView";
-import ListView from "./ListView";
-import GridView from "./GridView";
+import DynamicTable from "./DynamicTable";
+import DynamicGrid from "./DynamicGrid";
+import DynamicList from "./DynamicList";
 
 export default function ListingPage({
   view,
   data,
-  renderTableRow,
+  headers,
+  renderCell,
   renderListCard,
   renderGridCard,
-
-  table,
 }) {
   if (view === "table") {
     return (
       <div className="bg-white rounded-lg overflow-hidden">
-        {table}
-        {/* <TableView data={data}  /> */}
+        <DynamicTable
+          headers={headers}
+          data={data}
+          renderCell={renderCell}
+        />
       </div>
     );
   }
 
   if (view === "list") {
-    return <ListView data={data} renderCard={renderListCard} />;
+    return <DynamicList data={data} renderCard={renderListCard} />;
   }
 
-  return <GridView data={data} renderCard={renderGridCard} />;
+  return <DynamicGrid data={data} renderCard={renderGridCard} />;
 }

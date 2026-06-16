@@ -23,6 +23,7 @@ const defaultConfig = {
     title: "",
 
     breadcrumbs: [],
+    actionButton: null,
   },
 };
 

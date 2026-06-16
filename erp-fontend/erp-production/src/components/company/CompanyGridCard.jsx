@@ -19,7 +19,7 @@ export default function CompanyGridCard({ company }) {
           bg-green-500
           text-white
           px-3
-          rounded
+          rounded 
         "
         >
           Active

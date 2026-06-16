@@ -33,7 +33,7 @@ import { CommonFileService } from 'src/package/service/common-file.service';
 
 @Controller('company')
 export class CompanyController {
-  constructor(
+  constructor(    
     private companyService: CompanyService,
     private companyListService: CompanyListService,
     private commonFileService: CommonFileService,
