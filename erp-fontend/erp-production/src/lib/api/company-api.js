@@ -1,61 +1,42 @@
+import { apiClient } from "./api-client";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function loginUser(data) {
-  console.log("Logging in with data:", data); // Debug log
-  console.log(API_URL);
-
-  const response = await fetch(`${API_URL}/user/login`, {
+  const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-
-  return await response.json();
+  return res.json();
 }
 
 export async function listCompanies(data = { page: 1, limit: 10, search: "" }) {
-  console.log("Fetching companies with body data:", data); // Debug log
-
-  const response = await fetch(`${API_URL}/company/list-company`, {
-    method: "POST", // Changed to POST to allow a body
-    headers: {
-      "Content-Type": "application/json",
-    },
+  return apiClient("/company/list-company", {
+    method: "POST",
     body: JSON.stringify(data),
   });
-
-  return await response.json();
 }
 
 export async function createCompany(data) {
-  console.log("Creating company with data:", data); // Debug log
-
-  const response = await fetch(`${API_URL}/company/add-company`, {
+  return apiClient("/company/add-company", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(data),
   });
-
-  return await response.json();
 }
 
 export async function getCompany(id) {
-  console.log("Fetching company with ID:", id); // Debug log
-
-  const response = await fetch(`${API_URL}/company/get-company?id=${id}`, {
+  const res = await apiClient(`/company/get-company?id=${id}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  console.log("Get company response:", data?.settings?.data); // Debug log
-
-  return data?.settings?.data;
+  }); 
+  console.log("getCompany response:", res); // Debug log
+  return res?.settings?.data || res?.data || res;
 }
 
- 
+export async function updateCompany(data) {
+  return apiClient("/company/update-company", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}

@@ -20,22 +20,19 @@ import {
   UserDeleteDto,
   UserDetailsDto,
   UserListDto,
-  UserLoginDto,
 } from './dto/user.dto';
 
 import { UserService } from './service/user.service';
 import { UserListService } from './service/user.list.service';
-import { UserAuthService } from './service/user.auth.service';
 import { multerConfig } from 'src/package/config/multer.config';
 import { CommonFileDto } from 'src/package/dto/common-file.dto';
 import { CommonFileService } from 'src/package/service/common-file.service';
 
-@Controller('admin')
+@Controller('user')
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly userListService: UserListService,
-    private readonly userAuthService: UserAuthService,
     private readonly commonFileService: CommonFileService,
   ) {}
 
@@ -126,9 +123,5 @@ export class UserController {
     return await this.userListService.startUserList(req, body);
   }
 
-  @Post('login')
-  async login(@Body() body: UserLoginDto) {
-    console.log('Received login request with body:', body);
-    return await this.userAuthService.startLogin(body);
-  }
 }
+// Login is now handled exclusively by POST /auth/login in the AuthModule.

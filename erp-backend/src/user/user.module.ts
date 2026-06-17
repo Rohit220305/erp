@@ -12,7 +12,6 @@ import { UserListService } from './service/user.list.service';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CommonFileService } from 'src/package/service/common-file.service';
-import { UserAuthService } from './service/user.auth.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity, CompanyEntity, GroupEntity])],
@@ -20,10 +19,9 @@ import { UserAuthService } from './service/user.auth.service';
   providers: [
     UserService,
     UserListService,
-    UserAuthService,
     GeneralUtilities,
     CommonFileService,
   ],
-  exports: [UserService, UserListService, UserAuthService],
+  exports: [UserService, UserListService],
 })
 export class UserModule {}

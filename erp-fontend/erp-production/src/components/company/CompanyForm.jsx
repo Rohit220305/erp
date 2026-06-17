@@ -2,7 +2,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   companyAddSchema,
@@ -112,7 +114,7 @@ const PhoneField = ({
         className={`w-full px-3 py-2 border rounded-lg  transition ${
           error ? "border-red-500" : "border-gray-300"
         }`}
-        // {...register(name)}
+        {...register(name)}
       />
     </div>
     {error && <p className="text-sm text-red-500">{error}</p>}
@@ -138,8 +140,10 @@ export default function CompanyForm({
   mode = "create",
   parentCompanies = [],
   submitFn,
+  defaultValues: externalDefaults = {},
 }) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const defaultValues = {
     companyName: "",
@@ -164,6 +168,8 @@ export default function CompanyForm({
     status: "Active",
   };
 
+  const mergedDefaults = { ...defaultValues, ...externalDefaults };
+
   const {
     register,
     handleSubmit,
@@ -173,30 +179,28 @@ export default function CompanyForm({
     resolver: zodResolver(
       mode === "create" ? companyAddSchema : companyEditSchema,
     ),
-    defaultValues,
+    defaultValues: mergedDefaults,
     mode: "onBlur",
   });
 
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-
       await submitFn(data);
-
-      alert(
-        mode === "create"
-          ? "Company created successfully"
-          : "Company updated successfully",
+      toast.success(
+        mode === "create" ? "Company created successfully" : "Company updated successfully"
       );
-
-      if (mode === "create") reset();
+      if (mode === "create") {
+        reset();
+      } else {
+        router.push("/company");
+      }
     } catch (error) {
       console.error(error);
-
-      alert(
+      toast.error(
         error?.response?.data?.message ||
           error?.message ||
-          `Failed to ${mode === "create" ? "create" : "update"} company`,
+          `Failed to ${mode === "create" ? "create" : "update"} company`
       );
     } finally {
       setLoading(false);

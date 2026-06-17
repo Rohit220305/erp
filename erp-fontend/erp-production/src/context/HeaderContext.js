@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 
 const HeaderContext = createContext();
 
@@ -30,9 +30,12 @@ const defaultConfig = {
 export function HeaderProvider({ children }) {
   const [config, setConfig] = useState(defaultConfig);
 
-  const resetConfig = () => {
+  // useCallback ensures resetConfig has a stable reference across renders.
+  // Without this, every render creates a new function → components that list
+  // resetConfig in their useEffect dep array would re-run infinitely.
+  const resetConfig = useCallback(() => {
     setConfig(defaultConfig);
-  };
+  }, []); // defaultConfig is module-level constant — no deps needed
 
   return (
     <HeaderContext.Provider

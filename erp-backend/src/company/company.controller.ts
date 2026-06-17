@@ -30,6 +30,7 @@ import { CommonFileDto } from 'src/package/dto/common-file.dto';
 import { CompanyService } from './service/company.service';
 import { CompanyListService } from './service/company.list.service';
 import { CommonFileService } from 'src/package/service/common-file.service';
+import { Public } from 'src/package/decorator/decorator.public';
 
 @Controller('company')
 export class CompanyController {
@@ -44,8 +45,10 @@ export class CompanyController {
     return this.companyListService.startCompanyList(req, body);
   }
 
+  @Public()
   @Get('get-company')
   getCompanyById(@Req() req, @Query() query: CompanyDetailsDto) {
+    console.log('Received request to get company details:', query); 
     return this.companyListService.startCompanyDetails(query);
   }
 

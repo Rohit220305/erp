@@ -71,6 +71,11 @@ export class UserEntity {
   })
   status: string;
 
+  // @Column({
+  //   default: false,
+  // })
+  // isSuperAdmin: boolean;
+
   @Column({
     nullable: true,
   })

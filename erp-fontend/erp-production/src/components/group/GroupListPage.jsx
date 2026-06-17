@@ -1,90 +1,156 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import ListingPage from "@/components/listing/ListingPage";
+import TableSkeleton from "@/components/common/TableSkeleton";
+import { listGroups, deleteGroup } from "@/lib/api/group-api";
 import { useHeader } from "@/context/HeaderContext";
 import { useListing } from "@/context/ListingContext";
+import GroupListCard from "./GroupListCard";
+import GroupGridCard from "./GroupGridCard";
+import ConfirmModal from "@/components/common/ConfirmModal";
+import toast from "react-hot-toast";
 
 export default function GroupListPage() {
-    const { setConfig, resetConfig } = useHeader();
-    const { view } = useListing();
-    const [groups, setGroups] = useState([
-        {
-            id: 1,
-            groupName: "Sales",
-            description: "Sales department group",
-            members: 12,
-            status: "Active",
-        },
-        {
-            id: 2,
-            groupName: "Marketing",
-            description: "Marketing team",
-            members: 8,
-            status: "Active",
-        },
-    ]);
+  const { setConfig, resetConfig } = useHeader();
+  const { view, page, limit, setTotal, search } = useListing();
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const router = useRouter();
 
-    useEffect(() => {
-        setConfig({
-            header: {
-                actionButton: {
-                    label: "Create Group",
-                    onClick: () => console.log("Create group click"),
-                },
-                icons: ["refresh", "view"],
-                showSearch: true,
-            },
-            navbar: {
-                title: "Group Management",
-                breadcrumbs: [
-                    { label: "Master" },
-                    { label: "Group Listing", href: "/groups" },
-                ],
-            },
-        });
+  const fetchGroups = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await listGroups({ page, limit, search });
+      const data = response?.settings?.data || response?.data || {};
+      setGroups(data.list || []);
+      setTotal(data.total || 0);
+    } catch (error) {
+      toast.error("Failed to load groups");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit, search, setTotal]);
 
-        return () => resetConfig();
-    }, []);
+  useEffect(() => {
+    setConfig({
+      header: {
+        actionButton: { label: "Add Group", onClick: () => router.push("/group/add") },
+        icons: ["refresh", "filter", "view"],
+        showBookmark: true,
+        showLanguage: true,
+        showProfile: true,
+        showMenu: true,
+      },
+      navbar: {
+        title: "Listing",
+        breadcrumbs: [
+          { label: "Master" },
+          { label: "Group Master", href: "/group" },
+        ],
+      },
+    });
 
-    const headers = [
-        { label: "Group Name", key: "groupName" },
-        { label: "Description", key: "description" },
-        { label: "Members", key: "members" },
-        { label: "Status", key: "status" },
-    ];
+    return () => resetConfig();
+  }, [setConfig, router]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
 
-    const renderCell = (item, key) => {
-        if (key === "status") {
-            return (
-                <span
-                    className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700"
-                >
-                    {item.status}
-                </span>
-            );
-        }
-        return item[key];
-    };
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
 
-    const renderCard = (group) => (
-        <div key={group.id} className="bg-white p-4 rounded-lg border border-gray-200">
-            <h3 className="font-medium">{group.groupName}</h3>
-            <p className="text-sm text-gray-500">{group.description}</p>
-            <p className="text-xs mt-2 font-medium">Members: {group.members}</p>
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    try {
+      const res = await deleteGroup(deleteTarget.id);
+      if (res?.success === 1) {
+        toast.success("Group deleted successfully");
+        setDeleteTarget(null);
+        fetchGroups();
+      } else {
+        toast.error(res?.message || "Failed to delete group");
+      }
+    } catch {
+      toast.error("Failed to delete group");
+    }
+  }, [deleteTarget, fetchGroups]);
+
+  const headers = useMemo(() => [
+    { label: "Group Code", key: "groupCode" },
+    { label: "Group Name", key: "groupName" },
+    { label: "Description", key: "description" },
+    { label: "Status", key: "status" },
+    { label: "Added Date", key: "addedDateFormatted" },
+    { label: "Actions", key: "_actions" },
+  ], []);
+
+  const renderCell = useCallback((item, key) => {
+    if (key === "groupName") {
+      return (
+        <p
+          className="font-medium text-[#1565c0] hover:underline cursor-pointer"
+          onClick={() => router.push(`/group/${item.id}`)}
+        >
+          {item.groupName || "-"}
+        </p>
+      );
+    }
+    if (key === "status") {
+      return (
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+          item.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+        }`}>
+          {item.status === "active" ? "Active" : "Inactive"}
+        </span>
+      );
+    }
+    if (key === "description") {
+      return <span className="text-gray-500 text-sm">{item.description || "-"}</span>;
+    }
+    if (key === "_actions") {
+      return (
+        <div className="flex gap-2">
+          <button
+            onClick={() => router.push(`/group/edit/${item.id}`)}
+            className="px-3 py-1 text-xs border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => setDeleteTarget(item)}
+            className="px-3 py-1 text-xs border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition cursor-pointer"
+          >
+            Delete
+          </button>
         </div>
-    );
+      );
+    }
+    return item[key] || "-";
+  }, [router]);
 
-    return (
-        <div className="px-6">
-            <ListingPage
-                view={view}
-                data={groups}
-                headers={headers}
-                renderCell={renderCell}
-                renderListCard={renderCard}
-                renderGridCard={renderCard}
-            />
-        </div>
-    );
+  if (loading) return <div className="px-6"><TableSkeleton rows={8} cols={6} /></div>;
+
+  return (
+    <div className="relative h-full px-6">
+      <ListingPage
+        view={view}
+        data={groups}
+        headers={headers}
+        renderCell={renderCell}
+        renderListCard={(g) => <GroupListCard key={g.id} group={g} />}
+        renderGridCard={(g) => <GroupGridCard key={g.id} group={g} />}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Group"
+        message={`Are you sure you want to delete "${deleteTarget?.groupName}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </div>
+  );
 }

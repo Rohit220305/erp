@@ -27,7 +27,7 @@ export default function AppLayout({ children }) {
           px-4
         "
       >
-        <div className="min-h-full bg-[#ebe9e9e8]">{children}</div>
+        <div className="h-full bg-[#ebe9e9e8]">{children}</div>
       </main>
 
       {/* Fixed Footer */}

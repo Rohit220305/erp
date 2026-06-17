@@ -5,9 +5,10 @@ import { Building2, MapPin, Phone, Mail } from "lucide-react";
 import DetailRow from "./DetailsRow";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect, useState } from "react";
-import { getAdmin } from "@/lib/api/user-api";
-
+// import { getAdmin } from "@/lib/api/admin-api";
+import { getUser } from "@/lib/api/user-api";
 export default function CompanyDetailsPage({ company }) {
+  console.log("Company Details:", company); // Debug log
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
   const [addedAdmin, setAddedAdmin] = useState(null);
@@ -15,7 +16,7 @@ export default function CompanyDetailsPage({ company }) {
 
   const fetchAddedBy = async () => {
     try {
-      const response = await getAdmin(company.addedBy);
+      const response = await getUser(company.addedBy);
       console.log("Added By Admin:", response); // Debug log
       setAddedAdmin(response || []);
     } catch (error) {
@@ -24,7 +25,7 @@ export default function CompanyDetailsPage({ company }) {
   };
   const fetchUpdatedBy = async () => {
     try {
-      const response = await getAdmin(company.updatedBy);
+      const response = await getUser(company.updatedBy);
       console.log("Updated By Admin:", response); // Debug log
       setUpdatedAdmin(response || []);
     } catch (error) {
@@ -51,7 +52,7 @@ export default function CompanyDetailsPage({ company }) {
         ],
         actionButton: {
           label: "edit",
-          onClick: () => router.push("/company/edit/" + company.id),
+          onClick: () => router.push(`/company/${company.id}/edit-company`),
         },
       },
     });
@@ -71,7 +72,7 @@ export default function CompanyDetailsPage({ company }) {
 
         <div className="col-span-12 lg:col-span-2">
           <div className="bg-white rounded-xl hover:shadow-lg transition     p-5">
-            <h2 className="font-semibold text-lg">{company.companyName}</h2>
+            <h2 className="font-semibold text-lg">{company.companyName || ""}</h2>
 
             <p className="text-gray-500">{company.shortName}</p>
 
