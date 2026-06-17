@@ -14,7 +14,8 @@ import toast from "react-hot-toast";
 
 export default function GroupListPage() {
   const { setConfig, resetConfig } = useHeader();
-  const { view, page, limit, setTotal, search } = useListing();
+  const { view, page, limit, setTotal, search, setLimit, setPage, total } =
+    useListing();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -26,7 +27,8 @@ export default function GroupListPage() {
       const response = await listGroups({ page, limit, search });
       const data = response?.settings?.data || response?.data || {};
       setGroups(data.list || []);
-      setTotal(data.total || 0);
+      setTotal(data?.pagination?.total || 0);
+      setLimit(data?.pagination?.limit || 10);
     } catch (error) {
       toast.error("Failed to load groups");
       console.error(error);
@@ -38,7 +40,10 @@ export default function GroupListPage() {
   useEffect(() => {
     setConfig({
       header: {
-        actionButton: { label: "Add Group", onClick: () => router.push("/group/add") },
+        actionButton: {
+          label: "Add Group",
+          onClick: () => router.push("/group/add"),
+        },
         icons: ["refresh", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
@@ -48,7 +53,7 @@ export default function GroupListPage() {
       navbar: {
         title: "Listing",
         breadcrumbs: [
-          { label: "Master" },
+          { label: "Master", href: "/" },
           { label: "Group Master", href: "/group" },
         ],
       },
@@ -83,7 +88,7 @@ export default function GroupListPage() {
     { label: "Description", key: "description" },
     { label: "Status", key: "status" },
     { label: "Added Date", key: "addedDateFormatted" },
-    { label: "Actions", key: "_actions" },
+    
   ], []);
 
   const renderCell = useCallback((item, key) => {
@@ -109,24 +114,7 @@ export default function GroupListPage() {
     if (key === "description") {
       return <span className="text-gray-500 text-sm">{item.description || "-"}</span>;
     }
-    if (key === "_actions") {
-      return (
-        <div className="flex gap-2">
-          <button
-            onClick={() => router.push(`/group/edit/${item.id}`)}
-            className="px-3 py-1 text-xs border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => setDeleteTarget(item)}
-            className="px-3 py-1 text-xs border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition cursor-pointer"
-          >
-            Delete
-          </button>
-        </div>
-      );
-    }
+    
     return item[key] || "-";
   }, [router]);
 

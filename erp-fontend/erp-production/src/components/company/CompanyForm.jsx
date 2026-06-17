@@ -11,7 +11,6 @@ import {
   companyEditSchema,
 } from "@/lib/validation/company-add-update.schema";
 
-// Custom Input Component with Label and Error
 const InputField = ({
   label,
   required,
@@ -40,7 +39,6 @@ const InputField = ({
   </div>
 );
 
-// Custom Select Component with Label and Error
 const SelectField = ({
   label,
   required,
@@ -72,7 +70,6 @@ const SelectField = ({
   </div>
 );
 
-// Custom Phone Field with Dial Code
 const PhoneField = ({
   label,
   required,
@@ -121,7 +118,6 @@ const PhoneField = ({
   </div>
 );
 
-// Custom Radio/Checkbox Component
 const CheckboxField = ({ label, error, register, name }) => (
   <div className="space-y-1">
     <div className="flex items-center gap-2">
@@ -207,7 +203,6 @@ export default function CompanyForm({
     }
   };
 
-  // Sample dial codes (you can replace with actual data)
   const dialCodeOptions = [
     { label: "+91", value: "+91" },
     { label: "+1", value: "+1" },
@@ -217,13 +212,11 @@ export default function CompanyForm({
     { label: "+972", value: "+972" },
   ];
 
-  // Sample status options
   const statusOptions = [
     { label: "Active", value: "Active" },
     { label: "InActive", value: "InActive" },
   ];
 
-  // Sample country options (replace with actual country data)
   const countryOptions = [
     { label: "India", value: "India" },
     { label: "USA", value: "USA" },
@@ -231,7 +224,6 @@ export default function CompanyForm({
     { label: "UAE", value: "UAE" },
   ];
 
-  // Sample state options (you can make dynamic based on country)
   const stateOptions = [
     { label: "Maharashtra", value: "Maharashtra" },
     { label: "Delhi", value: "Delhi" },
@@ -239,7 +231,6 @@ export default function CompanyForm({
     { label: "California", value: "California" },
   ];
 
-  // Sample city options
   const cityOptions = [
     { label: "Mumbai", value: "Mumbai" },
     { label: "Delhi", value: "Delhi" },

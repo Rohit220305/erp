@@ -65,7 +65,7 @@ export default function UserDetailPage({ user }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master" },
+          { label: "Master", href: "/" },
           { label: "User Management", href: "/admin" },
         ],
         actionButton: {

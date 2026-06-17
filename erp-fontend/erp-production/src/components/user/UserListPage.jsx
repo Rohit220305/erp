@@ -15,7 +15,8 @@ import toast from "react-hot-toast";
 
 export default function UserListPage() {
   const { setConfig, resetConfig } = useHeader();
-  const { view, page, limit, setTotal, search } = useListing();
+  const { view, page, limit, setTotal, search, setLimit, setPage, total } =
+    useListing();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +29,9 @@ export default function UserListPage() {
       const response = await listUsers({ page, limit, search });
       const data = response?.settings?.data || response?.data || {};
       setUsers(data.list || []);
-      setTotal(data.total || 0);
+
+      setTotal(data?.pagination?.total || 0);
+      setLimit(data?.pagination?.limit || 10);
     } catch (error) {
       toast.error("Failed to load users");
       console.error(error);
@@ -40,7 +43,10 @@ export default function UserListPage() {
   useEffect(() => {
     setConfig({
       header: {
-        actionButton: { label: "Add User", onClick: () => router.push("/admin/add") },
+        actionButton: {
+          label: "Add User",
+          onClick: () => router.push("/admin/add"),
+        },
         icons: ["refresh", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
@@ -50,7 +56,7 @@ export default function UserListPage() {
       navbar: {
         title: "Listing",
         breadcrumbs: [
-          { label: "Master" },
+          { label: "Master", href: "/" },
           { label: "User Management", href: "/admin" },
         ],
       },
@@ -85,7 +91,7 @@ export default function UserListPage() {
     { label: "Group", key: "groupName" },
     { label: "Status", key: "status" },
     { label: "Last Login", key: "lastLoginDateFormatted" },
-    { label: "Actions", key: "_actions" },
+    
   ], []);
 
   const renderCell = useCallback((item, key) => {
@@ -127,26 +133,7 @@ export default function UserListPage() {
         </div>
       );
     }
-    if (key === "_actions") {
-      return (
-        <div className="flex gap-2">
-          <button
-            onClick={() => router.push(`/admin/edit/${item.id}`)}
-            className="px-3 py-1 text-xs border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
-          >
-            Edit
-          </button>
-          {currentUser?.isSuperAdmin && (
-            <button
-              onClick={() => setDeleteTarget(item)}
-              className="px-3 py-1 text-xs border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition cursor-pointer"
-            >
-              Delete
-            </button>
-          )}
-        </div>
-      );
-    }
+   
     return item[key] || "-";
   }, [router, currentUser]);
 

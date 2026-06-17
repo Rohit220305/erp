@@ -21,7 +21,7 @@ export default function EditCompanyHeader({ company }) {
       navbar: {
         title: "Edit Company",
         breadcrumbs: [
-          { label: "Master" },
+          { label: "Master", href: "/" },
           { label: "Company Master", href: "/company" },
           { label: company.companyName || "Edit" },
         ],

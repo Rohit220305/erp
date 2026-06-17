@@ -77,7 +77,7 @@ export default function GroupDetailPage({ group }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master" },
+          { label: "Master", href: "/" },
           { label: "Group Master", href: "/group" },
         ],
         actionButton: {

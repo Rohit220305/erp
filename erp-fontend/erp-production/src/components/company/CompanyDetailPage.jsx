@@ -47,7 +47,7 @@ export default function CompanyDetailsPage({ company }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master" },
+          { label: "Master", href: "/" },
           { label: "Company Master", href: "/company" },
         ],
         actionButton: {

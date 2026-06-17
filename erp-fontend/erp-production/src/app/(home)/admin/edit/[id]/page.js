@@ -14,11 +14,18 @@ export default function AdminEditRoute() {
 
   useEffect(() => {
     setConfig({
-      header: { actionButton: null, icons: [], showBookmark: true, showLanguage: true, showProfile: true, showMenu: true },
+      header: {
+        actionButton: null,
+        icons: [],
+        showBookmark: true,
+        showLanguage: true,
+        showProfile: true,
+        showMenu: true,
+      },
       navbar: {
         title: "Edit User",
         breadcrumbs: [
-          { label: "Master" },
+          { label: "Master", href: "/" },
           { label: "User Management", href: "/admin" },
           { label: "Edit User" },
         ],

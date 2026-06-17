@@ -24,10 +24,8 @@ export default function CompanyListPage() {
     try {
       setLoading(true);
       const response = await listCompanies({ page, limit, search });
-      console.log("listCompanies response:", response);
       const data = response?.settings?.data || response?.data || {};
       setCompanies(data.list || []);
-      console.log("total data:", data?.pagination?.total);
       setTotal(data?.pagination?.total || 0);
       setLimit(data?.pagination?.limit || 10);
     } catch (error) {
@@ -55,7 +53,7 @@ export default function CompanyListPage() {
       navbar: {
         title: "Listing",
         breadcrumbs: [
-          { label: "Master" },
+          { label: "Master", href: "/" },
           { label: "Company Master", href: "/company" },
         ],
       },

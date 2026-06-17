@@ -14,11 +14,18 @@ export default function GroupEditRoute() {
 
   useEffect(() => {
     setConfig({
-      header: { actionButton: null, icons: [], showBookmark: true, showLanguage: true, showProfile: true, showMenu: true },
+      header: {
+        actionButton: null,
+        icons: [],
+        showBookmark: true,
+        showLanguage: true,
+        showProfile: true,
+        showMenu: true,
+      },
       navbar: {
         title: "Edit Group",
         breadcrumbs: [
-          { label: "Master" },
+          { label: "Master", href: "/" },
           { label: "Group Master", href: "/group" },
           { label: "Edit Group" },
         ],
