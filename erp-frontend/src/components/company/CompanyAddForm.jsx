@@ -1,16 +1,14 @@
 // CompanyAddForm.jsx
 "use client";
 
-import { companyAddSchema } from "@/lib/validation/company-add-update.schema";
 import CompanyForm from "./CompanyForm";
 import { createCompany } from "@/lib/api/company-api";
 
-export default function CompanyAddForm({ parentCompanies = [] }) {
+export default function CompanyAddForm() {
   return (
     <CompanyForm
       mode="create"
-      parentCompanies={parentCompanies}
-      submitFn={createCompany}
+      submitFn={(data, logoFile) => createCompany(data, logoFile)}
     />
   );
 }

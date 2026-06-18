@@ -6,63 +6,106 @@ const AuthContext = createContext();
 
 const SESSION_STACK_KEY = "sessionStack";
 const USER_KEY = "user";
+const TOKEN_KEY = "authToken";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  /**
-   * sessionStack stores the array of previous sessions when super admin
-   * is impersonating another user. Each entry: { user: {...} }
-   */
   const [sessionStack, setSessionStack] = useState([]);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem(USER_KEY);
     const storedStack = localStorage.getItem(SESSION_STACK_KEY);
-    if (storedUser) setUser(JSON.parse(storedUser));
-    if (storedStack) setSessionStack(JSON.parse(storedStack));
+    const storedToken = localStorage.getItem(TOKEN_KEY);
+
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      // Normalize isSuperAdmin and ensure sub exists
+      setUser({
+        ...userData,
+        isSuperAdmin: Number(userData.isSuperAdmin) === 1,
+        sub: userData.id || userData.sub,
+      });
+    }
+    if (storedStack) {
+      setSessionStack(JSON.parse(storedStack));
+    }
+    setIsInitializing(false);
   }, []);
 
-  /** Called after POST /auth/login succeeds — stores user metadata only */
-  const login = (userData) => {
-    localStorage.setItem(USER_KEY, JSON.stringify(userData));
-    setUser(userData);
+  const login = (userData, token = null) => {
+    const normalizedData = {
+      ...userData,
+      isSuperAdmin: Number(userData.isSuperAdmin) === 1,
+      sub: userData.id || userData.sub,
+    };
+
+    localStorage.setItem(USER_KEY, JSON.stringify(normalizedData));
+    setUser(normalizedData);
+
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    }
   };
 
-  /** Called after POST /auth/logout — clears local user */
   const logout = () => {
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(SESSION_STACK_KEY);
+    localStorage.removeItem(TOKEN_KEY);
     setUser(null);
     setSessionStack([]);
   };
 
-  /**
-   * loginAs — push current session to stack, set new user.
-   * Tokens are already updated in httpOnly cookie by backend.
-   */
-  const loginAs = (newUserData) => {
-    const newStack = [...sessionStack, { user }];
+  const loginAs = (newUserData, newToken = null) => {
+    const newStack = [
+      ...sessionStack,
+      {
+        user: user,
+        token: localStorage.getItem(TOKEN_KEY),
+      },
+    ];
+
+    const normalizedNewData = {
+      ...newUserData,
+      isSuperAdmin: Number(newUserData.isSuperAdmin) === 1,
+      sub: newUserData.id || newUserData.sub,
+    };
+
     localStorage.setItem(SESSION_STACK_KEY, JSON.stringify(newStack));
-    localStorage.setItem(USER_KEY, JSON.stringify(newUserData));
+    localStorage.setItem(USER_KEY, JSON.stringify(normalizedNewData));
+
+    if (newToken) {
+      localStorage.setItem(TOKEN_KEY, newToken);
+    }
+
     setSessionStack(newStack);
-    setUser(newUserData);
+    setUser(normalizedNewData);
   };
 
-  /**
-   * backToSession — pops last session. Since we can't restore original
-   * cookies without backend support, we logout (clears impersonation)
-   * and redirect to /login. The caller should handle the redirect.
-   */
-  const backToSession = () => {
-    // Pop most recent previous user metadata for display only
+  const backToSession = async () => {
+    if (sessionStack.length === 0) return null;
+
     const prevSession = sessionStack[sessionStack.length - 1];
     const newStack = sessionStack.slice(0, -1);
+
+    // Restore previous user
+    localStorage.setItem(USER_KEY, JSON.stringify(prevSession.user));
+    setUser(prevSession.user);
+
+    // Restore previous token if exists
+    if (prevSession.token) {
+      localStorage.setItem(TOKEN_KEY, prevSession.token);
+    }
+
+    // Update stack
     localStorage.setItem(SESSION_STACK_KEY, JSON.stringify(newStack));
     setSessionStack(newStack);
-    return prevSession?.user || null;
+
+    return prevSession;
   };
 
   const isImpersonating = sessionStack.length > 0;
+  const canImpersonate = user?.isSuperAdmin === true;
 
   return (
     <AuthContext.Provider
@@ -74,6 +117,8 @@ export function AuthProvider({ children }) {
         backToSession,
         sessionStack,
         isImpersonating,
+        canImpersonate,
+        isInitializing,
       }}
     >
       {children}
@@ -82,5 +127,9 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return context;
 }

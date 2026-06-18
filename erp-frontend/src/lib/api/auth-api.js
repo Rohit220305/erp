@@ -42,3 +42,15 @@ export async function logoutUser() {
 export async function loginAsUser(targetUserId) {
   return apiClient(`/auth/login-as-user/${targetUserId}`, { method: "POST" });
 }
+
+/**
+ * POST /auth/change-password — authenticated users only.
+ * Validates current password, sets new password.
+ */
+export async function changePassword(data) {
+  return apiClient("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+

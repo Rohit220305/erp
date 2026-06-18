@@ -2,6 +2,7 @@ import { Body, Controller, Post, Req, Res, Param, ParseIntPipe } from '@nestjs/c
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Public } from 'src/package/decorator/decorator.public';
 import { JwtPayload } from 'src/package/types/jwt-payload.type';
 
@@ -9,7 +10,7 @@ import { JwtPayload } from 'src/package/types/jwt-payload.type';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  /** Public — no token rquired */
+  /** Public — no token required */
   @Public()
   @Post('login')
   async login(
@@ -19,7 +20,6 @@ export class AuthController {
   ) {
     return this.authService.login(req, res, body);
   }
-
 
   @Public()
   @Post('refresh')
@@ -40,15 +40,32 @@ export class AuthController {
    * Super admin only — impersonate another user.
    * Guard checks `isSuperAdmin` from JWT payload.
    */
-  // @Post('login-as-user/:targetUserId')
-  // async loginAsUser(
-  //   @Req() req: Request & { user: JwtPayload },
-  //   @Res({ passthrough: true }) res: Response,
-  //   @Param('targetUserId', ParseIntPipe) targetUserId: number,
-  // ) {
-  //   if (!req.user?.isSuperAdmin) {
-  //     return { success: 0, message: 'Super admin access required' };
-  //   }
-  //   return this.authService.loginAsUser(res, targetUserId);
-  // }
+  @Post('login-as-user/:targetUserId')
+  async loginAsUser(
+    @Req() req: Request & { user: JwtPayload },
+    @Res({ passthrough: true }) res: Response,
+    @Param('targetUserId', ParseIntPipe) targetUserId: number,
+  ) {
+    if (!req.user?.isSuperAdmin) {
+      return { success: 0, message: 'Super admin access required' };
+    }
+    return this.authService.loginAsUser(res, targetUserId);
+  }
+
+  /**
+   * Authenticated users can change their own password.
+   * Validates current password and confirms new password match.
+   */
+  @Post('change-password')
+  async changePassword(
+    @Req() req: Request & { user: JwtPayload },
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(
+      req.user.sub,
+      dto.currentPassword,
+      dto.newPassword,
+      dto.confirmPassword,
+    );
+  }
 }

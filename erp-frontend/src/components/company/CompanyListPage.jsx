@@ -135,7 +135,7 @@ export default function CompanyListPage() {
     );
 
   return (
-    <div className="relative h-full px-6">
+    <div className="relative px-6 h-full">
       <ListingPage
         view={view}
         data={companies}
@@ -144,7 +144,6 @@ export default function CompanyListPage() {
         renderListCard={(c) => <CompanyListCard key={c.id} company={c} />}
         renderGridCard={(c) => <CompanyGridCard key={c.id} company={c} />}
       />
-   
     </div>
   );
 }

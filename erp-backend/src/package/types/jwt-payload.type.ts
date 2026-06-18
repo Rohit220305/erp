@@ -8,7 +8,7 @@ export interface JwtPayload {
   email: string;
   companyId: number;
   groupId: number;
-  // isSuperAdmin: boolean;
+  isSuperAdmin: boolean;
   /** Issued-at timestamp (Unix epoch, added by JwtService) */
   iat: number;
   /** Expiry timestamp (Unix epoch, added by JwtService) */

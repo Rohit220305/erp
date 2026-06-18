@@ -118,7 +118,7 @@ export default function Header() {
               <ProfileDropdown
                 user={user}
                 onProfile={() => user?.id && router.push(`/admin/${user.id}`)}
-                onChangePassword={() => toast("Change password coming soon")}
+                onChangePassword={() => router.push("/settings/change-password")}
                 onLogout={handleLogout}
               />
             )}

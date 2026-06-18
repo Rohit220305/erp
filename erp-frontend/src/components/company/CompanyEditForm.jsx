@@ -1,3 +1,4 @@
+// CompanyEditForm.jsx
 "use client";
 
 import CompanyForm from "./CompanyForm";
@@ -9,7 +10,9 @@ export default function CompanyEditForm({ company, parentCompanies = [] }) {
       mode="edit"
       defaultValues={company}
       parentCompanies={parentCompanies}
-      submitFn={(data) => updateCompany({ ...data, id: company.id })}
+      submitFn={(data, logoFile) =>
+        updateCompany({ ...data, id: company.id }, logoFile)
+      }
     />
   );
 }

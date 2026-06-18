@@ -31,23 +31,20 @@ export class AuthGuard implements CanActivate {
     private readonly config: ConfigService,
     private readonly reflector: Reflector,
   ) {}
-
+  
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // ── Strategy 1: @Public() decorator ──────────────────────────────────────
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
     if (isPublic) return true;
 
-    // ── Strategy 2: Fallback configurable path list ───────────────────────────
     const request = context.switchToHttp().getRequest<Request>();
     const isPublicPath = FALLBACK_PUBLIC_PATHS.some((pattern) =>
       pattern.test(request.path),
     );
     if (isPublicPath) return true;
 
-    // ── JWT Verification ──────────────────────────────────────────────────────
     const token = request.cookies?.accessToken;
     if (!token) {
       throw new UnauthorizedException('Access token missing');
@@ -58,7 +55,6 @@ export class AuthGuard implements CanActivate {
         secret: this.config.getOrThrow<string>('JWT_SECRET'),
       });
 
-      // Attach full typed payload so controllers can use req.user
       request['user'] = payload;
       return true;
     } catch (error: any) {

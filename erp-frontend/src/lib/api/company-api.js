@@ -19,7 +19,22 @@ export async function listCompanies(data = { page: 1, limit: 10, search: "" }) {
   });
 }
 
-export async function createCompany(data) {
+/**
+ * POST /company/add-company
+ * Sends FormData when a logo file is provided (required for multer),
+ * otherwise sends JSON.
+ */
+export async function createCompany(data, logoFile) {
+  if (logoFile) {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== "") {
+        formData.append(key, String(val));
+      }
+    });
+    formData.append("companyLogo", logoFile);
+    return apiClient("/company/add-company", { method: "POST", body: formData });
+  }
   return apiClient("/company/add-company", {
     method: "POST",
     body: JSON.stringify(data),
@@ -29,12 +44,26 @@ export async function createCompany(data) {
 export async function getCompany(id) {
   const res = await apiClient(`/company/get-company?id=${id}`, {
     method: "GET",
-  }); 
-  console.log("getCompany response:", res); // Debug log
+  });
   return res?.settings?.data || res?.data || res;
 }
 
-export async function updateCompany(data) {
+/**
+ * PUT /company/update-company
+ * Sends FormData when a logo file is provided, otherwise JSON.
+ */
+export async function updateCompany(data, logoFile) {
+  
+  if (logoFile) {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== "") {
+        formData.append(key, String(val));
+      }
+    });
+    formData.append("companyLogo", logoFile);
+    return apiClient("/company/update-company", { method: "PUT", body: formData });
+  }
   return apiClient("/company/update-company", {
     method: "PUT",
     body: JSON.stringify(data),

@@ -46,7 +46,7 @@ export default function ListingPage({
   }
 
   return (
-    <div>
+    <div className="rounded-lg overflow-hidden h-full">
       <DynamicGrid data={data} renderCard={renderGridCard} />
       <div className="absolute bottom-0 left-0 right-0 mx-6">
         <Pagination {...paginationProps} />

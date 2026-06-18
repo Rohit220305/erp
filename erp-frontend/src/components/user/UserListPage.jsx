@@ -125,11 +125,11 @@ export default function UserListPage() {
           }`}>
             {item.status}
           </span>
-          {item.isSuperAdmin && (
+          {item.isSuperAdmin ? (
             <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium w-fit">
               Super Admin
             </span>
-          )}
+          ) : null}
         </div>
       );
     }

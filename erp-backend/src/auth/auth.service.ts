@@ -35,7 +35,7 @@ const refreshCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
   secure: IS_PROD(),
-  maxAge: maxAgeMs,
+  maxAge: maxAgeMs, 
 });
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -71,8 +71,8 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       companyId: user.companyId,
-      groupId: user.groupId
-      // isSuperAdmin: user.isSuperAdmin,
+      groupId: user.groupId,
+      isSuperAdmin: user.isSuperAdmin,
     };
   }
 
@@ -205,12 +205,7 @@ export class AuthService {
     return { success: 1, message: 'Login successful', data };
   }
 
-  // ─── Refresh ────────────────────────────────────────────────────────────────
-
-  /**
-   * Reads the refresh token cookie, verifies it with the refresh secret,
-   * looks up the user, and issues a fresh pair of tokens (rotation).
-   */
+  
   async refresh(req: Request, res: Response) {
     const refreshToken = req.cookies?.refreshToken;
 
@@ -285,5 +280,37 @@ export class AuthService {
     const data = await this.buildSafeUser(target);
 
     return { success: 1, message: `Now acting as ${target.userName}`, data };
+  }
+
+  // ─── Change Password ─────────────────────────────────────────────────────────
+
+  /**
+   * Validates current password, ensures newPassword === confirmPassword,
+   * then persists the new bcrypt hash.
+   */
+  async changePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    if (newPassword !== confirmPassword) {
+      throw new UnauthorizedException('New password and confirm password do not match');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.userRepo.update({ id: userId }, { password: hashed });
+
+    return { success: 1, message: 'Password changed successfully' };
   }
 }
