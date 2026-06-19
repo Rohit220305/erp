@@ -11,11 +11,11 @@ export const groupAddSchema = z.object({
     .min(2, "Group name must be at least 2 characters")
     .max(100, "Group name must be at most 100 characters"),
   description: z.string().max(500, "Description must be at most 500 characters").optional(),
-  status: z.enum(["active", "inactive"], {
+  status: z.enum(["Active", "InActive"], {
     errorMap: () => ({ message: "Status must be Active or Inactive" }),
   }),
 });
 
 export const groupEditSchema = groupAddSchema.extend({
-  id: z.number({ required_error: "Group ID is required" }),
+  id: z.coerce.number({ required_error: "Group ID is required" }),
 });

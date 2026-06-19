@@ -54,3 +54,13 @@ export async function changePassword(data) {
   });
 }
 
+/**
+ * POST /auth/restore-session — restores previous session cookies.
+ */
+export async function restoreSession(token) {
+  return apiClient("/auth/restore-session", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+

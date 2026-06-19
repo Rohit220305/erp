@@ -44,6 +44,7 @@ export async function updateUser(data, photoFile) {
       }
     });
     formData.append("profilePhoto", photoFile);
+    
     return apiClient("/user/update-user", { method: "PUT", body: formData });
   }
   return apiClient("/user/update-user", {

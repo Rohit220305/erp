@@ -167,6 +167,7 @@ export class UserListService {
         const whereString = await this.general.makeFilterString(
           params.filters,
           'user',
+          params.logicalOperator
         );
 
         if (whereString) {

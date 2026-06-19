@@ -9,6 +9,8 @@ import CompanyListCard from "./CompanyListCard";
 import CompanyGridCard from "./CompanyGridCard";
 import { useRouter } from "next/navigation";
 import { useListing } from "@/context/ListingContext";
+import FilterDrawer from "@/components/common/FilterDrawer";
+import SearchDrawer from "@/components/common/SearchDrawer";
 import toast from "react-hot-toast";
 import Pagination from "../listing/Pagination";
 
@@ -20,10 +22,107 @@ export default function CompanyListPage() {
   const { view, page, limit, setTotal, search, setLimit, setPage, total } =
     useListing();
 
+  // Search/Filter states
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sidebarFilters, setSidebarFilters] = useState({
+    companyName: "",
+    shortName: "",
+    companyCode: "",
+    email: "",
+    phone: "",
+    contactPersonName: "",
+    status: "",
+  });
+  const [appliedSidebarFilters, setAppliedSidebarFilters] = useState(null);
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [logicalOperator, setLogicalOperator] = useState("AND");
+  const [tempLogicalOperator, setTempLogicalOperator] = useState("AND");
+  const [tempFilters, setTempFilters] = useState([]);
+  const [appliedFilters, setAppliedFilters] = useState([]);
+  const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
+
+  const fields = useMemo(() => [
+    { label: "Company Name", value: "companyName", type: "text" },
+    { label: "Short Name", value: "shortName", type: "text" },
+    { label: "Company Code", value: "companyCode", type: "text" },
+    { label: "Company Email", value: "email", type: "text" },
+    { label: "Company Phone", value: "phone", type: "text" },
+    { label: "Contact Person", value: "contactPersonName", type: "text" },
+    { label: "Status", value: "status", type: "select", options: [
+      { label: "Active", value: "Active" },
+      { label: "Inactive", value: "Inactive" },
+    ]}
+  ], []);
+
+  const handleOpenSearch = useCallback(() => {
+    if (tempFilters.length === 0 && fields.length > 0) {
+      const defaultField = fields[0];
+      setTempFilters([
+        {
+          field: defaultField.value,
+          operator: "equal",
+          value: defaultField.type === "select" ? (defaultField.options[0]?.value || "") : "",
+        },
+      ]);
+    }
+    setIsSearchOpen(true);
+  }, [tempFilters.length, fields]);
+
   const fetchCompanies = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await listCompanies({ page, limit, search });
+
+      let backendFilters = [];
+      let logicalOp = "AND";
+
+      if (appliedSidebarFilters) {
+        logicalOp = "AND";
+        if (appliedSidebarFilters.companyName) {
+          backendFilters.push({ key: "companyName", value: appliedSidebarFilters.companyName, operator: "like" });
+        }
+        if (appliedSidebarFilters.shortName) {
+          backendFilters.push({ key: "shortName", value: appliedSidebarFilters.shortName, operator: "like" });
+        }
+        if (appliedSidebarFilters.companyCode) {
+          backendFilters.push({ key: "companyCode", value: appliedSidebarFilters.companyCode, operator: "like" });
+        }
+        if (appliedSidebarFilters.email) {
+          backendFilters.push({ key: "email", value: appliedSidebarFilters.email, operator: "like" });
+        }
+        if (appliedSidebarFilters.phone) {
+          backendFilters.push({ key: "phone", value: appliedSidebarFilters.phone, operator: "like" });
+        }
+        if (appliedSidebarFilters.contactPersonName) {
+          backendFilters.push({ key: "contactPersonName", value: appliedSidebarFilters.contactPersonName, operator: "like" });
+        }
+        if (appliedSidebarFilters.status) {
+          backendFilters.push({ key: "status", value: appliedSidebarFilters.status, operator: "equal" });
+        }
+      } else if (appliedFilters.length > 0) {
+        logicalOp = appliedLogicalOperator;
+        backendFilters = appliedFilters
+          .map((row) => {
+            let key = row.field;
+            let value = row.value;
+            let operator = row.operator;
+
+            if (value === undefined || value === null || value === "") {
+              return null;
+            }
+
+            return { key, value, operator };
+          })
+          .filter(Boolean);
+      }
+
+      const response = await listCompanies({
+        page,
+        limit,
+        search,
+        filters: backendFilters.length > 0 ? backendFilters : undefined,
+        logicalOperator: logicalOp,
+      });
       const data = response?.settings?.data || response?.data || {};
       setCompanies(data.list || []);
       setTotal(data?.pagination?.total || 0);
@@ -34,7 +133,7 @@ export default function CompanyListPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, setTotal]);
+  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, setTotal, setLimit]);
 
   useEffect(() => {
     setConfig({
@@ -43,12 +142,14 @@ export default function CompanyListPage() {
           label: "Add Company",
           onClick: () => router.push("/company/add"),
         },
-        icons: ["refresh", "filter", "view"],
+        icons: ["refresh", "search", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
         showProfile: true,
         showMenu: true,
         showSearch: true,
+        onFilterClick: () => setIsFilterOpen(true),
+        onSearchClick: handleOpenSearch,
       },
       navbar: {
         title: "Listing",
@@ -59,7 +160,7 @@ export default function CompanyListPage() {
       },
     });
     return () => resetConfig();
-  }, [setConfig, router]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
+  }, [setConfig, router, handleOpenSearch, setIsFilterOpen]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
 
   useEffect(() => {
     fetchCompanies();
@@ -143,6 +244,63 @@ export default function CompanyListPage() {
         renderCell={renderCell}
         renderListCard={(c) => <CompanyListCard key={c.id} company={c} />}
         renderGridCard={(c) => <CompanyGridCard key={c.id} company={c} />}
+      />
+
+      <FilterDrawer
+        open={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onSearch={() => {
+          setAppliedSidebarFilters(sidebarFilters);
+          setAppliedFilters([]);
+          setPage(1);
+          setIsFilterOpen(false);
+        }}
+        onReset={() => {
+          const defaultSidebar = {
+            companyName: "",
+            shortName: "",
+            companyCode: "",
+            email: "",
+            phone: "",
+            contactPersonName: "",
+            status: "",
+          };
+          setSidebarFilters(defaultSidebar);
+          setAppliedSidebarFilters(null);
+          setPage(1);
+          setIsFilterOpen(false);
+        }}
+        filters={sidebarFilters}
+        setFilters={setSidebarFilters}
+        statuses={[
+          { label: "Active", value: "Active" },
+          { label: "Inactive", value: "Inactive" },
+        ]}
+      />
+
+      <SearchDrawer
+        open={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSearch={() => {
+          setAppliedFilters(tempFilters);
+          setAppliedLogicalOperator(tempLogicalOperator);
+          setAppliedSidebarFilters(null);
+          setPage(1);
+          setIsSearchOpen(false);
+        }}
+        onReset={() => {
+          setTempFilters([]);
+          setAppliedFilters([]);
+          setTempLogicalOperator("AND");
+          setAppliedLogicalOperator("AND");
+          setPage(1);
+          setIsSearchOpen(false);
+        }}
+        filters={tempFilters}
+        setFilters={setTempFilters}
+        logicalOperator={tempLogicalOperator}
+        setLogicalOperator={setTempLogicalOperator}
+        fields={fields}
       />
     </div>
   );

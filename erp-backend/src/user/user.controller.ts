@@ -79,7 +79,7 @@ export class UserController {
   ) {
     try {
       const params = body;
-
+      console.log('params', params);
       if (file) {
         const fileDto = new CommonFileDto();
 

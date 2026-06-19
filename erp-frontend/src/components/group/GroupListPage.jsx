@@ -10,6 +10,8 @@ import { useListing } from "@/context/ListingContext";
 import GroupListCard from "./GroupListCard";
 import GroupGridCard from "./GroupGridCard";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import FilterDrawer from "@/components/common/FilterDrawer";
+import SearchDrawer from "@/components/common/SearchDrawer";
 import toast from "react-hot-toast";
 
 export default function GroupListPage() {
@@ -21,10 +23,89 @@ export default function GroupListPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const router = useRouter();
 
+  // Search/Filter states
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sidebarFilters, setSidebarFilters] = useState({
+    groupCode: "",
+    groupName: "",
+    status: "",
+  });
+  const [appliedSidebarFilters, setAppliedSidebarFilters] = useState(null);
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [logicalOperator, setLogicalOperator] = useState("AND");
+  const [tempLogicalOperator, setTempLogicalOperator] = useState("AND");
+  const [tempFilters, setTempFilters] = useState([]);
+  const [appliedFilters, setAppliedFilters] = useState([]);
+  const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
+
+  const fields = useMemo(() => [
+    { label: "Group Code", value: "groupCode", type: "text" },
+    { label: "Group Name", value: "groupName", type: "text" },
+    { label: "Description", value: "description", type: "text" },
+    { label: "Status", value: "status", type: "select", options: [
+      { label: "Active", value: "Active" },
+      { label: "Inactive", value: "InActive" },
+    ]}
+  ], []);
+
+  const handleOpenSearch = useCallback(() => {
+    if (tempFilters.length === 0 && fields.length > 0) {
+      const defaultField = fields[0];
+      setTempFilters([
+        {
+          field: defaultField.value,
+          operator: "equal",
+          value: defaultField.type === "select" ? (defaultField.options[0]?.value || "") : "",
+        },
+      ]);
+    }
+    setIsSearchOpen(true);
+  }, [tempFilters.length, fields]);
+
   const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await listGroups({ page, limit, search });
+
+      let backendFilters = [];
+      let logicalOp = "AND";
+
+      if (appliedSidebarFilters) {
+        logicalOp = "AND";
+        if (appliedSidebarFilters.groupCode) {
+          backendFilters.push({ key: "groupCode", value: appliedSidebarFilters.groupCode, operator: "like" });
+        }
+        if (appliedSidebarFilters.groupName) {
+          backendFilters.push({ key: "groupName", value: appliedSidebarFilters.groupName, operator: "like" });
+        }
+        if (appliedSidebarFilters.status) {
+          backendFilters.push({ key: "status", value: appliedSidebarFilters.status, operator: "equal" });
+        }
+      } else if (appliedFilters.length > 0) {
+        logicalOp = appliedLogicalOperator;
+        backendFilters = appliedFilters
+          .map((row) => {
+            let key = row.field;
+            let value = row.value;
+            let operator = row.operator;
+
+            if (value === undefined || value === null || value === "") {
+              return null;
+            }
+
+            return { key, value, operator };
+          })
+          .filter(Boolean);
+      }
+
+      const response = await listGroups({
+        page,
+        limit,
+        search,
+        filters: backendFilters.length > 0 ? backendFilters : undefined,
+        logicalOperator: logicalOp,
+      });
+      // console.log("Groups Response:", response);
       const data = response?.settings?.data || response?.data || {};
       setGroups(data.list || []);
       setTotal(data?.pagination?.total || 0);
@@ -35,7 +116,7 @@ export default function GroupListPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, setTotal]);
+  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, setTotal, setLimit]);
 
   useEffect(() => {
     setConfig({
@@ -44,11 +125,13 @@ export default function GroupListPage() {
           label: "Add Group",
           onClick: () => router.push("/group/add"),
         },
-        icons: ["refresh", "filter", "view"],
+        icons: ["refresh", "search", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
         showProfile: true,
         showMenu: true,
+        onFilterClick: () => setIsFilterOpen(true),
+        onSearchClick: handleOpenSearch,
       },
       navbar: {
         title: "Listing",
@@ -60,7 +143,7 @@ export default function GroupListPage() {
     });
 
     return () => resetConfig();
-  }, [setConfig, router]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
+  }, [setConfig, router, handleOpenSearch, setIsFilterOpen]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
 
   useEffect(() => {
     fetchGroups();
@@ -70,12 +153,14 @@ export default function GroupListPage() {
     if (!deleteTarget) return;
     try {
       const res = await deleteGroup(deleteTarget.id);
-      if (res?.success === 1) {
+      const isSuccess = res?.success === 1 || res?.settings?.success === 1;
+      const message = res?.message || res?.settings?.message;
+      if (isSuccess) {
         toast.success("Group deleted successfully");
         setDeleteTarget(null);
         fetchGroups();
       } else {
-        toast.error(res?.message || "Failed to delete group");
+        toast.error(message || "Failed to delete group");
       }
     } catch {
       toast.error("Failed to delete group");
@@ -103,11 +188,12 @@ export default function GroupListPage() {
       );
     }
     if (key === "status") {
+      const isActive = item.status === "Active" || item.status === "active";
       return (
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-          item.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
         }`}>
-          {item.status === "active" ? "Active" : "Inactive"}
+          {isActive ? "Active" : "Inactive"}
         </span>
       );
     }
@@ -129,6 +215,59 @@ export default function GroupListPage() {
         renderCell={renderCell}
         renderListCard={(g) => <GroupListCard key={g.id} group={g} />}
         renderGridCard={(g) => <GroupGridCard key={g.id} group={g} />}
+      />
+
+      <FilterDrawer
+        open={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onSearch={() => {
+          setAppliedSidebarFilters(sidebarFilters);
+          setAppliedFilters([]);
+          setPage(1);
+          setIsFilterOpen(false);
+        }}
+        onReset={() => {
+          const defaultSidebar = {
+            groupCode: "",
+            groupName: "",
+            status: "",
+          };
+          setSidebarFilters(defaultSidebar);
+          setAppliedSidebarFilters(null);
+          setPage(1);
+          setIsFilterOpen(false);
+        }}
+        filters={sidebarFilters}
+        setFilters={setSidebarFilters}
+        statuses={[
+          { label: "Active", value: "Active" },
+          { label: "Inactive", value: "InActive" },
+        ]}
+      />
+
+      <SearchDrawer
+        open={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSearch={() => {
+          setAppliedFilters(tempFilters);
+          setAppliedLogicalOperator(tempLogicalOperator);
+          setAppliedSidebarFilters(null);
+          setPage(1);
+          setIsSearchOpen(false);
+        }}
+        onReset={() => {
+          setTempFilters([]);
+          setAppliedFilters([]);
+          setTempLogicalOperator("AND");
+          setAppliedLogicalOperator("AND");
+          setPage(1);
+          setIsSearchOpen(false);
+        }}
+        filters={tempFilters}
+        setFilters={setTempFilters}
+        logicalOperator={tempLogicalOperator}
+        setLogicalOperator={setTempLogicalOperator}
+        fields={fields}
       />
 
       <ConfirmModal

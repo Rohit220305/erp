@@ -5,9 +5,8 @@ import { Tag, Calendar, ExternalLink } from "lucide-react";
 
 export default function GroupGridCard({ group }) {
   const router = useRouter();
-
-  const isActive = group.status === "active";
-
+  const isActive = group.status === "Active" || group.status === "active";
+  console.log("Rendering GroupGridCard for group:", group);   
   return (
     <div
       onClick={() => router.push(`/group/${group.id}`)}

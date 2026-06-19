@@ -8,15 +8,15 @@ export const sitemapData = [
     title: "Company",
     menus: [
       { label: "Company Master", path: "/company" },
-      { label: "Add Company", path: "/company/add" },
+      // { label: "Add Company", path: "/company/add" },
     ],
     path: "/company",
   },
   {
-    title: "Group Master",
+    title: "Groups and Roles",
     menus: [
-      { label: "Group Listing", path: "/group" },
-      { label: "Add Group", path: "/group/add" },
+      { label: "Groups", path: "/group" },
+      // { label: "Add Group", path: "/group/add" },
     ],
     path: "/group",
   },
@@ -24,8 +24,9 @@ export const sitemapData = [
     title: "Users & Staff Management",
     menus: [
       { label: "Admin Users", path: "/admin" },
-      { label: "Add User", path: "/admin/add" },
+      // { label: "Add User", path: "/admin/add" },
     ],
     path: "/admin",
   },
 ];
+

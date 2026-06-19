@@ -64,9 +64,13 @@ export class UserAddDto {
   @IsInt()
   @Transform(({ value }) => Number(value))
   addedBy?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true || value === 1 || value === '1')
+  isSuperAdmin?: boolean;
 }
 
-export class UserUpdateDto {
+export class  UserUpdateDto {
   @IsInt()
   @Transform(({ value }) => Number(value))
   id: number;
@@ -127,6 +131,10 @@ export class UserUpdateDto {
   @IsInt()
   @Transform(({ value }) => Number(value))
   updatedBy?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true || value === 1 || value === '1')
+  isSuperAdmin?: boolean;
 }
 
 export class UserDeleteDto {

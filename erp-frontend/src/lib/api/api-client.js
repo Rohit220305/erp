@@ -34,7 +34,6 @@ export async function apiClient(path, options = {}) {
         // cookies() throws if called outside a request context (e.g., during build)
       }
     }
-
     return fetch(url, {
       ...options,
       credentials: "include",

@@ -3,16 +3,17 @@ import path from "path";
 
 @Injectable()
 export class GeneralUtilities {
-  async makeFilterString(filters: any, alias) {
+  async makeFilterString(filters: any, alias, logicalOperator = 'AND') {
     try {
       let filterString: any = '';
+      const op = logicalOperator === 'OR' ? 'OR' : 'AND';
 
-      if (filters.length > 0) {
+      if (filters && filters.length > 0) {
         filterString = await this.makeFilterCondition(filters[0], alias);
 
         for (let i = 1; i < filters.length; i++) {
           const condition = await this.makeFilterCondition(filters[i], alias);
-          filterString = filterString + ' AND ' + condition;
+          filterString = filterString + ` ${op} ` + condition;
         }
       } else {
         return true;

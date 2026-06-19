@@ -6,14 +6,13 @@ import { Tag, Calendar } from "lucide-react";
 export default function GroupListCard({ group }) {
   const router = useRouter();
 
-  const isActive = group.status === "active";
+  const isActive = group.status === "Active" || group.status === "active";
 
   return (
     <div
       onClick={() => router.push(`/group/${group.id}`)}
       className="bg-white px-5 py-4 flex items-center gap-5 border-b border-gray-100 hover:bg-gray-50/80 transition-colors cursor-pointer group"
     >
-      {/* Icon */}
       <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#1565c0]/10 to-[#1565c0]/20 flex items-center justify-center border border-[#1565c0]/15 shrink-0">
         <Tag size={16} className="text-[#1565c0]" />
       </div>
@@ -51,7 +50,7 @@ export default function GroupListCard({ group }) {
             isActive
               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
               : "bg-red-50 text-red-600 border border-red-200"
-          }`}
+          }`} 
         >
           {isActive ? "Active" : "Inactive"}
         </span>

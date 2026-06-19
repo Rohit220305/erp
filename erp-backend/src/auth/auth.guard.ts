@@ -13,12 +13,6 @@ import { JwtPayload } from 'src/package/types/jwt-payload.type';
 
 /**
  * Global JWT Auth Guard.
- *
- * A route is treated as public (no token required) when EITHER:
- *  1. It is decorated with @Public()                — preferred, declarative
- *  2. Its path matches an entry in FALLBACK_PUBLIC_PATHS — for dynamic/static paths
- */
-
 /** Paths that are always public regardless of @Public() decorator */
 const FALLBACK_PUBLIC_PATHS: RegExp[] = [
   /^\/uploads\//,   // static file serving

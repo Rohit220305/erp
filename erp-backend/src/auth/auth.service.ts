@@ -202,7 +202,7 @@ export class AuthService {
 
     const data = await this.buildSafeUser(user);
 
-    return { success: 1, message: 'Login successful', data };
+    return { success: 1, message: 'Login successful', data: { ...data, token: accessToken } };
   }
 
   
@@ -279,7 +279,7 @@ export class AuthService {
 
     const data = await this.buildSafeUser(target);
 
-    return { success: 1, message: `Now acting as ${target.userName}`, data };
+    return { success: 1, message: `Now acting as ${target.userName}`, data: { ...data, token: accessToken } };
   }
 
   // ─── Change Password ─────────────────────────────────────────────────────────
@@ -312,5 +312,37 @@ export class AuthService {
     await this.userRepo.update({ id: userId }, { password: hashed });
 
     return { success: 1, message: 'Password changed successfully' };
+  }
+
+  async restoreSession(res: Response, token: string) {
+    if (!token) {
+      return { success: 0, message: 'Session token is required' };
+    }
+
+    try {
+      const payload = this.jwtService.verify<JwtPayload>(token, {
+        secret: this.config.getOrThrow<string>('JWT_SECRET'),
+      });
+
+      const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+      if (!user || user.status !== 'Active') {
+        return { success: 0, message: 'User not found or inactive' };
+      }
+
+      const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
+        this.generateTokens(user);
+
+      this.setCookies(res, accessToken, refreshToken, accessMaxAge, refreshMaxAge);
+
+      const data = await this.buildSafeUser(user);
+
+      return {
+        success: 1,
+        message: 'Session restored successfully',
+        data: { ...data, token: accessToken },
+      };
+    } catch (error) {
+      return { success: 0, message: 'Invalid or expired session token' };
+    }
   }
 }

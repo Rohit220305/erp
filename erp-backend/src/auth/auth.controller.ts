@@ -68,4 +68,13 @@ export class AuthController {
       dto.confirmPassword,
     );
   }
+
+  @Public()
+  @Post('restore-session')
+  async restoreSession(
+    @Res({ passthrough: true }) res: Response,
+    @Body('token') token: string,
+  ) {
+    return this.authService.restoreSession(res, token);
+  }
 }

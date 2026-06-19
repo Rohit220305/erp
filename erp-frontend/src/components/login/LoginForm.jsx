@@ -38,11 +38,12 @@ export default function LoginForm() {
 
     try {
       setLoading(true);
+      // console.log("Submitting login form with data:" , form);
       const response = await loginUser(form);
 
       if (response?.success === 1 && response?.data) {
         // Store user metadata in context (tokens are httpOnly cookies)
-        login(response.data);
+        login(response.data, response.data.token);
         router.push("/");
       } else {
         setServerError(
@@ -139,6 +140,7 @@ export default function LoginForm() {
           </label>
           <button
             type="button"
+            onClick={() => router.push("/forgot-password")}
             className="cursor-pointer text-sm font-semibold text-black hover:text-[#1565c0]"
           >
             Forgot Password?

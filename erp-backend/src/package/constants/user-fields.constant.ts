@@ -11,6 +11,7 @@ export const USER_INSERT_FIELDS = [
   'profilePhoto',
   'status',
   'addedBy',
+  'isSuperAdmin',
 ];
 
 export const USER_UPDATE_FIELDS = [
@@ -26,4 +27,5 @@ export const USER_UPDATE_FIELDS = [
   'profilePhoto',
   'status',
   'updatedBy',
+  'isSuperAdmin',
 ];

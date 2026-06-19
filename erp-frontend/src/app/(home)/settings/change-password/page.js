@@ -21,9 +21,7 @@ const changePasswordSchema = z
       .string()
       .min(1, "New password is required")
       .min(6, "Password must be at least 6 characters")
-      // .regex(/(?=.*[a-zA-Z])(?=.*[\d\W])/, {
-      //   message: "Must contain letters and at least one number or symbol",
-    // })
+     
     ,
     confirmPassword: z
       .string()
@@ -147,7 +145,7 @@ export default function ChangePasswordPage() {
         <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 border border-blue-100">
           <ShieldCheck size={18} className="text-[#1565c0] mt-0.5 shrink-0" />
           <p className="text-xs text-blue-700 leading-relaxed">
-            Use a strong password with at least 8 characters, including letters and numbers or symbols.
+            Use a strong password with at least 6 characters.
           </p>
         </div>
 

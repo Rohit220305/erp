@@ -6,7 +6,6 @@ export default function DynamicList({ data, renderCard }) {
       </div>
     );
   }
-
   return (
     <div className="divide-y overflow-auto max-h-[92%] divide-gray-100">
       {data.map((item, index) => renderCard(item, index))}

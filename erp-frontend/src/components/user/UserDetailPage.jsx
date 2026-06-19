@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHeader } from "@/context/HeaderContext";
 import { useAuth } from "@/context/AuthContext";
-import { loginAsUser } from "@/lib/api/auth-api";
+import { loginAsUser, logoutUser } from "@/lib/api/auth-api";
 import { getUser } from "@/lib/api/user-api";
 import {
   Mail,
@@ -63,9 +63,9 @@ function ImpersonationBanner({ sessionStack, onBack }) {
             <p className="text-sm font-semibold text-purple-700">
               You're impersonating a user
             </p>
-            <p className="text-xs text-purple-600 mt-1">
+            {/* <p className="text-xs text-purple-600 mt-1">
               Stack: {sessionStack.length} previous session(s)
-            </p>
+            </p> */}
           </div>
         </div>
         <button
@@ -187,6 +187,8 @@ export default function UserDetailPage({ user }) {
      } else {
        toast.error("No previous session found");
        setBackToSessionLoading(false);
+       logoutUser();
+       window.location.href = "/login";
      }
    } catch (err) {
      console.error("BackToSession error:", err);
@@ -201,10 +203,10 @@ export default function UserDetailPage({ user }) {
   return (
     <div className="p-6">
       {/* Impersonation Banner - Shows when user is impersonating */}
-      <ImpersonationBanner
+      {/* <ImpersonationBanner
         sessionStack={sessionStack}
         onBack={handleBackToSession}
-      />
+      /> */}
 
       <div className="grid grid-cols-12 gap-6">
         {/* Sidebar */}

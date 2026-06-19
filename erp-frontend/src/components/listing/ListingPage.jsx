@@ -13,7 +13,6 @@ export default function ListingPage({
   renderGridCard,
 }) {
   const { page, setPage, limit, setLimit, total } = useListing();
-
   const paginationProps = {
     page,
     limit,

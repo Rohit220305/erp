@@ -71,11 +71,11 @@ export default function UserListCard({ user }) {
         >
           {user.status}
         </span>
-        {user.isSuperAdmin && (
+        {/* {user.isSuperAdmin ? (
           <span className="px-2 py-0.5 text-xs bg-purple-50 text-purple-700 border border-purple-200 rounded-full font-semibold">
             SA
           </span>
-        )}
+        ) : null} */}
       </div>
     </div>
   );

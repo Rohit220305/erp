@@ -120,15 +120,16 @@ export class CompanyListDto {
   search: string;
 
   @IsOptional()
-  @ValidateNested()
+  @ValidateNested({ each: true })
   @Type(() => filtersDto)
-  filters: any;
+  filters: filtersDto[];
 }
 
 export class filtersDto {
   @IsString()
   key: string;
 
+  @IsNotEmpty()
   value: any;
 
   @IsString()

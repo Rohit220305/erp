@@ -19,8 +19,8 @@ export class GroupEntity {
 
   @Column({
     type: 'enum',
-    enum: ['active', 'inactive'],
-    default: 'active',
+    enum: ['Active', 'InActive'],
+    default: 'Active',
   })
   status: string;
 

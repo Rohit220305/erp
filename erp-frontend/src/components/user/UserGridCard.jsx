@@ -43,11 +43,11 @@ export default function UserGridCard({ user }) {
         >
           {user.status || "—"}
         </span>
-        {user.isSuperAdmin && (
+        {user.isSuperAdmin ? (
           <span className="px-2 py-0.5 text-xs bg-purple-50 text-purple-700 border border-purple-200 rounded-full font-semibold">
             Super Admin
           </span>
-        )}
+        ) : null}
         {user.groupName && (
           <span className="px-2 py-0.5 text-xs bg-blue-50 text-[#1565c0] border border-blue-200 rounded-full font-medium">
             {user.groupName}

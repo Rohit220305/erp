@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { restoreSession } from "@/lib/api/auth-api";
 
 const AuthContext = createContext();
 
@@ -87,6 +88,13 @@ export function AuthProvider({ children }) {
 
     const prevSession = sessionStack[sessionStack.length - 1];
     const newStack = sessionStack.slice(0, -1);
+
+    if (prevSession.token) {
+      const res = await restoreSession(prevSession.token);
+      if (!res || res.success !== 1) {
+        throw new Error(res?.message || "Failed to restore backend session");
+      }
+    }
 
     // Restore previous user
     localStorage.setItem(USER_KEY, JSON.stringify(prevSession.user));

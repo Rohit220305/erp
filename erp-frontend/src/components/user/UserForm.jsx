@@ -127,15 +127,19 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const onSubmit = useCallback(async (data) => {
     try {
       setLoading(true);
+      mode === "create"? data.addedBy = currentUser?.id : data.updatedBy = currentUser?.id;
       const response = mode === "create"
         ? await createUser(data, photoFile)
         : await updateUser(data, photoFile);
+        
+      const isSuccess = response?.success === 1 || response?.settings?.success === 1;
+      const message = response?.message || response?.settings?.message;
 
-      if (response?.success === 1) {
+      if (isSuccess) {
         toast.success(mode === "create" ? "User created successfully!" : "User updated successfully!");
         router.push("/admin");
       } else {
-        toast.error(response?.message || `Failed to ${mode === "create" ? "create" : "update"} user`);
+        toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} user`);
       }
     } catch (error) {
       toast.error(error?.message || "Something went wrong");

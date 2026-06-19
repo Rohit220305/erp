@@ -69,7 +69,7 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
     groupCode: "",
     groupName: "",
     description: "",
-    status: "active",
+    status: "Active",
     ...initialValues,
   }), [initialValues]);
 
@@ -90,11 +90,14 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
         ? await createGroup(data)
         : await updateGroup(data);
 
-      if (response?.success === 1) {
+      const isSuccess = response?.success === 1 || response?.settings?.success === 1;
+      const message = response?.message || response?.settings?.message;
+
+      if (isSuccess) {
         toast.success(mode === "create" ? "Group created successfully!" : "Group updated successfully!");
         router.push("/group");
       } else {
-        toast.error(response?.message || `Failed to ${mode === "create" ? "create" : "update"} group`);
+        toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} group`);
       }
     } catch (error) {
       toast.error(error?.message || "Something went wrong");
@@ -104,8 +107,8 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
   }, [mode, router]);
 
   const statusOptions = [
-    { label: "Active", value: "active" },
-    { label: "Inactive", value: "inactive" },
+    { label: "Active", value: "Active" },
+    { label: "Inactive", value: "InActive" },
   ];
 
   return (

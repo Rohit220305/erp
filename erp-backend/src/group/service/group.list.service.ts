@@ -112,6 +112,7 @@ export class GroupListService {
         const whereString = await this.general.makeFilterString(
           params.filters,
           'group_master',
+          params.logicalOperator
         );
 
         if (whereString) {
