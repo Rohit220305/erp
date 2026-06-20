@@ -7,10 +7,12 @@ import { useHeader } from "@/context/HeaderContext";
 import { useEffect, useState } from "react";
 // import { getAdmin } from "@/lib/api/admin-api";
 import { getUser } from "@/lib/api/user-api";
+import { useAuth } from "@/context/AuthContext";
 export default function CompanyDetailsPage({ company }) {
   console.log("Company Details:", company); // Debug log
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
+  const { can } = useAuth();
   const [addedAdmin, setAddedAdmin] = useState(null);
   const [updatedAdmin, setUpdatedAdmin] = useState(null);
 
@@ -50,10 +52,10 @@ export default function CompanyDetailsPage({ company }) {
           { label: "Master", href: "/" },
           { label: "Company Master", href: "/company" },
         ],
-        actionButton: {
+        actionButton: can("COMPANY_UPDATE") ? {
           label: "edit",
           onClick: () => router.push(`/company/${company.id}/edit-company`),
-        },
+        } : null,
       },
     });
 
@@ -62,7 +64,7 @@ export default function CompanyDetailsPage({ company }) {
     return () => {
       resetConfig();
     };
-  }, []);
+  }, [setConfig, router, company.id, resetConfig, can]);
   return (
     <div className="p-6">
       {/* Header */}

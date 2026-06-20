@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
@@ -22,17 +22,17 @@ export class UserListService {
   @InjectRepository(GroupEntity)
   private groupRepo: Repository<GroupEntity>;
 
-  async startUserDetails(params) {
-    const response = await this.getUserDetails(params);
+  async startUserDetails(req, params) {
+    const response = await this.getUserDetails(req, params);
 
     if (response.success == 1) {
-      return await this.finishSuccess(response);
+       return await this.finishSuccess(response);
     }
 
     return await this.finishFailure(response);
   }
 
-  async getUserDetails(params) {
+  async getUserDetails(req, params) {
     let return_data: any = {};
 
     try {
@@ -48,6 +48,12 @@ export class UserListService {
 
       if (!user) {
         throw new Error('User not found');
+      }
+
+      // Scoping Check
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin && user.companyId !== req.user.companyId) {
+        throw new ForbiddenException('Cannot view user outside your company');
       }
 
       /**
@@ -110,6 +116,9 @@ export class UserListService {
         data: safeUser,
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
@@ -120,7 +129,7 @@ export class UserListService {
   }
 
   async startUserList(req, params) {
-    const response = await this.getUserList(params);
+    const response = await this.getUserList(req, params);
 
     if (response.success == 1) {
       return await this.finishSuccess(response);
@@ -129,7 +138,7 @@ export class UserListService {
     return await this.finishFailure(response);
   }
 
-  async getUserList(params) {
+  async getUserList(req, params) {
     let return_data: any = {};
 
     try {
@@ -140,6 +149,15 @@ export class UserListService {
       const skip = (page - 1) * limit;
 
       const queryBuilder = this.userRepo.createQueryBuilder('user');
+
+      // Scoping Check
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin) {
+        queryBuilder.andWhere('user.companyId = :scopedCompanyId', {
+          scopedCompanyId: req.user.companyId,
+        });
+      }
+
 
       /**
        * Search

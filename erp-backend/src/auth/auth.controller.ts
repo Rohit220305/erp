@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res, Param, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, Param, ParseIntPipe } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -69,6 +69,11 @@ export class AuthController {
     );
   }
 
+  @Get('get-user-permissions')
+  async getUserPermissions(@Req() req: Request) {
+    return this.authService.getUserPermissions(req);
+  }
+
   @Public()
   @Post('restore-session')
   async restoreSession(
@@ -78,3 +83,4 @@ export class AuthController {
     return this.authService.restoreSession(res, token);
   }
 }
+

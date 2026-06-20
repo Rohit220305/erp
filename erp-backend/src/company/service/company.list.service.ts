@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -12,8 +12,8 @@ export class CompanyListService {
   @InjectRepository(CompanyEntity)
   private companyRepo: Repository<CompanyEntity>;
 
-  async startCompanyDetails(params) {
-    const response = await this.getCompanyDetails(params);
+  async startCompanyDetails(req, params) {
+    const response = await this.getCompanyDetails(req, params);
 
     if (response.success == 1) {
       return await this.finishSuccess(response);
@@ -22,7 +22,7 @@ export class CompanyListService {
     }
   }
 
-  async getCompanyDetails(params) {
+  async getCompanyDetails(req, params) {
     let return_data: any = {};
 
     try {
@@ -38,6 +38,12 @@ export class CompanyListService {
 
       if (!company) {
         throw new Error('Company not found');
+      }
+
+      // Scoping Check
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
+        throw new ForbiddenException('Cannot view company outside your company hierarchy');
       }
 
       company['addedDateFormatted'] = await this.general.dateFormat(
@@ -78,6 +84,9 @@ export class CompanyListService {
         data: company,
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
@@ -88,7 +97,7 @@ export class CompanyListService {
   }
 
   async startCompanyList(req, params) {
-    const response = await this.getCompanyList(params);
+    const response = await this.getCompanyList(req, params);
 
     if (response.success == 1) {
       return await this.finishSuccess(response);
@@ -97,7 +106,7 @@ export class CompanyListService {
     }
   }
 
-  async getCompanyList(params) {
+  async getCompanyList(req, params) {
     let return_data: any = {};
 
     try {
@@ -109,6 +118,14 @@ export class CompanyListService {
 
       const queryBuilder = this.companyRepo.createQueryBuilder('company');
 
+      // Scoping Check
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin) {
+        queryBuilder.andWhere(
+          '(company.id = :scopedCompanyId OR company.parentCompanyId = :scopedCompanyId)',
+          { scopedCompanyId: req.user.companyId }
+        );
+      }
 
       if (params?.search) {
         queryBuilder.andWhere(
@@ -221,4 +238,5 @@ export class CompanyListService {
     return params;
   }
 }
+
 

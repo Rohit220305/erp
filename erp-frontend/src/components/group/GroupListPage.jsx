@@ -13,6 +13,7 @@ import ConfirmModal from "@/components/common/ConfirmModal";
 import FilterDrawer from "@/components/common/FilterDrawer";
 import SearchDrawer from "@/components/common/SearchDrawer";
 import toast from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function GroupListPage() {
   const { setConfig, resetConfig } = useHeader();
@@ -22,6 +23,7 @@ export default function GroupListPage() {
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const router = useRouter();
+  const { can } = useAuth();
 
   // Search/Filter states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -121,10 +123,10 @@ export default function GroupListPage() {
   useEffect(() => {
     setConfig({
       header: {
-        actionButton: {
+        actionButton: can("GROUP_CREATE") ? {
           label: "Add Group",
           onClick: () => router.push("/group/add"),
-        },
+        } : null,
         icons: ["refresh", "search", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
@@ -143,7 +145,7 @@ export default function GroupListPage() {
     });
 
     return () => resetConfig();
-  }, [setConfig, router, handleOpenSearch, setIsFilterOpen]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
+  }, [setConfig, router, handleOpenSearch, setIsFilterOpen, can]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
 
   useEffect(() => {
     fetchGroups();

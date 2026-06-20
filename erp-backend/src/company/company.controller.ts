@@ -30,7 +30,7 @@ import { CommonFileDto } from 'src/package/dto/common-file.dto';
 import { CompanyService } from './service/company.service';
 import { CompanyListService } from './service/company.list.service';
 import { CommonFileService } from 'src/package/service/common-file.service';
-import { Public } from 'src/package/decorator/decorator.public';
+import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
 
 @Controller('company')
 export class CompanyController {
@@ -41,18 +41,20 @@ export class CompanyController {
   ) {}
 
   @Post('list-company')
+  @RequirePermission('COMPANY_VIEW')
   getAllCompanies(@Req() req, @Body() body: CompanyListDto) {
     return this.companyListService.startCompanyList(req, body);
   }
 
-  @Public()
   @Get('get-company')
+  @RequirePermission('COMPANY_VIEW')
   getCompanyById(@Req() req, @Query() query: CompanyDetailsDto) {
     console.log('Received request to get company details:', query); 
-    return this.companyListService.startCompanyDetails(query);
+    return this.companyListService.startCompanyDetails(req, query);
   }
 
   @Post('add-company')
+  @RequirePermission('COMPANY_CREATE')
   @UseInterceptors(FileInterceptor('companyLogo', multerConfig))
   async addCompany(
     @Req() req,
@@ -94,6 +96,7 @@ export class CompanyController {
   }
 
   @Put('update-company')
+  @RequirePermission('COMPANY_UPDATE')
   @UseInterceptors(FileInterceptor('companyLogo', multerConfig))
   async updateCompany(
     @Req() req,
@@ -135,7 +138,9 @@ export class CompanyController {
   }
   
   @Delete('delete-company')
+  @RequirePermission('COMPANY_DELETE')
   deleteCompany(@Req() req, @Query() query: CompanyDeleteDto) {
     return this.companyService.startDeleteCompany(req, query);
   }
 }
+

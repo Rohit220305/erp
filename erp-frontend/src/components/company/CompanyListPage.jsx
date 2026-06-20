@@ -13,6 +13,7 @@ import FilterDrawer from "@/components/common/FilterDrawer";
 import SearchDrawer from "@/components/common/SearchDrawer";
 import toast from "react-hot-toast";
 import Pagination from "../listing/Pagination";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CompanyListPage() {
   const { setConfig, resetConfig } = useHeader();
@@ -21,6 +22,7 @@ export default function CompanyListPage() {
   const router = useRouter();
   const { view, page, limit, setTotal, search, setLimit, setPage, total } =
     useListing();
+  const { can } = useAuth();
 
   // Search/Filter states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -138,10 +140,10 @@ export default function CompanyListPage() {
   useEffect(() => {
     setConfig({
       header: {
-        actionButton: {
+        actionButton: can("COMPANY_CREATE") ? {
           label: "Add Company",
           onClick: () => router.push("/company/add"),
-        },
+        } : null,
         icons: ["refresh", "search", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
@@ -160,7 +162,7 @@ export default function CompanyListPage() {
       },
     });
     return () => resetConfig();
-  }, [setConfig, router, handleOpenSearch, setIsFilterOpen]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
+  }, [setConfig, router, handleOpenSearch, setIsFilterOpen, can]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
 
   useEffect(() => {
     fetchCompanies();

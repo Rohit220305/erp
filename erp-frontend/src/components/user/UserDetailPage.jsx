@@ -89,6 +89,7 @@ export default function UserDetailPage({ user }) {
     isImpersonating,
     sessionStack,
     canImpersonate,
+    can,
   } = useAuth();
   const router = useRouter();
   const [addedAdmin, setAddedAdmin] = useState(null);
@@ -121,15 +122,15 @@ export default function UserDetailPage({ user }) {
           { label: "Master", href: "/" },
           { label: "User Management", href: "/admin" },
         ],
-        actionButton: {
+        actionButton: can("USER_UPDATE") ? {
           label: "Edit",
           onClick: () => router.push(`/admin/edit/${user.id}`),
-        },
+        } : null,
       },
     });
     fetchAdmins();
     return () => resetConfig();
-  }, [setConfig, router, user.id, fetchAdmins, resetConfig]);
+  }, [setConfig, router, user.id, fetchAdmins, resetConfig, can]);
 
   const handleLoginAs = useCallback(async () => {
     if (!currentUser?.isSuperAdmin) {

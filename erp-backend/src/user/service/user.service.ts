@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
@@ -30,7 +30,7 @@ export class UserService {
   private groupRepo: Repository<GroupEntity>;
 
   async startInsertUser(req, params) {
-    const response = await this.insertUser(params);
+    const response = await this.insertUser(req, params);
 
     if (response.success == 1) {
       if (params.profilePhoto && response?.data?.insert_id) {
@@ -51,10 +51,15 @@ export class UserService {
     return await this.finishFailure(response);
   }
 
-  async insertUser(params) {
+  async insertUser(req, params) {
     let return_data: any = {};
 
     try {
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin && params.companyId !== req.user.companyId) {
+        throw new ForbiddenException('Cannot create user outside your company');
+      }
+
       /**
        * Company Validation
        */
@@ -117,6 +122,7 @@ export class UserService {
         USER_INSERT_FIELDS,
       );
 
+      queryColumns.addedBy = req.user?.sub;
       queryColumns.addedDate = () => 'NOW()';
 
       const res = await this.userRepo.insert(queryColumns);
@@ -129,6 +135,9 @@ export class UserService {
         },
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
@@ -139,7 +148,7 @@ export class UserService {
   }
 
   async startUpdateUser(req, params) {
-    const response = await this.updateUser(params);
+    const response = await this.updateUser(req, params);
 
     if (response.success == 1) {
       if (params.profilePhoto && params.id) {
@@ -160,7 +169,7 @@ export class UserService {
     return await this.finishFailure(response);
   }
 
-  async updateUser(params) {
+  async updateUser(req, params) {
     let return_data: any = {};
 
     try {
@@ -176,6 +185,14 @@ export class UserService {
 
       if (!user) {
         throw new Error('User not found');
+      }
+
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin && user.companyId !== req.user.companyId) {
+        throw new ForbiddenException('Cannot update user outside your company');
+      }
+      if (!isSuperAdmin && params.companyId && params.companyId !== req.user.companyId) {
+        throw new ForbiddenException('Cannot move user outside your company');
       }
 
       /**
@@ -250,6 +267,7 @@ export class UserService {
         USER_UPDATE_FIELDS,
       );
 
+      queryColumns.updatedBy = req.user?.sub;
       queryColumns.updatedDate = () => 'NOW()';
 
       const res = await this.userRepo.update(
@@ -267,6 +285,9 @@ export class UserService {
         },
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
@@ -277,7 +298,7 @@ export class UserService {
   }
 
   async startDeleteUser(req, params) {
-    const response = await this.deleteUser(params);
+    const response = await this.deleteUser(req, params);
 
     if (response.success == 1) {
       return await this.finishSuccess(response);
@@ -286,7 +307,7 @@ export class UserService {
     return await this.finishFailure(response);
   }
 
-  async deleteUser(params) {
+  async deleteUser(req, params) {
     let return_data: any = {};
 
     try {
@@ -298,6 +319,11 @@ export class UserService {
 
       if (!user) {
         throw new Error('User not found');
+      }
+
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin && user.companyId !== req.user.companyId) {
+        throw new ForbiddenException('Cannot delete user outside your company');
       }
 
       const res = await this.userRepo.delete({
@@ -314,11 +340,15 @@ export class UserService {
         },
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
       };
     }
+
 
     return return_data;
   }

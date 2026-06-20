@@ -21,7 +21,7 @@ export default function UserListPage() {
   const { setConfig, resetConfig } = useHeader();
   const { view, page, limit, setTotal, search, setLimit, setPage, total } =
     useListing();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, can } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -198,10 +198,10 @@ export default function UserListPage() {
   useEffect(() => {
     setConfig({
       header: {
-        actionButton: {
+        actionButton: can("USER_CREATE") ? {
           label: "Add User",
           onClick: () => router.push("/admin/add"),
-        },
+        } : null,
         icons: ["refresh", "search", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
@@ -219,7 +219,7 @@ export default function UserListPage() {
       },
     });
     return () => resetConfig();
-  }, [setConfig, router, handleOpenSearch, setIsFilterOpen]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
+  }, [setConfig, router, handleOpenSearch, setIsFilterOpen, can]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
 
   useEffect(() => {
     fetchUsers();

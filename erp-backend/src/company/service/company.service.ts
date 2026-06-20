@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -19,7 +19,7 @@ export class CompanyService {
 
 
   async startInsertCompany(req, params) {
-    const response = await this.insertCompany(params);
+    const response = await this.insertCompany(req, params);
 
     if (response.success == 1) {
       const insertId = response?.data?.insert_id;
@@ -55,10 +55,17 @@ export class CompanyService {
 
     return await this.finishFailure(response);
   }
-  async insertCompany(params) {
+  async insertCompany(req, params) {
     let return_data: any = {};
 
     try {
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin) {
+        if (params.parentCompanyId !== req.user.companyId) {
+          throw new ForbiddenException('Cannot create child company under a different parent company');
+        }
+      }
+
       const companyCodeExists = await this.companyRepo.findOne({
         where: {
           companyCode: params.companyCode,
@@ -86,6 +93,7 @@ export class CompanyService {
         COMPANY_INSERT_FIELDS,
       );
 
+      queryColumns.addedBy = req.user?.sub;
       queryColumns.addedDate = () => 'NOW()';
 
       const res = await this.companyRepo.insert(queryColumns);
@@ -98,6 +106,9 @@ export class CompanyService {
         },
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
@@ -110,7 +121,7 @@ export class CompanyService {
 
 
   async startUpdateCompany(req, params) {
-    const response = await this.updateCompany(params);
+    const response = await this.updateCompany(req, params);
 
     if (response.success == 1) {
       if (params.companyLogo && params.id) {
@@ -138,7 +149,7 @@ export class CompanyService {
     return await this.finishFailure(response);
   }
 
-  async updateCompany(params) {
+  async updateCompany(req, params) {
     let return_data: any = {};
 
     try {
@@ -154,6 +165,11 @@ export class CompanyService {
 
       if (!company) {
         throw new Error('Company not found');
+      }
+
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
+        throw new ForbiddenException('Cannot update company outside your company hierarchy');
       }
 
       if (params.companyCode && params.companyCode !== company.companyCode) {
@@ -177,6 +193,7 @@ export class CompanyService {
         COMPANY_UPDATE_FIELDS,
       );
 
+      queryColumns.updatedBy = req.user?.sub;
       queryColumns.updatedDate = () => 'NOW()';
 
       const res = await this.companyRepo.update(
@@ -192,6 +209,9 @@ export class CompanyService {
         },
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
@@ -202,7 +222,7 @@ export class CompanyService {
   }
 
   async startDeleteCompany(req, params) {
-    const response = await this.deleteCompany(params);
+    const response = await this.deleteCompany(req, params);
 
     if (response.success == 1) {
       return await this.finishSuccess(response);
@@ -211,7 +231,7 @@ export class CompanyService {
     }
   }
 
-  async deleteCompany(params) {
+  async deleteCompany(req, params) {
     let return_data: any = {};
 
     try {
@@ -227,6 +247,11 @@ export class CompanyService {
 
       if (!company) {
         throw new Error('Company not found');
+      }
+
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
+        throw new ForbiddenException('Cannot delete company outside your company hierarchy');
       }
 
       const childCompanies = await this.companyRepo.count({
@@ -253,11 +278,15 @@ export class CompanyService {
         },
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
       };
     }
+
 
     return return_data;
   }

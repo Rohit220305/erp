@@ -27,6 +27,7 @@ import { UserListService } from './service/user.list.service';
 import { multerConfig } from 'src/package/config/multer.config';
 import { CommonFileDto } from 'src/package/dto/common-file.dto';
 import { CommonFileService } from 'src/package/service/common-file.service';
+import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
 
 @Controller('user')
 export class UserController {
@@ -37,6 +38,7 @@ export class UserController {
   ) {}
 
   @Post('add-user')
+  @RequirePermission('USER_CREATE')
   @UseInterceptors(FileInterceptor('profilePhoto', multerConfig))
   async addUser(@Req() req, @Body() body: UserAddDto, @UploadedFile() file) {
     try {
@@ -71,6 +73,7 @@ export class UserController {
   }
 
   @Put('update-user')
+  @RequirePermission('USER_UPDATE')
   @UseInterceptors(FileInterceptor('profilePhoto', multerConfig))
   async updateUser(
     @Req() req,
@@ -109,19 +112,23 @@ export class UserController {
   }
 
   @Delete('delete-user')
+  @RequirePermission('USER_DELETE')
   async deleteUser(@Req() req, @Query() query: UserDeleteDto) {
     return await this.userService.startDeleteUser(req, query);
   }
 
   @Get('get-user')
-  async getUser(@Query() query: UserDetailsDto) {
-    return await this.userListService.startUserDetails(query);
+  @RequirePermission('USER_VIEW')
+  async getUser(@Req() req, @Query() query: UserDetailsDto) {
+    return await this.userListService.startUserDetails(req, query);
   }
 
   @Post('list-user')
+  @RequirePermission('USER_VIEW')
   async listUser(@Req() req, @Body() body: UserListDto) {
     return await this.userListService.startUserList(req, body);
   }
 
 }
 // Login is now handled exclusively by POST /auth/login in the AuthModule.
+

@@ -18,6 +18,8 @@ import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { JwtPayload } from 'src/package/types/jwt-payload.type';
 import { LoginDto } from './dto/login.dto';
 
+import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
+
 // ─── Cookie helpers ───────────────────────────────────────────────────────────
 
 const IS_PROD = () => process.env.NODE_ENV === 'production';
@@ -61,9 +63,26 @@ export class AuthService {
     private readonly companyRepo: Repository<CompanyEntity>,
     @InjectRepository(GroupEntity)
     private readonly groupRepo: Repository<GroupEntity>,
+    @InjectRepository(GroupCapabilityEntity)
+    private readonly groupCapabilityRepo: Repository<GroupCapabilityEntity>,
   ) {}
 
   // ─── Private helpers ────────────────────────────────────────────────────────
+
+  /** Load capabilities by groupId */
+  async getGroupCapabilities(groupId: number): Promise<string[]> {
+    const mappings = await this.groupCapabilityRepo.find({
+      where: {
+        groupId,
+        status: 'Active',
+        capability: {
+          status: 'Active',
+        },
+      },
+      relations: { capability: true },
+    });
+    return mappings.map((m) => m.capability?.capabilityCode).filter(Boolean);
+  }
 
   /** Build the JWT payload from a UserEntity */
   private buildPayload(user: UserEntity): Omit<JwtPayload, 'iat' | 'exp'> {
@@ -201,9 +220,11 @@ export class AuthService {
     this.setCookies(res, accessToken, refreshToken, accessMaxAge, refreshMaxAge);
 
     const data = await this.buildSafeUser(user);
+    const capabilities = await this.getGroupCapabilities(user.groupId);
 
-    return { success: 1, message: 'Login successful', data: { ...data, token: accessToken } };
+    return { success: 1, message: 'Login successful', data: { ...data, token: accessToken, capabilities } };
   }
+
 
   
   async refresh(req: Request, res: Response) {
@@ -278,8 +299,9 @@ export class AuthService {
     this.setCookies(res, accessToken, refreshToken, accessMaxAge, refreshMaxAge);
 
     const data = await this.buildSafeUser(target);
+    const capabilities = await this.getGroupCapabilities(target.groupId);
 
-    return { success: 1, message: `Now acting as ${target.userName}`, data: { ...data, token: accessToken } };
+    return { success: 1, message: `Now acting as ${target.userName}`, data: { ...data, token: accessToken, capabilities } };
   }
 
   // ─── Change Password ─────────────────────────────────────────────────────────
@@ -335,14 +357,25 @@ export class AuthService {
       this.setCookies(res, accessToken, refreshToken, accessMaxAge, refreshMaxAge);
 
       const data = await this.buildSafeUser(user);
+      const capabilities = await this.getGroupCapabilities(user.groupId);
 
       return {
         success: 1,
         message: 'Session restored successfully',
-        data: { ...data, token: accessToken },
+        data: { ...data, token: accessToken, capabilities },
       };
     } catch (error) {
       return { success: 0, message: 'Invalid or expired session token' };
     }
   }
+
+  async getUserPermissions(req: Request) {
+    const user = req['user'];
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    const capabilities = await this.getGroupCapabilities(user.groupId);
+    return { success: 1, capabilities };
+  }
 }
+

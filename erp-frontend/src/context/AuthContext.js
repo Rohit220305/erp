@@ -8,9 +8,11 @@ const AuthContext = createContext();
 const SESSION_STACK_KEY = "sessionStack";
 const USER_KEY = "user";
 const TOKEN_KEY = "authToken";
+const CAPABILITIES_KEY = "capabilities";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [capabilities, setCapabilities] = useState([]);
   const [sessionStack, setSessionStack] = useState([]);
   const [isInitializing, setIsInitializing] = useState(true);
 
@@ -18,6 +20,7 @@ export function AuthProvider({ children }) {
     const storedUser = localStorage.getItem(USER_KEY);
     const storedStack = localStorage.getItem(SESSION_STACK_KEY);
     const storedToken = localStorage.getItem(TOKEN_KEY);
+    const storedCapabilities = localStorage.getItem(CAPABILITIES_KEY);
 
     if (storedUser) {
       const userData = JSON.parse(storedUser);
@@ -27,6 +30,9 @@ export function AuthProvider({ children }) {
         isSuperAdmin: Number(userData.isSuperAdmin) === 1,
         sub: userData.id || userData.sub,
       });
+    }
+    if (storedCapabilities) {
+      setCapabilities(JSON.parse(storedCapabilities));
     }
     if (storedStack) {
       setSessionStack(JSON.parse(storedStack));
@@ -40,9 +46,12 @@ export function AuthProvider({ children }) {
       isSuperAdmin: Number(userData.isSuperAdmin) === 1,
       sub: userData.id || userData.sub,
     };
+    const caps = userData.capabilities || [];
 
     localStorage.setItem(USER_KEY, JSON.stringify(normalizedData));
+    localStorage.setItem(CAPABILITIES_KEY, JSON.stringify(caps));
     setUser(normalizedData);
+    setCapabilities(caps);
 
     if (token) {
       localStorage.setItem(TOKEN_KEY, token);
@@ -53,7 +62,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(SESSION_STACK_KEY);
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(CAPABILITIES_KEY);
     setUser(null);
+    setCapabilities([]);
     setSessionStack([]);
   };
 
@@ -62,6 +73,7 @@ export function AuthProvider({ children }) {
       ...sessionStack,
       {
         user: user,
+        capabilities: capabilities,
         token: localStorage.getItem(TOKEN_KEY),
       },
     ];
@@ -71,9 +83,11 @@ export function AuthProvider({ children }) {
       isSuperAdmin: Number(newUserData.isSuperAdmin) === 1,
       sub: newUserData.id || newUserData.sub,
     };
+    const caps = newUserData.capabilities || [];
 
     localStorage.setItem(SESSION_STACK_KEY, JSON.stringify(newStack));
     localStorage.setItem(USER_KEY, JSON.stringify(normalizedNewData));
+    localStorage.setItem(CAPABILITIES_KEY, JSON.stringify(caps));
 
     if (newToken) {
       localStorage.setItem(TOKEN_KEY, newToken);
@@ -81,6 +95,7 @@ export function AuthProvider({ children }) {
 
     setSessionStack(newStack);
     setUser(normalizedNewData);
+    setCapabilities(caps);
   };
 
   const backToSession = async () => {
@@ -100,6 +115,11 @@ export function AuthProvider({ children }) {
     localStorage.setItem(USER_KEY, JSON.stringify(prevSession.user));
     setUser(prevSession.user);
 
+    // Restore previous capabilities
+    const prevCaps = prevSession.capabilities || [];
+    localStorage.setItem(CAPABILITIES_KEY, JSON.stringify(prevCaps));
+    setCapabilities(prevCaps);
+
     // Restore previous token if exists
     if (prevSession.token) {
       localStorage.setItem(TOKEN_KEY, prevSession.token);
@@ -112,6 +132,12 @@ export function AuthProvider({ children }) {
     return prevSession;
   };
 
+  const can = (permission) => {
+    if (user?.isSuperAdmin) return true;
+    if (!capabilities || capabilities.length === 0) return false;
+    return capabilities.includes(permission);
+  };
+
   const isImpersonating = sessionStack.length > 0;
   const canImpersonate = user?.isSuperAdmin === true;
 
@@ -119,6 +145,8 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
+        capabilities,
+        can,
         login,
         logout,
         loginAs,
@@ -141,3 +169,4 @@ export function useAuth() {
   }
   return context;
 }
+

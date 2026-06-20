@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -19,7 +19,7 @@ export class GroupService {
   private groupRepo: Repository<GroupEntity>;
 
   async startInsertGroup(req, params) {
-    const response = await this.insertGroup(params);
+    const response = await this.insertGroup(req, params);
 
     if (response.success == 1) {
       return await this.finishSuccess(response);
@@ -28,10 +28,15 @@ export class GroupService {
     return await this.finishFailure(response);
   }
 
-  async insertGroup(params) {
+  async insertGroup(req, params) {
     let return_data: any = {};
 
     try {
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin) {
+        throw new ForbiddenException('Only super admins can modify groups');
+      }
+
       const existingGroup = await this.groupRepo.findOne({
         where: {
           groupCode: params.groupCode,
@@ -48,6 +53,7 @@ export class GroupService {
       );
 
       queryColumns.addedDate = () => 'NOW()';
+      queryColumns.addedBy = req.user?.sub;
 
       const res = await this.groupRepo.insert(queryColumns);
 
@@ -59,6 +65,9 @@ export class GroupService {
         },
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
@@ -69,7 +78,7 @@ export class GroupService {
   }
 
   async startUpdateGroup(req, params) {
-    const response = await this.updateGroup(params);
+    const response = await this.updateGroup(req, params);
 
     if (response.success == 1) {
       return await this.finishSuccess(response);
@@ -78,10 +87,15 @@ export class GroupService {
     return await this.finishFailure(response);
   }
 
-  async updateGroup(params) {
+  async updateGroup(req, params) {
     let return_data: any = {};
 
     try {
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin) {
+        throw new ForbiddenException('Only super admins can modify groups');
+      }
+
       if (!params.id) {
         throw new Error('Group ID is required');
       }
@@ -114,6 +128,7 @@ export class GroupService {
       );
 
       queryColumns.updatedDate = () => 'NOW()';
+      queryColumns.updatedBy = req.user?.sub;
 
       const res = await this.groupRepo.update({ id: params.id }, queryColumns);
 
@@ -125,6 +140,9 @@ export class GroupService {
         },
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
@@ -135,7 +153,7 @@ export class GroupService {
   }
 
   async startDeleteGroup(req, params) {
-    const response = await this.deleteGroup(params);
+    const response = await this.deleteGroup(req, params);
 
     if (response.success == 1) {
       return await this.finishSuccess(response);
@@ -144,10 +162,15 @@ export class GroupService {
     return await this.finishFailure(response);
   }
 
-  async deleteGroup(params) {
+  async deleteGroup(req, params) {
     let return_data: any = {};
 
     try {
+      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      if (!isSuperAdmin) {
+        throw new ForbiddenException('Only super admins can modify groups');
+      }
+
       if (!params.id) {
         throw new Error('Group ID is required');
       }
@@ -174,6 +197,9 @@ export class GroupService {
         },
       };
     } catch (err) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
       return_data = {
         success: 0,
         message: err.message,
@@ -197,3 +223,4 @@ export class GroupService {
     return params;
   }
 }
+

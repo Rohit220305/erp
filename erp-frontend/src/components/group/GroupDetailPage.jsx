@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useHeader } from "@/context/HeaderContext";
 import { getUser } from "@/lib/api/user-api";
 import { Tag } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 function DetailRow({ label, value }) {
   return (
@@ -46,6 +47,7 @@ function AdminAvatar({ admin, companyId, onClick }) {
 export default function GroupDetailPage({ group }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
+  const { can } = useAuth();
   const [addedAdmin, setAddedAdmin] = useState(null);
   const [updatedAdmin, setUpdatedAdmin] = useState(null);
 
@@ -80,16 +82,16 @@ export default function GroupDetailPage({ group }) {
           { label: "Master", href: "/" },
           { label: "Group Master", href: "/group" },
         ],
-        actionButton: {
+        actionButton: can("GROUP_UPDATE") ? {
           label: "Edit",
           onClick: () => router.push(`/group/edit/${group.id}`),
-        },
+        } : null,
       },
     });
 
     fetchAdmins();
     return () => resetConfig();
-  }, [setConfig, router, group.id, fetchAdmins]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
+  }, [setConfig, router, group.id, fetchAdmins, resetConfig, can]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
 
   return (
     <div className="p-6">
