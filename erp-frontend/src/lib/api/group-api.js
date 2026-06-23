@@ -28,3 +28,33 @@ export async function updateGroup(data) {
 export async function deleteGroup(id) {
   return apiClient(`/group/delete-group?id=${id}`, { method: "DELETE" });
 }
+
+export async function getGroups(data = { page: 1, limit: 100, search: "" }) {
+  return listGroups(data);
+}
+
+export async function getGroupById(id) {
+  return getGroup(id);
+}
+
+export async function saveGroupWithCapabilities(payload) {
+  return apiClient("/group/save-with-capabilities", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateGroupWithCapabilities(payload) {
+  return apiClient("/group/update-with-capabilities", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getCapabilityMatrix(groupId) {
+  const url = groupId
+    ? `/group-capability/matrix?groupId=${groupId}`
+    : "/group-capability/matrix";
+  return apiClient(url, { method: "GET" });
+}
+

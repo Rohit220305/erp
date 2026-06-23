@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Tag, Calendar } from "lucide-react";
+import { Tag, Calendar, Edit, Trash2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
-export default function GroupListCard({ group }) {
+export default function GroupListCard({ group, onDelete }) {
   const router = useRouter();
+  const { can } = useAuth();
 
   const isActive = group.status === "Active" || group.status === "active";
 
@@ -54,6 +56,28 @@ export default function GroupListCard({ group }) {
         >
           {isActive ? "Active" : "Inactive"}
         </span>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1 shrink-0 ml-4" onClick={(e) => e.stopPropagation()}>
+        {can("GROUP_UPDATE") && (
+          <button
+            onClick={() => router.push(`/group/edit/${group.id}`)}
+            className="p-1.5 text-gray-400 hover:text-[#1565c0] hover:bg-gray-100 rounded transition cursor-pointer"
+            title="Edit"
+          >
+            <Edit size={15} />
+          </button>
+        )}
+        {can("GROUP_DELETE") && (
+          <button
+            onClick={() => onDelete?.(group)}
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded transition cursor-pointer"
+            title="Delete"
+          >
+            <Trash2 size={15} />
+          </button>
+        )}
       </div>
     </div>
   );

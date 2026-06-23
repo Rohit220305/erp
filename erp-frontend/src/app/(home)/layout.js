@@ -1,10 +1,17 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { ListingProvider } from "@/context/ListingContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { getCurrentUserWithCapabilities } from "@/lib/api/auth/current-user";
 
-export default function HomeLayout({ children }) {
+export default async function HomeLayout({ children }) {
+  const { user, capabilities } = await getCurrentUserWithCapabilities();
+
   return (
-    <ListingProvider>
-      <AppLayout>{children}</AppLayout>
-    </ListingProvider>
+    <AuthProvider initialUser={user} initialCapabilities={capabilities}>
+      <ListingProvider>
+        <AppLayout>{children}</AppLayout>
+      </ListingProvider>
+    </AuthProvider>
   );
 }
+

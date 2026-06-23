@@ -17,6 +17,7 @@ import {
 
 import { GroupCapabilityService } from './service/group-capability.service';
 import { GroupCapabilityListService } from './service/group-capability.list.service';
+import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
 
 @Controller('group-capability')
 export class GroupCapabilityController {
@@ -44,4 +45,11 @@ export class GroupCapabilityController {
   async listGroupCapabilities(@Req() req, @Body() body: ListGroupCapabilitiesDto) {
     return await this.groupCapabilityListService.startListGroupCapabilities(req, body);
   }
+
+  @Get('matrix')
+  @RequirePermission('GROUP_VIEW')
+  async getMatrix(@Query('groupId') groupId?: string) {
+    return await this.groupCapabilityListService.startGetMatrix(groupId ? Number(groupId) : undefined);
+  }
 }
+

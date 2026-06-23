@@ -5,12 +5,14 @@ import { useParams } from "next/navigation";
 import { getGroup } from "@/lib/api/group-api";
 import GroupForm from "@/components/group/GroupForm";
 import { useHeader } from "@/context/HeaderContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function GroupEditRoute() {
   const { id } = useParams();
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const { setConfig, resetConfig } = useHeader();
+  const { can } = useAuth();
 
   useEffect(() => {
     setConfig({
@@ -48,6 +50,14 @@ export default function GroupEditRoute() {
     fetch();
   }, [id]);
 
+  if (!can("GROUP_UPDATE")) {
+    return (
+      <div className="p-6 text-red-500 font-medium">
+        Permission Denied: You do not have the required "GROUP_UPDATE" permission to access this page.
+      </div>
+    );
+  }
+
   if (loading) return <div className="p-6 text-sm text-gray-400">Loading...</div>;
   if (!group) return <div className="p-6 text-sm text-red-500">Group not found.</div>;
 
@@ -57,3 +67,4 @@ export default function GroupEditRoute() {
     </div>
   );
 }
+

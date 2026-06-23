@@ -5,131 +5,56 @@ import { restoreSession } from "@/lib/api/auth-api";
 
 const AuthContext = createContext();
 
-const SESSION_STACK_KEY = "sessionStack";
-const USER_KEY = "user";
-const TOKEN_KEY = "authToken";
-const CAPABILITIES_KEY = "capabilities";
-
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [capabilities, setCapabilities] = useState([]);
+export function AuthProvider({ children, initialUser = null, initialCapabilities = [] }) {
+  const [user, setUser] = useState(() => {
+    if (!initialUser) return null;
+    return {
+      ...initialUser,
+      isSuperAdmin: Number(initialUser.isSuperAdmin) === 1,
+      sub: initialUser.id || initialUser.sub,
+    };
+  });
+  const [capabilities, setCapabilities] = useState(initialCapabilities || []);
   const [sessionStack, setSessionStack] = useState([]);
+  const [token, setToken] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  // Load session stack and tokens on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem(USER_KEY);
-    const storedStack = localStorage.getItem(SESSION_STACK_KEY);
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    const storedCapabilities = localStorage.getItem(CAPABILITIES_KEY);
-
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      // Normalize isSuperAdmin and ensure sub exists
-      setUser({
-        ...userData,
-        isSuperAdmin: Number(userData.isSuperAdmin) === 1,
-        sub: userData.id || userData.sub,
-      });
+    if (typeof window !== "undefined") {
+      const storedStack = localStorage.getItem("sessionStack");
+      if (storedStack) {
+        try {
+          setSessionStack(JSON.parse(storedStack));
+        } catch (e) {
+          console.error("Failed to parse sessionStack from localStorage", e);
+        }
+      }
+      const storedToken = localStorage.getItem("authToken");
+      if (storedToken) {
+        setToken(storedToken);
+      }
+      setIsInitializing(false);
     }
-    if (storedCapabilities) {
-      setCapabilities(JSON.parse(storedCapabilities));
-    }
-    if (storedStack) {
-      setSessionStack(JSON.parse(storedStack));
-    }
-    setIsInitializing(false);
   }, []);
 
-  const login = (userData, token = null) => {
-    const normalizedData = {
-      ...userData,
-      isSuperAdmin: Number(userData.isSuperAdmin) === 1,
-      sub: userData.id || userData.sub,
-    };
-    const caps = userData.capabilities || [];
-
-    localStorage.setItem(USER_KEY, JSON.stringify(normalizedData));
-    localStorage.setItem(CAPABILITIES_KEY, JSON.stringify(caps));
+  const setAuthData = (userData, userCapabilities = []) => {
+    const normalizedData = userData
+      ? {
+          ...userData,
+          isSuperAdmin: Number(userData.isSuperAdmin) === 1,
+          sub: userData.id || userData.sub,
+        }
+      : null;
     setUser(normalizedData);
-    setCapabilities(caps);
-
-    if (token) {
-      localStorage.setItem(TOKEN_KEY, token);
-    }
+    setCapabilities(userCapabilities);
   };
 
-  const logout = () => {
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(SESSION_STACK_KEY);
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(CAPABILITIES_KEY);
+  const clearAuth = () => {
     setUser(null);
     setCapabilities([]);
     setSessionStack([]);
-  };
-
-  const loginAs = (newUserData, newToken = null) => {
-    const newStack = [
-      ...sessionStack,
-      {
-        user: user,
-        capabilities: capabilities,
-        token: localStorage.getItem(TOKEN_KEY),
-      },
-    ];
-
-    const normalizedNewData = {
-      ...newUserData,
-      isSuperAdmin: Number(newUserData.isSuperAdmin) === 1,
-      sub: newUserData.id || newUserData.sub,
-    };
-    const caps = newUserData.capabilities || [];
-
-    localStorage.setItem(SESSION_STACK_KEY, JSON.stringify(newStack));
-    localStorage.setItem(USER_KEY, JSON.stringify(normalizedNewData));
-    localStorage.setItem(CAPABILITIES_KEY, JSON.stringify(caps));
-
-    if (newToken) {
-      localStorage.setItem(TOKEN_KEY, newToken);
-    }
-
-    setSessionStack(newStack);
-    setUser(normalizedNewData);
-    setCapabilities(caps);
-  };
-
-  const backToSession = async () => {
-    if (sessionStack.length === 0) return null;
-
-    const prevSession = sessionStack[sessionStack.length - 1];
-    const newStack = sessionStack.slice(0, -1);
-
-    if (prevSession.token) {
-      const res = await restoreSession(prevSession.token);
-      if (!res || res.success !== 1) {
-        throw new Error(res?.message || "Failed to restore backend session");
-      }
-    }
-
-    // Restore previous user
-    localStorage.setItem(USER_KEY, JSON.stringify(prevSession.user));
-    setUser(prevSession.user);
-
-    // Restore previous capabilities
-    const prevCaps = prevSession.capabilities || [];
-    localStorage.setItem(CAPABILITIES_KEY, JSON.stringify(prevCaps));
-    setCapabilities(prevCaps);
-
-    // Restore previous token if exists
-    if (prevSession.token) {
-      localStorage.setItem(TOKEN_KEY, prevSession.token);
-    }
-
-    // Update stack
-    localStorage.setItem(SESSION_STACK_KEY, JSON.stringify(newStack));
-    setSessionStack(newStack);
-
-    return prevSession;
+    setToken(null);
   };
 
   const can = (permission) => {
@@ -138,6 +63,72 @@ export function AuthProvider({ children }) {
     return capabilities.includes(permission);
   };
 
+  const login = (userData, userToken = null) => {
+    setAuthData(userData, userData.capabilities || []);
+    if (userToken) {
+      setToken(userToken);
+      localStorage.setItem("authToken", userToken);
+    }
+  };
+
+  const logout = () => {
+    clearAuth();
+    localStorage.removeItem("sessionStack");
+    localStorage.removeItem("authToken");
+  };
+
+  const loginAs = (newUserData, newToken = null) => {
+    const currentToken = localStorage.getItem("authToken") || token;
+    const newStack = [
+      ...sessionStack,
+      {
+        user: user,
+        capabilities: capabilities,
+        token: currentToken,
+      },
+    ];
+
+    setSessionStack(newStack);
+    localStorage.setItem("sessionStack", JSON.stringify(newStack));
+
+    setAuthData(newUserData, newUserData.capabilities || []);
+    if (newToken) {
+      setToken(newToken);
+      localStorage.setItem("authToken", newToken);
+    }
+  };
+
+  const backToSession = async () => {
+    if (sessionStack.length === 0) return null;
+
+    const prevSession = sessionStack[sessionStack.length - 1];
+    const newStack = sessionStack.slice(0, -1);
+    
+    if (prevSession.token) {
+      const res = await restoreSession(prevSession.token);
+      if (!res || res.success !== 1) {
+        logout();
+        window.location.href = "/login";
+        throw new Error(res?.message || "Failed to restore backend session");
+      }
+    }
+
+    setSessionStack(newStack);
+    localStorage.setItem("sessionStack", JSON.stringify(newStack));
+
+    setAuthData(prevSession.user, prevSession.capabilities);
+    if (prevSession.token) {
+      setToken(prevSession.token);
+      localStorage.setItem("authToken", prevSession.token);
+    } else {
+      setToken(null);
+      localStorage.removeItem("authToken");
+    }
+
+    return prevSession;
+  };
+
+  const isAuthenticated = !!user;
   const isImpersonating = sessionStack.length > 0;
   const canImpersonate = user?.isSuperAdmin === true;
 
@@ -146,7 +137,10 @@ export function AuthProvider({ children }) {
       value={{
         user,
         capabilities,
+        isAuthenticated,
         can,
+        setAuthData,
+        clearAuth,
         login,
         logout,
         loginAs,
@@ -169,4 +163,3 @@ export function useAuth() {
   }
   return context;
 }
-

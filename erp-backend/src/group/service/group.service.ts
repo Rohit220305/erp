@@ -1,8 +1,11 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 
 import { GroupEntity } from '../entity/group.entity';
+import { CapabilityEntity } from 'src/capability/entity/capability.entity';
+import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
+import { PermissionCacheService } from 'src/auth/permission.cache.service';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
@@ -13,10 +16,142 @@ import {
 
 @Injectable()
 export class GroupService {
-  constructor(private readonly general: GeneralUtilities) {}
+  constructor(
+    private readonly general: GeneralUtilities,
+    @InjectRepository(GroupEntity)
+    private readonly groupRepo: Repository<GroupEntity>,
+    private readonly permissionCacheService: PermissionCacheService,
+    private readonly dataSource: DataSource,
+  ) {}
 
-  @InjectRepository(GroupEntity)
-  private groupRepo: Repository<GroupEntity>;
+  async startSaveWithCapabilities(req, params) {
+    const response = await this.saveWithCapabilities(req, params);
+
+    if (response.success == 1) {
+      return await this.finishSuccess(response);
+    }
+
+    return await this.finishFailure(response);
+  }
+
+  async saveWithCapabilities(req, params) {
+    let return_data: any = {};
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const { id, groupName, groupCode, status, capabilityCodes } = params;
+      const userId = req.user?.sub;
+
+      let groupId = id;
+
+      // 1. Group validation & insert/update
+      if (id) {
+        // Update mode
+        const group = await queryRunner.manager.findOne(GroupEntity, {
+          where: { id },
+        });
+
+        if (!group) {
+          throw new Error('Group not found');
+        }
+
+        // Check code uniqueness if changing code
+        if (groupCode !== group.groupCode) {
+          const codeExists = await queryRunner.manager.findOne(GroupEntity, {
+            where: { groupCode },
+          });
+          if (codeExists) {
+            throw new Error('Group Code already exists');
+          }
+        }
+
+        await queryRunner.manager.update(
+          GroupEntity,
+          { id },
+          {
+            groupName,
+            groupCode,
+            status,
+            updatedBy: userId,
+            updatedDate: () => 'NOW()',
+          },
+        );
+      } else {
+        // Add mode
+        const codeExists = await queryRunner.manager.findOne(GroupEntity, {
+          where: { groupCode },
+        });
+        if (codeExists) {
+          throw new Error('Group Code already exists');
+        }
+
+        const insertRes = await queryRunner.manager.insert(GroupEntity, {
+          groupName,
+          groupCode,
+          status,
+          addedBy: userId,
+          addedDate: () => 'NOW()',
+        });
+        groupId = insertRes.raw.insertId;
+      }
+
+      // 2. Fetch Capability IDs for the provided codes
+      // Reject if any capability code is invalid
+      let capabilityIds: number[] = [];
+      if (capabilityCodes && capabilityCodes.length > 0) {
+        const capabilities = await queryRunner.manager.find(CapabilityEntity, {
+          where: capabilityCodes.map((code) => ({ capabilityCode: code, status: 'Active' })),
+        });
+
+        if (capabilities.length !== capabilityCodes.length) {
+          throw new Error('One or more invalid or inactive capability codes provided');
+        }
+        capabilityIds = capabilities.map((c) => c.id);
+      }
+
+      // 3. Delete existing capabilities for the group
+      await queryRunner.manager.delete(GroupCapabilityEntity, { groupId });
+
+      // 4. Insert new capability mappings
+      if (capabilityIds.length > 0) {
+        const mappings = capabilityIds.map((capId) => ({
+          groupId,
+          capabilityId: capId,
+          status: 'Active',
+          addedBy: userId,
+          addedDate: () => 'NOW()',
+        }));
+        await queryRunner.manager.insert(GroupCapabilityEntity, mappings);
+      }
+
+      // Commit transaction
+      await queryRunner.commitTransaction();
+
+      // 5. Invalidate permission cache
+      await this.permissionCacheService.invalidatePermissions(groupId);
+
+      return_data = {
+        success: 1,
+        message: id ? 'Group Updated Successfully.' : 'Group Added Successfully.',
+        data: {
+          id: groupId,
+        },
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      return_data = {
+        success: 0,
+        message: err.message,
+      };
+    } finally {
+      await queryRunner.release();
+    }
+
+    return return_data;
+  }
 
   async startInsertGroup(req, params) {
     const response = await this.insertGroup(req, params);

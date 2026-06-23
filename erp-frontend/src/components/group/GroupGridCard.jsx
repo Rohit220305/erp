@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { Tag, Calendar, ExternalLink } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
-export default function GroupGridCard({ group }) {
+export default function GroupGridCard({ group, onDelete }) {
   const router = useRouter();
+  const { can } = useAuth();
   const isActive = group.status === "Active" || group.status === "active";
-  console.log("Rendering GroupGridCard for group:", group);   
+
   return (
     <div
       onClick={() => router.push(`/group/${group.id}`)}
@@ -49,9 +51,27 @@ export default function GroupGridCard({ group }) {
           <Calendar size={11} />
           <span>{group.addedDateFormatted || "—"}</span>
         </div>
-        <span className="text-xs text-[#1565c0] font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          View <ExternalLink size={11} />
-        </span>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {can("GROUP_UPDATE") && (
+            <button
+              onClick={() => router.push(`/group/edit/${group.id}`)}
+              className="text-[#1565c0] hover:text-[#0f57a6] font-medium text-xs border border-[#1565c0]/15 rounded px-2 py-0.5 bg-[#1565c0]/5 hover:bg-[#1565c0]/10 transition cursor-pointer"
+            >
+              Edit
+            </button>
+          )}
+          {can("GROUP_DELETE") && (
+            <button
+              onClick={() => onDelete?.(group)}
+              className="text-red-600 hover:text-red-700 font-medium text-xs border border-red-200 rounded px-2 py-0.5 bg-red-50 hover:bg-red-100 transition cursor-pointer"
+            >
+              Delete
+            </button>
+          )}
+          <span className="text-xs text-[#1565c0] font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            View <ExternalLink size={11} />
+          </span>
+        </div>
       </div>
     </div>
   );

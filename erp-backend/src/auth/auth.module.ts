@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 
 import { AuthGuard } from './auth.guard';
 import { PermissionGuard } from './permission.guard';
+import { PermissionCacheService } from './permission.cache.service';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { UserEntity } from 'src/user/entity/user.entity';
 import { CompanyEntity } from 'src/company/entity/company.entity';
@@ -25,6 +26,7 @@ import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.en
     AuthService,
     GeneralUtilities,
     Reflector,
+    PermissionCacheService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
@@ -34,7 +36,7 @@ import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.en
       useClass: PermissionGuard,
     },
   ],
-  exports: [AuthService],
+  exports: [AuthService, PermissionCacheService],
 })
 export class AuthModule {}
 

@@ -74,6 +74,12 @@ export class AuthController {
     return this.authService.getUserPermissions(req);
   }
 
+  @Get('me-with-capabilities')
+  async getMeWithCapabilities(@Req() req: Request) {
+    return this.authService.getMeWithCapabilities(req);
+  }
+
+
   @Public()
   @Post('restore-session')
   async restoreSession(

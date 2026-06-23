@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
 import { REQUIRE_PERMISSION_KEY } from 'src/package/decorator/require-permission.decorator';
+import { PermissionCacheService } from './permission.cache.service';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -16,6 +17,7 @@ export class PermissionGuard implements CanActivate {
     private readonly reflector: Reflector,
     @InjectRepository(GroupCapabilityEntity)
     private readonly groupCapabilityRepo: Repository<GroupCapabilityEntity>,
+    private readonly permissionCacheService: PermissionCacheService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -39,25 +41,39 @@ export class PermissionGuard implements CanActivate {
     request.user.companyId = user.companyId;
 
     // Bypass check if user is a Super Admin
-    // user.isSuperAdmin can be checking both numeric/boolean values safely
     if (user.isSuperAdmin === 1 || user.isSuperAdmin === true) {
       return true;
     }
 
-    const mappings = await this.groupCapabilityRepo.find({
-      where: {
-        groupId: user.groupId,
-        status: 'Active',
-        capability: {
-          status: 'Active',
-        },
-      },
-      relations: { capability: true },
-    });
+    // Caching check
+    const cached = await this.permissionCacheService.getPermissions(user.groupId);
+    let userPermissions: string[] = [];
 
-    const userPermissions = mappings
-      .map((m) => m.capability?.capabilityCode)
-      .filter(Boolean);
+    if (cached !== null) {
+      userPermissions = cached;
+    } else {
+      const mappings = await this.groupCapabilityRepo.find({
+        where: {
+          groupId: user.groupId,
+          status: 'Active',
+          capability: {
+            status: 'Active',
+          },
+        },
+        relations: { capability: true },
+      });
+
+      userPermissions = mappings
+        .map((m) => m.capability?.capabilityCode)
+        .filter(Boolean)
+        .map((code) => {
+          if (code.endsWith('_ADD')) return code.replace('_ADD', '_CREATE');
+          if (code.endsWith('_EDIT')) return code.replace('_EDIT', '_UPDATE');
+          return code;
+        });
+
+      await this.permissionCacheService.setPermissions(user.groupId, userPermissions);
+    }
 
     if (userPermissions.includes(requiredPermission)) {
       return true;
@@ -66,3 +82,4 @@ export class PermissionGuard implements CanActivate {
     throw new ForbiddenException('Insufficient permissions');
   }
 }
+

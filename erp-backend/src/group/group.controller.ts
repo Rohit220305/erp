@@ -16,6 +16,7 @@ import {
   GroupListDto,
   GroupUpdateDto,
 } from './dto/group.dto';
+import { SaveGroupWithCapabilitiesDto } from './dto/save-group-with-capabilities.dto';
 
 import { GroupService } from './service/group.service';
 import { GroupListService } from './service/group.list.service';
@@ -56,6 +57,18 @@ export class GroupController {
   @RequirePermission('GROUP_VIEW')
   async listGroup(@Req() req, @Body() body: GroupListDto) {
     return await this.groupListService.startGroupList(req, body);
+  }
+
+  @Post('save-with-capabilities')
+  @RequirePermission('GROUP_CREATE')
+  async saveWithCapabilities(@Req() req, @Body() body: SaveGroupWithCapabilitiesDto) {
+    return await this.groupService.startSaveWithCapabilities(req, body);
+  }
+
+  @Put('update-with-capabilities')
+  @RequirePermission('GROUP_UPDATE')
+  async updateWithCapabilities(@Req() req, @Body() body: SaveGroupWithCapabilitiesDto) {
+    return await this.groupService.startSaveWithCapabilities(req, body);
   }
 }
 

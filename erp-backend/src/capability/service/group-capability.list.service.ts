@@ -3,14 +3,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { GroupCapabilityEntity } from '../entity/group-capability.entity';
+import { CapabilityEntity } from '../entity/capability.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
 @Injectable()
 export class GroupCapabilityListService {
-  constructor(private readonly general: GeneralUtilities) {}
-
-  @InjectRepository(GroupCapabilityEntity)
-  private groupCapabilityRepo: Repository<GroupCapabilityEntity>;
+  constructor(
+    private readonly general: GeneralUtilities,
+    @InjectRepository(GroupCapabilityEntity)
+    private readonly groupCapabilityRepo: Repository<GroupCapabilityEntity>,
+    @InjectRepository(CapabilityEntity)
+    private readonly capabilityRepo: Repository<CapabilityEntity>,
+  ) {}
 
   async startGetByGroup(params) {
     const response = await this.getByGroup(params);
@@ -134,6 +138,53 @@ export class GroupCapabilityListService {
     return return_data;
   }
 
+  async startGetMatrix(groupId?: number) {
+    const response = await this.getMatrix(groupId);
+    if (response.success === 1) {
+      return await this.finishSuccess(response);
+    }
+    return await this.finishFailure(response);
+  }
+
+  async getMatrix(groupId?: number) {
+    let return_data: any = {};
+    try {
+      const allCapabilities = await this.capabilityRepo.find({
+        where: { status: 'Active' },
+        order: { moduleName: 'ASC', actionName: 'ASC' },
+      });
+
+      let assignedCapIds = new Set<number>();
+      if (groupId) {
+        const mappings = await this.groupCapabilityRepo.find({
+          where: { groupId, status: 'Active' },
+        });
+        assignedCapIds = new Set(mappings.map((m) => m.capabilityId));
+      }
+
+      const matrix = allCapabilities.map((cap) => ({
+        id: cap.id,
+        moduleName: cap.moduleName,
+        capabilityCode: cap.capabilityCode,
+        capabilityName: cap.capabilityName,
+        actionName: cap.actionName,
+        assigned: assignedCapIds.has(cap.id),
+      }));
+
+      return_data = {
+        success: 1,
+        message: 'Capability matrix retrieved successfully',
+        data: matrix,
+      };
+    } catch (err) {
+      return_data = {
+        success: 0,
+        message: err.message,
+      };
+    }
+    return return_data;
+  }
+
   async finishSuccess(params) {
     return {
       settings: {
@@ -148,3 +199,4 @@ export class GroupCapabilityListService {
     return params;
   }
 }
+

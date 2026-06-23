@@ -169,20 +169,25 @@ export default function GroupListPage() {
     }
   }, [deleteTarget, fetchGroups]);
 
-  const headers = useMemo(() => [
-    { label: "Group Code", key: "groupCode" },
-    { label: "Group Name", key: "groupName" },
-    { label: "Description", key: "description" },
-    { label: "Status", key: "status" },
-    { label: "Added Date", key: "addedDateFormatted" },
-    
-  ], []);
+  const headers = useMemo(() => {
+    const list = [
+      { label: "Group Code", key: "groupCode" },
+      { label: "Group Name", key: "groupName" },
+      { label: "Description", key: "description" },
+      { label: "Status", key: "status" },
+      { label: "Added Date", key: "addedDateFormatted" },
+    ];
+    if (can("GROUP_UPDATE") || can("GROUP_DELETE")) {
+      list.push({ label: "Actions", key: "actions" });
+    }
+    return list;
+  }, [can]);
 
   const renderCell = useCallback((item, key) => {
     if (key === "groupName") {
       return (
         <p
-          className="font-medium text-[#1565c0] hover:underline cursor-pointer"
+          className="font-medium text-[#1565c0] hover:underline cursor-pointer text-sm"
           onClick={() => router.push(`/group/${item.id}`)}
         >
           {item.groupName || "-"}
@@ -202,11 +207,41 @@ export default function GroupListPage() {
     if (key === "description") {
       return <span className="text-gray-500 text-sm">{item.description || "-"}</span>;
     }
+    if (key === "actions") {
+      return (
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {can("GROUP_UPDATE") && (
+            <button
+              onClick={() => router.push(`/group/edit/${item.id}`)}
+              className="text-[#1565c0] hover:text-[#0f57a6] font-medium text-xs border border-[#1565c0]/15 rounded px-2.5 py-1 bg-[#1565c0]/5 hover:bg-[#1565c0]/10 transition cursor-pointer"
+            >
+              Edit
+            </button>
+          )}
+          {can("GROUP_DELETE") && (
+            <button
+              onClick={() => setDeleteTarget(item)}
+              className="text-red-600 hover:text-red-700 font-medium text-xs border border-red-200 rounded px-2.5 py-1 bg-red-50 hover:bg-red-100 transition cursor-pointer"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      );
+    }
     
     return item[key] || "-";
-  }, [router]);
+  }, [router, can]);
 
   if (loading) return <div className="px-6"><TableSkeleton rows={8} cols={6} /></div>;
+
+  if (!can("GROUP_VIEW")) {
+    return (
+      <div className="p-10 text-center text-red-500 font-semibold text-sm">
+        Permission Denied: You do not have the required "GROUP_VIEW" permission to access this page.
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-full px-6">
@@ -215,8 +250,8 @@ export default function GroupListPage() {
         data={groups}
         headers={headers}
         renderCell={renderCell}
-        renderListCard={(g) => <GroupListCard key={g.id} group={g} />}
-        renderGridCard={(g) => <GroupGridCard key={g.id} group={g} />}
+        renderListCard={(g) => <GroupListCard key={g.id} group={g} onDelete={setDeleteTarget} />}
+        renderGridCard={(g) => <GroupGridCard key={g.id} group={g} onDelete={setDeleteTarget} />}
       />
 
       <FilterDrawer

@@ -19,6 +19,7 @@ import { JwtPayload } from 'src/package/types/jwt-payload.type';
 import { LoginDto } from './dto/login.dto';
 
 import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
+import { PermissionCacheService } from './permission.cache.service';
 
 // ─── Cookie helpers ───────────────────────────────────────────────────────────
 
@@ -65,12 +66,18 @@ export class AuthService {
     private readonly groupRepo: Repository<GroupEntity>,
     @InjectRepository(GroupCapabilityEntity)
     private readonly groupCapabilityRepo: Repository<GroupCapabilityEntity>,
+    private readonly permissionCacheService: PermissionCacheService,
   ) {}
 
   // ─── Private helpers ────────────────────────────────────────────────────────
 
   /** Load capabilities by groupId */
   async getGroupCapabilities(groupId: number): Promise<string[]> {
+    const cached = await this.permissionCacheService.getPermissions(groupId);
+    if (cached !== null) {
+      return cached;
+    }
+
     const mappings = await this.groupCapabilityRepo.find({
       where: {
         groupId,
@@ -81,7 +88,18 @@ export class AuthService {
       },
       relations: { capability: true },
     });
-    return mappings.map((m) => m.capability?.capabilityCode).filter(Boolean);
+
+    const permissions = mappings
+      .map((m) => m.capability?.capabilityCode)
+      .filter(Boolean)
+      .map((code) => {
+        if (code.endsWith('_ADD')) return code.replace('_ADD', '_CREATE');
+        if (code.endsWith('_EDIT')) return code.replace('_EDIT', '_UPDATE');
+        return code;
+      });
+
+    await this.permissionCacheService.setPermissions(groupId, permissions);
+    return permissions;
   }
 
   /** Build the JWT payload from a UserEntity */
@@ -376,6 +394,26 @@ export class AuthService {
     }
     const capabilities = await this.getGroupCapabilities(user.groupId);
     return { success: 1, capabilities };
+  }
+
+  async getMeWithCapabilities(req: Request) {
+    const userPayload = req['user'];
+    if (!userPayload) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    const user = await this.userRepo.findOne({ where: { id: userPayload.sub } });
+    if (!user || user.status !== 'Active') {
+      throw new UnauthorizedException('User not found or inactive');
+    }
+    const safeUser = await this.buildSafeUser(user);
+    const capabilities = await this.getGroupCapabilities(user.groupId);
+    return {
+      success: 1,
+      data: {
+        user: safeUser,
+        capabilities,
+      },
+    };
   }
 }
 
