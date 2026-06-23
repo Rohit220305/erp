@@ -127,9 +127,9 @@ export class AuthService {
     const payload = this.buildPayload(user);
 
     const accessExpires =
-      (this.config.get<string>('JWT_ACCESS_EXPIRES') ?? '15m');
+      this.config.get<string>('JWT_ACCESS_EXPIRES') ?? '15m';
     const refreshExpires =
-      (this.config.get<string>('JWT_REFRESH_EXPIRES') ?? '7d');
+      this.config.get<string>('JWT_REFRESH_EXPIRES') ?? '7d';
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.config.getOrThrow<string>('JWT_SECRET'),
@@ -202,7 +202,11 @@ export class AuthService {
     refreshMaxAge: number,
   ): void {
     res.cookie('accessToken', accessToken, accessCookieOptions(accessMaxAge));
-    res.cookie('refreshToken', refreshToken, refreshCookieOptions(refreshMaxAge));
+    res.cookie(
+      'refreshToken',
+      refreshToken,
+      refreshCookieOptions(refreshMaxAge),
+    );
   }
 
   // ─── Login ──────────────────────────────────────────────────────────────────
@@ -230,21 +234,32 @@ export class AuthService {
     console.log(`User ${user.userName} authenticated successfully`);
 
     // Update last login timestamp
-    await this.userRepo.update({ id: user.id }, { lastLoginDate: () => 'NOW()' as any });
+    await this.userRepo.update(
+      { id: user.id },
+      { lastLoginDate: () => 'NOW()' as any },
+    );
 
     const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
       this.generateTokens(user);
 
-    this.setCookies(res, accessToken, refreshToken, accessMaxAge, refreshMaxAge);
+    this.setCookies(
+      res,
+      accessToken,
+      refreshToken,
+      accessMaxAge,
+      refreshMaxAge,
+    );
 
     const data = await this.buildSafeUser(user);
     const capabilities = await this.getGroupCapabilities(user.groupId);
 
-    return { success: 1, message: 'Login successful', data: { ...data, token: accessToken, capabilities } };
+    return {
+      success: 1,
+      message: 'Login successful',
+      data: { ...data, token: accessToken, capabilities },
+    };
   }
 
-
-  
   async refresh(req: Request, res: Response) {
     const refreshToken = req.cookies?.refreshToken;
 
@@ -263,7 +278,9 @@ export class AuthService {
       res.clearCookie('refreshToken');
 
       if (error.name === 'TokenExpiredError') {
-        throw new UnauthorizedException('Session expired. Please log in again.');
+        throw new UnauthorizedException(
+          'Session expired. Please log in again.',
+        );
       }
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -282,7 +299,13 @@ export class AuthService {
       refreshMaxAge,
     } = this.generateTokens(user);
 
-    this.setCookies(res, newAccessToken, newRefreshToken, accessMaxAge, refreshMaxAge);
+    this.setCookies(
+      res,
+      newAccessToken,
+      newRefreshToken,
+      accessMaxAge,
+      refreshMaxAge,
+    );
 
     return { success: 1, message: 'Token refreshed' };
   }
@@ -314,12 +337,22 @@ export class AuthService {
     const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
       this.generateTokens(target);
 
-    this.setCookies(res, accessToken, refreshToken, accessMaxAge, refreshMaxAge);
+    this.setCookies(
+      res,
+      accessToken,
+      refreshToken,
+      accessMaxAge,
+      refreshMaxAge,
+    );
 
     const data = await this.buildSafeUser(target);
     const capabilities = await this.getGroupCapabilities(target.groupId);
 
-    return { success: 1, message: `Now acting as ${target.userName}`, data: { ...data, token: accessToken, capabilities } };
+    return {
+      success: 1,
+      message: `Now acting as ${target.userName}`,
+      data: { ...data, token: accessToken, capabilities },
+    };
   }
 
   // ─── Change Password ─────────────────────────────────────────────────────────
@@ -345,7 +378,9 @@ export class AuthService {
     }
 
     if (newPassword !== confirmPassword) {
-      throw new UnauthorizedException('New password and confirm password do not match');
+      throw new UnauthorizedException(
+        'New password and confirm password do not match',
+      );
     }
 
     const hashed = await bcrypt.hash(newPassword, 10);
@@ -372,7 +407,13 @@ export class AuthService {
       const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
         this.generateTokens(user);
 
-      this.setCookies(res, accessToken, refreshToken, accessMaxAge, refreshMaxAge);
+      this.setCookies(
+        res,
+        accessToken,
+        refreshToken,
+        accessMaxAge,
+        refreshMaxAge,
+      );
 
       const data = await this.buildSafeUser(user);
       const capabilities = await this.getGroupCapabilities(user.groupId);
@@ -396,12 +437,14 @@ export class AuthService {
     return { success: 1, capabilities };
   }
 
-  async getMeWithCapabilities(req: Request) {
+  async getProfileWithCapabilities(req: Request) {
     const userPayload = req['user'];
     if (!userPayload) {
       throw new UnauthorizedException('User not authenticated');
     }
-    const user = await this.userRepo.findOne({ where: { id: userPayload.sub } });
+    const user = await this.userRepo.findOne({
+      where: { id: userPayload.sub },
+    });
     if (!user || user.status !== 'Active') {
       throw new UnauthorizedException('User not found or inactive');
     }

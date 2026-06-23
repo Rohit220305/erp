@@ -24,7 +24,7 @@ export class UserListService {
 
   async startUserDetails(req, params) {
     const response = await this.getUserDetails(req, params);
-
+    console.log('response', response);
     if (response.success == 1) {
        return await this.finishSuccess(response);
     }
@@ -45,6 +45,7 @@ export class UserListService {
           id: params.id,
         },
       });
+      console.log('user', user);
 
       if (!user) {
         throw new Error('User not found');
@@ -55,7 +56,6 @@ export class UserListService {
       if (!isSuperAdmin && user.companyId !== req.user.companyId) {
         throw new ForbiddenException('Cannot view user outside your company');
       }
-
       /**
        * Company Name
        */

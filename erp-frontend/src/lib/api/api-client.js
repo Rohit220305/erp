@@ -59,7 +59,18 @@ export async function apiClient(path, options = {}) {
       } else {
         // Refresh failed — redirect to login on client, return null on server
         if (typeof window !== "undefined") {
+          localStorage.removeItem("sessionStack");
+          localStorage.removeItem("authToken");
           window.location.href = "/login";
+        } else {
+          try {
+            const { redirect } = await import("next/navigation");
+            redirect("/login");
+          } catch (err) {
+            if (err && err.message && err.message.includes("NEXT_REDIRECT")) {
+              throw err;
+            }
+          }
         }
         return null;
       }
@@ -70,7 +81,18 @@ export async function apiClient(path, options = {}) {
 
   if (res.status === 401) {
     if (typeof window !== "undefined") {
+      localStorage.removeItem("sessionStack");
+      localStorage.removeItem("authToken");
       window.location.href = "/login";
+    } else {
+      try {
+        const { redirect } = await import("next/navigation");
+        redirect("/login");
+      } catch (err) {
+        if (err && err.message && err.message.includes("NEXT_REDIRECT")) {
+          throw err;
+        }
+      }
     }
     return null;
   }

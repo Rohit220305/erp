@@ -1,8 +1,8 @@
-import { z } from "zod";
+const { z } = require("zod");
 
 const phoneRegex = /^[0-9]{6,15}$/;
 
-export const userAddSchema = z.object({
+const userAddSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters").max(100),
   lastName: z.string().min(2, "Last name must be at least 2 characters").max(100),
   userName: z.string().min(3, "Username must be at least 3 characters").max(100).regex(/^[a-zA-Z0-9._-]+$/, "Username can only contain letters, numbers, dots, hyphens and underscores"),
@@ -13,12 +13,30 @@ export const userAddSchema = z.object({
   dialCode: z.string().optional(),
   phone: z.string().regex(phoneRegex, "Enter a valid phone number").optional().or(z.literal("")),
   status: z.enum(["Active", "InActive"]).default("Active"),
-  isSuperAdmin: z.coerce.boolean().default(false),
+  isSuperAdmin: z.boolean().default(false),
 });
 
-export const userEditSchema = userAddSchema
+const userEditSchema = userAddSchema
   .omit({ password: true })
   .extend({
     id: z.coerce.number({ required_error: "User ID is required" }),
     password: z.string().min(5, "Password must be at least 6 characters").optional().or(z.literal("")),
   });
+
+const testData = {
+  id: "1",
+  firstName: "John",
+  lastName: "Doe",
+  userName: "johndoe",
+  email: "john@example.com",
+  password: "",
+  companyId: "1",
+  groupId: "1",
+  dialCode: "+1",
+  phone: "1234567890",
+  status: "Active",
+  isSuperAdmin: false
+};
+
+const res = userEditSchema.safeParse(testData);
+console.log(res.success ? "Success" : res.error.errors);

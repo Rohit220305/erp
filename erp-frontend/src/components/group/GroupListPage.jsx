@@ -177,9 +177,9 @@ export default function GroupListPage() {
       { label: "Status", key: "status" },
       { label: "Added Date", key: "addedDateFormatted" },
     ];
-    if (can("GROUP_UPDATE") || can("GROUP_DELETE")) {
-      list.push({ label: "Actions", key: "actions" });
-    }
+    // if (can("GROUP_UPDATE") || can("GROUP_DELETE")) {
+    //   list.push({ label: "Actions", key: "actions" });
+    // }
     return list;
   }, [can]);
 
@@ -207,28 +207,28 @@ export default function GroupListPage() {
     if (key === "description") {
       return <span className="text-gray-500 text-sm">{item.description || "-"}</span>;
     }
-    if (key === "actions") {
-      return (
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          {can("GROUP_UPDATE") && (
-            <button
-              onClick={() => router.push(`/group/edit/${item.id}`)}
-              className="text-[#1565c0] hover:text-[#0f57a6] font-medium text-xs border border-[#1565c0]/15 rounded px-2.5 py-1 bg-[#1565c0]/5 hover:bg-[#1565c0]/10 transition cursor-pointer"
-            >
-              Edit
-            </button>
-          )}
-          {can("GROUP_DELETE") && (
-            <button
-              onClick={() => setDeleteTarget(item)}
-              className="text-red-600 hover:text-red-700 font-medium text-xs border border-red-200 rounded px-2.5 py-1 bg-red-50 hover:bg-red-100 transition cursor-pointer"
-            >
-              Delete
-            </button>
-          )}
-        </div>
-      );
-    }
+    // if (key === "actions") {
+    //   return (
+    //     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+    //       {can("GROUP_UPDATE") && (
+    //         <button
+    //           onClick={() => router.push(`/group/edit/${item.id}`)}
+    //           className="text-[#1565c0] hover:text-[#0f57a6] font-medium text-xs border border-[#1565c0]/15 rounded px-2.5 py-1 bg-[#1565c0]/5 hover:bg-[#1565c0]/10 transition cursor-pointer"
+    //         >
+    //           Edit
+    //         </button>
+    //       )}
+    //       {can("GROUP_DELETE") && (
+    //         <button
+    //           onClick={() => setDeleteTarget(item)}
+    //           className="text-red-600 hover:text-red-700 font-medium text-xs border border-red-200 rounded px-2.5 py-1 bg-red-50 hover:bg-red-100 transition cursor-pointer"
+    //         >
+    //           Delete
+    //         </button>
+    //       )}
+    //     </div>
+    //   );
+    // }
     
     return item[key] || "-";
   }, [router, can]);

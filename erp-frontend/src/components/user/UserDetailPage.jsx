@@ -128,7 +128,7 @@ export default function UserDetailPage({ user }) {
         } : null,
       },
     });
-    fetchAdmins();
+    if (currentUser?.isSuperAdmin ) {fetchAdmins();}
     return () => resetConfig();
   }, [setConfig, router, user.id, fetchAdmins, resetConfig, can]);
 
@@ -200,7 +200,7 @@ export default function UserDetailPage({ user }) {
   // Can impersonate if: current user is super admin AND viewing someone else
   const canLoginAsThisUser = canImpersonate && currentUser?.sub !== user.id;
   // Add right after the useAuth() call
-  
+  console.log("Current User:", currentUser);
   return (
     <div className="p-6">
       {/* Impersonation Banner - Shows when user is impersonating */}
@@ -240,7 +240,7 @@ export default function UserDetailPage({ user }) {
 
             <hr className="my-4" />
 
-            <button className="w-full bg-[#1565c0] text-white py-2.5 rounded-lg text-sm font-medium mb-2">
+            <button className="w-full bg-[#1565c0] text-white py-2.5 rounded-lg text-sm font-medium mb-2 cursor-pointer">
               Summary
             </button>
 
@@ -249,7 +249,7 @@ export default function UserDetailPage({ user }) {
               <button
                 onClick={handleLoginAs}
                 disabled={loginAsLoading || isImpersonating}
-                className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full flex items-center cursor-pointer justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed"
                 title={
                   isImpersonating
                     ? "Return to previous session first"
@@ -326,35 +326,39 @@ export default function UserDetailPage({ user }) {
             </div>
 
             {/* Added / Updated */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                <h3 className="font-semibold mb-5">Added Info</h3>
-                <AdminLink
-                  admin={addedAdmin}
-                  onClick={() =>
-                    user.addedBy && router.push(`/admin/${user.addedBy}`)
-                  }
-                />
-                <p className="text-xs text-gray-400 mt-2">
-                  {user.addedDateFormatted || "-"}
-                </p>
-              </div>
 
-              {user.updatedBy && (
-                <div className="bg-white rounded-xl p-6 hover:shadow-lg transition">
-                  <h3 className="font-semibold mb-5">Updated Info</h3>
+            {currentUser?.isSuperAdmin && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+                  <h3 className="font-semibold mb-5">Added Info</h3>
                   <AdminLink
-                    admin={updatedAdmin}
+                    admin={addedAdmin}
                     onClick={() =>
-                      user.updatedBy && router.push(`/admin/${user.updatedBy}`)
+                      user.addedBy && router.push(`/admin/${user.addedBy}`)
                     }
                   />
                   <p className="text-xs text-gray-400 mt-2">
-                    {user.updatedDateFormatted || "-"}
+                    {user.addedDateFormatted || "-"}
                   </p>
                 </div>
-              )}
-            </div>
+
+                {user.updatedBy && (
+                  <div className="bg-white rounded-xl p-6 hover:shadow-lg transition">
+                    <h3 className="font-semibold mb-5">Updated Info</h3>
+                    <AdminLink
+                      admin={updatedAdmin}
+                      onClick={() =>
+                        user.updatedBy &&
+                        router.push(`/admin/${user.updatedBy}`)
+                      }
+                    />
+                    <p className="text-xs text-gray-400 mt-2">
+                      {user.updatedDateFormatted || "-"}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -51,7 +51,7 @@ export default function GroupGridCard({ group, onDelete }) {
           <Calendar size={11} />
           <span>{group.addedDateFormatted || "—"}</span>
         </div>
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        {/* <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           {can("GROUP_UPDATE") && (
             <button
               onClick={() => router.push(`/group/edit/${group.id}`)}
@@ -71,7 +71,7 @@ export default function GroupGridCard({ group, onDelete }) {
           <span className="text-xs text-[#1565c0] font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             View <ExternalLink size={11} />
           </span>
-        </div>
+        </div> */}
       </div>
     </div>
   );

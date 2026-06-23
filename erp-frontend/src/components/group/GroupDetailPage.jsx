@@ -124,9 +124,9 @@ export default function GroupDetailPage({ group }) {
                 label="Status"
                 value={
                   <span className={`font-medium ${
-                    group.status === "active" ? "text-green-600" : "text-red-600"
+                    group.status === "Active" ? "text-green-600" : "text-red-600"
                   }`}>
-                    {group.status === "active" ? "Active" : "Inactive"}
+                    {group.status === "Active" ? "Active" : "Inactive"}
                   </span>
                 }
               />

@@ -120,6 +120,7 @@ export class UserController {
   @Get('get-user')
   @RequirePermission('USER_VIEW')
   async getUser(@Req() req, @Query() query: UserDetailsDto) {
+    console.log('query', query);
     return await this.userListService.startUserDetails(req, query);
   }
 

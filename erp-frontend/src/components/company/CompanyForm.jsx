@@ -385,7 +385,6 @@ export default function CompanyForm({
     { label: "Active", value: "Active" },
     { label: "InActive", value: "InActive" },
   ];
-  
 
   // ── Submit ──────────────────────────────────────────────────────────────────
   const onSubmit = async (data) => {
@@ -408,7 +407,9 @@ export default function CompanyForm({
       data.parentCompanyId = Number(data.parentCompanyId);
     }
 
-    mode === "create" ? data.createdBy = user?.user?.id : data.updatedBy = user?.user?.id;
+    mode === "create"
+      ? (data.createdBy = user?.user?.id)
+      : (data.updatedBy = user?.user?.id);
     try {
       setLoading(true);
       const res = await submitFn(data, logoFile || null);
@@ -681,17 +682,6 @@ export default function CompanyForm({
               placeholder="Select Country"
             />
 
-            {/* Phone + Dial Code — lives directly below Country; dial code auto-fills from country */}
-            <PhoneField
-              label="Phone Number"
-              required
-              error={errors.phone?.message || errors.dialCode?.message}
-              register={register}
-              name="phone"
-              dialCodeName="dialCode"
-              dialCodeOptions={dialCodeOptions}
-            />
-
             <div className="grid grid-cols-2 gap-4">
               {/* State */}
               <SelectField
@@ -737,6 +727,16 @@ export default function CompanyForm({
               register={register}
               name="zipCode"
               placeholder="Enter zip code"
+            />
+            {/* Phone + Dial Code — lives directly below Country; dial code auto-fills from country */}
+            <PhoneField
+              label="Phone Number"
+              required
+              error={errors.phone?.message || errors.dialCode?.message}
+              register={register}
+              name="phone"
+              dialCodeName="dialCode"
+              dialCodeOptions={dialCodeOptions}
             />
           </div>
         </div>

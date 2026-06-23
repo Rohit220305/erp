@@ -11,13 +11,13 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
         groups[mod] = {
           moduleName: mod,
           VIEW: null,
-          ADD: null,
-          EDIT: null,
+          CREATE: null,
+          UPDATE: null,
           DELETE: null,
           custom: [],
         };
       }
-      if (["VIEW", "ADD", "EDIT", "DELETE"].includes(cap.actionName)) {
+      if (["VIEW", "CREATE", "UPDATE", "DELETE"].includes(cap.actionName)) {
         groups[mod][cap.actionName] = cap;
       } else {
         groups[mod].custom.push(cap);
@@ -83,12 +83,12 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/30">
+            <tr className=" border-gray-100 bg-gray-50/30">
               <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Module / Feature</th>
-              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center w-28">View</th>
-              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center w-28">Create</th>
-              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center w-28">Edit</th>
-              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center w-28">Delete</th>
+              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center  ">View</th>
+              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center  ">Create</th>
+              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center  ">Update </th>
+              <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center  ">Delete</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -98,8 +98,8 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
                   <span className="text-sm font-medium text-gray-700">{group.moduleName}</span>
                 </td>
                 <td className="px-6 py-4 text-center">{renderCheckbox(group.VIEW)}</td>
-                <td className="px-6 py-4 text-center">{renderCheckbox(group.ADD)}</td>
-                <td className="px-6 py-4 text-center">{renderCheckbox(group.EDIT)}</td>
+                <td className="px-6 py-4 text-center">{renderCheckbox(group.CREATE)}</td>
+                <td className="px-6 py-4 text-center">{renderCheckbox(group.UPDATE)}</td>
                 <td className="px-6 py-4 text-center">{renderCheckbox(group.DELETE)}</td>
               </tr>
             ))}

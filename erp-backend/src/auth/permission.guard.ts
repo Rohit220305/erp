@@ -37,6 +37,7 @@ export class PermissionGuard implements CanActivate {
       return false;
     }
 
+    
     // Attach user.companyId explicitly to request.user.companyId as required
     request.user.companyId = user.companyId;
 

@@ -11,8 +11,13 @@ import { listGroups } from "@/lib/api/group-api";
 import { useAuth } from "@/context/AuthContext";
 import { Camera, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
+import { Country } from "country-state-city";
+import { Controller } from "react-hook-form";
+import DialCodeSelect from "../common/DialCodeSelect";
 
-const InputField = ({ label, required, error, register, name, type = "text", placeholder, disabled }) => (
+
+
+const InputField = ({ label, required, error, register, name, type = "text", placeholder, disabled, readOnly }) => (
   <div className="space-y-1">
     <label className="block text-sm font-medium text-gray-700">
       {label} {required && <span className="text-red-500">*</span>}
@@ -21,9 +26,9 @@ const InputField = ({ label, required, error, register, name, type = "text", pla
       type={type}
       placeholder={placeholder}
       disabled={disabled}
-      className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${
-        error ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"
-      } ${disabled ? "bg-gray-50 text-gray-500" : ""}`}
+      readOnly={readOnly}
+      className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${error ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"
+        } ${disabled || readOnly ? "bg-gray-50 text-gray-500" : ""}`}
       {...register(name)}
     />
     {error && <p className="text-xs text-red-500">{error}</p>}
@@ -37,9 +42,8 @@ const SelectField = ({ label, required, error, register, name, options, placehol
     </label>
     <select
       disabled={disabled}
-      className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${
-        error ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"
-      } ${disabled ? "bg-gray-50 text-gray-500" : ""}`}
+      className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${error ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"
+        } ${disabled ? "bg-gray-50 text-gray-500" : ""}`}
       {...register(name)}
     >
       <option value="">{placeholder || `Select ${label}`}</option>
@@ -62,22 +66,28 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const [groups, setGroups] = useState([]);
   const fileInputRef = useRef(null);
 
+  const ALL_COUNTRIES = Country.getAllCountries();
+
+
+
+
+
   const defaultValues = useMemo(() => ({
     firstName: "",
     lastName: "",
     userName: "",
     email: "",
     password: "",
-    companyId: "",
+    companyId: !currentUser?.isSuperAdmin ? currentUser?.companyId : "",
     groupId: "",
     dialCode: "+91",
     phone: "",
     status: "Active",
     isSuperAdmin: false,
     ...initialValues,
-  }), [initialValues]);
+  }), [initialValues, currentUser]);
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, reset, watch, formState: { errors } } = useForm({
     resolver: zodResolver(mode === "create" ? userAddSchema : userEditSchema),
     defaultValues,
     mode: "onBlur",
@@ -127,11 +137,22 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const onSubmit = useCallback(async (data) => {
     try {
       setLoading(true);
-      mode === "create"? data.addedBy = currentUser?.id : data.updatedBy = currentUser?.id;
+      mode === "create" ? data.addedBy = currentUser?.id : data.updatedBy = currentUser?.id;
+
+      // Ensure id is present in edit mode
+      if (mode === "edit" && initialValues?.id) {
+        data.id = initialValues.id;
+      }
+
+      // Ensure companyId is present for non-super admins (since select is disabled)
+      if (!currentUser?.isSuperAdmin) {
+        data.companyId = currentUser?.companyId || initialValues?.companyId;
+      }
+
       const response = mode === "create"
         ? await createUser(data, photoFile)
         : await updateUser(data, photoFile);
-        
+
       const isSuccess = response?.success === 1 || response?.settings?.success === 1;
       const message = response?.message || response?.settings?.message;
 
@@ -148,7 +169,63 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     }
   }, [mode, router, photoFile]);
 
-  const dialCodes = ["+91", "+1", "+44", "+971", "+966"];
+  // const onSubmit = useCallback(
+  //   async (data) => {
+  //     try {
+  //       setLoading(true);
+
+  //       const payload = {
+  //         ...data,
+  //         ...(mode === "create"
+  //           ? { addedBy: currentUser?.id }
+  //           : { updatedBy: currentUser?.id }),
+  //       };
+
+  //       const cleanedData = Object.fromEntries(
+  //         Object.entries(payload).filter(
+  //           ([, value]) =>
+  //             value !== undefined && value !== null && value !== "",
+  //         ),
+  //       );
+
+  //       console.log(
+  //         "Submitting user form with data:",
+  //         cleanedData,
+  //         "and photoFile:",
+  //         photoFile,
+  //       );
+
+  //       const response =
+  //         mode === "create"
+  //           ? await createUser(cleanedData, photoFile)
+  //           : await updateUser(cleanedData, photoFile);
+
+  //       const isSuccess =
+  //         response?.success === 1 || response?.settings?.success === 1;
+  //       const message = response?.message || response?.settings?.message;
+
+  //       if (isSuccess) {
+  //         toast.success(
+  //           mode === "create"
+  //             ? "User created successfully!"
+  //             : "User updated successfully!",
+  //         );
+  //         router.push("/admin");
+  //       } else {
+  //         toast.error(
+  //           message ||
+  //             `Failed to ${mode === "create" ? "create" : "update"} user`,
+  //         );
+  //       }
+  //     } catch (error) {
+  //       toast.error(error?.message || "Something went wrong");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   },
+  //   [mode, router, photoFile, currentUser?.id],
+  // );
+
   const statusOptions = [
     { label: "Active", value: "Active" },
     { label: "Inactive", value: "InActive" },
@@ -157,12 +234,25 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const groupOptions = useMemo(() => groups.map((g) => ({ label: g.groupName, value: g.id })), [groups]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl p-6 shadow-sm space-y-6">
+    <form
+      onSubmit={handleSubmit(onSubmit, (errors) => {
+        console.error("Validation Errors:", errors);
+        toast.error("Please fix the validation errors in the form");
+      })}
+      className="bg-white rounded-xl p-6 shadow-sm space-y-6"
+    >
+      {/* Hidden inputs */}
+      {mode === "edit" && <input type="hidden" {...register("id")} />}
+
       {/* Photo Upload */}
-      <div className="flex items-center gap-6 pb-6 border-b">
+      <div className="flex items-center gap-6 pb-6 ">
         <div className="relative">
           {photoPreview ? (
-            <img src={photoPreview} alt="Profile" className="w-20 h-20 rounded-full object-cover border-2 border-gray-200" />
+            <img
+              src={photoPreview}
+              alt="Profile"
+              className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+            />
           ) : (
             <div className="w-20 h-20 rounded-full bg-blue-50 text-[#1565c0] flex items-center justify-center text-2xl font-bold border-2 border-blue-200">
               {watch("firstName")?.[0] || "U"}
@@ -175,37 +265,89 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
           >
             <Camera size={13} />
           </button>
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
         </div>
         <div>
           <p className="font-medium text-gray-800">Profile Photo</p>
-          <p className="text-xs text-gray-400 mt-1">JPG, PNG or GIF. Max 5MB.</p>
-          {photoFile && <p className="text-xs text-green-600 mt-1">{photoFile.name}</p>}
+          <p className="text-xs text-gray-400 mt-1">
+            JPG, PNG or GIF. Max 5MB.
+          </p>
+          {photoFile && (
+            <p className="text-xs text-green-600 mt-1">{photoFile.name}</p>
+          )}
         </div>
       </div>
 
       {/* Personal Info */}
       <div className="space-y-4">
-        <h2 className="text-base font-semibold text-gray-800 border-b pb-2">Personal Information</h2>
+        <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
+          Personal Information
+        </h2>
         <div className="grid md:grid-cols-2 gap-6">
-          <InputField label="First Name" required name="firstName" placeholder="Enter first name" register={register} error={errors.firstName?.message} />
-          <InputField label="Last Name" required name="lastName" placeholder="Enter last name" register={register} error={errors.lastName?.message} />
-          <InputField label="Username" required name="userName" placeholder="Enter username" register={register} error={errors.userName?.message} disabled={mode === "edit"} />
-          <InputField label="Email" required name="email" type="email" placeholder="user@email.com" register={register} error={errors.email?.message} />
+          <InputField
+            label="First Name"
+            required
+            name="firstName"
+            placeholder="Enter first name"
+            register={register}
+            error={errors.firstName?.message}
+          />
+          <InputField
+            label="Last Name"
+            required
+            name="lastName"
+            placeholder="Enter last name"
+            register={register}
+            error={errors.lastName?.message}
+          />
+          <InputField
+            label="Username"
+            required
+            name="userName"
+            placeholder="Enter username"
+            register={register}
+            error={errors.userName?.message}
+            readOnly={mode === "edit"}
+          />
+          <InputField
+            label="Email"
+            required
+            name="email"
+            type="email"
+            placeholder="user@email.com"
+            register={register}
+            error={errors.email?.message}
+          />
 
           {/* Password */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
-              Password {mode === "create" && <span className="text-red-500">*</span>}
-              {mode === "edit" && <span className="text-xs text-gray-400 ml-1">(leave blank to keep current)</span>}
+              Password{" "}
+              {mode === "create" && <span className="text-red-500">*</span>}
+              {mode === "edit" && (
+                <span className="text-xs text-gray-400 ml-1">
+                  (leave blank to keep current)
+                </span>
+              )}
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder={mode === "create" ? "Enter password" : "Leave blank to keep current"}
-                className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${
-                  errors.password ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"
-                }`}
+                placeholder={
+                  mode === "create"
+                    ? "Enter password"
+                    : "Leave blank to keep current"
+                }
+                className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${errors.password
+                    ? "border-red-400"
+                    : "border-gray-300 focus:border-[#1565c0]"
+                  }`}
                 {...register("password")}
               />
               <button
@@ -216,32 +358,41 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-xs text-red-500">{errors.password.message}</p>
+            )}
           </div>
         </div>
       </div>
 
       {/* Role & Company */}
       <div className="space-y-4">
-        <h2 className="text-base font-semibold text-gray-800 border-b pb-2">Company & Role</h2>
+        <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
+          Company & Role
+        </h2>
         <div className="grid md:grid-cols-2 gap-6">
-          <SelectField
-            label="Company"
-            required
-            name="companyId"
-            register={register}
-            options={companyOptions}
-            placeholder="Select Company"
-            error={errors.companyId?.message}
-            disabled={!currentUser?.isSuperAdmin}
-          />
+          <div className="relative">
+            <SelectField
+              label="Company"
+              required
+              name="companyId"
+              register={register}
+              options={companyOptions}
+              error={errors.companyId?.message}
+              disabled={!currentUser?.isSuperAdmin}
+            />
+            {/* Hidden input to ensure companyId is submitted even when select is disabled */}
+            {!currentUser?.isSuperAdmin && (
+              <input type="hidden" {...register("companyId")} value={currentUser?.companyId || initialValues?.companyId || ""} />
+            )}
+          </div>
           <SelectField
             label="Group / Role"
             required
             name="groupId"
             register={register}
             options={groupOptions}
-            placeholder="Select Group"
+            // placeholder="Select Group"
             error={errors.groupId?.message}
           />
           <SelectField
@@ -252,40 +403,69 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             options={statusOptions}
             error={errors.status?.message}
           />
-          {currentUser?.isSuperAdmin && (
+          {/* {currentUser?.isSuperAdmin && (
             <div className="flex items-center gap-3 pt-6">
-              <input type="checkbox" id="isSuperAdmin" className="w-4 h-4 accent-[#1565c0]" {...register("isSuperAdmin")} />
-              <label htmlFor="isSuperAdmin" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                id="isSuperAdmin"
+                className="w-4 h-4 accent-[#1565c0]"
+                {...register("isSuperAdmin")}
+              />
+              <label
+                htmlFor="isSuperAdmin"
+                className="text-sm font-medium text-gray-700 cursor-pointer"
+              >
                 Grant Super Admin privileges
               </label>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 
       {/* Phone */}
       <div className="space-y-4">
-        <h2 className="text-base font-semibold text-gray-800 border-b pb-2">Contact</h2>
+        <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
+          Contact
+        </h2>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Phone Number
+            </label>
             <div className="flex gap-2">
-              <select
-                className="w-24 px-2 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-[#1565c0]"
+              {/* <select
+                className="w-24 px-2 py-2 border cursor-pointer border-gray-300 rounded-lg text-sm outline-none focus:border-[#1565c0]"
                 {...register("dialCode")}
               >
-                {dialCodes.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
+                {dialCodeOptions.map((d) => (
+                  <option key={d.value} value={d.value}>
+                    {d.label}
+                  </option>
+                ))}
+              </select> */}
+              <Controller
+                name="dialCode"
+                control={control}
+                render={({ field }) => (
+                  <DialCodeSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
               <input
                 type="text"
                 placeholder="Phone number"
-                className={`flex-1 px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${
-                  errors.phone ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"
-                }`}
+                className={`flex-1 px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${errors.phone
+                    ? "border-red-400"
+                    : "border-gray-300 focus:border-[#1565c0]"
+                  }`}
                 {...register("phone")}
               />
             </div>
-            {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
+            {errors.phone && (
+              <p className="text-xs text-red-500">{errors.phone.message}</p>
+            )}
           </div>
         </div>
       </div>
@@ -301,7 +481,11 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
         </button>
         <button
           type="button"
-          onClick={() => { reset(defaultValues); setPhotoFile(null); setPhotoPreview(initialValues?.photoUrl || null); }}
+          onClick={() => {
+            reset(defaultValues);
+            setPhotoFile(null);
+            setPhotoPreview(initialValues?.photoUrl || null);
+          }}
           className="px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
         >
           Reset
@@ -312,8 +496,12 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
           className="px-6 py-2 bg-[#1565c0] text-white rounded-lg text-sm font-medium hover:bg-[#0f57a6] disabled:opacity-60 disabled:cursor-not-allowed transition cursor-pointer"
         >
           {loading
-            ? mode === "create" ? "Creating..." : "Updating..."
-            : mode === "create" ? "Create User" : "Update User"}
+            ? mode === "create"
+              ? "Creating..."
+              : "Updating..."
+            : mode === "create"
+              ? "Create User"
+              : "Update User"}
         </button>
       </div>
     </form>

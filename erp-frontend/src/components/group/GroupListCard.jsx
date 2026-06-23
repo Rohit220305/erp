@@ -59,7 +59,7 @@ export default function GroupListCard({ group, onDelete }) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1 shrink-0 ml-4" onClick={(e) => e.stopPropagation()}>
+      {/* <div className="flex items-center gap-1 shrink-0 ml-4" onClick={(e) => e.stopPropagation()}>
         {can("GROUP_UPDATE") && (
           <button
             onClick={() => router.push(`/group/edit/${group.id}`)}
@@ -78,7 +78,7 @@ export default function GroupListCard({ group, onDelete }) {
             <Trash2 size={15} />
           </button>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -13,7 +13,7 @@ export default function RootLayout({ children }) {
             <Toaster
               position="top-right"
               toastOptions={{
-                duration: 4000,
+                duration: 2000,
                 style: {
                   borderRadius: "8px",
                   fontSize: "14px",

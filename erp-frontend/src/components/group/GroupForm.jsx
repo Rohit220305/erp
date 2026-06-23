@@ -95,7 +95,7 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
         const groupId = mode === "edit" ? initialValues?.id : undefined;
         const res = await getCapabilityMatrix(groupId);
         const data = res?.settings?.data || res?.data || [];
-        setCapabilities(data);
+        setCapabilities(data);  
         const preselected = data.filter((c) => c.assigned).map((c) => c.capabilityCode);
         setSelectedCodes(preselected);
       } catch (err) {
@@ -200,7 +200,7 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
         />
       )}
 
-      <div className="flex gap-3 justify-end border-t pt-4">
+      <div className="flex gap-3 justify-end   pt-4">
         <button
           type="button"
           onClick={() => router.back()}
