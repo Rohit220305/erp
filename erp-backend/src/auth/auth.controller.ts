@@ -69,6 +69,18 @@ export class AuthController {
     );
   }
 
+  @Post('reset-password/:targetUserId')
+  async resetPassword(
+    @Req() req: Request & { user: JwtPayload },
+    @Param('targetUserId', ParseIntPipe) targetUserId: number,
+    @Body() body: any,
+  ) {
+    if (!req.user?.isSuperAdmin) {
+      return { success: 0, message: 'Super admin access required' };
+    }
+    return this.authService.resetPasswordBySuperAdmin(targetUserId, body.newPassword);
+  }
+
   @Get('get-user-permissions')
   async getUserPermissions(@Req() req: Request) {
     return this.authService.getUserPermissions(req);

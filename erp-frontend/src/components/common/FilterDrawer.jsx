@@ -84,7 +84,7 @@ export default function FilterDrawer({
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between bg-[#1565c0] px-6 py-4">
+        <div className="flex items-center justify-between bg-[#1565c0] px-6 py-5">
           <h2 className="text-xl font-semibold text-white">Filters</h2>
 
           <button

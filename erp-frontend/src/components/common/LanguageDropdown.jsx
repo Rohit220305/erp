@@ -68,7 +68,7 @@ export default function LanguageDropdown() {
   return (
     <div ref={dropdownRef} className="relative">
       {/* Selected Language */}
-
+    
       <button
         type="button"
         onClick={() => setOpen(!open)}

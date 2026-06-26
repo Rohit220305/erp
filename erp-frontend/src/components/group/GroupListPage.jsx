@@ -123,10 +123,10 @@ export default function GroupListPage() {
   useEffect(() => {
     setConfig({
       header: {
-        actionButton: can("GROUP_CREATE") ? {
-          label: "Add Group",
-          onClick: () => router.push("/group/add"),
-        } : null,
+          actionButton: can("GROUP_CREATE") ? {
+            label: "Add Group",
+            onClick: () => router.push("/group/add"),
+          } : null,
         icons: ["refresh", "search", "filter", "view"],
         showBookmark: true,
         showLanguage: true,

@@ -129,7 +129,7 @@ export class AssignGroupCapabilitiesDto {
   addedBy: number;
 }
 
-export class RemoveGroupCapabilityDto {
+export class  RemoveGroupCapabilityDto {
   @IsInt()
   @Transform(({ value }) => Number(value))
   groupId: number;

@@ -34,7 +34,7 @@ export class UserAuthService {
 
   async login(params) {
     let return_data: any = {};
-    console.log( params);
+    // console.log( params);
     try {
       if (!params.userName) {
         throw new Error('Username is required');

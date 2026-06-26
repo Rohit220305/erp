@@ -49,7 +49,6 @@ export class CompanyController {
   @Get('get-company')
   @RequirePermission('COMPANY_VIEW')
   getCompanyById(@Req() req, @Query() query: CompanyDetailsDto) {
-    console.log('Received request to get company details:', query); 
     return this.companyListService.startCompanyDetails(req, query);
   }
 

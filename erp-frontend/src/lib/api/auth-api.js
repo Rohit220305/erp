@@ -64,3 +64,14 @@ export async function restoreSession(token) {
   });
 }
 
+/**
+ * POST /auth/reset-password/:id — super admin only.
+ * Resets user password directly.
+ */
+export async function resetPasswordAsAdmin(targetUserId, newPassword) {
+  return apiClient(`/auth/reset-password/${targetUserId}`, {
+    method: "POST",
+    body: JSON.stringify({ newPassword }),
+  });
+}
+

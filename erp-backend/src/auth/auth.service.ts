@@ -43,15 +43,6 @@ const refreshCookieOptions = (maxAgeMs: number) => ({
 
 // ─── Service ──────────────────────────────────────────────────────────────────
 
-/**
- * Stateless JWT authentication service with full refresh‑token support.
- *
- * Token strategy:
- *  - Access token  : short-lived (default 15m), stored in httpOnly cookie
- *  - Refresh token : long-lived  (default 7d),  stored in httpOnly cookie
- *  - Neither token is exposed in the response body (XSS prevention)
- *  - Refresh tokens are NOT stored in DB (stateless) — logout is cookie-side only
- */
 @Injectable()
 export class AuthService {
   constructor(
@@ -387,6 +378,21 @@ export class AuthService {
     await this.userRepo.update({ id: userId }, { password: hashed });
 
     return { success: 1, message: 'Password changed successfully' };
+  }
+
+  /**
+   * Super admin only — reset another user's password directly.
+   */
+  async resetPasswordBySuperAdmin(targetUserId: number, newPassword: string) {
+    const target = await this.userRepo.findOne({ where: { id: targetUserId } });
+    if (!target) {
+      return { success: 0, message: 'Target user not found' };
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.userRepo.update({ id: targetUserId }, { password: hashed });
+
+    return { success: 1, message: 'Password reset successfully' };
   }
 
   async restoreSession(res: Response, token: string) {

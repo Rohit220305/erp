@@ -40,3 +40,4 @@ import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.en
 })
 export class AuthModule {}
 
+  

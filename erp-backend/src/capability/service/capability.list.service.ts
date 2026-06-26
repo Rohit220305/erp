@@ -84,7 +84,7 @@ export class CapabilityListService {
             OR capabilities.capabilityName LIKE :search
             OR capabilities.moduleName LIKE :search
             OR capabilities.actionName LIKE :search
-            OR capabilities.description LIKE :search
+            OR capabilities.description LIKE :search  
           )
           `,
           {

@@ -326,7 +326,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
           />
 
           {/* Password */}
-          <div className="space-y-1">
+          {/* <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
               Password{" "}
               {mode === "create" && <span className="text-red-500">*</span>}
@@ -361,7 +361,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             {errors.password && (
               <p className="text-xs text-red-500">{errors.password.message}</p>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
 

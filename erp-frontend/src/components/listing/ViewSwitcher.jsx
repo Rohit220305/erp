@@ -47,8 +47,8 @@ export default function ViewSwitcher() {
           transition
         "
       >
-        {selectedOption.icon}
-
+        {/* {selectedOption.icon} */}
+        <TableProperties size={18} />
       </button>
 
       {open && (

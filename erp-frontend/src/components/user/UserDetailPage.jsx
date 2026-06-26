@@ -85,7 +85,7 @@ export default function UserDetailPage({ user }) {
   const {
     user: currentUser,
     loginAs,
-    backToSession,
+    backToSession, 
     isImpersonating,
     sessionStack,
     canImpersonate,
@@ -132,73 +132,73 @@ export default function UserDetailPage({ user }) {
     return () => resetConfig();
   }, [setConfig, router, user.id, fetchAdmins, resetConfig, can]);
 
-  const handleLoginAs = useCallback(async () => {
-    if (!currentUser?.isSuperAdmin) {
-      toast.error("Only super admins can impersonate users");
-      return;
-    }
+  // const handleLoginAs = useCallback(async () => {
+  //   if (!currentUser?.isSuperAdmin) {
+  //     toast.error("Only super admins can impersonate users");
+  //     return;
+  //   }
 
-    if (currentUser.sub === user.id) {
-      toast.error("Cannot impersonate yourself");
-      return;
-    }
+  //   if (currentUser.sub === user.id) {
+  //     toast.error("Cannot impersonate yourself");
+  //     return;
+  //   }
 
-    try {
-      setLoginAsLoading(true);
-      const res = await loginAsUser(user.id);
+  //   try {
+  //     setLoginAsLoading(true);
+  //     const res = await loginAsUser(user.id);
 
-      if (res?.success === 1 && res?.data) {
-        // Pass token if API returns it
-        const token = res.data.token || null;
-        loginAs(res.data, token);
+  //     if (res?.success === 1 && res?.data) {
+  //       // Pass token if API returns it
+  //       const token = res.data.token || null;
+  //       loginAs(res.data, token);
 
-        toast.success(
-          `Successfully logged in as ${user.firstName} ${user.lastName}`,
-        );
+  //       toast.success(
+  //         `Successfully logged in as ${user.firstName} ${user.lastName}`,
+  //       );
 
-        // Wait for auth state to update before redirecting
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        router.push("/");
-      } else {
-        toast.error(res?.message || "Failed to login as user");
-      }
-    } catch (err) {
-      console.error("LoginAs error:", err);
-      toast.error(
-        "Failed to login as user: " + (err.message || "Unknown error"),
-      );
-    } finally {
-      setLoginAsLoading(false);
-    }
-  }, [currentUser, user, loginAs, router]);
+  //       // Wait for auth state to update before redirecting
+  //       await new Promise((resolve) => setTimeout(resolve, 100));
+  //       router.push("/");
+  //     } else {
+  //       toast.error(res?.message || "Failed to login as user");
+  //     }
+  //   } catch (err) {
+  //     console.error("LoginAs error:", err);
+  //     toast.error(
+  //       "Failed to login as user: " + (err.message || "Unknown error"),
+  //     );
+  //   } finally {
+  //     setLoginAsLoading(false);
+  //   }
+  // }, [currentUser, user, loginAs, router]);
 
- const handleBackToSession = useCallback(async () => {
-   try {
-     setBackToSessionLoading(true);
+//  const handleBackToSession = useCallback(async () => {
+//    try {
+//      setBackToSessionLoading(true);
 
-     const prevSession = await backToSession();
+//      const prevSession = await backToSession();
 
-     if (prevSession) {
-       toast.success(
-         `Back to ${prevSession.user.firstName} ${prevSession.user.lastName}'s session`,
-       );
+//      if (prevSession) {
+//        toast.success(
+//          `Back to ${prevSession.user.firstName} ${prevSession.user.lastName}'s session`,
+//        );
 
-       // FORCE FULL PAGE RELOAD - this is critical!
-       window.location.href = "/";
-     } else {
-       toast.error("No previous session found");
-       setBackToSessionLoading(false);
-       logoutUser();
-       window.location.href = "/login";
-     }
-   } catch (err) {
-     console.error("BackToSession error:", err);
-     toast.error("Failed to return to previous session");
-     setBackToSessionLoading(false);
-   }
- }, [backToSession]);
+//        // FORCE FULL PAGE RELOAD - this is critical!
+//        window.location.href = "/";
+//      } else {
+//        toast.error("No previous session found");
+//        setBackToSessionLoading(false);
+//        logoutUser();
+//        window.location.href = "/login";
+//      }
+//    } catch (err) {
+//      console.error("BackToSession error:", err);
+//      toast.error("Failed to return to previous session");
+//      setBackToSessionLoading(false);
+//    }
+//  }, [backToSession]);
   // Can impersonate if: current user is super admin AND viewing someone else
-  const canLoginAsThisUser = canImpersonate && currentUser?.sub !== user.id;
+  // const canLoginAsThisUser = canImpersonate && currentUser?.sub !== user.id;
   // Add right after the useAuth() call
   console.log("Current User:", currentUser);
   return (
@@ -245,7 +245,7 @@ export default function UserDetailPage({ user }) {
             </button>
 
             {/* LOGIN AS button — only for super admin viewing another user */}
-            {canLoginAsThisUser ? (
+            {/* {canLoginAsThisUser ? (
               <button
                 onClick={handleLoginAs}
                 disabled={loginAsLoading || isImpersonating}
@@ -259,13 +259,13 @@ export default function UserDetailPage({ user }) {
                 <LogIn size={15} />
                 {loginAsLoading ? "Switching..." : `Login As ${user.firstName}`}
               </button>
-            ) : null}
+            ) : null} */}
 
-            {isImpersonating && !canLoginAsThisUser && (
+            {/* {isImpersonating && !canLoginAsThisUser && (
               <p className="text-xs text-gray-400 mt-2 text-center">
                 You're in another session. Return first to impersonate.
               </p>
-            )}
+            )} */}
           </div>
         </div>
 

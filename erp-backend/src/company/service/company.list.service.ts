@@ -144,13 +144,13 @@ export class CompanyListService {
 
 
       if (params?.filters) {
-        console.log("DEBUG: params.filters =", JSON.stringify(params.filters));
+        // console.log("DEBUG: params.filters =", JSON.stringify(params.filters));
         const whereString = await this.general.makeFilterString(
           params.filters,
           'company',
           params.logicalOperator
         );
-        console.log("DEBUG: whereString =", whereString);
+        // console.log("DEBUG: whereString =", whereString);
 
         if (whereString) {
           queryBuilder.andWhere(whereString);

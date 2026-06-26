@@ -171,7 +171,6 @@ export class GroupCapabilityListService {
         actionName: cap.actionName,
         assigned: assignedCapIds.has(cap.id),
       }));
-      console.log("Capability Matrix:", matrix);
       return_data = {
         success: 1,
         message: 'Capability matrix retrieved successfully',

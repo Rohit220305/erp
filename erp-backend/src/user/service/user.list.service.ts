@@ -45,7 +45,7 @@ export class UserListService {
           id: params.id,
         },
       });
-      console.log('user', user);
+      // console.log('user', user);
 
       if (!user) {
         throw new Error('User not found');

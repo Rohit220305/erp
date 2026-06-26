@@ -3,14 +3,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 let isRefreshing = false;
 
-/**
- * Central fetch wrapper.
- * - Always sends httpOnly cookies (`credentials: 'include'`)
- * - On server (SSR): forwards the incoming request cookies via next/headers
- *   because `credentials: 'include'` is browser-only and does not work in Node.js fetch
- * - On 401: attempts silent token refresh once, then retries
- * - On second 401 (refresh failed): redirects to /login (client) or returns null (server)
- */
+
 export async function apiClient(path, options = {}) {
   const url = path.startsWith("http") ? path : `${API_URL}${path}`;
   const isServer = typeof window === "undefined";
@@ -18,14 +11,11 @@ export async function apiClient(path, options = {}) {
   const makeRequest = async () => {
     const isFormData = options.body instanceof FormData;
 
-    // On the server, `credentials: "include"` is silently ignored by Node.js fetch.
-    // We must read the browser's cookies from the incoming Next.js request and forward
-    // them explicitly as a Cookie header so the backend can authenticate the request.
+    
     let serverCookieHeader = {};
     if (isServer) {
       try {
-        // Dynamic import avoids bundling next/headers into the client bundle.
-        // This branch is only ever reached on the server, so the import is safe.
+        
         const { cookies } = await import("next/headers");
         const cookieStore = await cookies();
         const rawCookies = cookieStore.toString();

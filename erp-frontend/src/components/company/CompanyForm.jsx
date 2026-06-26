@@ -98,12 +98,7 @@ const SelectField = ({
   </div>
 );
 
-/**
- * PhoneField — placed in Address section directly below Country.
- * dialCode auto-updates when country changes.
- * `name`         → phone number input  → saved to `phone` field
- * `dialCodeName` → dial code select    → saved to `dialCode` field
- */
+
 const PhoneField = ({
   label,
   required,
@@ -799,6 +794,7 @@ export default function CompanyForm({
             setLogoFile(null);
             setLogoPreview(externalDefaults?.logoUrl || null);
             if (fileInputRef.current) fileInputRef.current.value = "";
+            () => router.back();
           }}
           className="px-5 py-2 border border-gray-200 rounded-lg text-sm font-medium
             text-gray-600 hover:bg-gray-50 transition cursor-pointer"

@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LogIn, RotateCw } from "lucide-react";
 import ListingPage from "@/components/listing/ListingPage";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { listUsers, deleteUser } from "@/lib/api/user-api";
+import { loginAsUser } from "@/lib/api/auth-api";
 import { listCompanies } from "@/lib/api/company-api";
 import { listGroups } from "@/lib/api/group-api";
 import { useHeader } from "@/context/HeaderContext";
@@ -13,11 +15,15 @@ import { useListing } from "@/context/ListingContext";
 import { useAuth } from "@/context/AuthContext";
 import UserListCard from "./UserListCard";
 import UserGridCard from "./UserGridCard";
+import UserDetailsDrawer from "./UserDetailsDrawer";
+import ResetPasswordDrawer from "./ResetPasswordDrawer";
+import UserTableRow from "./UserTableRow";
 import FilterDrawer from "@/components/common/FilterDrawer";
 import SearchDrawer from "@/components/common/SearchDrawer";
 import toast from "react-hot-toast";
 
 export default function UserListPage() {
+  const {loginAs,backToSession,isImpersonating,sessionStack, canImpersonate,} = useAuth();
   const { setConfig, resetConfig } = useHeader();
   const { view, page, limit, setTotal, search, setLimit, setPage, total } =
     useListing();
@@ -25,12 +31,34 @@ export default function UserListPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
+  const [selectedUserForPasswordReset, setSelectedUserForPasswordReset] = useState(null);
   const router = useRouter();
+
+  const handleLoginAs = useCallback(async (targetUserId) => {
+    try {
+      const res = await loginAsUser(targetUserId);
+      if (res?.success === 1 || res?.settings?.success === 1) {
+        const data = res?.data || res?.settings?.data;
+        loginAs(data, data?.token);
+        toast.success(res?.message || "Logged in successfully");
+        router.push("/");
+      } else {
+        toast.error(res?.message || "Failed to login as user");
+      }
+    } catch (error) {
+      toast.error("Failed to login as user");
+      console.error(error);
+    }
+  }, [loginAs, router]);
 
   // Dynamic dropdown options
   const [companyOptions, setCompanyOptions] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
 
+
+  // const canLoginAsThisUser = canImpersonate && currentUser?.sub !== user.id;
+  
   useEffect(() => {
     const loadOptions = async () => {
       try {
@@ -250,64 +278,27 @@ export default function UserListPage() {
       { label: "Company", key: "companyName" },
       { label: "Group", key: "groupName" },
       { label: "Status", key: "status" },
+      currentUser?.isSuperAdmin ? {
+        label: "Login As",
+        key: "loginAs"
+      } : null,
       { label: "Last Login", key: "lastLoginDateFormatted" },
-    ],
-    [],
+    ].filter(Boolean),
+    [currentUser?.isSuperAdmin],
   );
 
   const renderCell = useCallback(
-    (item, key) => {
-      if (key === "firstName") {
-        return (
-          <div className="flex items-center gap-3">
-            {item.photoUrl ? (
-              <img
-                src={item.photoUrl}
-                alt={item.firstName}
-                className="w-8 h-8 rounded-full object-cover border border-gray-200"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-[#1565c0] flex items-center justify-center font-semibold text-xs border border-blue-200">
-                {item.firstName?.[0]}
-                {item.lastName?.[0]}
-              </div>
-            )}
-            <div>
-              <p
-                className="font-medium text-[#1565c0] hover:underline cursor-pointer text-sm"
-                onClick={() => router.push(`/admin/${item.id}`)}
-              >
-                {item.firstName} {item.lastName}
-              </p>
-              <p className="text-xs text-gray-400">{item.userName}</p>
-            </div>
-          </div>
-        );
-      }
-      if (key === "status") {
-        return (
-          <div className="flex flex-col gap-1">
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
-                item.status === "Active"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-              }`}
-            >
-              {item.status}
-            </span>
-            {item.isSuperAdmin ? (
-              <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium w-fit">
-                Super Admin
-              </span>
-            ) : null}
-          </div>
-        );
-      }
-
-      return item[key] || "-";
-    },
-    [router, currentUser],
+    (item, key) => (
+      <UserTableRow
+        item={item}
+        columnKey={key}
+        currentUser={currentUser}
+        handleLoginAs={handleLoginAs}
+        setSelectedUserForPasswordReset={setSelectedUserForPasswordReset}
+        setSelectedUserForDetails={setSelectedUserForDetails}
+      />
+    ),
+    [currentUser, handleLoginAs],
   );
 
   if (loading)
@@ -324,9 +315,21 @@ export default function UserListPage() {
         data={users}
         headers={headers}
         renderCell={renderCell}
-        renderListCard={(u) => <UserListCard key={u.id} user={u} />}
-        renderGridCard={(u) => <UserGridCard key={u.id} user={u} />}
+        renderListCard={(u) => <UserListCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} />}
+        renderGridCard={(u) => <UserGridCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} setSelectedUserForDetails={setSelectedUserForDetails} setSelectedUserForPasswordReset={setSelectedUserForPasswordReset} />}
       />
+
+      <UserDetailsDrawer
+        open={!!selectedUserForDetails}
+        onClose={() => setSelectedUserForDetails(null)}
+        user={selectedUserForDetails}
+      />
+      
+      <ResetPasswordDrawer
+        open={!!selectedUserForPasswordReset}
+        onClose={() => setSelectedUserForPasswordReset(null)}
+        user={selectedUserForPasswordReset}
+        />
 
       <FilterDrawer
         open={isFilterOpen}

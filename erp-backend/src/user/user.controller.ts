@@ -82,7 +82,7 @@ export class UserController {
   ) {
     try {
       const params = body;
-      console.log('params', params);
+      // console.log('params', params);
       if (file) {
         const fileDto = new CommonFileDto();
 
@@ -120,7 +120,7 @@ export class UserController {
   @Get('get-user')
   @RequirePermission('USER_VIEW')
   async getUser(@Req() req, @Query() query: UserDetailsDto) {
-    console.log('query', query);
+    // console.log('query', query);
     return await this.userListService.startUserDetails(req, query);
   }
 
@@ -131,5 +131,4 @@ export class UserController {
   }
 
 }
-// Login is now handled exclusively by POST /auth/login in the AuthModule.
 

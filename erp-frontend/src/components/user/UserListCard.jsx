@@ -1,81 +1,112 @@
 "use client";
 
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Building2, Calendar } from "lucide-react";
 
 export default function UserListCard({ user }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const router = useRouter();
 
   return (
-    <div
-      onClick={() => router.push(`/admin/${user.id}`)}
-      className="bg-white px-5 py-3.5 flex items-center gap-5 border-b border-gray-100 hover:bg-gray-50/80 transition-colors cursor-pointer group"
-    >
-      {/* Avatar */}
-      <div className="shrink-0">
-        {user.photoUrl ? (
-          <img
-            src={user.photoUrl}
-            alt={user.firstName}
-            className="w-9 h-9 rounded-full object-cover border-2 border-gray-100"
-          />
-        ) : (
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1565c0]/15 to-[#1565c0]/30 text-[#1565c0] flex items-center justify-center font-semibold text-sm border-2 border-[#1565c0]/10">
-            {user.firstName?.[0]}{user.lastName?.[0]}
+    <div className=" px-4 py-2">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md">
+        <div 
+          className="flex items-center px-6 py-4"
+        >
+          {/* Col 1: Name */}
+          <div className="flex-[1.5]">
+              <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Name</p>
+              <div className="flex items-center gap-3">
+                {user.photoUrl ? (
+                  <img
+                    src={user.photoUrl}
+                    alt={user.firstName}
+                    className="w-10 h-10 rounded-full object-cover border border-gray-100"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm border border-orange-200">
+                    {user.firstName?.[0]}{user.lastName?.[0]}
+                  </div>
+                )}
+                <div>
+                  <p 
+                    className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer w-fit"
+                    onClick={() => router.push(`/admin/${user.id}`)}
+                  >
+                    {user.firstName} {user.lastName}
+                  </p>
+                  {user.phone && <p className="text-[11px] text-gray-400 mt-0.5">(+91)-{user.phone}</p>}
+                </div>
+              </div>
           </div>
-        )}
-      </div>
+          
+          {/* Col 2: User Name */}
+          <div className="flex-1">
+              <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">User Name</p>
+              <p className="text-[13px] text-gray-800 font-medium">{user.userName || user.email || "—"}</p>
+          </div>
+          
+          {/* Col 3: Status */}
+          <div className="flex-1">
+              <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Status</p>
+              <span className={`px-3 py-1 rounded text-[11px] font-semibold ${
+                user.status === "Active" ? "bg-[#2ecc71] text-white" : "bg-red-500 text-white"
+              }`}>
+                {user.status}
+              </span>
+          </div>
+          
+          {/* Col 4: Company Name */}
+          <div className="flex-[1.5]">
+              <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Company Name</p>
+              <p className="text-[13px] font-medium text-[#1565c0]">{user.companyName || "—"}</p>
+          </div>
 
-      {/* Name + username */}
-      <div className="min-w-0 w-44 shrink-0">
-        <p className="font-semibold text-sm text-gray-900 group-hover:text-[#1565c0] transition-colors truncate">
-          {user.firstName} {user.lastName}
-        </p>
-        <p className="text-xs text-gray-400 truncate mt-0.5">@{user.userName || "—"}</p>
-      </div>
+          {/* Chevron */}
+          <div 
+            className="ml-4 flex items-center justify-center cursor-pointer p-2 hover:bg-gray-100 rounded-full transition-colors"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <ChevronDown className={`text-[#1565c0] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} size={20} />
+          </div>
+        </div>
 
-      {/* Email */}
-      <div className="text-xs text-gray-500 min-w-0 flex-1 truncate">
-        {user.email || "—"}
-      </div>
-
-      {/* Company */}
-      <div className="flex items-center gap-1.5 text-xs text-gray-500 w-36 shrink-0 truncate">
-        <Building2 size={12} className="shrink-0 text-gray-400" />
-        <span className="truncate">{user.companyName || "—"}</span>
-      </div>
-
-      {/* Group */}
-      <div className="w-28 shrink-0">
-        {user.groupName && (
-          <span className="px-2 py-0.5 text-xs bg-blue-50 text-[#1565c0] border border-blue-200 rounded-full font-medium truncate block w-fit max-w-full">
-            {user.groupName}
-          </span>
-        )}
-      </div>
-
-      {/* Last Login */}
-      <div className="flex items-center gap-1.5 text-xs text-gray-400 w-28 shrink-0">
-        <Calendar size={11} className="shrink-0" />
-        <span className="truncate">{user.lastLoginDateFormatted || "Never"}</span>
-      </div>
-
-      {/* Status + Super Admin */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <span
-          className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-            user.status === "Active"
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-              : "bg-red-50 text-red-600 border border-red-200"
+        {/* Expanded Content */}
+        <div 
+          className={`transition-all duration-500 ease-in-out overflow-hidden ${
+            isExpanded ? "max-h-[500px] opacity-100 " : "max-h-0 opacity-0"
           }`}
         >
-          {user.status}
-        </span>
-        {/* {user.isSuperAdmin ? (
-          <span className="px-2 py-0.5 text-xs bg-purple-50 text-purple-700 border border-purple-200 rounded-full font-semibold">
-            SA
-          </span>
-        ) : null} */}
+          <div className="px-6 py-5 flex items-start bg-white">
+              {/* Col 1: Email */}
+              <div className="flex-[1.5]">
+                <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Email</p>
+                <p className="text-[13px] text-gray-800 font-medium">{user.email || "—"}</p>
+              </div>
+              
+              {/* Col 2: Date Of Birth */}
+              <div className="flex-1">
+                <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Date Of Birth</p>
+                <p className="text-[13px] text-gray-800 font-medium">{user.dateOfBirthFormatted || "-"}</p>
+              </div>
+              
+              {/* Col 3: Group Name */}
+              <div className="flex-1">
+                <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Group Name</p>
+                <p className="text-[13px] text-gray-800 font-medium">{user.groupName || "-"}</p>
+              </div>
+              
+              {/* Col 4: Last Access */}
+              <div className="flex-[1.5]">
+                <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Last Access</p>
+                <p className="text-[13px] text-gray-800 font-medium">{user.lastLoginDateFormatted || "-"}</p>
+              </div>
+              
+              {/* Spacer for Chevron alignment */}
+              <div className="ml-4 w-5"></div>
+          </div>
+        </div>
       </div>
     </div>
   );
