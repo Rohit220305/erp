@@ -69,3 +69,7 @@ export async function updateCompany(data, logoFile) {
     body: JSON.stringify(data),
   });
 }
+
+export async function deleteCompany(id) {
+  return apiClient(`/company/delete-company?id=${id}`, { method: "DELETE" });
+}

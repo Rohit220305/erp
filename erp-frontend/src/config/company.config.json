@@ -1,0 +1,56 @@
+{
+  "moduleName": "Company",
+  "title": "Company Master",
+  "permissions": {
+    "create": "COMPANY_CREATE",
+    "view": "COMPANY_VIEW"
+  },
+  "columns": [
+    { "label": "Logo", "key": "logoUrl", "type": "image" },
+    { "label": "Company Name", "key": "companyName", "type": "link", "linkPath": "/company/{id}" },
+    { "label": "Company Code", "key": "companyCode", "type": "text" },
+    { "label": "Contact Person", "key": "contactPersonName", "type": "text" },
+    { "label": "Email", "key": "email", "type": "text" },
+    { "label": "Phone", "key": "phone", "type": "phone" },
+    { "label": "Status", "key": "status", "type": "statusBadge" },
+    { "label": "Added Date", "key": "addedDateFormatted", "type": "text" }
+  ],
+  "actions": {
+    "header": [
+      { "label": "Add Company", "type": "redirect", "path": "/company/add", "permission": "COMPANY_CREATE" }
+    ],
+    "row": [
+      { "label": "Edit", "type": "editRedirect", "path": "/company/edit/{id}", "permission": "COMPANY_UPDATE" },
+      { "label": "Delete", "type": "deleteModal", "permission": "COMPANY_DELETE" }
+    ]
+  },
+  "searchFields": [
+    { "label": "Company Name", "value": "companyName", "type": "text" },
+    { "label": "Short Name", "value": "shortName", "type": "text" },
+    { "label": "Company Code", "value": "companyCode", "type": "text" },
+    { "label": "Company Email", "value": "email", "type": "text" },
+    { "label": "Company Phone", "value": "phone", "type": "text" },
+    { "label": "Contact Person", "value": "contactPersonName", "type": "text" },
+    { "label": "Status", "value": "status", "type": "select", "options": [
+      { "label": "Active", "value": "Active" },
+      { "label": "Inactive", "value": "Inactive" }
+    ]}
+  ],
+  "defaultFilters": {
+    "companyName": "",
+    "shortName": "",
+    "companyCode": "",
+    "email": "",
+    "phone": "",
+    "contactPersonName": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ]
+}
+
+
+
+

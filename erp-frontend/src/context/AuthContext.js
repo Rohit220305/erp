@@ -362,3 +362,228 @@ export function useAuth() {
 // 6. Log in as SuperAdmin — verify all pages and buttons are accessible.
 // 7. Test that navigating directly to a guarded URL redirects to `/not-authorized`.
 // 8. Test CompanyForm Discard button navigates back.
+
+
+
+
+// # Config-Driven Listing Architecture — Implementation Plan
+
+//   ## Goal
+//   Reduce the massive boilerplate (300+ lines) in our listing pages (`CompanyListPage`, `GroupListPage`, etc.) by moving declarative structure (columns, search fields, filters) into a separate configuration file, while keeping the UI flexible enough for custom rendering.
+
+//   ---
+
+//   ## Best Practice Recommendation
+
+//   The best practice for this pattern is to use a **JavaScript Configuration File (`.config.js`)** rather than a pure `.json` file. 
+
+//   **Why JS over JSON?**
+//   1. You can import constants (like dropdown options) directly into the config.
+//   2. It stays declarative (looks like JSON) but integrates natively with your React ecosystem.
+//   3. You keep the custom rendering logic (`renderCell`) inside your React component where it has access to hooks like `useRouter()`.
+
+//   ### The Separation of Concerns
+//   | What goes in `config.js` | What stays in `ListPage.jsx` |
+//   |---|---|
+//   | 📋 Table headers (keys & labels) | 🎨 Custom cell rendering (`renderCell`) |
+//   | 🔍 Search drawer fields & types | 🌐 API fetch function (`listCompanies`) |
+//   | 🎛️ Sidebar filter fields | 🧩 Card rendering (`renderGridCard`) |
+//   | 🔐 Permissions required | |
+
+// ---
+
+// ## Proposed Implementation
+
+// ### 1. Create the Config File
+// We will create a central or module-specific config file.
+
+// **Example: `src/config/company.listing.js`**
+// ```javascript
+// export const companyListingConfig = {
+//   // Page Metadata
+//   title: "Company Master",
+//   permissions: {
+//     list: "COMPANY_LIST",
+//     create: "COMPANY_CREATE"
+//   },
+  
+//   // Table Columns
+//   headers: [
+//     { label: "Logo", key: "logoUrl" },
+//     { label: "Company Name", key: "companyName" },
+//     { label: "Company Code", key: "companyCode" },
+//     { label: "Contact Person", key: "contactPersonName" },
+//     { label: "Email", key: "email" },
+//     { label: "Phone", key: "phone" },
+//     { label: "Status", key: "status" },
+//     { label: "Added Date", key: "addedDateFormatted" },
+//   ],
+
+//   // Search Drawer Fields
+//   searchFields: [
+//     { label: "Company Name", value: "companyName", type: "text" },
+//     { label: "Company Code", value: "companyCode", type: "text" },
+//     { label: "Status", value: "status", type: "select", options: [
+//       { label: "Active", value: "Active" },
+//       { label: "Inactive", value: "Inactive" },
+//     ]}
+//   ],
+
+//   // Default Sidebar Filters
+//   defaultFilters: {
+//     companyName: "",
+//     companyCode: "",
+//     status: "",
+//   }
+// };
+// ```
+
+// ### 2. Refactor the Generic `ListingPage` Wrapper
+// Currently, `CompanyListPage` manages all the state for search, filters, pagination, and fetching.
+// We can upgrade our generic `ListingPage` component to accept the config and handle all this internally.
+
+// ```jsx
+// // How CompanyListPage will look after refactoring:
+// export default function CompanyListPage() {
+//   const router = useRouter();
+
+//   // Custom rendering logic stays here (has access to router)
+//   const renderCell = (item, key) => {
+//     if (key === "companyName") {
+//       return <a onClick={() => router.push(`/company/${item.id}`)}>{item.companyName}</a>;
+//     }
+//     // ...
+//   };
+
+//   return (
+  //     <DynamicListing
+  //       config={companyListingConfig}
+  //       fetchData={listCompanies}
+  //       renderCell={renderCell}
+  //       renderListCard={(c) => <CompanyListCard company={c} />}
+  //       renderGridCard={(c) => <CompanyGridCard company={c} />}
+  //     />
+//   );
+// }
+// ```
+
+// ### 3. Benefits of this Approach
+// 1. **Massive Code Reduction**: `CompanyListPage.jsx` will drop from ~310 lines to ~50 lines.
+// 2. **Consistency**: All listing pages (Company, Group, User) will behave exactly the same way.
+// 3. **Easy Updates**: Adding a new column or search field just requires a 1-line addition to the config file.
+// 4. **Developer Friendly**: It balances configuration-driven UI with the flexibility of standard React for the complex bits.
+
+// ---
+
+// ## User Review Required
+
+// Does this architecture align with your vision? Let me know if you approve this plan, or if you'd like to tweak how the configuration is structured before we implement it!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// # Fully Config-Driven UI Architecture Analysis
+
+// ## The Proposal
+// The idea is to eliminate passing React components as props (`renderListCard`, `renderGridCard`) and instead define the layout and structure of these cards entirely inside the configuration object. The goal is to have exactly **one** generic `DynamicListing` component that builds the entire UI purely from configuration, allowing us to drop `CompanyListPage.jsx`, `GroupListPage.jsx`, etc. completely.
+
+// ---
+
+// ## Is this the right approach? (Industry Standards)
+
+// This paradigm is known as **Data-Driven UI** or **Server-Driven UI (SDUI)**. It is heavily used in low-code platforms (like Retool), generic admin panels (like React-Admin), and mobile apps that want to update layouts without App Store approvals.
+
+// ### The Verdict: It is a double-edged sword.
+// It is an excellent approach for **simple, highly uniform** applications, but it is considered an **anti-pattern** for standard React applications if your UI requires complex, module-specific interactions.
+
+// Here is a breakdown of why:
+
+// ### 🟢 Pros of a Fully Config-Driven Approach
+// 1. **Zero Boilerplate:** You don't need a `CompanyListPage.jsx` or `GroupListPage.jsx` at all. You just register a route and pass it a config object.
+// 2. **Backend Control:** You can eventually move the config to the backend, meaning you can generate new modules and pages without writing any frontend code.
+// 3. **Strict Consistency:** It forces all developers to use the exact same card layouts, preventing design drift.
+
+// ### 🔴 Cons and Risks (The "God Object" Problem)
+// 1. **Reinventing React:** React is already a configuration engine for UI. By putting layout into JSON, you have to build an interpreter in `DynamicListing` that reads JSON and outputs React.
+// 2. **Handling Actions is Very Hard:** If a specific card needs a custom button (e.g., "Reset Password" on a User card that opens a specific modal), you cannot put a JavaScript function in JSON. You end up having to invent complex event buses or action registries.
+// 3. **Complex Layouts:** If one module's card needs a slightly different layout (e.g., an avatar on the left instead of top), your JSON schema becomes exponentially more complicated as you add layout directives.
+
+// ---
+
+// ## What a Fully Config-Driven Implementation Looks Like
+
+// If we proceed with this, here is how the config would need to be structured:
+
+// ```javascript
+// // generic.listing.config.js
+// export const companyListingConfig = {
+//   apiEndpoint: "/company", // Handled internally by generic fetch
+//   permissions: { list: "COMPANY_LIST", create: "COMPANY_CREATE" },
+  
+//   // Table definition
+//   columns: [
+//     { label: "Company Name", key: "companyName", type: "text" },
+//     { label: "Status", key: "status", type: "badge", colors: { Active: "green", Inactive: "red" } }
+//   ],
+
+//   // Card Layout Engine Definition
+//   cardStructure: {
+//     // Defines what shows up in the ListCard / GridCard
+//     header: {
+//       titleKey: "companyName",
+//       subtitleKey: "companyCode",
+//       imageKey: "logoUrl"
+//     },
+//     body: [
+//       { label: "Email", key: "email", icon: "Mail" },
+//       { label: "Phone", key: "phone", icon: "Phone" }
+//     ],
+//     footerActions: [
+//       { type: "edit", permission: "COMPANY_UPDATE" },
+//       { type: "delete", permission: "COMPANY_DELETE" }
+//     ]
+//   }
+// }
+// ```
+
+// ### The Universal Component
+
+// We would then have a single `app/(home)/[module]/page.js` that loads the config dynamically based on the URL route:
+
+// ```jsx
+// import UniversalListing from "@/components/common/UniversalListing";
+// import { getListingConfig } from "@/config/registry";
+
+// export default function GenericModulePage({ params }) {
+//   const config = getListingConfig(params.module); // gets company, group, etc.
+  
+//   return <UniversalListing config={config} />;
+// }
+// ```
+
+// ---
+
+// ## Best Practice Recommendation
+
+// If your goal is to build a standard, maintainable React ERP system, the **Hybrid Approach** is the industry standard:
+
+// 1. **Use Config for Data:** Put columns, filters, API endpoints, and search fields in a config file. (Data is easy to configure).
+// 2. **Use React for UI:** Continue passing `<CompanyListCard />` as a prop. (UI is hard to configure).
+
+// **Why?** Because creating a `<CompanyListCard />` component takes maybe 50 lines of easy-to-read HTML/JSX. Building a generic JSON-to-Card rendering engine takes hundreds of lines of complex logic, and breaks as soon as a stakeholder says "Can we make the company logo bigger on this one specific card?".
+
+// ### Decision Time
+// - If you want **maximum flexibility** and standard React patterns: Keep passing Card components as props.
+// - If you want a **strict, low-code architecture** where all cards must look identical and are driven by config: We can build the Card Structure Engine as outlined above. 
+
+// How would you like to proceed?
