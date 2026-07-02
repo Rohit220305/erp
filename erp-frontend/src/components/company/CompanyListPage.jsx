@@ -1,21 +1,155 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { listCompanies, deleteCompany } from "@/lib/api/company-api";
-import CompanyListCard from "./CompanyListCard";
-import CompanyGridCard from "./CompanyGridCard";
-import ConfigDrivenListing from "@/components/core/dynamic-ui/ConfigDrivenListing";
+import { useAuth } from "@/context/AuthContext";
+import { useListing } from "@/context/ListingContext";
+import { useHeader } from "@/context/HeaderContext";
 import companyConfig from "@/config/company.config.json";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import TableSkeleton from "@/components/common/TableSkeleton";
+import FilterDrawer from "@/components/common/FilterDrawer";
+import SearchDrawer from "@/components/common/SearchDrawer";
+import Pagination from "@/components/listing/Pagination";
 import toast from "react-hot-toast";
+
+import {
+  CompanyTableView,
+  CompanyListView,
+  CompanyGridView,
+} from "./CompanyViews";
 
 export default function CompanyListPage() {
   const router = useRouter();
+  const { can } = useAuth();
+  const { setConfig, resetConfig } = useHeader();
+  const { view, page, limit, setTotal, search, setLimit, setPage, total } = useListing();
+
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Search/Filter states
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sidebarFilters, setSidebarFilters] = useState(companyConfig.defaultFilters || {});
+  const [appliedSidebarFilters, setAppliedSidebarFilters] = useState(null);
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [tempLogicalOperator, setTempLogicalOperator] = useState("AND");
+  const [tempFilters, setTempFilters] = useState([]);
+  const [appliedFilters, setAppliedFilters] = useState([]);
+  const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
+
+  const handleOpenSearch = useCallback(() => {
+    if (tempFilters.length === 0 && companyConfig.searchFields?.length > 0) {
+      const defaultField = companyConfig.searchFields[0];
+      setTempFilters([
+        {
+          field: defaultField.value,
+          operator: "equal",
+          value: defaultField.type === "select" ? (defaultField.options[0]?.value || "") : "",
+        },
+      ]);
+    }
+    setIsSearchOpen(true);
+  }, [tempFilters.length]);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      let backendFilters = [];
+      let logicalOp = "AND";
+
+      if (appliedSidebarFilters) {
+        logicalOp = "AND";
+        Object.keys(appliedSidebarFilters).forEach((key) => {
+          const val = appliedSidebarFilters[key];
+          if (val) {
+            const op = key === "status" ? "equal" : "like";
+            backendFilters.push({ key, value: val, operator: op });
+          }
+        });
+      } else if (appliedFilters.length > 0) {
+        logicalOp = appliedLogicalOperator;
+        backendFilters = appliedFilters
+          .map((row) => {
+            if (row.value === undefined || row.value === null || row.value === "") return null;
+            return { key: row.field, value: row.value, operator: row.operator };
+          })
+          .filter(Boolean);
+      }
+
+      const response = await listCompanies({
+        page,
+        limit,
+        search,
+        filters: backendFilters.length > 0 ? backendFilters : undefined,
+        logicalOperator: logicalOp,
+      });
+
+      const data = response?.settings?.data || response?.data || {};
+      setCompanies(data.list || []);
+      setTotal(data?.pagination?.total || 0);
+      setLimit(data?.pagination?.limit || 10);
+    } catch (error) {
+      toast.error(`Failed to load ${companyConfig.title || "companies"}`);
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, setTotal, setLimit]);
+
+  // Handle header config
+  useEffect(() => {
+    const headerAction = companyConfig.actions?.header?.[0];
+    const canDoAction = headerAction && (!headerAction.permission || can(headerAction.permission));
+    // console.log("Header Action:", headerAction, "Can Do Action:", canDoAction);
+    setConfig({
+      header: {
+        icons: ["refresh", "search", "filter", "view"],
+        showBookmark: true,
+        showLanguage: true,
+        showProfile: true,
+        showMenu: true,
+        showSearch: true,
+        onFilterClick: () => setIsFilterOpen(true),
+        onSearchClick: handleOpenSearch,
+        actionButton: canDoAction
+          ? {
+              label: headerAction.label,
+              onClick: () => {
+                if (headerAction.type === "redirect" && headerAction.path) {
+                  router.push(headerAction.path);
+                }
+              },
+            }
+          : null,
+      },
+      navbar: {
+        title: "Listing",
+        breadcrumbs: [
+          { label: "Master", href: "/" },
+          { label: companyConfig.title, href: `/${companyConfig.moduleName.toLowerCase()}` },
+        ],
+      },
+    });
+    return () => resetConfig();
+  }, [setConfig, handleOpenSearch, can, router]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleRowAction = useCallback((action, item) => {
     if (action.type === "editRedirect") {
+      let path = action.path;
+      if (path.includes("{id}")) {
+        path = path.replace("{id}", item.id);
+      }
+      router.push(path);
+    } else if (action.type === "viewRedirect") {
       let path = action.path;
       if (path.includes("{id}")) {
         path = path.replace("{id}", item.id);
@@ -34,9 +168,7 @@ export default function CompanyListPage() {
       const message = res?.message || res?.settings?.message;
       if (isSuccess) {
         toast.success("Company deleted successfully");
-        // We need a way to refresh the listing, typically by triggering a re-fetch.
-        // A simple window reload or triggering context works for now.
-        window.location.reload(); 
+        loadData();
       } else {
         toast.error(message || "Failed to delete company");
       }
@@ -45,17 +177,49 @@ export default function CompanyListPage() {
     } finally {
       setDeleteTarget(null);
     }
-  }, [deleteTarget]);
+  }, [deleteTarget, loadData]);
+
+  const paginationProps = {
+    page,
+    limit,
+    total,
+    onPageChange: setPage,
+    onLimitChange: setLimit,
+  };
+
+  if (!can(companyConfig.permissions.list)) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500 text-lg">You do not have permission to view this module.</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="px-6">
+        <TableSkeleton rows={8} cols={companyConfig.columns?.length || 5} />
+      </div>
+    );
+  }
 
   return (
-    <div className="h-full">
-      <ConfigDrivenListing
-        config={companyConfig}
-        fetchData={listCompanies}
-        onRowAction={handleRowAction}
-        renderListCard={(c) => <CompanyListCard key={c.id} company={c} />}
-        renderGridCard={(c) => <CompanyGridCard key={c.id} company={c} />}
-      />
+    <div className="relative px-6 h-full">
+      {/* Rendering specific view based on context */}
+      {view === "table" && (
+        <CompanyTableView
+          data={companies}
+          config={companyConfig}
+          onRowAction={handleRowAction}
+        />
+      )}
+      {view === "list" && <CompanyListView data={companies} config = {companyConfig}/>}
+      {view === "grid" && <CompanyGridView data={companies} config = {companyConfig}/>}
+
+      {/* Shared Pagination component */}
+      <div className="absolute bottom-0 left-0 right-0 mx-6 bg-white border-t border-gray-200">
+        <Pagination {...paginationProps} />
+      </div>
 
       <ConfirmModal
         isOpen={!!deleteTarget}
@@ -65,6 +229,55 @@ export default function CompanyListPage() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {companyConfig.defaultFilters && (
+        <FilterDrawer
+          open={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          onSearch={() => {
+            setAppliedSidebarFilters(sidebarFilters);
+            setAppliedFilters([]);
+            setPage(1);
+            setIsFilterOpen(false);
+          }}
+          onReset={() => {
+            setSidebarFilters(companyConfig.defaultFilters);
+            setAppliedSidebarFilters(null);
+            setPage(1);
+            setIsFilterOpen(false);
+          }}
+          filters={sidebarFilters}
+          setFilters={setSidebarFilters}
+          statuses={companyConfig.sidebarStatuses || []}
+        />
+      )}
+
+      {companyConfig.searchFields && (
+        <SearchDrawer
+          open={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          onSearch={() => {
+            setAppliedFilters(tempFilters);
+            setAppliedLogicalOperator(tempLogicalOperator);
+            setAppliedSidebarFilters(null);
+            setPage(1);
+            setIsSearchOpen(false);
+          }}
+          onReset={() => {
+            setTempFilters([]);
+            setAppliedFilters([]);
+            setTempLogicalOperator("AND");
+            setAppliedLogicalOperator("AND");
+            setPage(1);
+            setIsSearchOpen(false);
+          }}
+          filters={tempFilters}
+          setFilters={setTempFilters}
+          logicalOperator={tempLogicalOperator}
+          setLogicalOperator={setTempLogicalOperator}
+          fields={companyConfig.searchFields}
+        />
+      )}
     </div>
   );
 }

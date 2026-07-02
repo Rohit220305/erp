@@ -54,7 +54,7 @@ export class GroupController {
   }
 
   @Post('list-group')
-  @RequirePermission('GROUP_VIEW')
+  @RequirePermission('GROUP_LIST')
   async listGroup(@Req() req, @Body() body: GroupListDto) {
     return await this.groupListService.startGroupList(req, body);
   }

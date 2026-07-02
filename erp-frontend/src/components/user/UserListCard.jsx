@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function UserListCard({ user }) {
+export default function UserListCard({ user, can }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const router = useRouter();
 
@@ -30,12 +30,18 @@ export default function UserListCard({ user }) {
                   </div>
                 )}
                 <div>
-                  <p 
-                    className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer w-fit"
-                    onClick={() => router.push(`/admin/${user.id}`)}
-                  >
-                    {user.firstName} {user.lastName}
-                  </p>
+                  {can("USER_VIEW") ? (
+                    <p 
+                      className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer w-fit"
+                      onClick={() => router.push(`/admin/${user.id}`)}
+                    >
+                      {user.firstName} {user.lastName}
+                    </p>
+                  ) : (
+                    <p className="text-sm font-semibold text-gray-800">
+                      {user.firstName} {user.lastName}
+                    </p>
+                  )}
                   {user.phone && <p className="text-[11px] text-gray-400 mt-0.5">(+91)-{user.phone}</p>}
                 </div>
               </div>

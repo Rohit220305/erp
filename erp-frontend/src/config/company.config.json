@@ -2,8 +2,11 @@
   "moduleName": "Company",
   "title": "Company Master",
   "permissions": {
+    "list": "COMPANY_LIST",
     "create": "COMPANY_CREATE",
-    "view": "COMPANY_VIEW"
+    "view": "COMPANY_VIEW",
+    "update": "COMPANY_UPDATE",
+    "delete": "COMPANY_DELETE"
   },
   "columns": [
     { "label": "Logo", "key": "logoUrl", "type": "image" },
@@ -20,8 +23,9 @@
       { "label": "Add Company", "type": "redirect", "path": "/company/add", "permission": "COMPANY_CREATE" }
     ],
     "row": [
-      { "label": "Edit", "type": "editRedirect", "path": "/company/edit/{id}", "permission": "COMPANY_UPDATE" },
-      { "label": "Delete", "type": "deleteModal", "permission": "COMPANY_DELETE" }
+      { "label": "Edit", "type": "editRedirect", "path": "/company/{id}/edit-company", "icon": "Edit", "permission": "COMPANY_UPDATE" },
+      { "label": "View", "type": "viewRedirect", "path": "/company/{id}", "icon": "Eye", "permission": "COMPANY_VIEW" },
+      { "label": "Delete", "type": "deleteModal", "icon": "Trash2", "permission": "COMPANY_DELETE", "danger": true }
     ]
   },
   "searchFields": [
@@ -48,9 +52,38 @@
   "sidebarStatuses": [
     { "label": "Active", "value": "Active" },
     { "label": "Inactive", "value": "Inactive" }
-  ]
+  ],
+  "listCard": {
+    "primary": {
+      "image": "logoUrl",
+      "title": "companyName",
+      "subtitle": "companyCode"
+    },
+    "columns": [
+      { "label": "Email", "key": "email", "type": "text" },
+      { "label": "Phone", "key": "phone", "type": "phone" },
+      { "label": "Status", "key": "status", "type": "statusBadge" }
+    ],
+    "expanded": [
+      { "label": "Legal Name", "key": "legalName", "type": "text" },
+      { "label": "Registration No.", "key": "registrationNumber", "type": "text" },
+      { "label": "Contact Person", "key": "contactPersonName", "type": "text" },
+      { "label": "Added Date", "key": "addedDateFormatted", "type": "text" }
+    ]
+  },
+  "gridCard": {
+    "header": {
+      "image": "logoUrl",
+      "title": "companyName",
+      "subtitle": "shortName",
+      "badge": "status"
+    },
+    "details": [
+      { "icon": "Mail", "key": "email", "type": "text" },
+      { "icon": "Phone", "key": "phone", "type": "phone" }
+    ],
+    "footer": {
+      "date": "addedDateFormatted"
+    }
+  }
 }
-
-
-
-

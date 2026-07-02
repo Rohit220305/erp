@@ -9,6 +9,7 @@ export default function SitemapCard({ title, menus, path }) {
         onClick={() => router.push(path)}
       >
         <h3 className="font-medium text-[18px]">{title}</h3>
+       
       </div>
 
       <ul className="px-8 py-4">

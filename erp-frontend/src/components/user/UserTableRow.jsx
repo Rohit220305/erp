@@ -1,4 +1,5 @@
 import { LogIn, RotateCw } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function UserTableRow({
   item,
@@ -8,6 +9,9 @@ export default function UserTableRow({
   setSelectedUserForPasswordReset,
   setSelectedUserForDetails,
 }) {
+  const { can } = useAuth();
+  const hasViewPerm = can("USER_VIEW");
+
   if (columnKey === "firstName") {
     return (
       <div className="flex items-center gap-3">
@@ -24,12 +28,18 @@ export default function UserTableRow({
           </div>
         )}
         <div>
-          <p
-            className="font-medium text-[#1565c0] hover:underline cursor-pointer text-sm"
-            onClick={() => setSelectedUserForDetails(item)}
-          >
-            {item.firstName} {item.lastName}
-          </p>
+          {hasViewPerm ? (
+            <p
+              className="font-medium text-[#1565c0] hover:underline cursor-pointer text-sm"
+              onClick={() => setSelectedUserForDetails(item)}
+            >
+              {item.firstName} {item.lastName}
+            </p>
+          ) : (
+            <p className="font-medium text-gray-800 text-sm">
+              {item.firstName} {item.lastName}
+            </p>
+          )}
           <p className="text-xs text-gray-400">{item.userName}</p>
         </div>
       </div>

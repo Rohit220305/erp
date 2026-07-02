@@ -301,6 +301,14 @@ export default function UserListPage() {
     [currentUser, handleLoginAs],
   );
 
+  if (!can("USER_LIST")) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500 text-lg">You do not have permission to view this module.</p>
+      </div>
+    );
+  }
+
   if (loading)
     return (
       <div className="px-6">

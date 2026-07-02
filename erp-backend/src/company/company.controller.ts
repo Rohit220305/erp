@@ -41,7 +41,7 @@ export class CompanyController {
   ) {}
 
   @Post('list-company')
-  @RequirePermission('COMPANY_VIEW')
+  @RequirePermission('COMPANY_LIST')
   getAllCompanies(@Req() req, @Body() body: CompanyListDto) {
     return this.companyListService.startCompanyList(req, body);
   }

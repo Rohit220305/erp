@@ -79,13 +79,13 @@ export class AuthService {
       },
       relations: { capability: true },
     });
-
+    // console.log(mappings);
     const permissions = mappings
       .map((m) => m.capability?.capabilityCode)
       .filter(Boolean)
       .map((code) => {
-        if (code.endsWith('_ADD')) return code.replace('_ADD', '_CREATE');
-        if (code.endsWith('_EDIT')) return code.replace('_EDIT', '_UPDATE');
+        // if (code.endsWith('_ADD')) return code.replace('_ADD', '_CREATE');
+        // if (code.endsWith('_EDIT')) return code.replace('_EDIT', '_UPDATE');
         return code;
       });
 
@@ -118,7 +118,7 @@ export class AuthService {
     const payload = this.buildPayload(user);
 
     const accessExpires =
-      this.config.get<string>('JWT_ACCESS_EXPIRES') ?? '15m';
+      this.config.get<string>('JWT_ACCESS_EXPIRES') ?? '10s';
     const refreshExpires =
       this.config.get<string>('JWT_REFRESH_EXPIRES') ?? '7d';
 
@@ -135,7 +135,7 @@ export class AuthService {
     // Convert expires string to milliseconds for cookie maxAge
     const accessMaxAge = this.expiresInToMs(accessExpires);
     const refreshMaxAge = this.expiresInToMs(refreshExpires);
-
+    console.log(`Generated tokens for user ${user.userName}: accessToken expires in ${accessMaxAge}ms, refreshToken expires in ${refreshMaxAge}ms`);
     return { accessToken, refreshToken, accessMaxAge, refreshMaxAge };
   }
 
@@ -257,12 +257,12 @@ export class AuthService {
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token missing');
     }
-
     let payload: JwtPayload;
     try {
       payload = this.jwtService.verify<JwtPayload>(refreshToken, {
         secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
       });
+      console.log('Refresh token verified successfully for user ID:', payload.sub);
     } catch (error: any) {
       // Clear stale cookies before throwing
       res.clearCookie('accessToken');
@@ -297,7 +297,7 @@ export class AuthService {
       accessMaxAge,
       refreshMaxAge,
     );
-
+    console.log('Tokens refreshed successfully for user ID:', payload.sub);
     return { success: 1, message: 'Token refreshed' };
   }
 
@@ -312,7 +312,7 @@ export class AuthService {
   // ─── Login-as-user (super admin only) ───────────────────────────────────────
 
   /**
-   * Allows a super admin to impersonate another user.
+   * Allows a super admin to impersonate another user.  
    * Guard must ensure only isSuperAdmin users can reach this endpoint.
    */
   async loginAsUser(res: Response, targetUserId: number) {
@@ -328,6 +328,10 @@ export class AuthService {
     const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
       this.generateTokens(target);
 
+    await this.userRepo.update(
+      { id: target.id },
+      { lastLoginDate: () => 'NOW()' as any },
+    );
     this.setCookies(
       res,
       accessToken,

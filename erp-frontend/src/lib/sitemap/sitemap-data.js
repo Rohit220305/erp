@@ -6,27 +6,27 @@ export const sitemapData = [
   },
   {
     title: "Company",
-    permission: "COMPANY_VIEW",
+    permission: "COMPANY_LIST",
     menus: [
-      { label: "Company Master", path: "/company", permission: "COMPANY_VIEW" },
+      { label: "Company Master", path: "/company", permission: "COMPANY_LIST" },
       // { label: "Add Company", path: "/company/add" },
     ],
     path: "/company",
   },
   {
     title: "Groups and Roles",
-    permission: "GROUP_VIEW",
+    permission: "GROUP_LIST",
     menus: [
-      { label: "Groups", path: "/group", permission: "GROUP_VIEW" },
+      { label: "Groups", path: "/group", permission: "GROUP_LIST" },
       // { label: "Add Group", path: "/group/add" },
     ],
     path: "/group",
   },
   {
     title: "Users & Staff Management",
-    permission: "USER_VIEW",
+    permission: "USER_LIST",
     menus: [
-      { label: "Admin Users", path: "/admin", permission: "USER_VIEW" },
+      { label: "Admin Users", path: "/admin", permission: "USER_LIST" },
       // { label: "Add User", path: "/admin/add" },
     ],
     path: "/admin",

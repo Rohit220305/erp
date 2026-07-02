@@ -10,8 +10,12 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
     <div className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-200  group">
       {/* Avatar + Name */}
       <div
-        className="flex items-center gap-3 mb-4 cursor-pointer"
-        onClick={() => setSelectedUserForDetails(user)}
+        className={`flex items-center gap-3 mb-4 ${can("USER_VIEW") ? "cursor-pointer" : ""}`}
+        onClick={() => {
+          if (can("USER_VIEW")) {
+            setSelectedUserForDetails(user);
+          }
+        }}
       >
         {user.photoUrl ? (
           <img

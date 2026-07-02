@@ -6,7 +6,6 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function SitemapGrid({ data }) {
   const { can } = useAuth();
-
   const breakpointColumnsObj = {
     default: 4,
     1280: 4,

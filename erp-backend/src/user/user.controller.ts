@@ -125,10 +125,9 @@ export class UserController {
   }
 
   @Post('list-user')
-  @RequirePermission('USER_VIEW')
+  @RequirePermission('USER_LIST')
   async listUser(@Req() req, @Body() body: UserListDto) {
     return await this.userListService.startUserList(req, body);
   }
-
 }
 

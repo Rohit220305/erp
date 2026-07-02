@@ -1,10 +1,12 @@
 import React from "react";
 import Link from "next/link";
 import { resolvePath } from "./utils/pathResolver";
+import { useAuth } from "@/context/AuthContext";
 
-export default function CellRenderer({ item, column }) {
-  const value = resolvePath(item, column.key);
+export default function CellRenderer({ company, column, companyConfig }) {
+  const { can } = useAuth();
 
+  const value = resolvePath(company, column.key);
   switch (column.type) {
     case "image":
       return value ? (
@@ -26,14 +28,26 @@ export default function CellRenderer({ item, column }) {
         if (matches) {
           matches.forEach((match) => {
             const key = match.replace(/[{}]/g, "");
-            href = href.replace(match, item[key] || "");
+            href = href.replace(match, company[key] || "");
           });
         }
       }
       return (
-        <Link href={href} className="font-medium hover:cursor-pointer text-[#1565c0] hover:underline">
-          {value}
-        </Link>
+        // <Link href={href} className="font-medium hover:cursor-pointer text-[#1565c0] hover:underline">
+        //   {value}
+        // </Link>
+        can(companyConfig.permissions?.view || "COMPANY_VIEW") ? (
+          <Link
+            href={`/company/${company.id}`}
+            className="block w-fit text-[#1565c0] "
+          >
+            <p className="text-sm font-semibold hover:underline">
+              {value || "—"}
+            </p>
+          </Link>
+        ) : (
+          <p className="text-sm font-semibold text-gray-800">{value || "—"}</p>
+        )
       );
     }
 
@@ -53,7 +67,8 @@ export default function CellRenderer({ item, column }) {
     case "phone":
       return (
         <span>
-          {item.dialCode ? `${item.dialCode} ` : ""}{value || "-"}
+          {company.dialCode ? `${company.dialCode} ` : ""}
+          {value || "-"}
         </span>
       );
 

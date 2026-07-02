@@ -50,38 +50,61 @@ export const companyListingConfig = {
 
 
 
+// # Implementation Plan: Config-Driven List & Grid Cards
 
-// # Company Module Redesign Walkthrough
+// To make `CompanyListCard` and `CompanyGridCard` config-based, we will extend the existing `company.config.json` to define the layout for these specific views, eliminating hardcoded keys inside the components.
 
-// We have successfully completed the phase-wise implementation of the JSON-driven dynamic React module for the Company Module.
+// ## Proposed Changes
 
-// Here is a summary of the changes and new components added.
+// ### 1. Extend `company.config.json`
+// We will add two new config blocks to map fields specifically for the list and grid views:
 
-// ## What was completed
+// ```json
+// "listCard": {
+//   "primary": {
+//     "image": "logoUrl",
+//     "title": "companyName",
+//     "subtitle": "companyCode"
+//   },
+//   "columns": [
+//     { "label": "Email", "key": "email", "type": "text" },
+//     { "label": "Phone", "key": "phone", "type": "phone" },
+//     { "label": "Status", "key": "status", "type": "statusBadge" }
+//   ],
+//   "expanded": [
+//     { "label": "Legal Name", "key": "legalName", "type": "text" },
+//     { "label": "Registration No.", "key": "registrationNumber", "type": "text" },
+//     { "label": "Contact Person", "key": "contactPersonName", "type": "text" },
+//     { "label": "Added Date", "key": "addedDateFormatted", "type": "text" }
+//   ]
+// },
+// "gridCard": {
+//   "header": {
+//     "image": "logoUrl",
+//     "title": "companyName",
+//     "subtitle": "shortName",
+//     "badge": "status"
+//   },
+//   "details": [
+//     { "icon": "Mail", "key": "email", "type": "text" },
+//     { "icon": "Phone", "key": "phone", "type": "phone" }
+//   ],
+//   "footer": {
+//     "date": "addedDateFormatted"
+//   }
+// }
+// ```
 
-// ### 1. JSON Configuration
-// - Created `src/config/company.config.json`. This acts as the single source of truth for the company module. It defines columns, header actions, row actions, search fields, and default filters.
+// ### 2. Refactor `CompanyListCard.jsx`
+// - Replace hardcoded field rendering with loops that map over `config.listCard.columns` and `config.listCard.expanded`.
+// - Use the existing `CellRenderer` for rendering values based on their types (e.g., `statusBadge`, `phone`).
+// - Use the `primary` mapping for the main left-column display (Logo + Name + Code).
 
-// ### 2. Core Dynamic Engine
-// We created a reusable dynamic table rendering engine located in `src/components/core/dynamic-ui/`:
-// - **`pathResolver.js`**: A pure utility to safely parse nested properties (like `owner.name`) via dot notation from backend response objects.
-// - **`CellRenderer.jsx`**: Maps configured component types (`image`, `link`, `statusBadge`, `phone`, `text`) to React UI components on a per-cell basis. This eliminates hardcoded conditional rendering.
-// - **`ActionRenderer.jsx`**: Evaluates row-level actions against the user's permissions via `useAuth().can()`. If allowed, it renders the corresponding action buttons (like Edit, Delete).
-// - **`ConfigDrivenListing.jsx`**: Acts as a bridge between the JSON config and the existing `DynamicListing` component. It abstracts away column looping and handles the mapping of header and row actions securely.
+// ### 3. Refactor `CompanyGridCard.jsx`
+// - Replace hardcoded fields with loops over `config.gridCard.details`.
+// - Use `resolvePath` to extract dynamic keys from the header configuration.
 
-// ### 3. Module Refactoring
-// - Refactored `CompanyListPage.jsx`. We removed all manual table configurations (`renderCell` switch-case blocks) and hardcoded add/edit buttons.
-// - The module is now remarkably thin and clean, only taking the configuration JSON and passing it to `<ConfigDrivenListing />`.
-// - Additionally, we implemented a generic way to intercept row clicks (e.g., triggering a modal or navigating).
-
-// ### 4. API Integrity & Build
-// - Added the missing `deleteCompany` endpoint function to `src/lib/api/company-api.js` to ensure the delete row action works correctly.
-// - Ran the production build `npm run build` which passed without errors.
-
-// ## Validation Results
-// - The build executed correctly.
-// - Component paths and module imports were verified and successfully resolved.
-// - You can now test the Company Module locally by navigating to the Companies tab. It should seamlessly render your columns (and nested properties) using the new architecture while honoring role permissions.
-
-// > [!TIP]
-// > **Future modules**: You can easily migrate other modules (e.g. User Module) to this approach just by writing a `[module].config.json` and wrapping their list page in `<ConfigDrivenListing />`.
+// ## User Review Required
+// > [!IMPORTANT]
+// > Please review this structure. This will ensure that both the List and Grid views are strictly driven by `company.config.json`. Once approved, I will implement the changes directly to `CompanyListCard.jsx` and `CompanyGridCard.jsx`.
+ 

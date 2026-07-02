@@ -27,6 +27,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    
     return this.authService.refresh(req, res);
   }
 
