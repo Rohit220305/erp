@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as nodemailer from 'nodemailer';
 
 import { UserEntity } from 'src/user/entity/user.entity';
 import { CompanyEntity } from 'src/company/entity/company.entity';
@@ -21,11 +22,9 @@ import { LoginDto } from './dto/login.dto';
 import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
 import { PermissionCacheService } from './permission.cache.service';
 
-// ─── Cookie helpers ───────────────────────────────────────────────────────────
 
 const IS_PROD = () => process.env.NODE_ENV === 'production';
 
-/** Short-lived access token cookie (15 min by default) */
 const accessCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
@@ -33,7 +32,6 @@ const accessCookieOptions = (maxAgeMs: number) => ({
   maxAge: maxAgeMs,
 });
 
-/** Long-lived refresh token cookie (7 days by default) */
 const refreshCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
@@ -41,7 +39,6 @@ const refreshCookieOptions = (maxAgeMs: number) => ({
   maxAge: maxAgeMs, 
 });
 
-// ─── Service ──────────────────────────────────────────────────────────────────
 
 @Injectable()
 export class AuthService {
@@ -60,7 +57,7 @@ export class AuthService {
     private readonly permissionCacheService: PermissionCacheService,
   ) {}
 
-  // ─── Private helpers ────────────────────────────────────────────────────────
+  // ─── Private helpers 
 
   /** Load capabilities by groupId */
   async getGroupCapabilities(groupId: number): Promise<string[]> {
@@ -93,7 +90,6 @@ export class AuthService {
     return permissions;
   }
 
-  /** Build the JWT payload from a UserEntity */
   private buildPayload(user: UserEntity): Omit<JwtPayload, 'iat' | 'exp'> {
     return {
       sub: user.id,
@@ -104,11 +100,7 @@ export class AuthService {
     };
   }
 
-  /**
-   * Sign and return both tokens.
-   * Access token  : JWT_ACCESS_EXPIRES  (default 15m)
-   * Refresh token : JWT_REFRESH_EXPIRES (default 7d)
-   */
+
   private generateTokens(user: UserEntity): {
     accessToken: string;
     refreshToken: string;
@@ -135,11 +127,9 @@ export class AuthService {
     // Convert expires string to milliseconds for cookie maxAge
     const accessMaxAge = this.expiresInToMs(accessExpires);
     const refreshMaxAge = this.expiresInToMs(refreshExpires);
-    // console.log(`Generated tokens for user ${user.userName}: accessToken expires in ${accessMaxAge}ms, refreshToken expires in ${refreshMaxAge}ms`);
     return { accessToken, refreshToken, accessMaxAge, refreshMaxAge };
   }
 
-  /** Convert a JWT expiresIn string (e.g. '15m', '7d', '2h') to milliseconds */
   private expiresInToMs(expiresIn: string): number {
     const match = expiresIn.match(/^(\d+)([smhd])$/);
     if (!match) return 15 * 60 * 1000; // fallback 15m
@@ -154,11 +144,7 @@ export class AuthService {
     return value * multipliers[unit];
   }
 
-  /**
-   * Build the safe user object returned in login/refresh responses.
-   * Enriches with companyName, groupName, and profile photo URL.
-   * Password is always stripped.
-   */
+
   private async buildSafeUser(user: UserEntity): Promise<Record<string, any>> {
     const company = await this.companyRepo.findOne({
       where: { id: user.companyId },
@@ -184,7 +170,6 @@ export class AuthService {
     return safeUser;
   }
 
-  /** Set both tokens as httpOnly cookies on the response */
   private setCookies(
     res: Response,
     accessToken: string,
@@ -200,7 +185,6 @@ export class AuthService {
     );
   }
 
-  // ─── Login ──────────────────────────────────────────────────────────────────
 
   async login(req: Request, res: Response, body: LoginDto) {
     const { userName, password } = body;
@@ -224,7 +208,6 @@ export class AuthService {
     }
     console.log(`User ${user.userName} authenticated successfully`);
 
-    // Update last login timestamp
     await this.userRepo.update(
       { id: user.id },
       { lastLoginDate: () => 'NOW()' as any },
@@ -301,7 +284,7 @@ export class AuthService {
     return { success: 1, message: 'Token refreshed' };
   }
 
-  // ─── Logout ─────────────────────────────────────────────────────────────────
+  // ─── Logout 
 
   async logout(res: Response) {
     res.clearCookie('accessToken');
@@ -309,12 +292,8 @@ export class AuthService {
     return { success: 1, message: 'Logged out successfully' };
   }
 
-  // ─── Login-as-user (super admin only) ───────────────────────────────────────
+  // ─── Login-as-user (super admin only) 
 
-  /**
-   * Allows a super admin to impersonate another user.  
-   * Guard must ensure only isSuperAdmin users can reach this endpoint.
-   */
   async loginAsUser(res: Response, targetUserId: number) {
     const target = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!target) {
@@ -350,12 +329,9 @@ export class AuthService {
     };
   }
 
-  // ─── Change Password ─────────────────────────────────────────────────────────
+  // ─── Change Password 
 
-  /**
-   * Validates current password, ensures newPassword === confirmPassword,
-   * then persists the new bcrypt hash.
-   */
+  
   async changePassword(
     userId: number,
     currentPassword: string,
@@ -436,6 +412,97 @@ export class AuthService {
     } catch (error) {
       return { success: 0, message: 'Invalid or expired session token' };
     }
+  }
+
+  // ─── Forgot Password 
+
+  async forgotPassword(email: string) {
+    if (!email) {
+      return { success: 0, message: 'Email is required' };
+    }
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user) {
+      return { success: 0, message: 'User does not exist with email' };
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = new Date();
+    expiry.setMinutes(expiry.getMinutes() + 10); // 10 minutes
+
+    await this.userRepo.update({ id: user.id }, {
+      resetPasswordOtp: otp,
+      resetPasswordOtpExpiry: expiry
+    });
+
+    try {
+      await this.sendOtpEmail(email, otp);
+    } catch (error) {
+      console.error('Failed to send OTP email:', error);
+      return { success: 0, message: 'Failed to send OTP email' };
+    }
+
+    return { success: 1, message: 'OTP sent to email successfully' };
+  }
+
+  async verifyOtp(email: string, otp: string) {
+    if (!email || !otp) {
+      return { success: 0, message: 'Email and OTP are required' };
+    }
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user || user.resetPasswordOtp !== otp) {
+      return { success: 0, message: 'Invalid OTP' };
+    }
+    if (user.resetPasswordOtpExpiry && new Date() > user.resetPasswordOtpExpiry) {
+      return { success: 0, message: 'OTP expired' };
+    }
+    return { success: 1, message: 'OTP verified successfully' };
+  }
+
+  async resetPassword(email: string, otp: string, newPassword: string) {
+    if (!email || !otp || !newPassword) {
+      return { success: 0, message: 'Email, OTP, and new password are required' };
+    }
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user || user.resetPasswordOtp !== otp) {
+      return { success: 0, message: 'Invalid OTP' };
+    }
+    if (user.resetPasswordOtpExpiry && new Date() > user.resetPasswordOtpExpiry) {
+      return { success: 0, message: 'OTP expired' };
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.userRepo.update({ id: user.id }, {
+      password: hashed,
+      resetPasswordOtp: null as any,
+      resetPasswordOtpExpiry: null as any,
+    });
+
+    return { success: 1, message: 'Password reset successfully' };
+  }
+
+  private async sendOtpEmail(to: string, otp: string) {
+    console.log(`Sending OTP ${otp} to email: ${to}`);
+    const transporter = nodemailer.createTransport({
+      host: this.config.get<string>('SMTP_HOST') || 'smtp.gmail.com',
+      port: parseInt(this.config.get<string>('SMTP_PORT') || '587', 10),
+      secure: false, 
+      auth: {
+        user: this.config.get<string>('SMTP_USER'),
+        pass: this.config.get<string>('SMTP_PASS'),
+      },
+    });
+
+    const from = this.config.get<string>('SMTP_FROM_EMAIL') || '"ERP System" <noreply@erp.com>';
+    console.log(`Using SMTP from: ${from} to send OTP email to: ${to}`);
+    await transporter.sendMail({
+      from,
+      to,
+      subject: 'Password Reset OTP',
+      text: `Your OTP for password reset is ${otp}. It is valid for 10 minutes.`,
+      html: `<b>Your OTP for password reset is ${otp}.</b><br>It is valid for 10 minutes.`,
+    });
+    console.log(`OTP email sent to ${to} successfully`);
   }
 
   async getUserPermissions(req: Request) {

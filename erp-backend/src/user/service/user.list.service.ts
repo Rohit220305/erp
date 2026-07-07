@@ -129,7 +129,7 @@ export class UserListService {
 
   async getUserList(req, params) {
     let return_data: any = {};
-    console.log('params', params);
+    // console.log('params', params);
     try {
       const page = params.page ? parseInt(params.page) : 1;
 
@@ -207,7 +207,7 @@ export class UserListService {
       queryBuilder.take(limit);
 
       const [data, total] = await queryBuilder.getManyAndCount();
-      console.log('data', data);
+      // console.log('data', data);
       const userList: any[] = [];
 
       for (const user of data) {
@@ -279,7 +279,7 @@ export class UserListService {
 
     return return_data;
   }
-
+  
   async finishSuccess(params) {
     return {
       settings: {

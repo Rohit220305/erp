@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { loginUser } from "@/lib/api/auth-api";
 import { Mail, EyeOff, LockKeyhole, LockOpen } from "lucide-react";
+import toast from "react-hot-toast";
 import { loginSchema } from "@/lib/validation/login.schema";
 
 export default function LoginForm() {
@@ -13,7 +15,6 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState("");
 
   const [form, setForm] = useState({ userName: "", password: "" });
 
@@ -21,7 +22,6 @@ export default function LoginForm() {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
-    if (serverError) setServerError("");
   };
 
   const handleSubmit = async (e) => {
@@ -42,16 +42,17 @@ export default function LoginForm() {
       const response = await loginUser(form);
 
       if (response?.success === 1 && response?.data) {
+        toast.success(response.message || "Login successful");
         // Store user metadata in context (tokens are httpOnly cookies)
         login(response.data, response.data.token);
         router.push("/");
       } else {
-        setServerError(
+        toast.error(
           response?.message || "Login failed. Please check your credentials."
         );
       }
     } catch (error) {
-      setServerError(error.message || "Something went wrong. Please try again.");
+      toast.error(error.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -62,12 +63,6 @@ export default function LoginForm() {
       <h1 className="mb-10 text-2xl font-medium text-black">
         Log in to Production Planning
       </h1>
-
-      {serverError && (
-        <div className="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-          {serverError}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
         {/* Username */}
@@ -138,13 +133,12 @@ export default function LoginForm() {
             <input type="checkbox" className="h-4 w-4 cursor-pointer" />
             Remember me
           </label>
-          <button
-            type="button"
-            onClick={() => router.push("/forgot-password")}
+          <Link
+            href="/forgot-password"
             className="cursor-pointer text-sm font-semibold text-black hover:text-[#1565c0]"
           >
             Forgot Password?
-          </button>
+          </Link>
         </div>
       </form>
     </div>

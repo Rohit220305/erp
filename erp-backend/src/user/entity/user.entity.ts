@@ -41,6 +41,18 @@ export class UserEntity {
   password: string;
 
   @Column({
+    length: 6,
+    nullable: true,
+  })
+  resetPasswordOtp: string;
+
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+  })
+  resetPasswordOtpExpiry: Date;
+
+  @Column({
     length: 10,
     nullable: true,
   })

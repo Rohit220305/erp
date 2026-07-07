@@ -100,5 +100,23 @@ export class AuthController {
   ) {
     return this.authService.restoreSession(res, token);
   }
+
+  @Public()
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: { email: string }) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Public()
+  @Post('verify-otp')
+  async verifyOtp(@Body() body: { email: string; otp: string }) {
+    return this.authService.verifyOtp(body.email, body.otp);
+  }
+
+  @Public()
+  @Post('reset-password-otp')
+  async resetPasswordOtp(@Body() body: { email: string; otp: string; newPassword: string }) {
+    return this.authService.resetPassword(body.email, body.otp, body.newPassword);
+  }
 }
 

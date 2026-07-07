@@ -75,3 +75,42 @@ export async function resetPasswordAsAdmin(targetUserId, newPassword) {
   });
 }
 
+/**
+ * POST /auth/forgot-password — public
+ * Sends OTP to email
+ */
+export async function forgotPassword(data) {
+  const res = await fetch(`${API_URL}/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+/**
+ * POST /auth/verify-otp — public
+ * Verifies OTP against email
+ */
+export async function verifyOtp(data) {
+  const res = await fetch(`${API_URL}/auth/verify-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+/**
+ * POST /auth/reset-password-otp — public
+ * Resets password using OTP
+ */
+export async function resetPasswordOtp(data) {
+  const res = await fetch(`${API_URL}/auth/reset-password-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
