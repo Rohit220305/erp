@@ -6,6 +6,8 @@ export async function apiClient(path, options = {}) {
   const url = path.startsWith("http") ? path : `${API_URL}${path}`;
   const isServer = typeof window === "undefined";
 
+  console.log(`API Request: ${options.method } ${url}`, options);
+
   const makeRequest = async (overrideHeaders = {}) => {
     const isFormData = options.body instanceof FormData;
 
@@ -17,11 +19,9 @@ export async function apiClient(path, options = {}) {
         const rawCookies = cookieStore.toString();
         if (rawCookies) serverCookieHeader = { Cookie: rawCookies };
       } catch {
-        // cookies() throws if called outside a request context
       }
     }
     
-    // Merge server cookies with any override headers (like new cookies after refresh)
     const finalHeaders = { ...serverCookieHeader, ...overrideHeaders, ...options.headers };
 
     return fetch(url, {
@@ -53,7 +53,6 @@ export async function apiClient(path, options = {}) {
 
       try {
         await clientRefreshPromise;
-        // Retry original request with new cookies
         res = await makeRequest();
       } catch (err) {
         localStorage.removeItem("sessionStack");

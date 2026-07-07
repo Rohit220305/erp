@@ -1,18 +1,18 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, BadRequestException } from "@nestjs/common";
 import path from "path";
 
 @Injectable()
 export class GeneralUtilities {
-  async makeFilterString(filters: any, alias, logicalOperator = 'AND') {
+  async makeFilterString(filters: any, columnMapOrAlias: Record<string, string> | string, logicalOperator = 'AND') {
     try {
       let filterString: any = '';
       const op = logicalOperator === 'OR' ? 'OR' : 'AND';
 
       if (filters && filters.length > 0) {
-        filterString = await this.makeFilterCondition(filters[0], alias);
+        filterString = await this.makeFilterCondition(filters[0], columnMapOrAlias);
 
         for (let i = 1; i < filters.length; i++) {
-          const condition = await this.makeFilterCondition(filters[i], alias);
+          const condition = await this.makeFilterCondition(filters[i], columnMapOrAlias);
           filterString = filterString + ` ${op} ` + condition;
         }
       } else {
@@ -22,12 +22,23 @@ export class GeneralUtilities {
       return filterString;
     } catch (err) {
       console.log(err);
+      throw err;
     }
   }
 
-  async makeFilterCondition(filter, alias) {
+  async makeFilterCondition(filter, columnMapOrAlias: Record<string, string> | string) {
     try {
       let symbol;
+      let mappedField = '';
+
+      if (typeof columnMapOrAlias === 'string') {
+        mappedField = `${columnMapOrAlias}.${filter.key}`;
+      } else {
+        if (!columnMapOrAlias[filter.key]) {
+          throw new BadRequestException('Invalid filter field');
+        }
+        mappedField = columnMapOrAlias[filter.key];
+      }
 
       switch (filter.operator) {
         case 'equal':
@@ -50,12 +61,13 @@ export class GeneralUtilities {
           break;
 
         case 'like':
-          return `${alias}.${filter.key} LIKE "%${filter.value}%"`;
+          return `${mappedField} LIKE "%${filter.value}%"`;
       }
 
-      return `${alias}.${filter.key} ${symbol} "${filter.value}"`;
+      return `${mappedField} ${symbol} "${filter.value}"`;
     } catch (err) {
       console.log(err);
+      throw err;
     }
   }
 

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { getUser } from "@/lib/api/user-api";
 import { useAuth } from "@/context/AuthContext";
 export default function CompanyDetailsPage({ company }) {
-  console.log("Company Details:", company); // Debug log
+  // console.log("Company Details:", company); // Debug log
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
   const { can } = useAuth();
@@ -19,7 +19,7 @@ export default function CompanyDetailsPage({ company }) {
   const fetchAddedBy = async () => {
     try {
       const response = await getUser(company.addedBy);
-      console.log("Added By Admin:", response); // Debug log
+      // console.log("Added By Admin:", response); // Debug log
       setAddedAdmin(response || []);
     } catch (error) {
       console.error(error);
@@ -28,7 +28,7 @@ export default function CompanyDetailsPage({ company }) {
   const fetchUpdatedBy = async () => {
     try {
       const response = await getUser(company.updatedBy);
-      console.log("Updated By Admin:", response); // Debug log
+      // console.log("Updated By Admin:", response); // Debug log
       setUpdatedAdmin(response || []);
     } catch (error) {
       console.error(error);
@@ -65,6 +65,7 @@ export default function CompanyDetailsPage({ company }) {
       resetConfig();
     };
   }, [setConfig, router, company.id, resetConfig, can]);
+  console.log(company);
   return (
     <div className="p-6">
       {/* Header */}
@@ -74,9 +75,24 @@ export default function CompanyDetailsPage({ company }) {
 
         <div className="col-span-12 lg:col-span-2">
           <div className="bg-white rounded-xl hover:shadow-lg transition     p-5">
-            <h2 className="font-semibold text-lg">{company.companyName || ""}</h2>
+            <div className="flex items-center gap-4 mb-4">
+              {company.logoUrl ? (
+                <img
+                  src={company.logoUrl}
+                  alt="Company logo"
+                  className="w-16 h-16 rounded-xl object-cover border-2 border-blue-100 shadow"
+                />
+              ) : (
+                ""
+              )}
+              <div>
+                <h2 className="font-semibold text-lg">
+                  {company.companyName || ""}
+                </h2>
 
-            <p className="text-gray-500">{company.shortName}</p>
+                <p className="text-gray-500">{company.shortName}</p>
+              </div>
+            </div>
 
             <hr className="my-4" />
 

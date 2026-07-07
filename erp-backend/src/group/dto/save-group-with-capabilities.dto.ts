@@ -22,6 +22,10 @@ export class SaveGroupWithCapabilitiesDto {
   @IsNotEmpty()
   groupCode: string;
 
+  @IsOptional()
+  @IsString()
+  description: string;
+
   @IsString()
   @IsNotEmpty()
   @IsIn(['Active', 'InActive'])

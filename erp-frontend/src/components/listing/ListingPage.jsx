@@ -11,6 +11,7 @@ export default function ListingPage({
   renderCell,
   renderListCard,
   renderGridCard,
+  loading,
 }) {
   const { page, setPage, limit, setLimit, total } = useListing();
   const paginationProps = {
@@ -24,7 +25,7 @@ export default function ListingPage({
   if (view === "table") {
     return (
       <div className="bg-white rounded-lg overflow-hidden h-full">
-        <DynamicTable headers={headers} data={data} renderCell={renderCell} />
+        <DynamicTable headers={headers} data={data} renderCell={renderCell} loading={loading} />
 
         <div className="absolute bottom-0 left-0 right-0 mx-6">
           <Pagination {...paginationProps} />

@@ -118,7 +118,7 @@ export class AuthService {
     const payload = this.buildPayload(user);
 
     const accessExpires =
-      this.config.get<string>('JWT_ACCESS_EXPIRES') ?? '10s';
+      this.config.get<string>('JWT_ACCESS_EXPIRES') ?? '15m';
     const refreshExpires =
       this.config.get<string>('JWT_REFRESH_EXPIRES') ?? '7d';
 
@@ -135,7 +135,7 @@ export class AuthService {
     // Convert expires string to milliseconds for cookie maxAge
     const accessMaxAge = this.expiresInToMs(accessExpires);
     const refreshMaxAge = this.expiresInToMs(refreshExpires);
-    console.log(`Generated tokens for user ${user.userName}: accessToken expires in ${accessMaxAge}ms, refreshToken expires in ${refreshMaxAge}ms`);
+    // console.log(`Generated tokens for user ${user.userName}: accessToken expires in ${accessMaxAge}ms, refreshToken expires in ${refreshMaxAge}ms`);
     return { accessToken, refreshToken, accessMaxAge, refreshMaxAge };
   }
 
@@ -262,7 +262,7 @@ export class AuthService {
       payload = this.jwtService.verify<JwtPayload>(refreshToken, {
         secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
       });
-      console.log('Refresh token verified successfully for user ID:', payload.sub);
+      // console.log('Refresh token verified successfully for user ID:', payload.sub);
     } catch (error: any) {
       // Clear stale cookies before throwing
       res.clearCookie('accessToken');
@@ -297,7 +297,7 @@ export class AuthService {
       accessMaxAge,
       refreshMaxAge,
     );
-    console.log('Tokens refreshed successfully for user ID:', payload.sub);
+    // console.log('Tokens refreshed successfully for user ID:', payload.sub);
     return { success: 1, message: 'Token refreshed' };
   }
 

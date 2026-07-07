@@ -118,7 +118,6 @@ export class CompanyListService {
 
       const queryBuilder = this.companyRepo.createQueryBuilder('company');
 
-      // Scoping Check
       const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin) {
         queryBuilder.andWhere(
@@ -143,21 +142,38 @@ export class CompanyListService {
       }
 
 
+      const columnMap: Record<string, string> = {
+        companyCode: 'company.companyCode',
+        companyName: 'company.companyName',
+        email: 'company.email',
+        contactPersonName: 'company.contactPersonName',
+        phone: 'company.phone',
+        status: 'company.status',
+        id: 'company.id',
+      };
+
       if (params?.filters) {
-        // console.log("DEBUG: params.filters =", JSON.stringify(params.filters));
+        // console.log("DE BUG: params.filters =", JSON.stringify(params.filters));
         const whereString = await this.general.makeFilterString(
           params.filters,
-          'company',
+          columnMap,
           params.logicalOperator
         );
-        // console.log("DEBUG: whereString =", whereString);
 
         if (whereString) {
           queryBuilder.andWhere(whereString);
         }
       }
 
-      queryBuilder.orderBy('company.id', 'ASC');
+      /**
+       * Sorting
+       */
+      if (params?.sortField && params?.sortOrder && columnMap[params.sortField]) {
+        const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        queryBuilder.orderBy(columnMap[params.sortField], order);
+      } else {
+        queryBuilder.orderBy('company.id', 'ASC');
+      }
 
       queryBuilder.skip(skip);
       queryBuilder.take(limit);

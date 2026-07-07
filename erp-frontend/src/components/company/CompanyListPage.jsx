@@ -24,10 +24,11 @@ export default function CompanyListPage() {
   const router = useRouter();
   const { can } = useAuth();
   const { setConfig, resetConfig } = useHeader();
-  const { view, page, limit, setTotal, search, setLimit, setPage, total } = useListing();
+  const { view, page, limit, setTotal, search, setLimit, setPage, total, columnFilters, sortField, sortOrder } = useListing();
 
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Search/Filter states
@@ -81,12 +82,23 @@ export default function CompanyListPage() {
           .filter(Boolean);
       }
 
+      // Add column filters
+      if (columnFilters && Object.keys(columnFilters).length > 0) {
+        Object.entries(columnFilters).forEach(([key, val]) => {
+          if (val === undefined || val === null || val === "") return;
+          const op = key === "status" ? "equal" : "like";
+          backendFilters.push({ key, value: val, operator: op });
+        });
+      }
+
       const response = await listCompanies({
         page,
         limit,
         search,
         filters: backendFilters.length > 0 ? backendFilters : undefined,
         logicalOperator: logicalOp,
+        sortField,
+        sortOrder,
       });
 
       const data = response?.settings?.data || response?.data || {};
@@ -98,8 +110,9 @@ export default function CompanyListPage() {
       console.error(error);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
-  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, setTotal, setLimit]);
+  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, columnFilters, sortField, sortOrder, setTotal, setLimit]);
 
   // Handle header config
   useEffect(() => {
@@ -187,15 +200,16 @@ export default function CompanyListPage() {
     onLimitChange: setLimit,
   };
 
-  if (!can(companyConfig.permissions.list)) {
+  if (!can("COMPANY_VIEW")) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500 text-lg">You do not have permission to view this module.</p>
+      <div className="p-10 text-center text-red-500 font-semibold text-sm">
+        Permission Denied: You do not have the required "COMPANY_VIEW"
+        permission to access this page.
       </div>
     );
   }
 
-  if (loading) {
+  if (initialLoad) {
     return (
       <div className="px-6">
         <TableSkeleton rows={8} cols={companyConfig.columns?.length || 5} />
@@ -206,15 +220,13 @@ export default function CompanyListPage() {
   return (
     <div className="relative px-6 h-full">
       {/* Rendering specific view based on context */}
-      {view === "table" && (
-        <CompanyTableView
-          data={companies}
-          config={companyConfig}
-          onRowAction={handleRowAction}
-        />
+      {view === "table" ? (
+        <CompanyTableView data={companies} config={companyConfig} onRowAction={handleRowAction} loading={loading} />
+      ) : view === "list" ? (
+        <CompanyListView data={companies} config={companyConfig} />
+      ) : (
+        <CompanyGridView data={companies} config={companyConfig} />
       )}
-      {view === "list" && <CompanyListView data={companies} config = {companyConfig}/>}
-      {view === "grid" && <CompanyGridView data={companies} config = {companyConfig}/>}
 
       {/* Shared Pagination component */}
       <div className="absolute bottom-0 left-0 right-0 mx-6 bg-white border-t border-gray-200">

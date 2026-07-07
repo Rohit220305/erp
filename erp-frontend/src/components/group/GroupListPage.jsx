@@ -17,10 +17,11 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function GroupListPage() {
   const { setConfig, resetConfig } = useHeader();
-  const { view, page, limit, setTotal, search, setLimit, setPage, total } =
+  const { view, page, limit, setTotal, search, setLimit, setPage, total, columnFilters, sortField, sortOrder } =
     useListing();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const router = useRouter();
   const { can } = useAuth();
@@ -100,12 +101,23 @@ export default function GroupListPage() {
           .filter(Boolean);
       }
 
+      // Add column filters
+      if (columnFilters && Object.keys(columnFilters).length > 0) {
+        Object.entries(columnFilters).forEach(([key, val]) => {
+          if (val === undefined || val === null || val === "") return;
+          const op = key === "status" ? "equal" : "like";
+          backendFilters.push({ key, value: val, operator: op });
+        });
+      }
+
       const response = await listGroups({
         page,
         limit,
         search,
         filters: backendFilters.length > 0 ? backendFilters : undefined,
         logicalOperator: logicalOp,
+        sortField,
+        sortOrder,
       });
       // console.log("Groups Response:", response);
       const data = response?.settings?.data || response?.data || {};
@@ -117,8 +129,9 @@ export default function GroupListPage() {
       console.error(error);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
-  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, setTotal, setLimit]);
+  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, columnFilters, sortField, sortOrder, setTotal, setLimit]);
 
   useEffect(() => {
     setConfig({
@@ -145,8 +158,8 @@ export default function GroupListPage() {
     });
 
     return () => resetConfig();
-  }, [setConfig, router, handleOpenSearch, setIsFilterOpen, can]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
-
+  }, [setConfig, router, handleOpenSearch, setIsFilterOpen, can]); 
+  
   useEffect(() => {
     fetchGroups();
   }, [fetchGroups]);
@@ -171,11 +184,14 @@ export default function GroupListPage() {
 
   const headers = useMemo(() => {
     const list = [
-      { label: "Group Code", key: "groupCode" },
-      { label: "Group Name", key: "groupName" },
-      { label: "Description", key: "description" },
-      { label: "Status", key: "status" },
-      { label: "Added Date", key: "addedDateFormatted" },
+      { label: "Group Code", key: "groupCode", searchable: true, sortable: false },
+      { label: "Group Name", key: "groupName", searchable: true, sortable: false },
+      { label: "Description", key: "description", searchable: true, sortable: false },
+      { label: "Status", key: "status", searchable: true, sortable: false, type: "select", options: [
+        { label: "Active", value: "Active" },
+        { label: "Inactive", value: "InActive" },
+      ] },
+      { label: "Added Date", key: "addedDateFormatted", searchable: false, sortable: false },
     ];
     // if (can("GROUP_UPDATE") || can("GROUP_DELETE")) {
     //   list.push({ label: "Actions", key: "actions" });
@@ -233,7 +249,13 @@ export default function GroupListPage() {
     return item[key] || "-";
   }, [router, can]);
 
-  if (loading) return <div className="px-6"><TableSkeleton rows={8} cols={6} /></div>;
+  if (initialLoad) {
+    return (
+      <div className="px-6">
+        <TableSkeleton rows={8} cols={6} />
+      </div>
+    );
+  }
 
   if (!can("GROUP_VIEW")) {
     return (
@@ -244,14 +266,15 @@ export default function GroupListPage() {
   }
 
   return (
-    <div className="relative h-full px-6">
+    <div className="relative px-6 h-full">
       <ListingPage
         view={view}
         data={groups}
         headers={headers}
         renderCell={renderCell}
-        renderListCard={(g) => <GroupListCard key={g.id} group={g} onDelete={setDeleteTarget} />}
-        renderGridCard={(g) => <GroupGridCard key={g.id} group={g} onDelete={setDeleteTarget} />}
+        renderListCard={(u) => <GroupListCard key={u.id} group={u} handleDelete={() => setDeleteTarget(u)} can={can} />}
+        renderGridCard={(u) => <GroupGridCard key={u.id} group={u} handleDelete={() => setDeleteTarget(u)} can={can}/>}
+        loading={loading}
       />
 
       <FilterDrawer
@@ -318,3 +341,5 @@ export default function GroupListPage() {
     </div>
   );
 }
+
+

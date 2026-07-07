@@ -81,7 +81,7 @@ export default function CompanyGridCard({ company, companyConfig }) {
             >
               {Icon && <Icon size={12} className="shrink-0 text-gray-400" />}
               <span className="truncate">
-                <CellRenderer item={company} column={detail} />
+                <CellRenderer company={company} column={detail} companyConfig={companyConfig} />
               </span>
             </div>
           );

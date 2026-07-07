@@ -2,11 +2,14 @@ import React from "react";
 import Link from "next/link";
 import { resolvePath } from "./utils/pathResolver";
 import { useAuth } from "@/context/AuthContext";
+import { Building2 } from "lucide-react";
 
 export default function CellRenderer({ company, column, companyConfig }) {
   const { can } = useAuth();
-
+  // console.log("Rendering CellRenderer for company:", company, "column:", column);
+  // console.log("Rendering CellRenderer for company:" , "column:", column);
   const value = resolvePath(company, column.key);
+  // console.log("Resolved value for column key", column.key, ":", value);
   switch (column.type) {
     case "image":
       return value ? (
@@ -16,13 +19,19 @@ export default function CellRenderer({ company, column, companyConfig }) {
           className="h-10 w-10 rounded object-cover"
         />
       ) : (
-        <div className="h-10 w-10 rounded bg-gray-200" />
+        <div
+          className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50
+                  border-2 border-gray-100 flex flex-col items-center
+                  justify-center text-blue-300 gap-1.5  
+                  transition-colors"
+        >
+          <Building2 size={22} />
+        </div>
       );
 
     case "link": {
       if (!value) return <span>-</span>;
       let href = column.linkPath || "#";
-      // Replace {id} or other tokens in the path
       if (href.includes("{")) {
         const matches = href.match(/\{([^}]+)\}/g);
         if (matches) {
@@ -33,9 +42,7 @@ export default function CellRenderer({ company, column, companyConfig }) {
         }
       }
       return (
-        // <Link href={href} className="font-medium hover:cursor-pointer text-[#1565c0] hover:underline">
-        //   {value}
-        // </Link>
+       
         can(companyConfig.permissions?.view || "COMPANY_VIEW") ? (
           <Link
             href={`/company/${company.id}`}
@@ -67,7 +74,7 @@ export default function CellRenderer({ company, column, companyConfig }) {
     case "phone":
       return (
         <span>
-          {company.dialCode ? `${company.dialCode} ` : ""}
+          {company?.dialCode ? `${company.dialCode} ` : ""}
           {value || "-"}
         </span>
       );

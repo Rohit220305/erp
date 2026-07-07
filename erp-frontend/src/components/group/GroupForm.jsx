@@ -114,6 +114,7 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
   const onSubmit = useCallback(async (data) => {
     if (selectedCodes.length === 0) {
       toast.error("Please select at least one capability");
+      // console.log("Attempted to submit group form without any selected capabilities.");
       return;
     }
     try {
@@ -122,7 +123,7 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
         ...data,
         capabilityCodes: selectedCodes,
       };
-
+      
       const response = mode === "create"
         ? await saveGroupWithCapabilities(payload)
         : await updateGroupWithCapabilities(payload);

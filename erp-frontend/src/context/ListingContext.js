@@ -11,19 +11,37 @@ export function ListingProvider({ children }) {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
+  
+  const [columnFilters, setColumnFilters] = useState({});
+  const [sortField, setSortField] = useState("");
+  const [sortOrder, setSortOrder] = useState("");
 
   const pathname = usePathname();
 
-  // Reset pagination and search on every route change
+  // Reset all state on every route change
   useEffect(() => {
     setPage(1);
     setTotal(0);
     setSearch("");
+    setColumnFilters({});
+    setSortField("");
+    setSortOrder("");
   }, [pathname]);
 
   const resetPagination = useCallback(() => {
     setPage(1);
     setTotal(0);
+  }, []);
+
+  const handleSetColumnFilters = useCallback((filters) => {
+    setColumnFilters(filters);
+    setPage(1);
+  }, []);
+
+  const handleSetSort = useCallback((field, order) => {
+    setSortField(field);
+    setSortOrder(order);
+    setPage(1);
   }, []);
 
   const value = useMemo(
@@ -38,9 +56,14 @@ export function ListingProvider({ children }) {
       setTotal,
       search,
       setSearch,
+      columnFilters,
+      setColumnFilters: handleSetColumnFilters,
+      sortField,
+      sortOrder,
+      setSort: handleSetSort,
       resetPagination,
     }),
-    [view, page, limit, total, search, resetPagination]
+    [view, page, limit, total, search, columnFilters, handleSetColumnFilters, sortField, sortOrder, handleSetSort, resetPagination]
   );
 
   return (

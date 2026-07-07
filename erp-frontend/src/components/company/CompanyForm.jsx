@@ -27,7 +27,7 @@ import {
 import { listCompanies } from "@/lib/api/company-api";
 import { useAuth } from "@/context/AuthContext";
 
-// ─── Field Components ─────────────────────────────────────────────────────────
+//  Field Components 
 
 const InputField = ({
   label,
@@ -162,12 +162,10 @@ const SectionHeader = ({
   </div>
 );
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const ALL_COUNTRIES = Country.getAllCountries();
 const findCountryByName = (name) => ALL_COUNTRIES.find((c) => c.name === name);
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function CompanyForm({
   mode = "create",
@@ -178,7 +176,7 @@ export default function CompanyForm({
   const router = useRouter();
   const fileInputRef = useRef(null);
   const user = useAuth();
-  // ── State ───────────────────────────────────────────────────────────────────
+  //  State 
   const [loading, setLoading] = useState(false);
   const [parentCompanies, setParentCompanies] = useState(
     parentCompaniesProp ?? [],
@@ -192,7 +190,7 @@ export default function CompanyForm({
   );
   const isInitialMount = useRef(true);
 
-  // ── Form defaults ───────────────────────────────────────────────────────────
+  // Form defaults 
   const baseDefaults = {
     companyName: "",
     parentCompanyId: "",
@@ -217,7 +215,7 @@ export default function CompanyForm({
   };
   const mergedDefaults = { ...baseDefaults, ...externalDefaults };
 
-  // ── React Hook Form ─────────────────────────────────────────────────────────
+  //  React Hook Form 
   const {
     register,
     handleSubmit,
@@ -235,8 +233,7 @@ export default function CompanyForm({
 
   const watchedCountry = useWatch({ control, name: "country" });
   const watchedState = useWatch({ control, name: "state" });
-
-  // ── Fetch parent companies (client-side on add page) ────────────────────────
+// (client-side on add page) 
   useEffect(() => {
     if (parentCompaniesProp && parentCompaniesProp.length > 0) return;
     let cancelled = false;
@@ -260,10 +257,9 @@ export default function CompanyForm({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Memoised options ────────────────────────────────────────────────────────
+  //  Memoised options 
   const countryOptions = useMemo(
     () => ALL_COUNTRIES.map((c) => ({ label: c.name, value: c.name })),
     [],
@@ -281,7 +277,7 @@ export default function CompanyForm({
     }, []);
   }, []);
 
-  // ── Effect: country → states + auto dial code ───────────────────────────────
+  //  Effect: country → states + auto dial code 
   useEffect(() => {
     if (!watchedCountry) {
       setStateOptions([]);
@@ -315,10 +311,9 @@ export default function CompanyForm({
       setValue("state", "", { shouldValidate: false });
       setValue("city", "", { shouldValidate: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedCountry]);
 
-  // ── Effect: state → cities ──────────────────────────────────────────────────
+  //  Effect: state → cities 
   useEffect(() => {
     if (!watchedState || !watchedCountry) {
       setCityOptions([]);
@@ -339,10 +334,9 @@ export default function CompanyForm({
     );
     if (!isInitialMount.current)
       setValue("city", "", { shouldValidate: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchedState, stateOptions]);
+    }, [watchedState, stateOptions]);
 
-  // ── Mark initial mount done ─────────────────────────────────────────────────
+  //  Mark initial mount done 
   useEffect(() => {
     const t = setTimeout(() => {
       isInitialMount.current = false;
@@ -350,7 +344,7 @@ export default function CompanyForm({
     return () => clearTimeout(t);
   }, []);
 
-  // ── Logo handlers ───────────────────────────────────────────────────────────
+  //  Logo handlers 
   const handleLogoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -381,7 +375,7 @@ export default function CompanyForm({
     { label: "InActive", value: "InActive" },
   ];
 
-  // ── Submit ──────────────────────────────────────────────────────────────────
+  // Submit 
   const onSubmit = async (data) => {
     data.companyName = data.companyName.trim();
     data.shortName = data.shortName.trim();
@@ -434,10 +428,8 @@ export default function CompanyForm({
     }
   };
 
-  // ── JSX ─────────────────────────────────────────────────────────────────────
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 text-black">
-      {/* ── Row 1: Logo + Company Details side by side ── */}
       <div className="grid lg:grid-cols-[260px_1fr] gap-5">
         {/* Logo Card */}
         <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
@@ -466,7 +458,6 @@ export default function CompanyForm({
                 </div>
               )}
 
-              {/* Camera overlay */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -496,9 +487,7 @@ export default function CompanyForm({
               <p className="text-xs font-medium text-gray-700 truncate max-w-[180px]">
                 {logoFile ? logoFile.name : "Upload company logo"}
               </p>
-              <p className="text-[10px] text-gray-400">
-                JPG, PNG or WEBP · Max 5 MB
-              </p>
+             
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -636,7 +625,7 @@ export default function CompanyForm({
         </div>
       </div>
 
-      {/* ── Row 2: Address + Contact Person side by side ── */}
+      {/*  Address and Contact */}
       <div className="grid lg:grid-cols-2 gap-5">
         {/* Address Card */}
         <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
@@ -723,7 +712,6 @@ export default function CompanyForm({
               name="zipCode"
               placeholder="Enter zip code"
             />
-            {/* Phone + Dial Code — lives directly below Country; dial code auto-fills from country */}
             <PhoneField
               label="Phone Number"
               required
@@ -774,7 +762,6 @@ export default function CompanyForm({
         </div>
       </div>
 
-      {/* ── Actions ── */}
       <div
         className="bg-white rounded-xl px-6 py-4 shadow-sm border border-gray-100
         flex gap-3 justify-end items-center"
@@ -788,7 +775,7 @@ export default function CompanyForm({
         <button
           type="button"
           onClick={() => {
-            reset(mergedDefaults);
+            reset(mergedDefaults);1
             setStateOptions([]);
             setCityOptions([]);
             setLogoFile(null);

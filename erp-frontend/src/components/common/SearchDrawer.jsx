@@ -8,7 +8,7 @@ export default function SearchDrawer({
   onClose,
   onSearch,
   onReset,
-  filters = [], 
+  filters = [],
   setFilters,
   logicalOperator = "AND",
   setLogicalOperator,
@@ -88,7 +88,6 @@ export default function SearchDrawer({
         >
           {/* Content */}
           <div className="h-[300px] overflow-y-auto px-6 py-5">
-            {/* Top Toolbar: Logical Operator & Add Button */}
             <div className="mb-4 flex items-center gap-2">
               <select
                 value={logicalOperator}

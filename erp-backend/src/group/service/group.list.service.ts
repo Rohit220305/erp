@@ -87,9 +87,7 @@ export class GroupListService {
 
       const queryBuilder = this.groupRepo.createQueryBuilder('group_master');
 
-      /**
-       * Search
-       */
+
       if (params?.search) {
         queryBuilder.andWhere(
           `
@@ -120,7 +118,24 @@ export class GroupListService {
         }
       }
 
-      queryBuilder.orderBy('group_master.id', 'ASC');
+      /**
+       * Sorting
+       */
+      const allowedSortFields = {
+        groupCode: 'group_master.groupCode',
+        groupName: 'group_master.groupName',
+        description: 'group_master.description',
+        status: 'group_master.status',
+        addedDateFormatted: 'group_master.addedDate',
+        id: 'group_master.id',
+      };
+
+      if (params?.sortField && params?.sortOrder && allowedSortFields[params.sortField]) {
+        const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        queryBuilder.orderBy(allowedSortFields[params.sortField], order);
+      } else {
+        queryBuilder.orderBy('group_master.id', 'ASC');
+      }
 
       queryBuilder.skip(skip);
       queryBuilder.take(limit);

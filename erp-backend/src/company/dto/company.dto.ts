@@ -123,6 +123,10 @@ export class CompanyListDto {
   @ValidateNested({ each: true })
   @Type(() => filtersDto)
   filters: filtersDto[];
+
+  @IsOptional()
+  @IsString()
+  logicalOperator: string;
 }
 
 export class filtersDto {

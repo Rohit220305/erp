@@ -24,7 +24,7 @@ export class UserListService {
 
   async startUserDetails(req, params) {
     const response = await this.getUserDetails(req, params);
-    console.log('response', response);
+    // console.log('response', response);
     if (response.success == 1) {
        return await this.finishSuccess(response);
     }
@@ -45,29 +45,23 @@ export class UserListService {
           id: params.id,
         },
       });
-      // console.log('user', user);
 
       if (!user) {
         throw new Error('User not found');
       }
 
-      // Scoping Check
       const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin && user.companyId !== req.user.companyId) {
         throw new ForbiddenException('Cannot view user outside your company');
       }
-      /**
-       * Company Name
-       */
+
       const company = await this.companyRepo.findOne({
         where: {
           id: user.companyId,
         },
       });
 
-      /**
-       * Group Name
-       */
+
       const group = await this.groupRepo.findOne({
         where: {
           id: user.groupId,
@@ -94,21 +88,16 @@ export class UserListService {
         );
       }
 
-      /**
-       * Profile Photo URL
-       */
+
       if (user.profilePhoto) {
         user['photoUrl'] = await this.general.generateUrl(
-          'users',
+          'users',  
           `${user.id}`,
           user.profilePhoto,
         );
       }
 
-      /**
-       * Hide Password
-       */
-      //   delete user.password;
+     
       const { password, ...safeUser } = user;
 
       return_data = {
@@ -140,7 +129,7 @@ export class UserListService {
 
   async getUserList(req, params) {
     let return_data: any = {};
-
+    console.log('params', params);
     try {
       const page = params.page ? parseInt(params.page) : 1;
 
@@ -149,6 +138,10 @@ export class UserListService {
       const skip = (page - 1) * limit;
 
       const queryBuilder = this.userRepo.createQueryBuilder('user');
+      
+      // Join for sorting and filtering
+      queryBuilder.leftJoin(CompanyEntity, 'company', 'company.id = user.companyId');
+      queryBuilder.leftJoin(GroupEntity, 'group', 'group.id = user.groupId');
 
       // Scoping Check
       const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
@@ -159,9 +152,7 @@ export class UserListService {
       }
 
 
-      /**
-       * Search
-       */
+
       if (params?.search) {
         queryBuilder.andWhere(
           `
@@ -178,13 +169,24 @@ export class UserListService {
         );
       }
 
-      /**
-       * Filters
-       */
+      const columnMap: Record<string, string> = {
+        firstName: 'user.firstName',
+        lastName: 'user.lastName',
+        email: 'user.email',
+        userName: 'user.userName',
+        status: 'user.status',
+        companyName: 'company.companyName',
+        groupName: 'group.groupName',
+        companyId: 'user.companyId',
+        groupId: 'user.groupId',
+        id: 'user.id',
+      };
+
+
       if (params?.filters) {
         const whereString = await this.general.makeFilterString(
           params.filters,
-          'user',
+          columnMap,
           params.logicalOperator
         );
 
@@ -193,13 +195,19 @@ export class UserListService {
         }
       }
 
-      queryBuilder.orderBy('user.id', 'ASC');
+
+      if (params?.sortField && params?.sortOrder && columnMap[params.sortField]) {
+        const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        queryBuilder.orderBy(columnMap[params.sortField], order);
+      } else {
+        queryBuilder.orderBy('user.id', 'ASC');
+      }
 
       queryBuilder.skip(skip);
       queryBuilder.take(limit);
 
       const [data, total] = await queryBuilder.getManyAndCount();
-
+      console.log('data', data);
       const userList: any[] = [];
 
       for (const user of data) {

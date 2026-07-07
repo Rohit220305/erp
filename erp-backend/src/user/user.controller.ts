@@ -127,6 +127,7 @@ export class UserController {
   @Post('list-user')
   @RequirePermission('USER_LIST')
   async listUser(@Req() req, @Body() body: UserListDto) {
+    // console.log('body', body);
     return await this.userListService.startUserList(req, body);
   }
 }

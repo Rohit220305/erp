@@ -42,7 +42,7 @@ export class GroupService {
     await queryRunner.startTransaction();
 
     try {
-      const { id, groupName, groupCode, status, capabilityCodes } = params;
+      const { id, groupName, groupCode,description, status, capabilityCodes } = params;
       const userId = req.user?.sub;
 
       let groupId = id;
@@ -57,7 +57,7 @@ export class GroupService {
         if (!group) {
           throw new Error('Group not found');
         }
-
+        
         // Check code uniqueness if changing code
         if (groupCode !== group.groupCode) {
           const codeExists = await queryRunner.manager.findOne(GroupEntity, {
@@ -65,7 +65,7 @@ export class GroupService {
           });
           if (codeExists) {
             throw new Error('Group Code already exists');
-          }
+          } 
         }
 
         await queryRunner.manager.update(
@@ -75,6 +75,7 @@ export class GroupService {
             groupName,
             groupCode,
             status,
+            description,
             updatedBy: userId,
             updatedDate: () => 'NOW()',
           },
@@ -91,6 +92,7 @@ export class GroupService {
         const insertRes = await queryRunner.manager.insert(GroupEntity, {
           groupName,
           groupCode,
+          description,
           status,
           addedBy: userId,
           addedDate: () => 'NOW()',

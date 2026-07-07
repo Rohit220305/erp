@@ -38,6 +38,7 @@ export async function getGroupById(id) {
 }
 
 export async function saveGroupWithCapabilities(payload) {
+  // console.log('Saving group with capabilities:', payload);
   return apiClient("/group/save-with-capabilities", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -45,6 +46,8 @@ export async function saveGroupWithCapabilities(payload) {
 }
 
 export async function updateGroupWithCapabilities(payload) {
+  console.log('Updating group with capabilities:', payload);
+  
   return apiClient("/group/update-with-capabilities", {
     method: "PUT",
     body: JSON.stringify(payload),

@@ -25,11 +25,12 @@ import toast from "react-hot-toast";
 export default function UserListPage() {
   const {loginAs,backToSession,isImpersonating,sessionStack, canImpersonate,} = useAuth();
   const { setConfig, resetConfig } = useHeader();
-  const { view, page, limit, setTotal, search, setLimit, setPage, total } =
+  const { view, page, limit, setTotal, search, setLimit, setPage, total, columnFilters, sortField, sortOrder } =
     useListing();
   const { user: currentUser, can } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
   const [selectedUserForPasswordReset, setSelectedUserForPasswordReset] = useState(null);
@@ -194,12 +195,23 @@ export default function UserListPage() {
           .filter(Boolean);
       }
 
+      // Add column filters
+      if (columnFilters && Object.keys(columnFilters).length > 0) {
+        Object.entries(columnFilters).forEach(([key, val]) => {
+          if (val === undefined || val === null || val === "") return;
+          const op = key === "status" ? "equal" : "like";
+          backendFilters.push({ key, value: val, operator: op });
+        });
+      }
+
       const response = await listUsers({
         page,
         limit,
         search,
         filters: backendFilters.length > 0 ? backendFilters : undefined,
         logicalOperator: logicalOp,
+        sortField,
+        sortOrder,
       });
       const data = response?.settings?.data || response?.data || {};
       setUsers(data.list || []);
@@ -211,6 +223,7 @@ export default function UserListPage() {
       console.error(error);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   }, [
     page,
@@ -219,6 +232,9 @@ export default function UserListPage() {
     appliedFilters,
     appliedLogicalOperator,
     appliedSidebarFilters,
+    columnFilters,
+    sortField,
+    sortOrder,
     setTotal,
     setLimit,
   ]);
@@ -272,18 +288,43 @@ export default function UserListPage() {
   }, [deleteTarget, fetchUsers]);
 
   const headers = useMemo(
-    () => [
-      { label: "User", key: "firstName" },
-      { label: "Email", key: "email" },
-      { label: "Company", key: "companyName" },
-      { label: "Group", key: "groupName" },
-      { label: "Status", key: "status" },
-      currentUser?.isSuperAdmin ? {
-        label: "Login As",
-        key: "loginAs"
-      } : null,
-      { label: "Last Login", key: "lastLoginDateFormatted" },
-    ].filter(Boolean),
+    () =>
+      [
+        { label: "User", key: "firstName", searchable: true, sortable: false },
+        { label: "Email", key: "email", searchable: true, sortable: false },
+        {
+          label: "Company",
+          key: "companyName",
+          searchable: true,
+          sortable: false,
+        },
+        { label: "Group", key: "groupName", searchable: true, sortable: false },
+        {
+          label: "Status",
+          key: "status",
+          type: "select",
+          options: [
+            { label: "Active", value: "Active" },
+            { label: "Inactive", value: "InActive" }, 
+          ],
+          searchable: true,
+          sortable: false ,
+        },
+        currentUser?.isSuperAdmin
+          ? {
+              label: "Login As",
+              key: "loginAs",
+              sortable: false,
+              searchable: false,
+            }
+          : null,
+        {
+          label: "Last Login",
+          key: "lastLoginDateFormatted",
+          sortable: false,
+          searchable: false,
+        },
+      ].filter(Boolean),
     [currentUser?.isSuperAdmin],
   );
 
@@ -309,7 +350,7 @@ export default function UserListPage() {
     );
   }
 
-  if (loading)
+  if (initialLoad)
     return (
       <div className="px-6">
         <TableSkeleton rows={8} cols={7} />
@@ -325,6 +366,7 @@ export default function UserListPage() {
         renderCell={renderCell}
         renderListCard={(u) => <UserListCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} />}
         renderGridCard={(u) => <UserGridCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} setSelectedUserForDetails={setSelectedUserForDetails} setSelectedUserForPasswordReset={setSelectedUserForPasswordReset} />}
+        loading={loading}
       />
 
       <UserDetailsDrawer
@@ -339,7 +381,7 @@ export default function UserListPage() {
         user={selectedUserForPasswordReset}
         />
 
-      <FilterDrawer
+      {/* <FilterDrawer
         open={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
         onSearch={() => {
@@ -369,7 +411,7 @@ export default function UserListPage() {
           { label: "Active", value: "Active" },
           { label: "Inactive", value: "InActive" },
         ]}
-      />
+      /> */}
 
       <SearchDrawer
         open={isSearchOpen}
@@ -407,3 +449,8 @@ export default function UserListPage() {
     </div>
   );
 }
+
+
+
+
+

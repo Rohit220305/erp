@@ -9,18 +9,19 @@
     "delete": "COMPANY_DELETE"
   },
   "columns": [
-    { "label": "Logo", "key": "logoUrl", "type": "image" },
-    { "label": "Company Name", "key": "companyName", "type": "link", "linkPath": "/company/{id}" },
-    { "label": "Company Code", "key": "companyCode", "type": "text" },
-    { "label": "Contact Person", "key": "contactPersonName", "type": "text" },
-    { "label": "Email", "key": "email", "type": "text" },
-    { "label": "Phone", "key": "phone", "type": "phone" },
-    { "label": "Status", "key": "status", "type": "statusBadge" },
-    { "label": "Added Date", "key": "addedDateFormatted", "type": "text" }
+    { "label": "Logo", "key": "logoUrl", "type": "image", "searchable": false, "sortable": false },
+    { "label": "Company Name", "key": "companyName", "type": "link", "linkPath": "/company/{id}", "searchable": true, "sortable": false },
+    { "label": "Short Name", "key": "shortName", "type": "text", "searchable": true, "sortable": false },
+    { "label": "Company Code", "key": "companyCode", "type": "text", "searchable": true, "sortable": false },
+    { "label": "Contact Person", "key": "contactPersonName", "type": "text", "searchable": true, "sortable": false },
+    { "label": "Email", "key": "email", "type": "text", "searchable": true, "sortable": false },
+    { "label": "Phone", "key": "phone", "type": "phone", "searchable": true, "sortable": false },
+    { "label": "Status", "key": "status", "type": "statusBadge", "searchable": true, "sortable": false, "options": [{ "label": "Active", "value": "Active" }, { "label": "Inactive", "value": "InActive" }] },
+    { "label": "Added Date", "key": "addedDateFormatted", "type": "text", "searchable": false, "sortable": false }
   ],
   "actions": {
     "header": [
-      { "label": "Add Company", "type": "redirect", "path": "/company/add", "permission": "COMPANY_CREATE" }
+      { "label": "Add Company", "type": " ", "path": "/company/add", "permission": "COMPANY_CREATE" }
     ],
     "row": [
       { "label": "Edit", "type": "editRedirect", "path": "/company/{id}/edit-company", "icon": "Edit", "permission": "COMPANY_UPDATE" },
@@ -35,10 +36,15 @@
     { "label": "Company Email", "value": "email", "type": "text" },
     { "label": "Company Phone", "value": "phone", "type": "text" },
     { "label": "Contact Person", "value": "contactPersonName", "type": "text" },
-    { "label": "Status", "value": "status", "type": "select", "options": [
-      { "label": "Active", "value": "Active" },
-      { "label": "Inactive", "value": "Inactive" }
-    ]}
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
   ],
   "defaultFilters": {
     "companyName": "",
@@ -87,3 +93,7 @@
     }
   }
 }
+
+
+
+   

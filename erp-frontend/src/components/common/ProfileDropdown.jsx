@@ -56,11 +56,18 @@ export default function ProfileDropdown({
         onClick={() => setOpen((prev) => !prev)}
         className="flex items-center gap-3 cursor-pointer"
       >
-        <img
-          src={user?.photoUrl || "/images/user-avatar.png"}
-          alt="user"
-          className="h-10 w-10 object-cover rounded-full"
-        />
+        {user?.photoUrl ? (
+          <img
+            src={user?.photoUrl}
+            alt="user"
+            className="h-10 w-10 object-cover rounded-full"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-gray-100 text-black flex items-center justify-center font-semibold text-xs border border-gray-200">
+            {user?.firstName?.[0] || ""}
+            {user?.lastName?.[0] || ""}
+          </div>
+        )}
 
         <div className="text-right">
           <p className="text-[15px] font-medium">

@@ -1,11 +1,7 @@
 "use client";
 
-// Deterministic pseudo-random width to avoid SSR/client hydration mismatch.
-// Math.random() produces different values on server vs client, so we seed
-// using row + col indices. This gives visually varied widths that are
-// identical on both sides.
+
 function seededWidth(row, col) {
-  // Simple integer hash: mix row and col into a stable 0-1 float
   const n = Math.sin(row * 127 + col * 311) * 43758.5453123;
   return 60 + (n - Math.floor(n)) * 40; // range [60, 100)
 }
