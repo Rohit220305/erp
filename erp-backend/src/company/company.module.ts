@@ -6,9 +6,10 @@ import { CompanyService } from './service/company.service';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CompanyListService } from './service/company.list.service';
 import { CommonFileService } from 'src/package/service/common-file.service';
+import { ActivityLogModule } from 'src/activity-log/activity-log.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CompanyEntity])],
+  imports: [TypeOrmModule.forFeature([CompanyEntity]), ActivityLogModule],
   controllers: [CompanyController],
   providers: [
     CompanyService,

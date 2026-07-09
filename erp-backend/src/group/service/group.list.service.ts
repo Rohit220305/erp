@@ -134,7 +134,7 @@ export class GroupListService {
         const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
         queryBuilder.orderBy(allowedSortFields[params.sortField], order);
       } else {
-        queryBuilder.orderBy('group_master.id', 'ASC');
+        queryBuilder.orderBy('group_master.groupName', 'ASC');
       }
 
       queryBuilder.skip(skip);

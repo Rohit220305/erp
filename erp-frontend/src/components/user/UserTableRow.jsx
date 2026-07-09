@@ -8,9 +8,27 @@ export default function UserTableRow({
   handleLoginAs,
   setSelectedUserForPasswordReset,
   setSelectedUserForDetails,
+  setSelectedCompanyForDetails,
 }) {
   const { can } = useAuth();
   const hasViewPerm = can("USER_VIEW");
+
+  if (columnKey === "companyName") {
+    return (
+      <div>
+        {can("COMPANY_VIEW") ? (
+          <span
+            className="font-medium text-[#1565c0] hover:underline cursor-pointer text-sm"
+            onClick={() => setSelectedCompanyForDetails(item)}
+          >
+            {item.companyName || "-"}
+          </span>
+        ) : (
+          <span className="text-gray-800 text-sm">{item.companyName || "-"}</span>
+        )}
+      </div>
+    );
+  }
 
   if (columnKey === "firstName") {
     return (

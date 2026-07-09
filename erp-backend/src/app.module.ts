@@ -11,6 +11,7 @@ import { join } from 'path';
 import { GroupModule } from './group/group.module';
 import { AuthModule } from './auth/auth.module';
 import { CapabilityModule } from './capability/capability.module';
+import { ActivityLogModule } from './activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CapabilityModule } from './capability/capability.module';
     GroupModule,
     AuthModule,
     CapabilityModule,
+    ActivityLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entity/user.entity';
 import { CompanyEntity } from 'src/company/entity/company.entity';
 import { GroupEntity } from 'src/group/entity/group.entity';
+import { ActivityLogModule } from 'src/activity-log/activity-log.module';
 
 import { UserController } from './user.controller';
 
@@ -14,7 +15,7 @@ import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CommonFileService } from 'src/package/service/common-file.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, CompanyEntity, GroupEntity])],
+  imports: [TypeOrmModule.forFeature([UserEntity, CompanyEntity, GroupEntity]), ActivityLogModule],
   controllers: [UserController],
   providers: [
     UserService,

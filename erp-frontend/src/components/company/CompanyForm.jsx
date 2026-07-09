@@ -3,8 +3,9 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 import {
   Building2,
@@ -26,6 +27,7 @@ import {
 } from "@/lib/validation/company-add-update.schema";
 import { listCompanies } from "@/lib/api/company-api";
 import { useAuth } from "@/context/AuthContext";
+import ConfirmModal from "../common/ConfirmModal";
 
 //  Field Components 
 
@@ -65,7 +67,7 @@ const SelectField = ({
   label,
   required,
   error,
-  register,
+  control,
   name,
   options = [],
   placeholder,
@@ -76,22 +78,51 @@ const SelectField = ({
       {label}
       {required && <span className="text-red-400 ml-1">*</span>}
     </label>
-    <select
-      disabled={disabled}
-      className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-        focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-        ${error ? "border-red-400 bg-red-50" : "border-gray-200"}
-        ${disabled ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white hover:border-gray-300"}
-      `}
-      {...register(name)}
-    >
-      <option value="">{placeholder || `Select ${label}`}</option>
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+    <Controller
+      name={name}
+      control={control}
+      render={({ field }) => (
+        <Select
+          {...field}
+          isDisabled={disabled}
+          options={options}
+          placeholder={placeholder || `Select ${label}`}
+          isClearable={true}
+          isSearchable={required ? true : false}
+          value={options.find((c) => String(c.value) === String(field.value)) || null}
+          onChange={(val) => field.onChange(val ? val.value : "")}
+          classNamePrefix="react-select"
+          styles={{
+            control: (base) => ({
+              ...base,
+              borderColor: error ? '#f87171' : '#e5e7eb',
+              borderRadius: '0.5rem',
+              minHeight: '42px',
+              backgroundColor: disabled ? '#f9fafb' : '#ffffff',
+              boxShadow: 'none',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              '&:hover': {
+                borderColor: '#d1d5db'
+              }
+            }),
+            option: (base) => ({
+              ...base,
+              fontSize: '0.875rem',
+              cursor: 'pointer'
+            }),
+            singleValue: (base) => ({
+              ...base,
+              fontSize: '0.875rem'
+            }),
+            placeholder: (base) => ({
+              ...base,
+              fontSize: '0.875rem'
+            })
+          }}
+        />
+      )}
+    />
     {error && (
       <p className="text-xs text-red-500 flex items-center gap-1">⚠ {error}</p>
     )}
@@ -104,6 +135,7 @@ const PhoneField = ({
   required,
   error,
   register,
+  control,
   name,
   dialCodeName,
   dialCodeOptions = [],
@@ -114,19 +146,45 @@ const PhoneField = ({
       {required && <span className="text-red-400 ml-1">*</span>}
     </label>
     <div className="flex gap-2">
-      <select
-        className={`w-28 shrink-0 px-2 py-2.5 border rounded-lg text-sm transition-all outline-none
-          focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-          ${error ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"} bg-white
-        `}
-        {...register(dialCodeName)}
-      >
-        {dialCodeOptions.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      <Controller
+        name={dialCodeName}
+        control={control}
+        render={({ field }) => (
+          <Select
+            {...field}
+            options={dialCodeOptions}
+            isSearchable={true}
+            value={dialCodeOptions.find((c) => String(c.value) === String(field.value)) || null}
+            onChange={(val) => field.onChange(val ? val.value : "")}
+            classNamePrefix="react-select"
+            styles={{
+              control: (base) => ({
+                ...base,
+                borderColor: error ? '#f87171' : '#e5e7eb',
+                borderRadius: '0.5rem',
+                minHeight: '42px',
+                width: '120px',
+                boxShadow: 'none',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }),
+              option: (base) => ({
+                ...base,
+                fontSize: '0.875rem',
+                cursor: 'pointer'
+              }),
+              singleValue: (base) => ({
+                ...base,
+                fontSize: '0.875rem'
+              }),
+              placeholder: (base) => ({
+                ...base,
+                fontSize: '0.875rem'
+              })
+            }}
+          />
+        )}
+      />
       <input
         type="tel"
         placeholder="Enter phone number"
@@ -188,6 +246,7 @@ export default function CompanyForm({
   const [logoPreview, setLogoPreview] = useState(
     externalDefaults?.logoUrl || null,
   );
+  const [confirmState, setConfirmState] = useState({ isOpen: false, type: null, data: null });
   const isInitialMount = useRef(true);
 
   // Form defaults 
@@ -222,7 +281,7 @@ export default function CompanyForm({
     reset,
     control,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm({
     resolver: zodResolver(
       mode === "create" ? companyAddSchema : companyEditSchema,
@@ -233,7 +292,7 @@ export default function CompanyForm({
 
   const watchedCountry = useWatch({ control, name: "country" });
   const watchedState = useWatch({ control, name: "state" });
-// (client-side on add page) 
+  // (client-side on add page) 
   useEffect(() => {
     if (parentCompaniesProp && parentCompaniesProp.length > 0) return;
     let cancelled = false;
@@ -334,7 +393,7 @@ export default function CompanyForm({
     );
     if (!isInitialMount.current)
       setValue("city", "", { shouldValidate: false });
-    }, [watchedState, stateOptions]);
+  }, [watchedState, stateOptions]);
 
   //  Mark initial mount done 
   useEffect(() => {
@@ -376,7 +435,9 @@ export default function CompanyForm({
   ];
 
   // Submit 
-  const onSubmit = async (data) => {
+  const onFormValid = (data) => setConfirmState({ isOpen: true, type: "submit", data });
+
+  const handleActualSubmit = async (data) => {
     data.companyName = data.companyName.trim();
     data.shortName = data.shortName.trim();
     data.legalName = data.legalName?.trim() ?? "";
@@ -406,7 +467,7 @@ export default function CompanyForm({
       if (res?.success === 0) {
         toast.error(
           res.message ||
-            `Failed to ${mode === "create" ? "create" : "update"} company`,
+          `Failed to ${mode === "create" ? "create" : "update"} company`,
         );
         return;
       }
@@ -420,8 +481,8 @@ export default function CompanyForm({
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-          error?.message ||
-          `Failed to ${mode === "create" ? "create" : "update"} company`,
+        error?.message ||
+        `Failed to ${mode === "create" ? "create" : "update"} company`,
       );
     } finally {
       setLoading(false);
@@ -429,385 +490,384 @@ export default function CompanyForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 text-black">
-      <div className="grid lg:grid-cols-[260px_1fr] gap-5">
-        {/* Logo Card */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <SectionHeader icon={Building2} title="Company Logo" />
+    <div className="h-full overflow-y-scroll ">
+      <form onSubmit={handleSubmit(onFormValid)} className="space-y-5 text-black">
+        <div className="grid lg:grid-cols-[260px_1fr] gap-5">
+          {/* Logo Card */}
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <SectionHeader icon={Building2} title="Company Logo" />
 
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              {logoPreview ? (
-                <img
-                  src={logoPreview}
-                  alt="Company logo"
-                  className="w-28 h-28 rounded-xl object-cover border-2 border-blue-100 shadow"
-                />
-              ) : (
-                <div
-                  className="w-28 h-28 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                {logoPreview ? (
+                  <img
+                    src={logoPreview}
+                    alt="Company logo"
+                    className="w-28 h-28 rounded-xl object-cover border-2 border-blue-100 shadow"
+                  />
+                ) : (
+                  <div
+                    className="w-28 h-28 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50
                   border-2 border-dashed border-blue-200 flex flex-col items-center
                   justify-center text-blue-300 gap-1.5 cursor-pointer hover:border-blue-400
                   transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Building2 size={32} />
-                  <span className="text-[10px] font-medium text-blue-400">
-                    No logo
-                  </span>
-                </div>
-              )}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Building2 size={32} />
+                    <span className="text-[10px] font-medium text-blue-400">
+                      No logo
+                    </span>
+                  </div>
+                )}
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute -bottom-2.5 -right-2.5 w-8 h-8 rounded-full
-                  bg-[#1565c0] text-white flex items-center justify-center
-                  shadow-lg hover:bg-[#0f57a6] transition cursor-pointer"
-                title="Upload logo"
-              >
-                <Camera size={14} />
-              </button>
-
-              {logoPreview && (
                 <button
                   type="button"
-                  onClick={removeLogo}
-                  className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -bottom-2.5 -right-2.5 w-8 h-8 rounded-full
+                  bg-[#1565c0] text-white flex items-center justify-center
+                  shadow-lg hover:bg-[#0f57a6] transition cursor-pointer"
+                  title="Upload logo"
+                >
+                  <Camera size={14} />
+                </button>
+
+                {logoPreview && (
+                  <button
+                    type="button"
+                    onClick={removeLogo}
+                    className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full
                     bg-red-500 text-white flex items-center justify-center
                     shadow hover:bg-red-600 transition cursor-pointer"
-                  title="Remove logo"
-                >
-                  <X size={11} />
-                </button>
-              )}
-            </div>
+                    title="Remove logo"
+                  >
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
 
-            <div className="text-center space-y-1">
-              <p className="text-xs font-medium text-gray-700 truncate max-w-[180px]">
-                {logoFile ? logoFile.name : "Upload company logo"}
-              </p>
-             
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="mt-1 px-4 py-1.5 border border-gray-200 rounded-lg text-xs font-medium
-                  text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition cursor-pointer"
-              >
-                {logoPreview ? "Change" : "Choose File"}
-              </button>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/webp"
-              className="hidden"
-              onChange={handleLogoChange}
-            />
-          </div>
-        </div>
-
-        {/* Company Details Card */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <SectionHeader icon={Briefcase} title="Company Details" />
-
-          <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
-            <InputField
-              label="Company Name"
-              required
-              error={errors.companyName?.message}
-              register={register}
-              name="companyName"
-              placeholder="Enter company name"
-            />
-
-            {/* Parent Company */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                Parent Company
-              </label>
-              <select
-                disabled={parentLoading}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                  focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-                  ${errors.parentCompanyId ? "border-red-400 bg-red-50" : "border-gray-200"}
-                  ${parentLoading ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white hover:border-gray-300"}
-                `}
-                {...register("parentCompanyId")}
-              >
-                <option value="">
-                  {parentLoading ? "Loading…" : "None (Top-level)"}
-                </option>
-                {parentCompanies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.companyName}
-                  </option>
-                ))}
-              </select>
-              {errors.parentCompanyId && (
-                <p className="text-xs text-red-500">
-                  ⚠ {errors.parentCompanyId.message}
+              <div className="text-center space-y-1">
+                <p className="text-xs font-medium text-gray-700 truncate max-w-[180px]">
+                  {logoFile ? logoFile.name : "Upload company logo"}
                 </p>
-              )}
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="mt-1 px-4 py-1.5 border border-gray-200 rounded-lg text-xs font-medium
+                  text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition cursor-pointer"
+                >
+                  {logoPreview ? "Change" : "Choose File"}
+                </button>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                className="hidden"
+                onChange={handleLogoChange}
+              />
             </div>
-
-            <InputField
-              label="Short Name"
-              required
-              error={errors.shortName?.message}
-              register={register}
-              name="shortName"
-              placeholder="e.g. ACME"
-            />
-
-            <InputField
-              label="Company Code"
-              error={errors.companyCode?.message}
-              register={register}
-              name="companyCode"
-              placeholder="Auto-generated or enter custom code"
-            />
-
-            <InputField
-              label="Legal Name"
-              error={errors.legalName?.message}
-              register={register}
-              name="legalName"
-              placeholder="Full legal / registered name"
-            />
-
-            <InputField
-              label="Registration Number"
-              error={errors.registrationNumber?.message}
-              register={register}
-              name="registrationNumber"
-              placeholder="Enter registration number"
-            />
-
-            <InputField
-              label="Tax Number (GST / VAT)"
-              error={errors.taxNumber?.message}
-              register={register}
-              name="taxNumber"
-              placeholder="Enter tax number"
-            />
-
-            <InputField
-              label="Website"
-              error={errors.website?.message}
-              register={register}
-              name="website"
-              placeholder="https://example.com"
-              type="url"
-            />
-
-            <InputField
-              label="Company Email"
-              required
-              error={errors.email?.message}
-              register={register}
-              name="email"
-              placeholder="company@example.com"
-              type="email"
-            />
-
-            <SelectField
-              label="Status"
-              required
-              error={errors.status?.message}
-              register={register}
-              name="status"
-              options={statusOptions}
-              placeholder="Select Status"
-            />
           </div>
-        </div>
-      </div>
 
-      {/*  Address and Contact */}
-      <div className="grid lg:grid-cols-2 gap-5">
-        {/* Address Card */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <SectionHeader
-            icon={MapPin}
-            title="Address"
-            color="text-emerald-600"
-            bg="bg-emerald-50"
-          />
+          {/* Company Details Card */}
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <SectionHeader icon={Briefcase} title="Company Details" />
 
-          <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
               <InputField
-                label="Address Line 1"
+                label="Company Name"
                 required
-                error={errors.addressLine1?.message}
+                error={errors.companyName?.message}
                 register={register}
-                name="addressLine1"
-                placeholder="Street / building"
+                name="companyName"
+                placeholder="Enter company name"
               />
+
+              {/* Parent Company */}
+              <SelectField
+                label="Parent Company"
+                control={control}
+                name="parentCompanyId"
+                options={parentCompanies.map((c) => ({
+                  label: c.companyName,
+                  value: c.id,
+                }))}
+                placeholder={parentLoading ? "Loading…" : "None (Top-level)"}
+                disabled={parentLoading}
+                error={errors.parentCompanyId?.message}
+              />
+
               <InputField
-                label="Address Line 2"
-                error={errors.addressLine2?.message}
+                label="Short Name"
+                required
+                error={errors.shortName?.message}
                 register={register}
-                name="addressLine2"
-                placeholder="Area / landmark (optional)"
+                name="shortName"
+                placeholder="e.g. ACME"
+              />
+
+              <InputField
+                label="Company Code"
+                error={errors.companyCode?.message}
+                register={register}
+                name="companyCode"
+                placeholder="Auto-generated or enter custom code"
+                disabled={mode === "edit"}
+              />
+
+              <InputField
+                label="Legal Name"
+                error={errors.legalName?.message}
+                register={register}
+                name="legalName"
+                placeholder="Full legal / registered name"
+              />
+
+              <InputField
+                label="Registration Number"
+                error={errors.registrationNumber?.message}
+                register={register}
+                name="registrationNumber"
+                placeholder="Enter registration number"
+              />
+
+              <InputField
+                label="Tax Number (GST / VAT)"
+                error={errors.taxNumber?.message}
+                register={register}
+                name="taxNumber"
+                placeholder="Enter tax number"
+              />
+
+              <InputField
+                label="Website"
+                error={errors.website?.message}
+                register={register}
+                name="website"
+                placeholder="https://example.com"
+                type="text"
+              />
+
+              <InputField
+                label="Company Email"
+                required
+                error={errors.email?.message}
+                register={register}
+                name="email"
+                placeholder="company@example.com"
+                type="email"
+              />
+
+              <SelectField
+                label="Status"
+                required
+                error={errors.status?.message}
+                control={control}
+                name="status"
+                options={statusOptions}
+                placeholder="Select Status"
               />
             </div>
-
-            {/* Country */}
-            <SelectField
-              label="Country"
-              required
-              error={errors.country?.message}
-              register={register}
-              name="country"
-              options={countryOptions}
-              placeholder="Select Country"
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* State */}
-              <SelectField
-                label="State / Province"
-                required
-                error={errors.state?.message}
-                register={register}
-                name="state"
-                options={stateOptions}
-                placeholder={
-                  !watchedCountry
-                    ? "Select country first"
-                    : stateOptions.length === 0
-                      ? "No states"
-                      : "Select State"
-                }
-                disabled={!watchedCountry || stateOptions.length === 0}
-              />
-
-              {/* City */}
-              <SelectField
-                label="City"
-                required
-                error={errors.city?.message}
-                register={register}
-                name="city"
-                options={cityOptions}
-                placeholder={
-                  !watchedState
-                    ? "Select state first"
-                    : cityOptions.length === 0
-                      ? "No cities"
-                      : "Select City"
-                }
-                disabled={!watchedState || cityOptions.length === 0}
-              />
-            </div>
-
-            <InputField
-              label="Zip / Postal Code"
-              required
-              error={errors.zipCode?.message}
-              register={register}
-              name="zipCode"
-              placeholder="Enter zip code"
-            />
-            <PhoneField
-              label="Phone Number"
-              required
-              error={errors.phone?.message || errors.dialCode?.message}
-              register={register}
-              name="phone"
-              dialCodeName="dialCode"
-              dialCodeOptions={dialCodeOptions}
-            />
           </div>
         </div>
 
-        {/* Contact Person Card */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <SectionHeader
-            icon={User}
-            title="Contact Person"
-            color="text-violet-600"
-            bg="bg-violet-50"
-          />
-
-          <div className="space-y-5">
-            <InputField
-              label="Contact Person Name"
-              error={errors.contactPersonName?.message}
-              register={register}
-              name="contactPersonName"
-              placeholder="Full name"
+        {/*  Address and Contact */}
+        <div className="grid lg:grid-cols-2 gap-5">
+          {/* Address Card */}
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <SectionHeader
+              icon={MapPin}
+              title="Address"
+              color="text-emerald-600"
+              bg="bg-emerald-50"
             />
 
-            <InputField
-              label="Contact Person Email"
-              error={errors.contactPersonEmail?.message}
-              register={register}
-              name="contactPersonEmail"
-              placeholder="contact@example.com"
-              type="email"
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <InputField
+                  label="Address Line 1"
+                  required
+                  error={errors.addressLine1?.message}
+                  register={register}
+                  name="addressLine1"
+                  placeholder="Street / building"
+                />
+                <InputField
+                  label="Address Line 2"
+                  error={errors.addressLine2?.message}
+                  register={register}
+                  name="addressLine2"
+                  placeholder="Area / landmark (optional)"
+                />
+              </div>
+
+              {/* Country */}
+              <SelectField
+                label="Country"
+                required
+                error={errors.country?.message}
+                control={control}
+                name="country"
+                options={countryOptions}
+                placeholder="Select Country"
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* State */}
+                <SelectField
+                  label="State / Province"
+                  required
+                  error={errors.state?.message}
+                  control={control}
+                  name="state"
+                  options={stateOptions}
+                  placeholder={
+                    !watchedCountry
+                      ? "Select country first"
+                      : stateOptions.length === 0
+                        ? "No states"
+                        : "Select State"
+                  }
+                  disabled={!watchedCountry || stateOptions.length === 0}
+                />
+
+                {/* City */}
+                <SelectField
+                  label="City"
+                  required
+                  error={errors.city?.message}
+                  control={control}
+                  name="city"
+                  options={cityOptions}
+                  placeholder={
+                    !watchedState
+                      ? "Select state first"
+                      : cityOptions.length === 0
+                        ? "No cities"
+                        : "Select City"
+                  }
+                  disabled={!watchedState || cityOptions.length === 0}
+                />
+              </div>
+
+              <InputField
+                label="Zip / Postal Code"
+                required
+                error={errors.zipCode?.message}
+                register={register}
+                name="zipCode"
+                placeholder="Enter zip code"
+              />
+              <PhoneField
+                label="Phone Number"
+                required
+                error={errors.phone?.message || errors.dialCode?.message}
+                register={register}
+                control={control}
+                name="phone"
+                dialCodeName="dialCode"
+                dialCodeOptions={dialCodeOptions}
+              />
+            </div>
+          </div>
+
+          {/* Contact Person Card */}
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <SectionHeader
+              icon={User}
+              title="Contact Person"
+              color="text-violet-600"
+              bg="bg-violet-50"
             />
 
-            <InputField
-              label="Contact Person Phone"
-              error={errors.contactPersonPhone?.message}
-              register={register}
-              name="contactPersonPhone"
-              placeholder="Phone number"
-            />
+            <div className="space-y-5">
+              <InputField
+                label="Contact Person Name"
+                error={errors.contactPersonName?.message}
+                register={register}
+                name="contactPersonName"
+                placeholder="Full name"
+              />
+
+              <InputField
+                label="Contact Person Email"
+                error={errors.contactPersonEmail?.message}
+                register={register}
+                name="contactPersonEmail"
+                placeholder="contact@example.com"
+                type="email"
+              />
+
+              <InputField
+                label="Contact Person Phone"
+                error={errors.contactPersonPhone?.message}
+                register={register}
+                name="contactPersonPhone"
+                placeholder="Phone number"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div
-        className="bg-white rounded-xl px-6 py-4 shadow-sm border border-gray-100
-        flex gap-3 justify-end items-center"
-      >
-        <p className="text-xs text-gray-400 mr-auto">
-          {mode === "create"
-            ? "All fields marked * are required"
-            : `Editing company · ${externalDefaults?.companyName || ""}`}
-        </p>
-
-        <button
-          type="button"
-          onClick={() => {
-            reset(mergedDefaults);1
-            setStateOptions([]);
-            setCityOptions([]);
-            setLogoFile(null);
-            setLogoPreview(externalDefaults?.logoUrl || null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-            () => router.back();
-          }}
-          className="px-5 py-2 border border-gray-200 rounded-lg text-sm font-medium
-            text-gray-600 hover:bg-gray-50 transition cursor-pointer"
+        <div
+          className=" px-6 py-4  
+        flex gap-3 justify-center items-center"
         >
-          Discard
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (isDirty) {
+                setConfirmState({ isOpen: true, type: "discard", data: null });
+              } else {
+                reset(mergedDefaults);
+                1;
+                setStateOptions([]);
+                setCityOptions([]);
+                setLogoFile(null);
+                setLogoPreview(externalDefaults?.logoUrl || null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+                router.back();
+              }
+            }}
+            className="px-5 py-2 border bg-white border-gray-300 rounded-lg text-md font-medium
+            text-gray-600 hover:bg-gray-50 transition cursor-pointer"
+          >
+            Discard
+          </button>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-2 rounded-lg bg-[#1565c0] text-white text-sm font-medium
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-2 rounded-lg bg-[#1565c0] text-white text-md font-medium
             hover:bg-[#0f57a6] disabled:opacity-60 disabled:cursor-not-allowed
             transition cursor-pointer flex items-center gap-2"
-        >
-          {loading ? (
-            <>
-              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              {mode === "create" ? "Creating…" : "Updating…"}
-            </>
-          ) : mode === "create" ? (
-            "Create Company"
-          ) : (
-            "Update Company"
-          )}
-        </button>
-      </div>
-    </form>
+          >
+            Submit
+          </button>
+        </div>
+      </form>
+      
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}
+        message={
+          confirmState.type === "submit"
+            ? "Are you sure you want to save these changes?"
+            : "Are you sure you want to discard? Any unsaved changes will be lost."
+        }
+        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
+        danger={confirmState.type === "discard"}
+        onConfirm={() => {
+          if (confirmState.type === "submit") {
+            handleActualSubmit(confirmState.data);
+          } else {
+            router.back();
+          }
+          setConfirmState({ isOpen: false, type: null, data: null });
+        }}
+        onCancel={() => setConfirmState({ isOpen: false, type: null, data: null })}
+      />
+    </div>
   );
 }

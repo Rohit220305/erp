@@ -6,12 +6,14 @@ import { CompanyEntity } from '../entity/company.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { COMPANY_INSERT_FIELDS, COMPANY_UPDATE_FIELDS } from 'src/package/constants/company-fields.constant';
 import { CommonFileService } from 'src/package/service/common-file.service';
+import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 
 @Injectable()
 export class CompanyService {
   constructor(
     private readonly general: GeneralUtilities,
     private readonly commonFileService: CommonFileService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
   @InjectRepository(CompanyEntity)
   private companyRepo: Repository<CompanyEntity>;
@@ -97,6 +99,17 @@ export class CompanyService {
       queryColumns.addedDate = () => 'NOW()';
 
       const res = await this.companyRepo.insert(queryColumns);
+
+      // Activity Log
+      this.activityLogService.log({
+        actorUserId: req.user?.sub,
+        action: 'CREATE',
+        module: 'COMPANY',
+        entityId: res?.raw?.insertId,
+        description: `Created new company ${params.companyName}`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
 
       return_data = {
         success: 1,
@@ -201,6 +214,19 @@ export class CompanyService {
         queryColumns,
       );
 
+      this.activityLogService.log({
+        actorUserId: req.user?.sub,
+        impersonatorId: req.user?.impersonatorId || undefined,
+        action: 'UPDATE',
+        module: 'COMPANY',
+        entityId: params.id,
+        description: `Updated company profile for ID ${params.id}`,
+        oldValue: company,
+        newValue: queryColumns,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+
       return_data = {
         success: 1,
         message: 'Company Updated Successfully.',
@@ -269,6 +295,17 @@ export class CompanyService {
       });
 
       await this.commonFileService.deleteFolder('company', `${params.id}`);
+
+      // Activity Log
+      this.activityLogService.log({
+        actorUserId: req.user?.sub,
+        action: 'DELETE',
+        module: 'COMPANY',
+        entityId: params.id,
+        description: `Deleted company ${company.companyName}`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
 
       return_data = {
         success: 1,

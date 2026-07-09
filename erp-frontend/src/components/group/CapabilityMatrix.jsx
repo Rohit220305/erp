@@ -9,8 +9,8 @@ const ACTION_COLUMNS = [
   { key: "CREATE", label: "Create" },
   { key: "UPDATE", label: "Update" },
   { key: "DELETE", label: "Delete" },
-  { key: "EXPORT", label: "Export" },
-  { key: "PRINT",  label: "Print" },
+  // { key: "EXPORT", label: "Export" },
+  // { key: "PRINT",  label: "Print" },
 ];
 
 export default function CapabilityMatrix({ capabilities, selectedCodes, onChange }) {
@@ -42,7 +42,6 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
     return Object.values(groups).sort((a, b) => a.moduleName.localeCompare(b.moduleName));
   }, [capabilities]);
 
-  // ── Individual cell helpers (unchanged) ───────────────────────────────────
 
   const handleCheckboxChange = (code, checked) => {
     if (checked) {
@@ -56,7 +55,6 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
 
   const renderCheckbox = (cap, label) => {
     if (!cap) {
-      // No capability for this action — show a normal unchecked checkbox with label
       return (
         <label className="inline-flex items-center gap-1.5 p-2 rounded">
           <input
@@ -82,7 +80,6 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
     );
   };
 
-  // ── Column header checkbox helpers ────────────────────────────────────────
 
   const capsInColumn = (actionKey) =>
     capabilities.filter((c) => c.actionName?.toUpperCase() === actionKey);
@@ -101,7 +98,6 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
     }
   };
 
-  // ── Row-select checkbox helpers ───────────────────────────────────────────
 
   const capsInRow = (group) =>
     ACTION_COLUMNS.map((col) => group[col.key]).filter(Boolean);

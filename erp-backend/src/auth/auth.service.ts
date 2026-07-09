@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
@@ -21,6 +23,7 @@ import { LoginDto } from './dto/login.dto';
 
 import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
 import { PermissionCacheService } from './permission.cache.service';
+import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 
 
 const IS_PROD = () => process.env.NODE_ENV === 'production';
@@ -36,7 +39,7 @@ const refreshCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
   secure: IS_PROD(),
-  maxAge: maxAgeMs, 
+  maxAge: maxAgeMs,
 });
 
 
@@ -55,11 +58,11 @@ export class AuthService {
     @InjectRepository(GroupCapabilityEntity)
     private readonly groupCapabilityRepo: Repository<GroupCapabilityEntity>,
     private readonly permissionCacheService: PermissionCacheService,
+    @Inject(forwardRef(() => ActivityLogService))
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
-  // ─── Private helpers 
 
-  /** Load capabilities by groupId */
   async getGroupCapabilities(groupId: number): Promise<string[]> {
     const cached = await this.permissionCacheService.getPermissions(groupId);
     if (cached !== null) {
@@ -90,24 +93,25 @@ export class AuthService {
     return permissions;
   }
 
-  private buildPayload(user: UserEntity): Omit<JwtPayload, 'iat' | 'exp'> {
+  private buildPayload(user: UserEntity, impersonatorId?: number): Omit<JwtPayload, 'iat' | 'exp'> {
     return {
       sub: user.id,
       email: user.email,
       companyId: user.companyId,
       groupId: user.groupId,
       isSuperAdmin: user.isSuperAdmin,
+      ...(impersonatorId ? { impersonatorId } : {}),
     };
   }
 
 
-  private generateTokens(user: UserEntity): {
+  private generateTokens(user: UserEntity, impersonatorId?: number): {
     accessToken: string;
     refreshToken: string;
     accessMaxAge: number;
     refreshMaxAge: number;
   } {
-    const payload = this.buildPayload(user);
+    const payload = this.buildPayload(user, impersonatorId);
 
     const accessExpires =
       this.config.get<string>('JWT_ACCESS_EXPIRES') ?? '15m';
@@ -227,6 +231,16 @@ export class AuthService {
     const data = await this.buildSafeUser(user);
     const capabilities = await this.getGroupCapabilities(user.groupId);
 
+    // Activity Log
+    this.activityLogService.log({
+      actorUserId: user.id,
+      action: 'LOGIN',
+      module: 'AUTH',
+      description: `User ${user.userName} logged in successfully`,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
     return {
       success: 1,
       message: 'Login successful',
@@ -271,7 +285,7 @@ export class AuthService {
       refreshToken: newRefreshToken,
       accessMaxAge,
       refreshMaxAge,
-    } = this.generateTokens(user);
+    } = this.generateTokens(user, payload.impersonatorId);
 
     this.setCookies(
       res,
@@ -284,17 +298,29 @@ export class AuthService {
     return { success: 1, message: 'Token refreshed' };
   }
 
-  // ─── Logout 
 
-  async logout(res: Response) {
+  async logout(req: Request, res: Response) {
+    console.log(req);
+    const userPayload = req['user'] as JwtPayload | undefined;
+    console.log('Logging out user:', userPayload);
+    if (userPayload) {
+      this.activityLogService.log({
+        actorUserId: userPayload.sub,
+        impersonatorId: userPayload.impersonatorId || undefined,
+        action: 'LOGOUT',
+        module: 'AUTH',
+        description: `User logged out`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+    }
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     return { success: 1, message: 'Logged out successfully' };
   }
 
-  // ─── Login-as-user (super admin only) 
 
-  async loginAsUser(res: Response, targetUserId: number) {
+  async loginAsUser(req: Request, res: Response, targetUserId: number) {
     const target = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!target) {
       return { success: 0, message: 'Target user not found' };
@@ -304,8 +330,9 @@ export class AuthService {
       return { success: 0, message: 'Target user is inactive' };
     }
 
+    const currentAdminId = req['user']?.sub;
     const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
-      this.generateTokens(target);
+      this.generateTokens(target, currentAdminId);
 
     await this.userRepo.update(
       { id: target.id },
@@ -322,6 +349,18 @@ export class AuthService {
     const data = await this.buildSafeUser(target);
     const capabilities = await this.getGroupCapabilities(target.groupId);
 
+    // Activity Log
+    this.activityLogService.log({
+      actorUserId: currentAdminId || target.id,
+      impersonatorId: currentAdminId,
+      action: 'IMPERSONATE',
+      module: 'AUTH',
+      entityId: target.id,
+      description: `Superadmin logged in as user ${target.userName}`,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
     return {
       success: 1,
       message: `Now acting as ${target.userName}`,
@@ -329,7 +368,6 @@ export class AuthService {
     };
   }
 
-  // ─── Change Password 
 
   
   async changePassword(
@@ -357,12 +395,18 @@ export class AuthService {
     const hashed = await bcrypt.hash(newPassword, 10);
     await this.userRepo.update({ id: userId }, { password: hashed });
 
+    // Activity Log
+    this.activityLogService.log({
+      actorUserId: userId,
+      action: 'UPDATE_PASSWORD',
+      module: 'AUTH',
+      description: `User changed their password`,
+    });
+
     return { success: 1, message: 'Password changed successfully' };
   }
 
-  /**
-   * Super admin only — reset another user's password directly.
-   */
+ 
   async resetPasswordBySuperAdmin(targetUserId: number, newPassword: string) {
     const target = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!target) {
@@ -372,10 +416,19 @@ export class AuthService {
     const hashed = await bcrypt.hash(newPassword, 10);
     await this.userRepo.update({ id: targetUserId }, { password: hashed });
 
+    // Activity Log
+    this.activityLogService.log({
+      actorUserId: targetUserId,
+      action: 'ADMIN_RESET_PASSWORD',
+      module: 'AUTH',
+      entityId: targetUserId,
+      description: `Superadmin reset password for user ID ${targetUserId}`,
+    });
+
     return { success: 1, message: 'Password reset successfully' };
   }
 
-  async restoreSession(res: Response, token: string) {
+  async restoreSession(req: Request, res: Response, token: string) {
     if (!token) {
       return { success: 0, message: 'Session token is required' };
     }
@@ -392,6 +445,30 @@ export class AuthService {
 
       const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
         this.generateTokens(user);
+
+      let activeUserId: number | undefined = undefined;
+      let activeImpersonatorId: number | undefined = undefined;
+      const activeToken = req.cookies?.accessToken;
+      if (activeToken) {
+        try {
+          const decoded = this.jwtService.verify<JwtPayload>(activeToken, {
+            secret: this.config.getOrThrow<string>('JWT_SECRET'),
+          });
+          activeUserId = decoded.sub;
+          activeImpersonatorId = decoded.impersonatorId;
+        } catch {}
+      }
+      
+      this.activityLogService.log({
+        actorUserId: activeUserId || user.id,
+        impersonatorId: activeImpersonatorId || user.id,
+        action: 'RETURN_SESSION',
+        module: 'AUTH',
+        entityId: user.id,
+        description: `Superadmin returned from impersonated session`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
 
       this.setCookies(
         res,
@@ -476,6 +553,14 @@ export class AuthService {
       password: hashed,
       resetPasswordOtp: null as any,
       resetPasswordOtpExpiry: null as any,
+    });
+
+    // Activity Log
+    this.activityLogService.log({
+      actorUserId: user.id,
+      action: 'FORGOT_PASSWORD_RESET',
+      module: 'AUTH',
+      description: `User reset their password via OTP`,
     });
 
     return { success: 1, message: 'Password reset successfully' };

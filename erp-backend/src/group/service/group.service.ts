@@ -13,6 +13,7 @@ import {
   GROUP_INSERT_FIELDS,
   GROUP_UPDATE_FIELDS,
 } from 'src/package/constants/group-fields.constant';
+import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 
 @Injectable()
 export class GroupService {
@@ -22,6 +23,7 @@ export class GroupService {
     private readonly groupRepo: Repository<GroupEntity>,
     private readonly permissionCacheService: PermissionCacheService,
     private readonly dataSource: DataSource,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   async startSaveWithCapabilities(req, params) {
@@ -47,6 +49,9 @@ export class GroupService {
 
       let groupId = id;
 
+      let oldValue: any = null;
+      let newValue: any = null;
+
       // 1. Group validation & insert/update
       if (id) {
         // Update mode
@@ -57,6 +62,9 @@ export class GroupService {
         if (!group) {
           throw new Error('Group not found');
         }
+
+        oldValue = group;
+        newValue = { groupName, groupCode, description, status, capabilityCodes };
         
         // Check code uniqueness if changing code
         if (groupCode !== group.groupCode) {
@@ -135,6 +143,20 @@ export class GroupService {
       // 5. Invalidate permission cache
       await this.permissionCacheService.invalidatePermissions(groupId);
 
+      // 6. Activity Log
+      this.activityLogService.log({
+        actorUserId: userId,
+        impersonatorId: req.user?.impersonatorId || undefined,
+        action: id ? 'UPDATE' : 'CREATE',
+        module: 'GROUP',
+        entityId: groupId,
+        description: id ? `Updated group ${groupName}` : `Created new group ${groupName}`,
+        oldValue: id ? oldValue : null,
+        newValue: id ? newValue : null,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+
       return_data = {
         success: 1,
         message: id ? 'Group Updated Successfully.' : 'Group Added Successfully.',
@@ -193,6 +215,17 @@ export class GroupService {
       queryColumns.addedBy = req.user?.sub;
 
       const res = await this.groupRepo.insert(queryColumns);
+
+      // Activity Log
+      this.activityLogService.log({
+        actorUserId: req.user?.sub,
+        action: 'CREATE',
+        module: 'GROUP',
+        entityId: res?.raw?.insertId,
+        description: `Created new group ${params.groupName}`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
 
       return_data = {
         success: 1,
@@ -269,6 +302,20 @@ export class GroupService {
 
       const res = await this.groupRepo.update({ id: params.id }, queryColumns);
 
+      // Activity Log
+      this.activityLogService.log({
+        actorUserId: req.user?.sub,
+        impersonatorId: req.user?.impersonatorId || undefined,
+        action: 'UPDATE',
+        module: 'GROUP',
+        entityId: params.id,
+        description: `Updated group ID ${params.id}`,
+        oldValue: group,
+        newValue: queryColumns,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+
       return_data = {
         success: 1,
         message: 'Group Updated Successfully.',
@@ -324,6 +371,17 @@ export class GroupService {
 
       const res = await this.groupRepo.delete({
         id: params.id,
+      });
+
+      // Activity Log
+      this.activityLogService.log({
+        actorUserId: req.user?.sub,
+        action: 'DELETE',
+        module: 'GROUP',
+        entityId: params.id,
+        description: `Deleted group ${group.groupName}`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
       });
 
       return_data = {

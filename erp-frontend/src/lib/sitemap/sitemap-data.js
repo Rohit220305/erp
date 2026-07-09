@@ -31,6 +31,14 @@ export const sitemapData = [
     ],
     path: "/admin",
   },
+  // {
+  //   title: "System Audit",
+  //   superAdminOnly: true,
+  //   menus: [
+  //     { label: "Audit Logs", path: "/admin/audit-logs", superAdminOnly: true },
+  //   ],
+  //   path: "/admin/audit-logs",
+  // },
 ];
 
 

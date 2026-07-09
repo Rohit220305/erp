@@ -9,6 +9,7 @@ export interface JwtPayload {
   companyId: number;
   groupId: number;
   isSuperAdmin: boolean;
+  impersonatorId?: number;
   /** Issued-at timestamp (Unix epoch, added by JwtService) */
   iat: number;
   /** Expiry timestamp (Unix epoch, added by JwtService) */

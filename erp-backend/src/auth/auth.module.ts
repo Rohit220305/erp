@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { ActivityLogModule } from 'src/activity-log/activity-log.module';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -20,6 +21,7 @@ import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.en
     // Global JwtModule — available across all modules
     JwtModule.register({ global: true }),
     TypeOrmModule.forFeature([UserEntity, CompanyEntity, GroupEntity, GroupCapabilityEntity]),
+    forwardRef(() => ActivityLogModule),
   ],
   controllers: [AuthController],
   providers: [

@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import { Country } from "country-state-city";
 import { Controller } from "react-hook-form";
 import DialCodeSelect from "../common/DialCodeSelect";
+import ConfirmModal from "../common/ConfirmModal";
 
 
 
@@ -65,6 +66,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const [companies, setCompanies] = useState([]);
   const [groups, setGroups] = useState([]);
   const fileInputRef = useRef(null);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, type: null, data: null });
 
   const ALL_COUNTRIES = Country.getAllCountries();
 
@@ -87,7 +89,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     ...initialValues,
   }), [initialValues, currentUser]);
 
-  const { register, handleSubmit, control, reset, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, reset, watch, formState: { errors, isDirty } } = useForm({
     resolver: zodResolver(mode === "create" ? userAddSchema : userEditSchema),
     defaultValues,
     mode: "onBlur",
@@ -134,7 +136,9 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     setPhotoPreview(URL.createObjectURL(file));
   }, []);
 
-  const onSubmit = useCallback(async (data) => {
+  const onFormValid = (data) => setConfirmState({ isOpen: true, type: "submit", data });
+
+  const handleActualSubmit = useCallback(async (data) => {
     try {
       setLoading(true);
       mode === "create" ? data.addedBy = currentUser?.id : data.updatedBy = currentUser?.id;
@@ -234,10 +238,14 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const groupOptions = useMemo(() => groups.map((g) => ({ label: g.groupName, value: g.id })), [groups]);
 
   return (
+    <div className="h-full overflow-y-auto mx-6">
     <form
-      onSubmit={handleSubmit(onSubmit, (errors) => {
-        console.error("Validation Errors:", errors);
-        toast.error("Please fix the validation errors in the form");
+      onSubmit={handleSubmit(onFormValid, (errors) => {
+        if (errors && Object.keys(errors).length > 0) {
+          console.error("Validation Errors:", errors);
+          const firstError = Object.values(errors)[0]?.message;
+          toast.error(firstError || "Please fix the validation errors in the form");
+        }
       })}
       className="bg-white rounded-xl p-6 shadow-sm space-y-6"
     >
@@ -325,43 +333,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             error={errors.email?.message}
           />
 
-          {/* Password */}
-          {/* <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
-              Password{" "}
-              {mode === "create" && <span className="text-red-500">*</span>}
-              {mode === "edit" && (
-                <span className="text-xs text-gray-400 ml-1">
-                  (leave blank to keep current)
-                </span>
-              )}
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder={
-                  mode === "create"
-                    ? "Enter password"
-                    : "Leave blank to keep current"
-                }
-                className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${errors.password
-                    ? "border-red-400"
-                    : "border-gray-300 focus:border-[#1565c0]"
-                  }`}
-                {...register("password")}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-xs text-red-500">{errors.password.message}</p>
-            )}
-          </div> */}
         </div>
       </div>
 
@@ -381,7 +352,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               error={errors.companyId?.message}
               disabled={!currentUser?.isSuperAdmin}
             />
-            {/* Hidden input to ensure companyId is submitted even when select is disabled */}
             {!currentUser?.isSuperAdmin && (
               <input type="hidden" {...register("companyId")} value={currentUser?.companyId || initialValues?.companyId || ""} />
             )}
@@ -403,22 +373,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             options={statusOptions}
             error={errors.status?.message}
           />
-          {/* {currentUser?.isSuperAdmin && (
-            <div className="flex items-center gap-3 pt-6">
-              <input
-                type="checkbox"
-                id="isSuperAdmin"
-                className="w-4 h-4 accent-[#1565c0]"
-                {...register("isSuperAdmin")}
-              />
-              <label
-                htmlFor="isSuperAdmin"
-                className="text-sm font-medium text-gray-700 cursor-pointer"
-              >
-                Grant Super Admin privileges
-              </label>
-            </div>
-          )} */}
+         
         </div>
       </div>
 
@@ -433,16 +388,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               Phone Number
             </label>
             <div className="flex gap-2">
-              {/* <select
-                className="w-24 px-2 py-2 border cursor-pointer border-gray-300 rounded-lg text-sm outline-none focus:border-[#1565c0]"
-                {...register("dialCode")}
-              >
-                {dialCodeOptions.map((d) => (
-                  <option key={d.value} value={d.value}>
-                    {d.label}
-                  </option>
-                ))}
-              </select> */}
+
               <Controller
                 name="dialCode"
                 control={control}
@@ -471,40 +417,52 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 justify-end border-t pt-4">
+      <div className="flex gap-3 justify-center border-t pt-4">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => {
+            if (isDirty) {
+              setConfirmState({ isOpen: true, type: "discard", data: null });
+            } else {
+              router.back();
+            }
+          }}
           className="px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
         >
           Cancel
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            reset(defaultValues);
-            setPhotoFile(null);
-            setPhotoPreview(initialValues?.photoUrl || null);
-          }}
-          className="px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-        >
-          Reset
-        </button>
+        
         <button
           type="submit"
           disabled={loading}
           className="px-6 py-2 bg-[#1565c0] text-white rounded-lg text-sm font-medium hover:bg-[#0f57a6] disabled:opacity-60 disabled:cursor-not-allowed transition cursor-pointer"
         >
-          {loading
-            ? mode === "create"
-              ? "Creating..."
-              : "Updating..."
-            : mode === "create"
-              ? "Create User"
-              : "Update User"}
+          Submit
         </button>
       </div>
     </form>
+    
+    <ConfirmModal
+      isOpen={confirmState.isOpen}
+      title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}
+      message={
+        confirmState.type === "submit"
+          ? "Are you sure you want to save these changes?"
+          : "Are you sure you want to discard? Any unsaved changes will be lost."
+      }
+      confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
+      danger={confirmState.type === "discard"}
+      onConfirm={() => {
+        if (confirmState.type === "submit") {
+          handleActualSubmit(confirmState.data);
+        } else {
+          router.back();
+        }
+        setConfirmState({ isOpen: false, type: null, data: null });
+      }}
+      onCancel={() => setConfirmState({ isOpen: false, type: null, data: null })}
+    />
+  </div>
   );
 }
 

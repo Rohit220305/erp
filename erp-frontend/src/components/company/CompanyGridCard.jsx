@@ -1,15 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Mail, Phone, Building2, ExternalLink } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { resolvePath } from "@/components/core/dynamic-ui/utils/pathResolver";
 import CellRenderer from "@/components/core/dynamic-ui/CellRenderer";
-
-const IconMap = {
-  Mail,
-  Phone,
-};
 
 export default function CompanyGridCard({ company, companyConfig }) {
   const router = useRouter();
@@ -25,78 +20,64 @@ export default function CompanyGridCard({ company, companyConfig }) {
   const badgeValue = resolvePath(company, config.header.badge);
 
   return (
-    <div
-      onClick={() => hasViewPerm && router.push(`/company/${company.id}`)}
-      className={`bg-white rounded-xl border border-gray-100 p-5 hover:shadow-lg transition-all duration-200 group flex flex-col h-full ${
-        hasViewPerm ? "cursor-pointer hover:-translate-y-1" : ""
-      }`}
-    >
-      {/* Header: logo/avatar + status */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={title}
-              className="w-11 h-11 rounded-xl object-cover border border-gray-200"
-            />
-          ) : (
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#1565c0]/10 to-[#1565c0]/20 flex items-center justify-center border border-[#1565c0]/15 shrink-0">
-              <Building2 size={20} className="text-[#1565c0]" />
-            </div>
-          )}
-          <div className="min-w-0">
-            <p
-              className={`font-semibold text-gray-900 text-sm truncate leading-tight  transition-colors ${hasViewPerm ? "group-hover:text-[#1565c0]" : ""}`}
-            >
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200">
+      {/* Top Section */}
+      <div className="flex items-start justify-between">
+        <div 
+          className={`flex items-center gap-3 ${hasViewPerm ? "cursor-pointer" : ""}`}
+          onClick={() => hasViewPerm && router.push(`/company/${company.id}`)}
+        >
+          <div className="relative shrink-0">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={title}
+                className="w-14 h-14 rounded-full object-cover border border-gray-100"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-[#1565c0] text-white flex items-center justify-center font-bold text-xl">
+                {title?.[0] || "C"}
+              </div>
+            )}
+            <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${badgeValue === "Active" ? "bg-green-500" : "bg-gray-300"}`}></div>
+          </div>
+          <div>
+            <p className={`font-medium leading-tight mb-0.5 ${hasViewPerm ? "text-[#1565c0] hover:underline decoration-1 underline-offset-2" : "text-gray-900"}`}>
               {title || "—"}
             </p>
-            <p className="text-xs text-gray-400 truncate mt-0.5">
+            <p className="text-gray-400 text-sm mt-2 leading-tight">
               {subtitle || "—"}
             </p>
           </div>
         </div>
-        <span
-          className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${
-            badgeValue === "Active"
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-              : "bg-red-50 text-red-600 border border-red-200"
-          }`}
-        >
-          {badgeValue || "—"}
-        </span>
+        
+        {/* <button className="text-gray-400 hover:text-gray-600 p-1">
+          <MoreVertical size={18} />
+        </button> */}
       </div>
 
-      {/* Contact info */}
-      <div className="space-y-1.5 flex-grow">
+      <hr className="border-gray-100 my-4" />
+
+      {/* Bottom Section */}
+      <div className="space-y-3 text-sm">
         {config.details.map((detail, idx) => {
           const val = resolvePath(company, detail.key);
           if (!val) return null;
 
-          const Icon = IconMap[detail.icon];
           return (
-            <div
-              key={idx}
-              className="flex items-center gap-2 text-xs text-gray-500"
-            >
-              {Icon && <Icon size={12} className="shrink-0 text-gray-400" />}
-              <span className="truncate">
+            <div key={idx} className="grid grid-cols-[110px_1fr] items-center gap-2">
+              <span className="text-gray-400">{detail.header || detail.key}</span>
+              <span className="text-gray-900 truncate">
                 <CellRenderer company={company} column={detail} companyConfig={companyConfig} />
               </span>
             </div>
           );
         })}
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-        <p className="text-xs text-gray-400">
-          {resolvePath(company, config.footer.date) || ""}
-        </p>
-        {hasViewPerm && (
-          <span className="text-xs text-[#1565c0] font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            View <ExternalLink size={11} />
-          </span>
+        {resolvePath(company, config.footer.date) && (
+          <div className="grid grid-cols-[110px_1fr] items-center gap-2">
+            <span className="text-gray-400">Created At</span>
+            <span className="text-gray-900 truncate">{resolvePath(company, config.footer.date)}</span>
+          </div>
         )}
       </div>
     </div>

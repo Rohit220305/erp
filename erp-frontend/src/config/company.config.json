@@ -21,7 +21,7 @@
   ],
   "actions": {
     "header": [
-      { "label": "Add Company", "type": " ", "path": "/company/add", "permission": "COMPANY_CREATE" }
+      { "label": "Add Company", "type": "redirect", "path": "/company/add", "permission": "COMPANY_CREATE" }
     ],
     "row": [
       { "label": "Edit", "type": "editRedirect", "path": "/company/{id}/edit-company", "icon": "Edit", "permission": "COMPANY_UPDATE" },
@@ -93,7 +93,5 @@
     }
   }
 }
-
-
 
    

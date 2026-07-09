@@ -5,7 +5,7 @@ import SitemapCard from "./SitemapCard";
 import { useAuth } from "@/context/AuthContext";
 
 export default function SitemapGrid({ data }) {
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const breakpointColumnsObj = {
     default: 4,
     1280: 4,
@@ -14,16 +14,22 @@ export default function SitemapGrid({ data }) {
     640: 1,
   };
 
-  // Filter sections and menus based on permissions
   const filteredData = data
     .map((section) => {
-      // If the section itself requires a permission and user does not have it, return null
+      if (section.superAdminOnly && !user?.isSuperAdmin) {
+        return null;
+      }
+      
+      // If the section itself equires a permission and user does not have it, return null
       if (section.permission && !can(section.permission)) {
         return null;
       }
 
       // Filter menus in this section
       const filteredMenus = section.menus.filter((menu) => {
+        if (menu.superAdminOnly && !user?.isSuperAdmin) {
+          return false;
+        }
         if (menu.permission && !can(menu.permission)) {
           return false;
         }

@@ -21,6 +21,8 @@ import UserTableRow from "./UserTableRow";
 import FilterDrawer from "@/components/common/FilterDrawer";
 import SearchDrawer from "@/components/common/SearchDrawer";
 import toast from "react-hot-toast";
+import AccessDenied from "@/components/common/AccessDenied";
+import CompanyDetailsDrawer from "@/components/company/CompanyDetailsDrawer";
 
 export default function UserListPage() {
   const {loginAs,backToSession,isImpersonating,sessionStack, canImpersonate,} = useAuth();
@@ -34,6 +36,7 @@ export default function UserListPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
   const [selectedUserForPasswordReset, setSelectedUserForPasswordReset] = useState(null);
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
   const router = useRouter();
 
   const handleLoginAs = useCallback(async (targetUserId) => {
@@ -337,17 +340,14 @@ export default function UserListPage() {
         handleLoginAs={handleLoginAs}
         setSelectedUserForPasswordReset={setSelectedUserForPasswordReset}
         setSelectedUserForDetails={setSelectedUserForDetails}
+        setSelectedCompanyForDetails={setSelectedCompanyForDetails}
       />
     ),
     [currentUser, handleLoginAs],
   );
 
   if (!can("USER_LIST")) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500 text-lg">You do not have permission to view this module.</p>
-      </div>
-    );
+    return <AccessDenied missingPermission="USER_LIST" />;
   }
 
   if (initialLoad)
@@ -358,14 +358,14 @@ export default function UserListPage() {
     );
 
   return (
-    <div className="relative h-full px-6">
+    <div className="relative h-full  px-6">
       <ListingPage
         view={view}
         data={users}
         headers={headers}
         renderCell={renderCell}
-        renderListCard={(u) => <UserListCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} />}
-        renderGridCard={(u) => <UserGridCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} setSelectedUserForDetails={setSelectedUserForDetails} setSelectedUserForPasswordReset={setSelectedUserForPasswordReset} />}
+        renderListCard={(u) => <UserListCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} setSelectedUserForDetails={setSelectedUserForDetails} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />}
+        renderGridCard={(u) => <UserGridCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} setSelectedUserForDetails={setSelectedUserForDetails} setSelectedUserForPasswordReset={setSelectedUserForPasswordReset} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />}
         loading={loading}
       />
 
@@ -374,6 +374,12 @@ export default function UserListPage() {
         onClose={() => setSelectedUserForDetails(null)}
         user={selectedUserForDetails}
       />
+
+      <CompanyDetailsDrawer
+        open={!!selectedCompanyForDetails}
+        onClose={() => setSelectedCompanyForDetails(null)}
+        company={selectedCompanyForDetails}
+      />
       
       <ResetPasswordDrawer
         open={!!selectedUserForPasswordReset}
@@ -381,7 +387,7 @@ export default function UserListPage() {
         user={selectedUserForPasswordReset}
         />
 
-      {/* <FilterDrawer
+      <FilterDrawer
         open={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
         onSearch={() => {
@@ -411,7 +417,7 @@ export default function UserListPage() {
           { label: "Active", value: "Active" },
           { label: "Inactive", value: "InActive" },
         ]}
-      /> */}
+      />
 
       <SearchDrawer
         open={isSearchOpen}

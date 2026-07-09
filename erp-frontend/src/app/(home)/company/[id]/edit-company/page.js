@@ -22,7 +22,7 @@ export default async function CompanyEditPage({ params }) {
   const parentCompanies = allCompanies.filter((c) => c.id !== company.id);
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full">
       <EditCompanyHeader company={company} />
       <CompanyEditForm company={company} parentCompanies={parentCompanies} />
     </div>

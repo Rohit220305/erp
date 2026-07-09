@@ -4,12 +4,12 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function UserListCard({ user, can }) {
+export default function UserListCard({ user, can, setSelectedUserForDetails, setSelectedCompanyForDetails }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const router = useRouter();
 
   return (
-    <div className=" px-4 py-2">
+    <div className=" mx-2 my-2">
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md">
         <div 
           className="flex items-center px-6 py-4"
@@ -33,7 +33,7 @@ export default function UserListCard({ user, can }) {
                   {can("USER_VIEW") ? (
                     <p 
                       className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer w-fit"
-                      onClick={() => router.push(`/admin/${user.id}`)}
+                      onClick={() => setSelectedUserForDetails(user)}
                     >
                       {user.firstName} {user.lastName}
                     </p>
@@ -66,7 +66,16 @@ export default function UserListCard({ user, can }) {
           {/* Col 4: Company Name */}
           <div className="flex-[1.5]">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Company Name</p>
-              <p className="text-[13px] font-medium text-[#1565c0]">{user.companyName || "—"}</p>
+              {can("COMPANY_VIEW") ? (
+                <p 
+                  className="text-[13px] font-medium text-[#1565c0] hover:underline cursor-pointer w-fit"
+                  onClick={() => setSelectedCompanyForDetails(user)}
+                >
+                  {user.companyName || "—"}
+                </p>
+              ) : (
+                <p className="text-[13px] font-medium text-gray-800">{user.companyName || "—"}</p>
+              )}
           </div>
 
           {/* Chevron */}

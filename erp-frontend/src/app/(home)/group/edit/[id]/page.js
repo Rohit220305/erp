@@ -6,6 +6,7 @@ import { getGroup } from "@/lib/api/group-api";
 import GroupForm from "@/components/group/GroupForm";
 import { useHeader } from "@/context/HeaderContext";
 import { useAuth } from "@/context/AuthContext";
+import AccessDenied from "@/components/common/AccessDenied";
 
 export default function GroupEditRoute() {
   const { id } = useParams();
@@ -51,18 +52,14 @@ export default function GroupEditRoute() {
   }, [id]);
 
   if (!can("GROUP_UPDATE")) {
-    return (
-      <div className="p-6 text-red-500 font-medium">
-        Permission Denied: You do not have the required "GROUP_UPDATE" permission to access this page.
-      </div>
-    );
+    return <AccessDenied missingPermission="GROUP_UPDATE" />;
   }
 
   if (loading) return <div className="p-6 text-sm text-gray-400">Loading...</div>;
   if (!group) return <div className="p-6 text-sm text-red-500">Group not found.</div>;
 
   return (
-    <div className="p-6">
+    <div className="h-full">
       <GroupForm mode="edit" defaultValues={{ ...group }} />
     </div>
   );

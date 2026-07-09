@@ -13,10 +13,23 @@ import {
   LogIn,
   Calendar,
   ArrowLeft,
+  Activity,
+  User as UserIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import ActivityLogTimeline from "./ActivityLogTimeline";
 
-function DetailRow({ label, value }) {
+function DetailRow({ label, value, isRestricted }) {
+  if (isRestricted) {
+    return (
+      <div className="flex items-start justify-between py-2.5 border-b border-gray-100 last:border-0 opacity-70">
+        <span className="text-sm text-gray-500 min-w-[140px]">{label}</span>
+        <span className="text-sm font-medium text-gray-400 flex items-center gap-1.5">
+          <span className="text-xs">🔒</span> Restricted
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="flex items-start justify-between py-2.5 border-b border-gray-100 last:border-0">
       <span className="text-sm text-gray-500 min-w-[140px]">{label}</span>
@@ -25,7 +38,15 @@ function DetailRow({ label, value }) {
   );
 }
 
-function AdminLink({ admin, onClick }) {
+function AdminLink({ admin, onClick, isRestricted }) {
+  if (isRestricted) {
+    return (
+      <div className="flex items-center gap-2 py-1.5 text-gray-400">
+        <span className="text-xs">🔒</span>
+        <span className="text-sm italic font-medium">Restricted Info</span>
+      </div>
+    );
+  }
   if (!admin) return null;
 
   return (
@@ -51,34 +72,7 @@ function AdminLink({ admin, onClick }) {
   );
 }
 
-function ImpersonationBanner({ sessionStack, onBack }) {
-  if (sessionStack.length === 0) return null;
 
-  return (
-    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <LogIn size={20} className="text-purple-600" />
-          <div>
-            <p className="text-sm font-semibold text-purple-700">
-              You're impersonating a user
-            </p>
-            {/* <p className="text-xs text-purple-600 mt-1">
-              Stack: {sessionStack.length} previous session(s)
-            </p> */}
-          </div>
-        </div>
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition"
-        >
-          <ArrowLeft size={16} />
-          Back to previous session
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export default function UserDetailPage({ user }) {
   const { setConfig, resetConfig } = useHeader();
@@ -94,17 +88,54 @@ export default function UserDetailPage({ user }) {
   const router = useRouter();
   const [addedAdmin, setAddedAdmin] = useState(null);
   const [updatedAdmin, setUpdatedAdmin] = useState(null);
+  const [addedAdminRestricted, setAddedAdminRestricted] = useState(false);
+  const [updatedAdminRestricted, setUpdatedAdminRestricted] = useState(false);
+  const [activeTab, setActiveTab] = useState("summary"); // "summary" | "activity"
   const [loginAsLoading, setLoginAsLoading] = useState(false);
   const [backToSessionLoading, setBackToSessionLoading] = useState(false);
 
   const fetchAdmins = useCallback(async () => {
-    try {
-      if (user.addedBy) setAddedAdmin(await getUser(user.addedBy));
-      if (user.updatedBy) setUpdatedAdmin(await getUser(user.updatedBy));
-    } catch (err) {
-      console.error("Failed to fetch admin details:", err);
+    // If user lacks USER_VIEW permission and is not viewing themselves, mark as restricted
+    const canViewOthers = can("USER_VIEW") || currentUser?.isSuperAdmin;
+
+    if (user.addedBy) {
+      if (!canViewOthers && currentUser?.id !== user.addedBy) {
+        setAddedAdminRestricted(true);
+      } else {
+        try {
+          const fetchedUser = await getUser(user.addedBy);
+          if (fetchedUser && fetchedUser.firstName && fetchedUser.success !== 0 && fetchedUser.settings?.success !== 0) {
+            setAddedAdmin(fetchedUser);
+            setAddedAdminRestricted(false);
+          } else {
+            setAddedAdminRestricted(true);
+          }
+        } catch (err) {
+          console.error("Failed to fetch admin details:", err);
+          setAddedAdminRestricted(true);
+        }
+      }
     }
-  }, [user.addedBy, user.updatedBy]);
+
+    if (user.updatedBy) {
+      if (!canViewOthers && currentUser?.id !== user.updatedBy) {
+        setUpdatedAdminRestricted(true);
+      } else {
+        try {
+          const fetchedUser = await getUser(user.updatedBy);
+          if (fetchedUser && fetchedUser.firstName && fetchedUser.success !== 0 && fetchedUser.settings?.success !== 0) {
+            setUpdatedAdmin(fetchedUser);
+            setUpdatedAdminRestricted(false);
+          } else {
+            setUpdatedAdminRestricted(true);
+          }
+        } catch (err) {
+          console.error("Failed to fetch updater details:", err);
+          setUpdatedAdminRestricted(true);
+        }
+      }
+    }
+  }, [user.addedBy, user.updatedBy, can, currentUser]);
 
   useEffect(() => {
     setConfig({
@@ -128,7 +159,7 @@ export default function UserDetailPage({ user }) {
         } : null,
       },
     });
-    if (currentUser?.isSuperAdmin ) {fetchAdmins();}
+    fetchAdmins();
     return () => resetConfig();
   }, [setConfig, router, user.id, fetchAdmins, resetConfig, can]);
 
@@ -199,18 +230,15 @@ export default function UserDetailPage({ user }) {
 //  }, [backToSession]);
   // Can impersonate if: current user is super admin AND viewing someone else
   // const canLoginAsThisUser = canImpersonate && currentUser?.sub !== user.id;
-  // Add right after the useAuth() call
-  console.log("Current User:", currentUser);
+  const canViewActivityLogs = currentUser?.isSuperAdmin || currentUser?.sub === user.id || can("ACTIVITY_LOG_VIEW");
+  console.log("UserDetailPage  render: user=", user, "currentUser=", currentUser, "canViewActivityLogs=", canViewActivityLogs);
+  console.log(user.firstName, user.lastName, "addedBy=", user.addedBy, "updatedBy=", user.updatedBy, "addedAdmin=", addedAdmin, "updatedAdmin=", updatedAdmin);
   return (
     <div className="p-6">
-      {/* Impersonation Banner - Shows when user is impersonating */}
-      {/* <ImpersonationBanner
-        sessionStack={sessionStack}
-        onBack={handleBackToSession}
-      /> */}
+
 
       <div className="grid grid-cols-12 gap-6">
-        {/* Sidebar */}
+        {/* Sidebar */} 
         <div className="col-span-12 lg:col-span-2">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
             {/* Avatar */}
@@ -240,38 +268,39 @@ export default function UserDetailPage({ user }) {
 
             <hr className="my-4" />
 
-            <button className="w-full bg-[#1565c0] text-white py-2.5 rounded-lg text-sm font-medium mb-2 cursor-pointer">
-              Summary
-            </button>
-
-            {/* LOGIN AS button — only for super admin viewing another user */}
-            {/* {canLoginAsThisUser ? (
-              <button
-                onClick={handleLoginAs}
-                disabled={loginAsLoading || isImpersonating}
-                className="w-full flex items-center cursor-pointer justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed"
-                title={
-                  isImpersonating
-                    ? "Return to previous session first"
-                    : "Login as this user"
-                }
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => setActiveTab("summary")}
+                className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium cursor-pointer transition ${
+                  activeTab === "summary" 
+                    ? "bg-[#1565c0] text-white" 
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                }`}
               >
-                <LogIn size={15} />
-                {loginAsLoading ? "Switching..." : `Login As ${user.firstName}`}
+                <UserIcon size={16} /> Summary
               </button>
-            ) : null} */}
+              
+              {/* {canViewActivityLogs && (
+                <button 
+                  onClick={() => setActiveTab("activity")}
+                  className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium cursor-pointer transition ${
+                    activeTab === "activity" 
+                      ? "bg-[#1565c0] text-white" 
+                      : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <Activity size={16} /> Activity Logs
+                </button>
+              )} */}
+            </div>
 
-            {/* {isImpersonating && !canLoginAsThisUser && (
-              <p className="text-xs text-gray-400 mt-2 text-center">
-                You're in another session. Return first to impersonate.
-              </p>
-            )} */}
           </div>
         </div>
 
         {/* Content */}
         <div className="col-span-12 lg:col-span-10">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {activeTab === "summary" ? (
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             {/* Main Details */}
             <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
               <h3 className="font-semibold mb-5">Personal Details</h3>
@@ -327,41 +356,99 @@ export default function UserDetailPage({ user }) {
 
             {/* Added / Updated */}
 
-            {currentUser?.isSuperAdmin && (
-              <div className="space-y-6">
+            <div className="space-y-6">
+              {user.addedBy && (
                 <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
                   <h3 className="font-semibold mb-5">Added Info</h3>
                   <AdminLink
                     admin={addedAdmin}
+                    isRestricted={addedAdminRestricted}
                     onClick={() =>
-                      user.addedBy && router.push(`/admin/${user.addedBy}`)
+                      !addedAdminRestricted && user.addedBy && router.push(`/admin/${user.addedBy}`)
                     }
                   />
                   <p className="text-xs text-gray-400 mt-2">
                     {user.addedDateFormatted || "-"}
                   </p>
                 </div>
+              )}
 
-                {user.updatedBy && (
-                  <div className="bg-white rounded-xl p-6 hover:shadow-lg transition">
-                    <h3 className="font-semibold mb-5">Updated Info</h3>
-                    <AdminLink
-                      admin={updatedAdmin}
-                      onClick={() =>
-                        user.updatedBy &&
-                        router.push(`/admin/${user.updatedBy}`)
-                      }
-                    />
-                    <p className="text-xs text-gray-400 mt-2">
-                      {user.updatedDateFormatted || "-"}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+              {user.updatedBy && (
+                <div className="bg-white rounded-xl p-6 hover:shadow-lg transition">
+                  <h3 className="font-semibold mb-5">Updated Info</h3>
+                  <AdminLink
+                    admin={updatedAdmin}
+                    isRestricted={updatedAdminRestricted}
+                    onClick={() =>
+                      !updatedAdminRestricted && user.updatedBy &&
+                      router.push(`/admin/${user.updatedBy}`)
+                    }
+                  />
+                  <p className="text-xs text-gray-400 mt-2">
+                    {user.updatedDateFormatted || "-"}
+                  </p>
+                </div>
+              )}
+            </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+              <h3 className="font-semibold mb-5 text-lg border-b border-gray-100 pb-3">Activity Logs</h3>
+              <ActivityLogTimeline userId={user.id} />
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
+// Viewed CompanyListPage.jsx:6-14
+
+// I will view `UserDetailPage.jsx` to update the fetch checks to properly detect API-level permission failures and trigger the restricted state.
+
+// Viewed UserDetailPage.jsx:65-115
+
+// I will view lines 110 to 140 of `UserDetailPage.jsx` to see the updater admin fetch logic.
+
+// Viewed UserDetailPage.jsx:110-140
+
+// I will update the `fetchAdmins` check in `UserDetailPage.jsx` to verify that the retrieved user is a valid profile object and not an API error response.
+
+// Edited UserDetailPage.jsx
+
+// I will view the rendering block in `admin/[id]/page.js` to ensure the logic handles invalid user data.
+
+// Viewed page.js:15-38
+
+// I will modify `admin/[id]/page.js` to ensure it renders the `AccessDenied` component if the backend returns a forbidden response/failed payload rather than rendering a blank template.
+
+// Edited page.js
+
+// I will view `CompanyDetailPage.jsx` around lines 60 to 75.
+
+// Viewed CompanyDetailPage.jsx:60-75
+
+// I will view lines 76 to 99 of `CompanyDetailPage.jsx`.
+
+// Viewed CompanyDetailPage.jsx:76-99
+
+// I will view lines 100 to 110 of `CompanyDetailPage.jsx`.
+
+// Viewed CompanyDetailPage.jsx:100-110
+
+// I will update `CompanyDetailPage.jsx` to verify that the retrieved company payload is valid.
+
+// Edited CompanyDetailPage.jsx
+
+// I have fixed both of those issues:
+
+// 1. **Handling Backend Denials for Admin/Company Details Pages (Resolves Blank Page)**:
+//    - When a user tries to view a details page for a record they are not permitted to see (even if they have the general list permission), the backend API returns a response showing `success: 0` or forbidden headers rather than throwing a physical JavaScript exception.
+//    - I updated [admin/[id]/page.js](file:///var/www/html/training/erp/erp-frontend/src/app/(home)/admin/[id]/page.js) and [CompanyDetailPage.jsx](file:///var/www/html/training/erp/erp-frontend/src/components/company/CompanyDetailPage.jsx) to inspect the API response. If the payload indicates a failure (e.g. `success === 0`, `settings.success === 0`, or lacks name fields), it will now trigger the **403 Access Denied** view instead of rendering a blank template.
+// 2. **Preventing `undefined undefined` in Added By / Updated By cards**:
+//    - I modified the admin fetch logic in [UserDetailPage.jsx](file:///var/www/html/training/erp/erp-frontend/src/components/user/UserDetailPage.jsx) and [CompanyDetailPage.jsx](file:///var/www/html/training/erp/erp-frontend/src/components/company/CompanyDetailPage.jsx) to verify that the retrieved admin profile is a valid user object containing profile fields (like `firstName`). 
+//    - If the backend returns a forbidden response for that specific user connection, the cards will now render as `🔒 Restricted Info` as designed.

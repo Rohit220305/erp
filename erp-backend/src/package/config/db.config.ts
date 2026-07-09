@@ -5,6 +5,7 @@ import { GroupEntity } from "src/group/entity/group.entity";
 import { UserEntity } from "src/user/entity/user.entity";
 import { CapabilityEntity } from "src/capability/entity/capability.entity";
 import { GroupCapabilityEntity } from "src/capability/entity/group-capability.entity";
+import { ActivityLogEntity } from "src/activity-log/entity/activity-log.entity";
 dotenv.config();
 
 
@@ -15,7 +16,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   username: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  entities: [UserEntity, CompanyEntity, GroupEntity, CapabilityEntity, GroupCapabilityEntity],
+  entities: [UserEntity, CompanyEntity, GroupEntity, CapabilityEntity, GroupCapabilityEntity, ActivityLogEntity],
   synchronize: false,
   migrationsRun: false,
   logging: false,

@@ -5,12 +5,15 @@ import { useParams } from "next/navigation";
 import { getUser } from "@/lib/api/user-api";
 import UserForm from "@/components/user/UserForm";
 import { useHeader } from "@/context/HeaderContext";
+import { useAuth } from "@/context/AuthContext";
+import AccessDenied from "@/components/common/AccessDenied";
 
 export default function AdminEditRoute() {
   const { id } = useParams();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const { setConfig, resetConfig } = useHeader();
+  const { can } = useAuth();
 
   useEffect(() => {
     setConfig({
@@ -49,10 +52,15 @@ export default function AdminEditRoute() {
   }, [id]);
 
   if (loading) return <div className="p-6 text-sm text-gray-400">Loading...</div>;
+
+  if (!can("USER_UPDATE")) {
+    return <AccessDenied missingPermission="USER_UPDATE" />;
+  }
+
   if (!user) return <div className="p-6 text-sm text-red-500">User not found.</div>;
 
   return (
-    <div className="p-6">
+    <div className="h-full">
       <UserForm mode="edit" defaultValues={{ ...user }} />
     </div>
   );

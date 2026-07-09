@@ -11,6 +11,7 @@ import { GroupEntity } from 'src/group/entity/group.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CommonFileService } from 'src/package/service/common-file.service';
 import { USER_INSERT_FIELDS, USER_UPDATE_FIELDS } from 'src/package/constants/user-fields.constant';
+import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 
 
 @Injectable()
@@ -18,6 +19,7 @@ export class UserService {
   constructor(
     private readonly general: GeneralUtilities,
     private readonly commonFileService: CommonFileService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   @InjectRepository(UserEntity)
@@ -126,6 +128,18 @@ export class UserService {
       queryColumns.addedDate = () => 'NOW()';
 
       const res = await this.userRepo.insert(queryColumns);
+
+      // Activity Log
+      this.activityLogService.log({
+        actorUserId: req.user?.sub,
+        impersonatorId: req.user?.impersonatorId, // Assuming if you add it later
+        action: 'CREATE',
+        module: 'USER',
+        entityId: res?.raw?.insertId,
+        description: `Created new user ${params.userName}`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
 
       return_data = {
         success: 1,
@@ -277,6 +291,23 @@ export class UserService {
         queryColumns,
       );
 
+      // Activity Log
+      const { password: oldPassword, ...oldValue } = user;
+      const { password: newPassword, ...newValue } = queryColumns;
+
+      this.activityLogService.log({
+        actorUserId: req.user?.sub,
+        impersonatorId: req.user?.impersonatorId || undefined,
+        action: 'UPDATE',
+        module: 'USER',
+        entityId: params.id,
+        description: `Updated user profile for ID ${params.id}`,
+        oldValue,
+        newValue,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+
       return_data = {
         success: 1,
         message: 'User Updated Successfully',
@@ -331,6 +362,17 @@ export class UserService {
       });
 
       await this.commonFileService.deleteFolder('users', `${params.id}`);
+
+      // Activity Log
+      this.activityLogService.log({
+        actorUserId: req.user?.sub,
+        action: 'DELETE',
+        module: 'USER',
+        entityId: params.id,
+        description: `Deleted user ${user.userName}`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
 
       return_data = {
         success: 1,

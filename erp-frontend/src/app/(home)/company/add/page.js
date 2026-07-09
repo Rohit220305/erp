@@ -3,9 +3,12 @@
 import CompanyAddForm from "@/components/company/CompanyAddForm";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import AccessDenied from "@/components/common/AccessDenied";
 
 export default function CompanyAddPage() {
   const { setConfig, resetConfig } = useHeader();
+  const { can } = useAuth();
 
   useEffect(() => {
     setConfig({
@@ -29,8 +32,12 @@ export default function CompanyAddPage() {
     return () => resetConfig();
   }, []);
 
+  if (!can("COMPANY_CREATE")) {
+    return <AccessDenied missingPermission="COMPANY_CREATE" />;
+  }
+
   return (
-    <div className="">
+    <div className="h-full">
       <CompanyAddForm />
     </div>
   );

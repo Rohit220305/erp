@@ -6,7 +6,7 @@ export async function apiClient(path, options = {}) {
   const url = path.startsWith("http") ? path : `${API_URL}${path}`;
   const isServer = typeof window === "undefined";
 
-  console.log(`API Request: ${options.method } ${url}`, options);
+  console.log(`API Request: ${options.method} ${url}`, options);
 
   const makeRequest = async (overrideHeaders = {}) => {
     const isFormData = options.body instanceof FormData;
@@ -21,7 +21,7 @@ export async function apiClient(path, options = {}) {
       } catch {
       }
     }
-    
+
     const finalHeaders = { ...serverCookieHeader, ...overrideHeaders, ...options.headers };
 
     return fetch(url, {
@@ -69,7 +69,7 @@ export async function apiClient(path, options = {}) {
           const cookieStore = await cookies();
           const rawCookies = cookieStore.toString();
           if (rawCookies) serverCookieHeader = { Cookie: rawCookies };
-        } catch {}
+        } catch { }
 
         const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
           method: "POST",

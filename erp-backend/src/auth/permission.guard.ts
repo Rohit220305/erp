@@ -37,7 +37,6 @@ export class PermissionGuard implements CanActivate {
       return false;
     }
 
-    
     // Attach user.companyId explicitly to request.user.companyId as required
     request.user.companyId = user.companyId;
 
@@ -46,8 +45,19 @@ export class PermissionGuard implements CanActivate {
       return true;
     }
 
+    // Bypass check if user is accessing their own profile details
+
+    if (
+      request.path === '/user/get-user' &&
+      request.method === 'GET' &&
+      String(request.query.id) === String(user.sub)
+    ) {
+      return true;
+    }
     // Caching check
-    const cached = await this.permissionCacheService.getPermissions(user.groupId);
+    const cached = await this.permissionCacheService.getPermissions(
+      user.groupId,
+    );
     let userPermissions: string[] = [];
 
     if (cached !== null) {
@@ -73,7 +83,10 @@ export class PermissionGuard implements CanActivate {
           return code;
         });
 
-      await this.permissionCacheService.setPermissions(user.groupId, userPermissions);
+      await this.permissionCacheService.setPermissions(
+        user.groupId,
+        userPermissions,
+      );
     }
 
     if (userPermissions.includes(requiredPermission)) {

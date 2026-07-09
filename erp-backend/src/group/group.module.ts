@@ -12,11 +12,13 @@ import { GroupListService } from './service/group.list.service';
 import { AuthModule } from 'src/auth/auth.module';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
+import { ActivityLogModule } from 'src/activity-log/activity-log.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([GroupEntity, CapabilityEntity, GroupCapabilityEntity]),
     AuthModule,
+    ActivityLogModule,
   ],
   controllers: [GroupController],
   providers: [GroupService, GroupListService, GeneralUtilities],

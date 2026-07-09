@@ -43,7 +43,7 @@ export const companyAddSchema = z.object({
     .trim()
     .optional()
     .or(z.literal(""))
-    .refine((value) => !value || /^https?:\/\/.+/i.test(value), {
+    .refine((value) => !value || /^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+(\/[^\s]*)?$/i.test(value), {
       message: "Please enter a valid website URL.",
     }),
 

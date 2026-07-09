@@ -22,7 +22,7 @@ export default function CompanyListCard({ company, companyConfig }) {
   const subtitle = resolvePath(company, config.primary.subtitle);
 
   return (
-    <div className=" px-4 py-2">
+    <div className=" mx-2 my-2">
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-400 shadow-sm hover:shadow-md">
         <div className="flex items-center px-6 py-4">
           {/* Primary Column */}

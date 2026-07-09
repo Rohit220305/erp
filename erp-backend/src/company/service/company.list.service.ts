@@ -172,7 +172,7 @@ export class CompanyListService {
         const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
         queryBuilder.orderBy(columnMap[params.sortField], order);
       } else {
-        queryBuilder.orderBy('company.id', 'ASC');
+        queryBuilder.orderBy('company.companyName', 'ASC');
       }
 
       queryBuilder.skip(skip);

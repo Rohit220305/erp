@@ -4,6 +4,7 @@ import GroupForm from "@/components/group/GroupForm";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import AccessDenied from "@/components/common/AccessDenied";
 
 export default function GroupAddPage() {
   const { setConfig, resetConfig } = useHeader();
@@ -32,15 +33,11 @@ export default function GroupAddPage() {
   }, []);
 
   if (!can("GROUP_CREATE")) {
-    return (
-      <div className="p-6 text-red-500 font-medium">
-        Permission Denied: You do not have the required "GROUP_CREATE" permission to access this page.
-      </div>
-    );
+    return <AccessDenied missingPermission="GROUP_CREATE" />;
   }
 
   return (
-    <div className="p-6">
+    <div className="h-full  ">
       <GroupForm mode="create" />
     </div>
   );

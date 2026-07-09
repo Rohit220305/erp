@@ -128,11 +128,11 @@ export default function LoginForm() {
         </button>
 
         {/* Footer */}
-        <div className="mt-7 flex items-center justify-between">
-          <label className="flex cursor-pointer items-center gap-3 text-sm text-gray-700">
+        <div className="mt-7 flex items-center ">
+          {/* <label className="flex cursor-pointer items-center gap-3 text-sm text-gray-700">
             <input type="checkbox" className="h-4 w-4 cursor-pointer" />
             Remember me
-          </label>
+          </label> */}
           <Link
             href="/forgot-password"
             className="cursor-pointer text-sm font-semibold text-black hover:text-[#1565c0]"

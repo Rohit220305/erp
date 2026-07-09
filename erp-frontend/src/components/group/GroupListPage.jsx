@@ -9,11 +9,13 @@ import { useHeader } from "@/context/HeaderContext";
 import { useListing } from "@/context/ListingContext";
 import GroupListCard from "./GroupListCard";
 import GroupGridCard from "./GroupGridCard";
+import GroupTableRow from "./GroupTableRow";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import FilterDrawer from "@/components/common/FilterDrawer";
 import SearchDrawer from "@/components/common/SearchDrawer";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import AccessDenied from "@/components/common/AccessDenied";
 
 export default function GroupListPage() {
   const { setConfig, resetConfig } = useHeader();
@@ -140,7 +142,7 @@ export default function GroupListPage() {
             label: "Add Group",
             onClick: () => router.push("/group/add"),
           } : null,
-        icons: ["refresh", "search", "filter", "view"],
+        icons: [ "search", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
         showProfile: true,
@@ -184,8 +186,8 @@ export default function GroupListPage() {
 
   const headers = useMemo(() => {
     const list = [
-      { label: "Group Code", key: "groupCode", searchable: true, sortable: false },
       { label: "Group Name", key: "groupName", searchable: true, sortable: false },
+      { label: "Group Code", key: "groupCode", searchable: true, sortable: false },
       { label: "Description", key: "description", searchable: true, sortable: false },
       { label: "Status", key: "status", searchable: true, sortable: false, type: "select", options: [
         { label: "Active", value: "Active" },
@@ -197,57 +199,14 @@ export default function GroupListPage() {
     //   list.push({ label: "Actions", key: "actions" });
     // }
     return list;
-  }, [can]);
+  }, []);
 
-  const renderCell = useCallback((item, key) => {
-    if (key === "groupName") {
-      return (
-        <p
-          className="font-medium text-[#1565c0] hover:underline cursor-pointer text-sm"
-          onClick={() => router.push(`/group/${item.id}`)}
-        >
-          {item.groupName || "-"}
-        </p>
-      );
-    }
-    if (key === "status") {
-      const isActive = item.status === "Active" || item.status === "active";
-      return (
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-          isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-        }`}>
-          {isActive ? "Active" : "Inactive"}
-        </span>
-      );
-    }
-    if (key === "description") {
-      return <span className="text-gray-500 text-sm">{item.description || "-"}</span>;
-    }
-    // if (key === "actions") {
-    //   return (
-    //     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-    //       {can("GROUP_UPDATE") && (
-    //         <button
-    //           onClick={() => router.push(`/group/edit/${item.id}`)}
-    //           className="text-[#1565c0] hover:text-[#0f57a6] font-medium text-xs border border-[#1565c0]/15 rounded px-2.5 py-1 bg-[#1565c0]/5 hover:bg-[#1565c0]/10 transition cursor-pointer"
-    //         >
-    //           Edit
-    //         </button>
-    //       )}
-    //       {can("GROUP_DELETE") && (
-    //         <button
-    //           onClick={() => setDeleteTarget(item)}
-    //           className="text-red-600 hover:text-red-700 font-medium text-xs border border-red-200 rounded px-2.5 py-1 bg-red-50 hover:bg-red-100 transition cursor-pointer"
-    //         >
-    //           Delete
-    //         </button>
-    //       )}
-    //     </div>
-    //   );
-    // }
-    
-    return item[key] || "-";
-  }, [router, can]);
+  const renderCell = useCallback((item, key) => (
+    <GroupTableRow
+      item={item}
+      columnKey={key}
+    />
+  ), []);
 
   if (initialLoad) {
     return (
@@ -258,11 +217,7 @@ export default function GroupListPage() {
   }
 
   if (!can("GROUP_VIEW")) {
-    return (
-      <div className="p-10 text-center text-red-500 font-semibold text-sm">
-        Permission Denied: You do not have the required "GROUP_VIEW" permission to access this page.
-      </div>
-    );
+    return <AccessDenied missingPermission="GROUP_VIEW" />;
   }
 
   return (

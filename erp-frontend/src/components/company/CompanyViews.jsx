@@ -163,9 +163,9 @@ export const CompanyListView = ({ data, config }) => {
     );
   }
   return (
-    <div className="bg-white rounded-lg overflow-hidden h-full">
+    <div className=" rounded-lg overflow-hidden h-full">
       <div className="overflow-auto max-h-[calc(100vh-250px)] pb-20">
-        <div className="flex flex-col gap-2 p-4">
+        <div className="flex flex-col  ">
           {data.map((item) => (
             <CompanyListCard key={item.id} company={item} companyConfig={config} />
           ))}
@@ -186,7 +186,7 @@ export const CompanyGridView = ({ data, config }) => {
   return (
     <div className="rounded-lg overflow-hidden h-full">
       <div className="overflow-auto max-h-[calc(100vh-250px)] pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 p-6">
           {data.map((item) => (
             <CompanyGridCard key={item.id} company={item} companyConfig={config} />
           ))}

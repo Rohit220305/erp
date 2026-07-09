@@ -1,84 +1,92 @@
 "use client";
 
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Tag, Calendar, Edit, Trash2 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 
-export default function GroupListCard({ group, onDelete }) {
+export default function GroupListCard({ group, can }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const router = useRouter();
-  const { can } = useAuth();
 
   const isActive = group.status === "Active" || group.status === "active";
 
   return (
-    <div
-      onClick={() => router.push(`/group/${group.id}`)}
-      className="bg-white px-5 py-4 flex items-center gap-5 border-b border-gray-100 hover:bg-gray-50/80 transition-colors cursor-pointer group"
-    >
-      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#1565c0]/10 to-[#1565c0]/20 flex items-center justify-center border border-[#1565c0]/15 shrink-0">
-        <Tag size={16} className="text-[#1565c0]" />
-      </div>
-
-      {/* Code */}
-      <div className="w-28 shrink-0">
-        <p className="text-xs text-gray-400 mb-0.5">Code</p>
-        <p className="font-semibold text-sm text-[#1565c0]">{group.groupCode || "—"}</p>
-      </div>
-
-      {/* Name */}
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-gray-400 mb-0.5">Group Name</p>
-        <p className="font-semibold text-sm text-gray-900 group-hover:text-[#1565c0] transition-colors truncate">
-          {group.groupName || "—"}
-        </p>
-      </div>
-
-      {/* Description */}
-      <div className="min-w-0 flex-1 hidden md:block">
-        <p className="text-xs text-gray-400 mb-0.5">Description</p>
-        <p className="text-sm text-gray-500 truncate">{group.description || "—"}</p>
-      </div>
-
-      {/* Date */}
-      <div className="flex items-center gap-1.5 text-xs text-gray-400 w-28 shrink-0">
-        <Calendar size={11} className="shrink-0" />
-        <span>{group.addedDateFormatted || "—"}</span>
-      </div>
-
-      {/* Status */}
-      <div className="shrink-0">
-        <span
-          className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-            isActive
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-              : "bg-red-50 text-red-600 border border-red-200"
-          }`} 
+    <div className=" mx-2 my-2">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md">
+        <div 
+          className="flex items-center px-6 py-4"
         >
-          {isActive ? "Active" : "Inactive"}
-        </span>
-      </div>
+          {/* Col 1: Group Name */}
+          <div className="flex-[1.5]">
+              <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Group Name</p>
+              <div className="flex items-center gap-3">
+               
+                <div>
+                  {can("GROUP_VIEW") ? (
+                    <p 
+                      className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer w-fit"
+                      onClick={() => router.push(`/group/${group.id}`)}
+                    >
+                      {group.groupName || "—"}
+                    </p>
+                  ) : (
+                    <p className="text-sm font-semibold text-gray-800">
+                      {group.groupName || "—"}
+                    </p>
+                  )}
+                </div>
+              </div>
+          </div>
+          
+          {/* Col 2: Group Code */}
+          <div className="flex-1">
+              <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Group Code</p>
+              <p className="text-[13px] text-gray-800 font-medium">{group.groupCode || "—"}</p>
+          </div>
+          
+          {/* Col 3: Status */}
+          <div className="flex-1">
+              <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Status</p>
+              <span className={`px-3 py-1 rounded text-[11px] font-semibold ${
+                isActive ? "bg-[#2ecc71] text-white" : "bg-red-500 text-white"
+              }`}>
+                {isActive ? "Active" : "Inactive"}
+              </span>
+          </div>
+          
+          {/* Col 4: Added Date */}
+          <div className="flex-[1.5]">
+              <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Added Date</p>
+              <p className="text-[13px] font-medium text-gray-800">{group.addedDateFormatted || "—"}</p>
+          </div>
 
-      {/* Actions */}
-      {/* <div className="flex items-center gap-1 shrink-0 ml-4" onClick={(e) => e.stopPropagation()}>
-        {can("GROUP_UPDATE") && (
-          <button
-            onClick={() => router.push(`/group/edit/${group.id}`)}
-            className="p-1.5 text-gray-400 hover:text-[#1565c0] hover:bg-gray-100 rounded transition cursor-pointer"
-            title="Edit"
+          {/* Chevron */}
+          <div 
+            className="ml-4 flex items-center justify-center cursor-pointer p-2 hover:bg-gray-100 rounded-full transition-colors"
+            onClick={() => setIsExpanded(!isExpanded)}
           >
-            <Edit size={15} />
-          </button>
-        )}
-        {can("GROUP_DELETE") && (
-          <button
-            onClick={() => onDelete?.(group)}
-            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded transition cursor-pointer"
-            title="Delete"
-          >
-            <Trash2 size={15} />
-          </button>
-        )}
-      </div> */}
+            <ChevronDown className={`text-[#1565c0] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} size={20} />
+          </div>
+        </div>
+
+        {/* Expanded Content */}
+        <div 
+          className={`transition-all duration-500 ease-in-out overflow-hidden ${
+            isExpanded ? "max-h-[500px] opacity-100 " : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="px-6 py-5 flex items-start bg-white">
+              {/* Col 1: Description */}
+              <div className="flex-[4]">
+                <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Description</p>
+                <p className="text-[13px] text-gray-800 font-medium">{group.description || "—"}</p>
+              </div>
+              
+              {/* Spacer for Chevron alignment */}
+              <div className="ml-4 w-5"></div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

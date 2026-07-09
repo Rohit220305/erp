@@ -3,9 +3,12 @@
 import UserForm from "@/components/user/UserForm";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import AccessDenied from "@/components/common/AccessDenied";
 
 export default function AdminAddPage() {
   const { setConfig, resetConfig } = useHeader();
+  const { can } = useAuth();
 
   useEffect(() => {
     setConfig({
@@ -29,8 +32,12 @@ export default function AdminAddPage() {
     return () => resetConfig();
   }, []);
 
+  if (!can("USER_CREATE")) {
+    return <AccessDenied missingPermission="USER_CREATE" />;
+  }
+
   return (
-    <div className="p-6">
+    <div className="h-full  ">
       <UserForm mode="create" />
     </div>
   );

@@ -13,6 +13,7 @@ import FilterDrawer from "@/components/common/FilterDrawer";
 import SearchDrawer from "@/components/common/SearchDrawer";
 import Pagination from "@/components/listing/Pagination";
 import toast from "react-hot-toast";
+import AccessDenied from "@/components/common/AccessDenied";
 
 import {
   CompanyTableView,
@@ -200,13 +201,8 @@ export default function CompanyListPage() {
     onLimitChange: setLimit,
   };
 
-  if (!can("COMPANY_VIEW")) {
-    return (
-      <div className="p-10 text-center text-red-500 font-semibold text-sm">
-        Permission Denied: You do not have the required "COMPANY_VIEW"
-        permission to access this page.
-      </div>
-    );
+  if (!can("COMPANY_LIST")) {
+    return <AccessDenied missingPermission="COMPANY_LIST" />;
   }
 
   if (initialLoad) {
@@ -219,7 +215,6 @@ export default function CompanyListPage() {
 
   return (
     <div className="relative px-6 h-full">
-      {/* Rendering specific view based on context */}
       {view === "table" ? (
         <CompanyTableView data={companies} config={companyConfig} onRowAction={handleRowAction} loading={loading} />
       ) : view === "list" ? (
@@ -228,7 +223,6 @@ export default function CompanyListPage() {
         <CompanyGridView data={companies} config={companyConfig} />
       )}
 
-      {/* Shared Pagination component */}
       <div className="absolute bottom-0 left-0 right-0 mx-6 bg-white border-t border-gray-200">
         <Pagination {...paginationProps} />
       </div>

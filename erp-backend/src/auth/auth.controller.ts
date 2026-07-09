@@ -10,7 +10,6 @@ import { JwtPayload } from 'src/package/types/jwt-payload.type';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  /** Public — no token required */
   @Public()
   @Post('login')
   async login(
@@ -33,8 +32,11 @@ export class AuthController {
 
   /** Requires valid access token */
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
-    return this.authService.logout(res);
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.logout(req, res);
   }
 
   /**
@@ -50,7 +52,7 @@ export class AuthController {
     if (!req.user?.isSuperAdmin) {
       return { success: 0, message: 'Super admin access required' };
     }
-    return this.authService.loginAsUser(res, targetUserId);
+    return this.authService.loginAsUser(req, res, targetUserId);
   }
 
   /**
@@ -95,10 +97,11 @@ export class AuthController {
   @Public()
   @Post('restore-session')
   async restoreSession(
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Body('token') token: string,
   ) {
-    return this.authService.restoreSession(res, token);
+    return this.authService.restoreSession(req, res, token);
   }
 
   @Public()

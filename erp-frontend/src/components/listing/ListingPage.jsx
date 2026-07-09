@@ -36,7 +36,7 @@ export default function ListingPage({
 
   if (view === "list") {
     return (
-      <div className="bg-white rounded-lg overflow-hidden h-full">
+      <div className=" rounded-lg overflow-hidden h-full">
         <DynamicList data={data} renderCard={renderListCard} />
         <div className="absolute bottom-0 left-0 right-0 mx-6">
           <Pagination {...paginationProps} />

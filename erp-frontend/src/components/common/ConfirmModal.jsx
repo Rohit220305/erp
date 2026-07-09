@@ -23,15 +23,12 @@ export default function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onCancel}
       />
 
-      {/* Modal */}
       <div className="relative z-10 bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 animate-in fade-in-0 zoom-in-95">
-        {/* Close button */}
         <button
           onClick={onCancel}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition cursor-pointer"
@@ -39,7 +36,6 @@ export default function ConfirmModal({
           <X size={20} />
         </button>
 
-        {/* Icon */}
         <div
           className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
             danger ? "bg-red-100" : "bg-blue-100"
@@ -51,7 +47,6 @@ export default function ConfirmModal({
           />
         </div>
 
-        {/* Text */}
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
         <p className="text-sm text-gray-500 mb-6">{message}</p>
 

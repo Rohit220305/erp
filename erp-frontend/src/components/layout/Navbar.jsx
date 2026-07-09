@@ -18,7 +18,6 @@ export default function Navbar() {
   return (
     <div className="h-[80px] bg-[#ebe9e9e8] flex  justify-between px-10  ">
       <div className="h-full    py-4">
-        {/* LEFT */}
         <div className="flex items-center gap-5">
           {navbar.breadcrumbs.length > 0 && (
             <div className="flex items-center text-sm">
@@ -32,7 +31,7 @@ export default function Navbar() {
                       {item.label}
                     </Link>
                   ) : (
-                    <span className="text-blue-700">{item.label}</span>
+                    <span className="text-blue-700 ">{item.label}</span>
                   )}
 
                   {index !== navbar.breadcrumbs.length - 1 && (
@@ -44,7 +43,7 @@ export default function Navbar() {
           )}
         </div>
         {navbar.title && (
-          <h2 className="font-semibold text-xl ">{navbar.title}</h2>
+          <h2 className="font-semibold text-xl mt-2">{navbar.title}</h2>
         )}
       </div>
       <div className="h-px bg-gray-300 mt-4 me-3.5">

@@ -114,8 +114,10 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-1">Date of Birth</p>
-              <p className="font-medium">{delayedUser.dateOfBirthFormatted || "-"}</p>
+              <p className="text-xs text-gray-400 mb-1">Phone</p>
+              <p className="font-medium">
+                {delayedUser.phone ? `${delayedUser.dialCode || ""} ${delayedUser.phone}` : "-"}
+              </p>
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Group</p>
@@ -136,30 +138,6 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
             <div>
               <p className="text-xs text-gray-400 mb-1">Modified Date</p>
               <p className="font-medium">{delayedUser.modifiedDateFormatted || "-"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Allow Login</p>
-              <p className="font-medium font-semibold">
-                {delayedUser.allowLogin ? "Yes" : "No"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Is Email Verified</p>
-              <p className="font-medium">
-                {delayedUser.isEmailVerified ? "Yes" : "-"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Preferred Language</p>
-              <p className="font-medium font-semibold">
-                {delayedUser.preferredLanguage || "-"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Is Archived</p>
-              <p className="font-medium font-semibold">
-                {delayedUser.isArchived ? "Yes" : "No"}
-              </p>
             </div>
           </div>
         </div>

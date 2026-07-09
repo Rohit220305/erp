@@ -22,8 +22,8 @@ import { logoutUser } from "@/lib/api/auth-api";
 import toast from "react-hot-toast";
 
 const iconMap = {
-  refresh: RefreshCw,
-  export: Upload,
+  // refresh: RefreshCw,
+  // export: Upload,
   filter: Filter,
   search: Search,
   view: LayoutGrid,
@@ -82,7 +82,7 @@ export default function Header() {
             />
           </div>
 
-          <div className="mx-6 h-10 w-px bg-gray-300" />
+          {/* <div className="mx-6 h-10 w-px bg-gray-300" />
 
           <div className="flex overflow-hidden rounded-md bg-gray-100">
             <div className="flex items-center p-2 px-3">
@@ -101,7 +101,7 @@ export default function Header() {
               <span>ALL</span>
               <ChevronDown size={20} />
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* RIGHT */}
@@ -144,11 +144,11 @@ export default function Header() {
             );
           })}
 
-          {header.showBookmark && (
+          {/* {header.showBookmark && (
             <Bookmark size={20} className="text-gray-600 cursor-pointer" />
-          )}
+          )} */}
 
-          {header.showLanguage && <LanguageDropdown />}
+          {/* {header.showLanguage && <LanguageDropdown />} */}
 
           {header.showProfile && (
             <ProfileDropdown
@@ -162,7 +162,7 @@ export default function Header() {
             />
           )}
 
-          {header.showMenu && (
+          {/* {header.showMenu && (
             <>
               <div className="h-10 w-px bg-gray-300" />
               <button
@@ -173,7 +173,7 @@ export default function Header() {
                 <span>Menu</span>
               </button>
             </>
-          )}
+          )} */}
         </div>
       </div>
     </header>

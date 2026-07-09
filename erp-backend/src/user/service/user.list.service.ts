@@ -200,7 +200,7 @@ export class UserListService {
         const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
         queryBuilder.orderBy(columnMap[params.sortField], order);
       } else {
-        queryBuilder.orderBy('user.id', 'ASC');
+        queryBuilder.orderBy('user.firstName', 'ASC');
       }
 
       queryBuilder.skip(skip);
