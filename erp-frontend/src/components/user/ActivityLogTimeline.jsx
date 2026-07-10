@@ -86,14 +86,14 @@ export default function ActivityLogTimeline({ userId }) {
   }
 
   return (
-    <div className="relative border-l border-gray-200 ml-3 py-4 space-y-8">
+    <div className="relative border-l border-gray-200 ml-3 py-4 space-y-8 ">
       {logs.map((log) => (
         <div key={log.id} className="relative pl-6">
           <span className="absolute -left-3 top-0 bg-white border border-gray-200 rounded-full p-1 shadow-sm">
             {getActionIcon(log.action)}
           </span>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
-            <h4 className="text-sm font-semibold text-gray-900">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 ">
+            <h4 className="text-sm font-semibold text-gray-900 mt-1">
               {log.description}
             </h4>
             <span className="text-xs text-gray-400 whitespace-nowrap mt-1 sm:mt-0">

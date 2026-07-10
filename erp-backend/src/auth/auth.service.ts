@@ -116,7 +116,7 @@ export class AuthService {
     const accessExpires =
       this.config.get<string>('JWT_ACCESS_EXPIRES') ?? '15m';
     const refreshExpires =
-      this.config.get<string>('JWT_REFRESH_EXPIRES') ?? '7d';
+      this.config.get<string>('JWT_REFRESH_EXPIRES') ?? '7d'; 
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.config.getOrThrow<string>('JWT_SECRET'),
@@ -249,6 +249,7 @@ export class AuthService {
   }
 
   async refresh(req: Request, res: Response) {
+    
     const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
@@ -327,7 +328,7 @@ export class AuthService {
     }
 
     if (target.status !== 'Active') {
-      return { success: 0, message: 'Target user is inactive' };
+      return { success: 0, message: 'User is inactive' };
     }
 
     const currentAdminId = req['user']?.sub;
@@ -434,10 +435,13 @@ export class AuthService {
     }
 
     try {
+      console.log('Verifying session tokenin restoresession:', );
+      
       const payload = this.jwtService.verify<JwtPayload>(token, {
         secret: this.config.getOrThrow<string>('JWT_SECRET'),
+        ignoreExpiration: true,
       });
-
+      console.log('Session token verified successfully for user :', payload);
       const user = await this.userRepo.findOne({ where: { id: payload.sub } });
       if (!user || user.status !== 'Active') {
         return { success: 0, message: 'User not found or inactive' };

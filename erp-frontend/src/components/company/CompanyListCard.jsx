@@ -9,7 +9,9 @@ import { useAuth } from "@/context/AuthContext";
 import CellRenderer from "@/components/core/dynamic-ui/CellRenderer";
 import { resolvePath } from "@/components/core/dynamic-ui/utils/pathResolver";
 
-export default function CompanyListCard({ company, companyConfig }) {
+import SharedImageZoom from "@/components/common/SharedImageZoom";
+
+export default function CompanyListCard({ company, companyConfig, setSelectedCompanyForDetails }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const router = useRouter();
   const { can } = useAuth();
@@ -25,33 +27,27 @@ export default function CompanyListCard({ company, companyConfig }) {
     <div className=" mx-2 my-2">
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-400 shadow-sm hover:shadow-md">
         <div className="flex items-center px-6 py-4">
-          {/* Primary Column */}
           <div className="flex-1 min-w-0">
             <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
               Company
             </p>
             <div className="flex items-center gap-3">
-              {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt={title}
-                  className="w-10 h-10 rounded-lg object-cover border border-gray-100"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#1565c0]/10 to-[#1565c0]/20 flex items-center justify-center border border-[#1565c0]/15 shrink-0">
-                  <Building2 size={18} className="text-[#1565c0]" />
-                </div>
-              )}
+              <SharedImageZoom
+                id={`company-list-${company.id}`}
+                src={logoUrl}
+                alt={title}
+                placeholderText={<Building2 size={18} />}
+                thumbnailClassName="w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0"
+                modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"
+              />
               <div className="min-w-0">
                 {can(companyConfig.permissions?.view || "COMPANY_VIEW") ? (
-                  <Link
-                    href={`/company/${company.id}`}
-                    className="block w-fit text-[#1565c0] "
+                  <span
+                    onClick={() => setSelectedCompanyForDetails && setSelectedCompanyForDetails(company)}
+                    className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-semibold text-sm truncate"
                   >
-                    <p className="text-sm font-semibold hover:underline truncate">
-                      {title || "—"}
-                    </p>
-                  </Link>
+                    {title || "—"}
+                  </span>
                 ) : (
                   <p className="text-sm font-semibold text-gray-800 truncate">
                     {title || "—"}
@@ -93,7 +89,6 @@ export default function CompanyListCard({ company, companyConfig }) {
           </div>
         </div>
 
-        {/* Expanded Content */}
         <div
           className={`transition-all duration-400 ease-in-out overflow-hidden ${
             isExpanded ? "max-h-[500px] opacity-100 " : "max-h-0 opacity-0"
@@ -111,7 +106,6 @@ export default function CompanyListCard({ company, companyConfig }) {
               </div>
             ))}
 
-            {/* Spacer for Chevron alignment */}
             <div className="flex-shrink-0 ml-4 w-5"></div>
           </div>
         </div>

@@ -45,8 +45,8 @@ export default function GroupListPage() {
   const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
 
   const fields = useMemo(() => [
-    { label: "Group Code", value: "groupCode", type: "text" },
     { label: "Group Name", value: "groupName", type: "text" },
+    { label: "Group Code", value: "groupCode", type: "text" },
     { label: "Description", value: "description", type: "text" },
     { label: "Status", value: "status", type: "select", options: [
       { label: "Active", value: "Active" },
@@ -186,18 +186,43 @@ export default function GroupListPage() {
 
   const headers = useMemo(() => {
     const list = [
-      { label: "Group Name", key: "groupName", searchable: true, sortable: false },
-      { label: "Group Code", key: "groupCode", searchable: true, sortable: false },
-      { label: "Description", key: "description", searchable: true, sortable: false },
-      { label: "Status", key: "status", searchable: true, sortable: false, type: "select", options: [
-        { label: "Active", value: "Active" },
-        { label: "Inactive", value: "InActive" },
-      ] },
-      { label: "Added Date", key: "addedDateFormatted", searchable: false, sortable: false },
+      {
+        label: "Group Name",
+        key: "groupName",
+        searchable: true,
+        sortable: true,
+      },
+      {
+        label: "Group Code",
+        key: "groupCode",
+        searchable: true,
+        sortable: true,
+      },
+      {
+        label: "Description",
+        key: "description",
+        searchable: true,
+        sortable: true,
+      },
+      {
+        label: "Status",
+        key: "status",
+        searchable: true,
+        sortable: false,
+        type: "select",
+        options: [
+          { label: "Active", value: "Active" },
+          { label: "Inactive", value: "InActive" },
+        ],
+      },
+      {
+        label: "Added Date",
+        key: "addedDateFormatted",
+        searchable: false,
+        sortable: true,
+      },
     ];
-    // if (can("GROUP_UPDATE") || can("GROUP_DELETE")) {
-    //   list.push({ label: "Actions", key: "actions" });
-    // }
+    
     return list;
   }, []);
 

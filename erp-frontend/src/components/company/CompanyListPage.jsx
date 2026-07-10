@@ -20,6 +20,7 @@ import {
   CompanyListView,
   CompanyGridView,
 } from "./CompanyViews";
+import CompanyDetailsDrawer from "./CompanyDetailsDrawer";
 
 export default function CompanyListPage() {
   const router = useRouter();
@@ -31,8 +32,8 @@ export default function CompanyListPage() {
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
 
-  // Search/Filter states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sidebarFilters, setSidebarFilters] = useState(companyConfig.defaultFilters || {});
   const [appliedSidebarFilters, setAppliedSidebarFilters] = useState(null);
@@ -83,7 +84,6 @@ export default function CompanyListPage() {
           .filter(Boolean);
       }
 
-      // Add column filters
       if (columnFilters && Object.keys(columnFilters).length > 0) {
         Object.entries(columnFilters).forEach(([key, val]) => {
           if (val === undefined || val === null || val === "") return;
@@ -216,11 +216,11 @@ export default function CompanyListPage() {
   return (
     <div className="relative px-6 h-full">
       {view === "table" ? (
-        <CompanyTableView data={companies} config={companyConfig} onRowAction={handleRowAction} loading={loading} />
+        <CompanyTableView data={companies} config={companyConfig} onRowAction={handleRowAction} loading={loading} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />
       ) : view === "list" ? (
-        <CompanyListView data={companies} config={companyConfig} />
+        <CompanyListView data={companies} config={companyConfig} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />
       ) : (
-        <CompanyGridView data={companies} config={companyConfig} />
+        <CompanyGridView data={companies} config={companyConfig} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />
       )}
 
       <div className="absolute bottom-0 left-0 right-0 mx-6 bg-white border-t border-gray-200">
@@ -284,6 +284,12 @@ export default function CompanyListPage() {
           fields={companyConfig.searchFields}
         />
       )}
+
+      <CompanyDetailsDrawer
+        open={!!selectedCompanyForDetails}
+        onClose={() => setSelectedCompanyForDetails(null)}
+        company={selectedCompanyForDetails}
+      />
     </div>
   );
 }

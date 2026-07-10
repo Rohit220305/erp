@@ -10,14 +10,14 @@
   },
   "columns": [
     { "label": "Logo", "key": "logoUrl", "type": "image", "searchable": false, "sortable": false },
-    { "label": "Company Name", "key": "companyName", "type": "link", "linkPath": "/company/{id}", "searchable": true, "sortable": false },
-    { "label": "Short Name", "key": "shortName", "type": "text", "searchable": true, "sortable": false },
-    { "label": "Company Code", "key": "companyCode", "type": "text", "searchable": true, "sortable": false },
-    { "label": "Contact Person", "key": "contactPersonName", "type": "text", "searchable": true, "sortable": false },
-    { "label": "Email", "key": "email", "type": "text", "searchable": true, "sortable": false },
-    { "label": "Phone", "key": "phone", "type": "phone", "searchable": true, "sortable": false },
-    { "label": "Status", "key": "status", "type": "statusBadge", "searchable": true, "sortable": false, "options": [{ "label": "Active", "value": "Active" }, { "label": "Inactive", "value": "InActive" }] },
-    { "label": "Added Date", "key": "addedDateFormatted", "type": "text", "searchable": false, "sortable": false }
+    { "label": "Company Name", "key": "companyName", "type": "link", "linkPath": "/company/{id}", "searchable": true, "sortable": true },
+    { "label": "Short Name", "key": "shortName", "type": "text", "searchable": true, "sortable": true },
+    { "label": "Company Code", "key": "companyCode", "type": "text", "searchable": true, "sortable": true },
+    { "label": "Contact Person", "key": "contactPersonName", "type": "text", "searchable": true, "sortable": true },
+    { "label": "Email", "key": "email", "type": "text", "searchable": true, "sortable": true },
+    { "label": "Phone", "key": "phone", "type": "phone", "searchable": true, "sortable": true },
+    { "label": "Status", "key": "status", "type": "statusBadge", "searchable": true, "sortable": true, "options": [{ "label": "Active", "value": "Active" }, { "label": "Inactive", "value": "InActive" }] },
+    { "label": "Added Date", "key": "addedDateFormatted", "type": "text", "searchable": false, "sortable": true }
   ],
   "actions": {
     "header": [
@@ -33,8 +33,8 @@
     { "label": "Company Name", "value": "companyName", "type": "text" },
     { "label": "Short Name", "value": "shortName", "type": "text" },
     { "label": "Company Code", "value": "companyCode", "type": "text" },
-    { "label": "Company Email", "value": "email", "type": "text" },
-    { "label": "Company Phone", "value": "phone", "type": "text" },
+    { "label": "Email", "value": "email", "type": "text" },
+    { "label": "Phone", "value": "phone", "type": "text" },
     { "label": "Contact Person", "value": "contactPersonName", "type": "text" },
     {
       "label": "Status",
@@ -85,8 +85,8 @@
       "badge": "status"
     },
     "details": [
-      { "icon": "Mail", "key": "email", "type": "text" },
-      { "icon": "Phone", "key": "phone", "type": "phone" }
+      { "label": "Email", "icon": "Mail", "key": "email", "type": "text" },
+      { "label": "Phone", "icon": "Phone", "key": "phone", "type": "phone" }
     ],
     "footer": {
       "date": "addedDateFormatted"

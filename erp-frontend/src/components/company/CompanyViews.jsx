@@ -6,12 +6,11 @@ import ActionRenderer from "@/components/core/dynamic-ui/ActionRenderer";
 import { useListing } from "@/context/ListingContext";
 import { FiChevronUp, FiChevronDown } from "react-icons/fi";
 
-export const CompanyTableView = ({ data, config, loading = false }) => {
+export const CompanyTableView = ({ data, config, loading = false, setSelectedCompanyForDetails }) => {
   const columns = config?.columns || [];
   const actions = config?.actions || [];
   const { sortField, sortOrder, setSort, columnFilters, setColumnFilters } = useListing();
 
-  // Local state for debounced text inputs
   const [localFilters, setLocalFilters] = useState({});
 
   useEffect(() => {
@@ -96,11 +95,11 @@ export const CompanyTableView = ({ data, config, loading = false }) => {
                   return (
                     <th key={`filter-${index}`} className="px-4 py-2 border-b border-gray-200">
                       <select
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal"
+                        className="w-full px-2 py-1 text-sm border cursor-pointer border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal"
                         value={localFilters[header.key] || ""}
                         onChange={(e) => handleSelectChange(header.key, e.target.value)}
                       >
-                        <option value="">All</option>
+                        <option value="" >All</option>
                         {header.options.map((opt) => (
                           <option key={opt.value} value={opt.value}>
                             {opt.label}
@@ -140,7 +139,7 @@ export const CompanyTableView = ({ data, config, loading = false }) => {
                   {tableColumns.map((col, colIndex) => {
                     return (
                       <td key={colIndex} className="px-4 py-3 text-sm">
-                        <CellRenderer company={item} column={col} companyConfig={config} />
+                        <CellRenderer company={item} column={col} companyConfig={config} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />
                       </td>
                     );
                   })}
@@ -154,7 +153,7 @@ export const CompanyTableView = ({ data, config, loading = false }) => {
   );
 };
 
-export const CompanyListView = ({ data, config }) => {
+export const CompanyListView = ({ data, config, setSelectedCompanyForDetails }) => {
   if (!data || data.length === 0) {
     return (
       <div className="p-10 text-center text-gray-400 text-sm">
@@ -167,7 +166,7 @@ export const CompanyListView = ({ data, config }) => {
       <div className="overflow-auto max-h-[calc(100vh-250px)] pb-20">
         <div className="flex flex-col  ">
           {data.map((item) => (
-            <CompanyListCard key={item.id} company={item} companyConfig={config} />
+            <CompanyListCard key={item.id} company={item} companyConfig={config} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />
           ))}
         </div>
       </div>
@@ -175,7 +174,7 @@ export const CompanyListView = ({ data, config }) => {
   );
 };
 
-export const CompanyGridView = ({ data, config }) => {
+export const CompanyGridView = ({ data, config, setSelectedCompanyForDetails }) => {
   if (!data || data.length === 0) {
     return (
       <div className="p-10 text-center text-gray-400 text-sm">
@@ -188,7 +187,7 @@ export const CompanyGridView = ({ data, config }) => {
       <div className="overflow-auto max-h-[calc(100vh-250px)] pb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 p-6">
           {data.map((item) => (
-            <CompanyGridCard key={item.id} company={item} companyConfig={config} />
+            <CompanyGridCard key={item.id} company={item} companyConfig={config} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />
           ))}
         </div>
       </div>

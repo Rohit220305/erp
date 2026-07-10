@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHeader } from "@/context/HeaderContext";
 import { useAuth } from "@/context/AuthContext";
+import SharedImageZoom from "@/components/common/SharedImageZoom";
 import { loginAsUser, logoutUser } from "@/lib/api/auth-api";
 import { getUser } from "@/lib/api/user-api";
 import {
@@ -38,7 +39,7 @@ function DetailRow({ label, value, isRestricted }) {
   );
 }
 
-function AdminLink({ admin, onClick, isRestricted }) {
+function AdminLink({ admin, onClick, isRestricted, canNavigate = true }) {
   if (isRestricted) {
     return (
       <div className="flex items-center gap-2 py-1.5 text-gray-400">
@@ -49,10 +50,12 @@ function AdminLink({ admin, onClick, isRestricted }) {
   }
   if (!admin) return null;
 
+  const isClickable = canNavigate && onClick;
+
   return (
     <div
-      className="flex items-center gap-3 cursor-pointer group"
-      onClick={onClick}
+      className={`flex items-center gap-3 ${isClickable ? "cursor-pointer group" : ""}`}
+      onClick={isClickable ? onClick : undefined}
     >
       {admin.photoUrl ? (
         <img
@@ -65,21 +68,21 @@ function AdminLink({ admin, onClick, isRestricted }) {
           {admin.firstName?.[0] || "?"}
         </div>
       )}
-      <span className="text-sm text-[#1565c0] group-hover:underline font-medium">
+      <span
+        className={`text-sm font-medium ${isClickable ? "text-[#1565c0] group-hover:underline" : "text-gray-850"}`}
+      >
         {`${admin.firstName} ${admin.lastName}`}
       </span>
     </div>
   );
 }
 
-
-
 export default function UserDetailPage({ user }) {
   const { setConfig, resetConfig } = useHeader();
   const {
     user: currentUser,
     loginAs,
-    backToSession, 
+    backToSession,
     isImpersonating,
     sessionStack,
     canImpersonate,
@@ -104,7 +107,12 @@ export default function UserDetailPage({ user }) {
       } else {
         try {
           const fetchedUser = await getUser(user.addedBy);
-          if (fetchedUser && fetchedUser.firstName && fetchedUser.success !== 0 && fetchedUser.settings?.success !== 0) {
+          if (
+            fetchedUser &&
+            fetchedUser.firstName &&
+            fetchedUser.success !== 0 &&
+            fetchedUser.settings?.success !== 0
+          ) {
             setAddedAdmin(fetchedUser);
             setAddedAdminRestricted(false);
           } else {
@@ -123,7 +131,12 @@ export default function UserDetailPage({ user }) {
       } else {
         try {
           const fetchedUser = await getUser(user.updatedBy);
-          if (fetchedUser && fetchedUser.firstName && fetchedUser.success !== 0 && fetchedUser.settings?.success !== 0) {
+          if (
+            fetchedUser &&
+            fetchedUser.firstName &&
+            fetchedUser.success !== 0 &&
+            fetchedUser.settings?.success !== 0
+          ) {
             setUpdatedAdmin(fetchedUser);
             setUpdatedAdminRestricted(false);
           } else {
@@ -153,107 +166,55 @@ export default function UserDetailPage({ user }) {
           { label: "Master", href: "/" },
           { label: "User Management", href: "/admin" },
         ],
-        actionButton: can("USER_UPDATE") ? {
-          label: "Edit",
-          onClick: () => router.push(`/admin/edit/${user.id}`),
-        } : null,
+        actionButton: can("USER_UPDATE")
+          ? {
+              label: "Edit",
+              onClick: () => router.push(`/admin/edit/${user.id}`),
+            }
+          : null,
       },
     });
     fetchAdmins();
     return () => resetConfig();
   }, [setConfig, router, user.id, fetchAdmins, resetConfig, can]);
 
-  // const handleLoginAs = useCallback(async () => {
-  //   if (!currentUser?.isSuperAdmin) {
-  //     toast.error("Only super admins can impersonate users");
-  //     return;
-  //   }
-
-  //   if (currentUser.sub === user.id) {
-  //     toast.error("Cannot impersonate yourself");
-  //     return;
-  //   }
-
-  //   try {
-  //     setLoginAsLoading(true);
-  //     const res = await loginAsUser(user.id);
-
-  //     if (res?.success === 1 && res?.data) {
-  //       // Pass token if API returns it
-  //       const token = res.data.token || null;
-  //       loginAs(res.data, token);
-
-  //       toast.success(
-  //         `Successfully logged in as ${user.firstName} ${user.lastName}`,
-  //       );
-
-  //       // Wait for auth state to update before redirecting
-  //       await new Promise((resolve) => setTimeout(resolve, 100));
-  //       router.push("/");
-  //     } else {
-  //       toast.error(res?.message || "Failed to login as user");
-  //     }
-  //   } catch (err) {
-  //     console.error("LoginAs error:", err);
-  //     toast.error(
-  //       "Failed to login as user: " + (err.message || "Unknown error"),
-  //     );
-  //   } finally {
-  //     setLoginAsLoading(false);
-  //   }
-  // }, [currentUser, user, loginAs, router]);
-
-//  const handleBackToSession = useCallback(async () => {
-//    try {
-//      setBackToSessionLoading(true);
-
-//      const prevSession = await backToSession();
-
-//      if (prevSession) {
-//        toast.success(
-//          `Back to ${prevSession.user.firstName} ${prevSession.user.lastName}'s session`,
-//        );
-
-//        // FORCE FULL PAGE RELOAD - this is critical!
-//        window.location.href = "/";
-//      } else {
-//        toast.error("No previous session found");
-//        setBackToSessionLoading(false);
-//        logoutUser();
-//        window.location.href = "/login";
-//      }
-//    } catch (err) {
-//      console.error("BackToSession error:", err);
-//      toast.error("Failed to return to previous session");
-//      setBackToSessionLoading(false);
-//    }
-//  }, [backToSession]);
-  // Can impersonate if: current user is super admin AND viewing someone else
-  // const canLoginAsThisUser = canImpersonate && currentUser?.sub !== user.id;
-  const canViewActivityLogs = currentUser?.isSuperAdmin || currentUser?.sub === user.id || can("ACTIVITY_LOG_VIEW");
-  console.log("UserDetailPage  render: user=", user, "currentUser=", currentUser, "canViewActivityLogs=", canViewActivityLogs);
-  console.log(user.firstName, user.lastName, "addedBy=", user.addedBy, "updatedBy=", user.updatedBy, "addedAdmin=", addedAdmin, "updatedAdmin=", updatedAdmin);
+  const canViewActivityLogs =
+    currentUser?.isSuperAdmin ||
+    currentUser?.sub === user.id ||
+    can("ACTIVITY_LOG_VIEW");
+  console.log(
+    "UserDetailPage  render: user=",
+    user,
+    "currentUser=",
+    currentUser,
+    "canViewActivityLogs=",
+    canViewActivityLogs,
+  );
+  console.log(
+    user.firstName,
+    user.lastName,
+    "addedBy=",
+    user.addedBy,
+    "updatedBy=",
+    user.updatedBy,
+    "addedAdmin=",
+    addedAdmin,
+    "updatedAdmin=",
+    updatedAdmin,
+  );
   return (
     <div className="p-6">
-
-
       <div className="grid grid-cols-12 gap-6">
-        {/* Sidebar */} 
         <div className="col-span-12 lg:col-span-2">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
-            {/* Avatar */}
-            {user.photoUrl ? (
-              <img
-                src={user.photoUrl}
-                alt={user.firstName}
-                className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 mb-3"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-blue-100 text-[#1565c0] flex items-center justify-center font-bold text-2xl border-2 border-blue-200 mb-3">
-                {user.firstName?.[0]}
-                {user.lastName?.[0]}
-              </div>
-            )}
+            <SharedImageZoom
+              id={`detail-${user.id}`}
+              src={user.photoUrl}
+              alt={`${user.firstName} ${user.lastName}`}
+              placeholderText={`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
+              thumbnailClassName="w-16 h-16 rounded-full object-cover border-2 border-gray-200 mb-3"
+              modalImageClassName="w-72 h-72 rounded-full"
+            />
             <h2 className="font-semibold text-base">
               {user.firstName} {user.lastName}
             </h2>
@@ -269,23 +230,23 @@ export default function UserDetailPage({ user }) {
             <hr className="my-4" />
 
             <div className="flex flex-col gap-2">
-              <button 
+              <button
                 onClick={() => setActiveTab("summary")}
                 className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium cursor-pointer transition ${
-                  activeTab === "summary" 
-                    ? "bg-[#1565c0] text-white" 
+                  activeTab === "summary"
+                    ? "bg-[#1565c0] text-white"
                     : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 <UserIcon size={16} /> Summary
               </button>
-              
+
               {/* {canViewActivityLogs && (
-                <button 
+                <button
                   onClick={() => setActiveTab("activity")}
                   className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium cursor-pointer transition ${
-                    activeTab === "activity" 
-                      ? "bg-[#1565c0] text-white" 
+                    activeTab === "activity"
+                      ? "bg-[#1565c0] text-white"
                       : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                   }`}
                 >
@@ -293,108 +254,127 @@ export default function UserDetailPage({ user }) {
                 </button>
               )} */}
             </div>
-
           </div>
         </div>
 
-        {/* Content */}
         <div className="col-span-12 lg:col-span-10">
           {activeTab === "summary" ? (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Main Details */}
-            <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
-              <h3 className="font-semibold mb-5">Personal Details</h3>
-              <DetailRow label="First Name" value={user.firstName} />
-              <DetailRow label="Last Name" value={user.lastName} />
-              <DetailRow label="Username" value={user.userName} />
-              <DetailRow
-                label="Status"
-                value={
-                  <span
-                    className={`font-medium ${user.status === "Active" ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {user.status}
-                  </span>
-                }
-              />
-              <DetailRow
-                label="Super Admin"
-                value={user.isSuperAdmin ? "Yes" : "No"}
-              />
-            </div>
+              <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
+                <h3 className="font-semibold mb-5">Personal Details</h3>
+                <DetailRow label="First Name" value={user.firstName} />
+                <DetailRow label="Last Name" value={user.lastName} />
+                <DetailRow label="Username" value={user.userName} />
+                <DetailRow
+                  label="Status"
+                  value={
+                    <span
+                      className={`font-medium ${user.status === "Active" ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {user.status}
+                    </span>
+                  }
+                />
+                <DetailRow
+                  label="Super Admin"
+                  value={user.isSuperAdmin ? "Yes" : "No"}
+                />
+              </div>
 
-            {/* Contact + Company */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                <h3 className="font-semibold mb-5">Contact Info</h3>
-                <div className="flex items-center gap-3 mb-3">
-                  <Mail size={16} className="text-[#1565c0]" />
-                  <span className="text-sm">{user.email || "-"}</span>
-                </div>
-                {user.phone && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+                  <h3 className="font-semibold mb-5">Contact Info</h3>
                   <div className="flex items-center gap-3 mb-3">
-                    <Phone size={16} className="text-[#1565c0]" />
+                    <Mail size={16} className="text-[#1565c0]" />
+                    <span className="text-sm">{user.email || "-"}</span>
+                  </div>
+                  {user.phone && (
+                    <div className="flex items-center gap-3 mb-3">
+                      <Phone size={16} className="text-[#1565c0]" />
+                      <span className="text-sm">
+                        {user.dialCode} {user.phone}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <Calendar size={16} className="text-[#1565c0]" />
                     <span className="text-sm">
-                      {user.dialCode} {user.phone}
+                      Last login: {user.lastLoginDateFormatted || "Never"}
                     </span>
                   </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <Calendar size={16} className="text-[#1565c0]" />
-                  <span className="text-sm">
-                    Last login: {user.lastLoginDateFormatted || "Never"}
-                  </span>
                 </div>
-              </div>
 
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                <h3 className="font-semibold mb-5">Company & Role</h3>
-                <DetailRow label="Company" value={user.companyName} />
-                <DetailRow label="Group / Role" value={user.groupName} />
-              </div>
-            </div>
-
-            {/* Added / Updated */}
-
-            <div className="space-y-6">
-              {user.addedBy && (
                 <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                  <h3 className="font-semibold mb-5">Added Info</h3>
-                  <AdminLink
-                    admin={addedAdmin}
-                    isRestricted={addedAdminRestricted}
-                    onClick={() =>
-                      !addedAdminRestricted && user.addedBy && router.push(`/admin/${user.addedBy}`)
-                    }
-                  />
-                  <p className="text-xs text-gray-400 mt-2">
-                    {user.addedDateFormatted || "-"}
-                  </p>
+                  <h3 className="font-semibold mb-5">Company & Role</h3>
+                  <DetailRow label="Company" value={user.companyName} />
+                  <DetailRow label="Group / Role" value={user.groupName} />
                 </div>
-              )}
+              </div>
 
-              {user.updatedBy && (
-                <div className="bg-white rounded-xl p-6 hover:shadow-lg transition">
-                  <h3 className="font-semibold mb-5">Updated Info</h3>
-                  <AdminLink
-                    admin={updatedAdmin}
-                    isRestricted={updatedAdminRestricted}
-                    onClick={() =>
-                      !updatedAdminRestricted && user.updatedBy &&
-                      router.push(`/admin/${user.updatedBy}`)
-                    }
-                  />
-                  <p className="text-xs text-gray-400 mt-2">
-                    {user.updatedDateFormatted || "-"}
-                  </p>
-                </div>
-              )}
-            </div>
+              {/* <div className="space-y-6">
+                {!addedAdminRestricted && (
+                  <>
+                    {user.addedBy && (
+                      <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+                        <h3 className="font-semibold mb-5">Added Info</h3>
+                        <AdminLink
+                          admin={addedAdmin}
+                          isRestricted={addedAdminRestricted}
+                          canNavigate={
+                            currentUser?.isSuperAdmin ||
+                            can("USER_CREATE") ||
+                            can("USER_UPDATE")
+                          }
+                          onClick={() =>
+                            !addedAdminRestricted &&
+                            user.addedBy &&
+                            router.push(`/admin/${user.addedBy}`)
+                          }
+                        />
+                        <p className="text-xs text-gray-400 mt-2">
+                          {user.addedDateFormatted || "-"}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {!updatedAdminRestricted && (
+                  <>
+                    {user.updatedBy && (
+                      <div className="bg-white rounded-xl p-6 hover:shadow-lg transition">
+                        <h3 className="font-semibold mb-5">Updated Info</h3>
+                        <AdminLink
+                          admin={updatedAdmin}
+                          isRestricted={updatedAdminRestricted}
+                          canNavigate={
+                            currentUser?.isSuperAdmin ||
+                            can("USER_CREATE") ||
+                            can("USER_UPDATE")
+                          }
+                          onClick={() =>
+                            !updatedAdminRestricted &&
+                            user.updatedBy &&
+                            router.push(`/admin/${user.updatedBy}`)
+                          }
+                        />
+                        <p className="text-xs text-gray-400 mt-2">
+                          {user.updatedDateFormatted || "-"}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div> */}
             </div>
           ) : (
-            <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-              <h3 className="font-semibold mb-5 text-lg border-b border-gray-100 pb-3">Activity Logs</h3>
-              <ActivityLogTimeline userId={user.id} />
+            <div className="bg-white rounded-xl hover:shadow-lg transition py-6 me-4 h-[75vh]  ">
+              <h3 className="font-semibold mb-5 text-lg border-b border-gray-100 pb-3 px-6 ">
+                Activity Logs
+              </h3>
+              <div className="overflow-y-scroll h-[90%] pb-1  px-6">
+                <ActivityLogTimeline userId={user.id} />
+              </div>
             </div>
           )}
         </div>
@@ -402,53 +382,3 @@ export default function UserDetailPage({ user }) {
     </div>
   );
 }
-
-
-
-
-// Viewed CompanyListPage.jsx:6-14
-
-// I will view `UserDetailPage.jsx` to update the fetch checks to properly detect API-level permission failures and trigger the restricted state.
-
-// Viewed UserDetailPage.jsx:65-115
-
-// I will view lines 110 to 140 of `UserDetailPage.jsx` to see the updater admin fetch logic.
-
-// Viewed UserDetailPage.jsx:110-140
-
-// I will update the `fetchAdmins` check in `UserDetailPage.jsx` to verify that the retrieved user is a valid profile object and not an API error response.
-
-// Edited UserDetailPage.jsx
-
-// I will view the rendering block in `admin/[id]/page.js` to ensure the logic handles invalid user data.
-
-// Viewed page.js:15-38
-
-// I will modify `admin/[id]/page.js` to ensure it renders the `AccessDenied` component if the backend returns a forbidden response/failed payload rather than rendering a blank template.
-
-// Edited page.js
-
-// I will view `CompanyDetailPage.jsx` around lines 60 to 75.
-
-// Viewed CompanyDetailPage.jsx:60-75
-
-// I will view lines 76 to 99 of `CompanyDetailPage.jsx`.
-
-// Viewed CompanyDetailPage.jsx:76-99
-
-// I will view lines 100 to 110 of `CompanyDetailPage.jsx`.
-
-// Viewed CompanyDetailPage.jsx:100-110
-
-// I will update `CompanyDetailPage.jsx` to verify that the retrieved company payload is valid.
-
-// Edited CompanyDetailPage.jsx
-
-// I have fixed both of those issues:
-
-// 1. **Handling Backend Denials for Admin/Company Details Pages (Resolves Blank Page)**:
-//    - When a user tries to view a details page for a record they are not permitted to see (even if they have the general list permission), the backend API returns a response showing `success: 0` or forbidden headers rather than throwing a physical JavaScript exception.
-//    - I updated [admin/[id]/page.js](file:///var/www/html/training/erp/erp-frontend/src/app/(home)/admin/[id]/page.js) and [CompanyDetailPage.jsx](file:///var/www/html/training/erp/erp-frontend/src/components/company/CompanyDetailPage.jsx) to inspect the API response. If the payload indicates a failure (e.g. `success === 0`, `settings.success === 0`, or lacks name fields), it will now trigger the **403 Access Denied** view instead of rendering a blank template.
-// 2. **Preventing `undefined undefined` in Added By / Updated By cards**:
-//    - I modified the admin fetch logic in [UserDetailPage.jsx](file:///var/www/html/training/erp/erp-frontend/src/components/user/UserDetailPage.jsx) and [CompanyDetailPage.jsx](file:///var/www/html/training/erp/erp-frontend/src/components/company/CompanyDetailPage.jsx) to verify that the retrieved admin profile is a valid user object containing profile fields (like `firstName`). 
-//    - If the backend returns a forbidden response for that specific user connection, the cards will now render as `🔒 Restricted Info` as designed.

@@ -180,7 +180,7 @@ export default function ChangePasswordPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-end border-t pt-4">
+        <div className="flex gap-3 justify-center border-t pt-4">
           <button
             type="button"
             onClick={() => router.back()}
@@ -188,20 +188,20 @@ export default function ChangePasswordPage() {
           >
             Cancel
           </button>
-          <button
+          {/* <button
             type="button"
             onClick={() => reset()}
             className="px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
           >
             Clear
-          </button>
+          </button> */}
           <button
             type="submit"
             disabled={loading}
             className="px-6 py-2 bg-[#1565c0] text-white rounded-lg text-sm font-medium hover:bg-[#0f57a6] disabled:opacity-60 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-2"
           >
             <Lock size={15} />
-            {loading ? "Updating..." : "Update Password"}
+            {loading ? "Updating..." : "Submit"}
           </button>
         </div>
       </form>

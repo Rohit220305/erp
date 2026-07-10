@@ -4,12 +4,17 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { getCompany } from "@/lib/api/company-api";
+import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function CompanyDetailsDrawer({ open, onClose, company }) {
   const router = useRouter();
   const { can } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
-  const [delayedCompany, setDelayedCompany] = useState(company);
+  const [delayedCompany, setDelayedCompany] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const companyId = company?.companyId || company?.id;
 
   useEffect(() => {
     const handleEsc = (e) => {
@@ -21,8 +26,26 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
   }, [open, onClose]);
 
   useEffect(() => {
+    async function loadCompany() {
+      if (!companyId) return;
+      try {
+        setLoading(true);
+        const res = await getCompany(companyId);
+        if (res && res.companyName && res.success !== 0 && res.settings?.success !== 0) {
+          setDelayedCompany(res);
+        } else {
+          setDelayedCompany(null);
+        }
+      } catch (err) {
+        console.error("Failed to load company details in drawer", err);
+        setDelayedCompany(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     if (open && company) {
-      setDelayedCompany(company);
+      loadCompany();
       const timerId = setTimeout(() => setIsVisible(true), 10);
       return () => clearTimeout(timerId);
     } else if (!open) {
@@ -32,7 +55,23 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [open, company]);
+  }, [open, company, companyId]);
+
+  if (loading) {
+    return (
+      <div
+        className={`fixed inset-0 z-[100] transition-all duration-300 ${
+          isVisible ? "pointer-events-auto" : "pointer-events-none"
+        }`}
+      >
+        <div onClick={onClose} className="absolute inset-0 bg-black/30" />
+        <div className="absolute right-0 top-0 h-full w-full max-w-[380px] bg-white p-6 flex flex-col justify-center items-center shadow-2xl">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1565c0]"></div>
+          <p className="text-sm text-gray-500 mt-2">Loading company...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!delayedCompany) return null;
 
@@ -44,7 +83,6 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
         isVisible ? "pointer-events-auto" : "pointer-events-none"
       }`}
     >
-      {/* Backdrop */}
       <div
         onClick={onClose}
         className={`absolute inset-0 bg-black/30 transition-opacity duration-300 ${
@@ -52,7 +90,6 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
         }`}
       />
 
-      {/* Drawer */}
       <div
         className={`absolute right-0 top-0 h-full w-full max-w-[380px] bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
           isVisible ? "translate-x-0" : "translate-x-full"
@@ -70,20 +107,16 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex h-[calc(100%-72px)] flex-col overflow-y-auto px-6 py-6">
           <div className="flex items-center gap-4 mb-6">
-            {delayedCompany.logoUrl ? (
-              <img
-                src={delayedCompany.logoUrl}
-                alt={delayedCompany.companyName}
-                className="w-16 h-16 rounded-xl object-cover shadow-sm border border-gray-200"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-xl bg-blue-50 text-[#1565c0] flex items-center justify-center font-bold text-2xl border border-blue-100 shadow-sm">
-                {delayedCompany.companyName?.[0] || "C"}
-              </div>
-            )}
+            <SharedImageZoom
+              id={`drawer-company-${delayedCompany.id}`}
+              src={delayedCompany.logoUrl}
+              alt={delayedCompany.companyName}
+              placeholderText={delayedCompany.companyName?.[0] || "C"}
+              thumbnailClassName="w-16 h-16 rounded-xl object-cover shadow-sm border border-gray-200"
+              modalImageClassName="w-64 h-64 rounded-xl"
+            />
             <div>
               <p className="font-semibold text-lg text-gray-800">
                 {delayedCompany.companyName}

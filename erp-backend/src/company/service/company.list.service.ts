@@ -145,11 +145,13 @@ export class CompanyListService {
       const columnMap: Record<string, string> = {
         companyCode: 'company.companyCode',
         companyName: 'company.companyName',
+        shortName: 'company.shortName',
         email: 'company.email',
         contactPersonName: 'company.contactPersonName',
         phone: 'company.phone',
         status: 'company.status',
         id: 'company.id',
+        addedDateFormatted: 'company.addedDate',
       };
 
       if (params?.filters) {

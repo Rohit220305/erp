@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { getUser } from "@/lib/api/user-api";
 import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
+import UserDetailsDrawer from "../user/UserDetailsDrawer";
+import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function CompanyDetailsPage({ company }) {
   // console.log("Company Details:", company); // Debug log
@@ -19,6 +21,7 @@ export default function CompanyDetailsPage({ company }) {
   const [updatedAdmin, setUpdatedAdmin] = useState(null);
   const [addedAdminRestricted, setAddedAdminRestricted] = useState(false);
   const [updatedAdminRestricted, setUpdatedAdminRestricted] = useState(false);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
   const fetchAddedBy = async () => {
     const canViewUsers = can("USER_VIEW") || currentUser?.isSuperAdmin;
@@ -81,10 +84,12 @@ export default function CompanyDetailsPage({ company }) {
           { label: "Master", href: "/" },
           { label: "Company Master", href: "/company" },
         ],
-        actionButton: can("COMPANY_UPDATE") ? {
-          label: "edit",
-          onClick: () => router.push(`/company/${company.id}/edit-company`),
-        } : null,
+        actionButton: can("COMPANY_UPDATE")
+          ? {
+              label: "Edit",
+              onClick: () => router.push(`/company/${company.id}/edit-company`),
+            }
+          : null,
       },
     });
 
@@ -101,31 +106,31 @@ export default function CompanyDetailsPage({ company }) {
     return <AccessDenied missingPermission="COMPANY_VIEW" />;
   }
 
-  if (!company || company.success === 0 || company.settings?.success === 0 || !company.companyName) {
+  if (
+    !company ||
+    company.success === 0 ||
+    company.settings?.success === 0 ||
+    !company.companyName
+  ) {
     return <AccessDenied missingPermission="COMPANY_VIEW" />;
   }
   console.log(company);
   return (
     <div className="p-6">
-      {/* Header */}
-
       <div className="grid grid-cols-12 gap-6">
-        {/* Sidebar */}
-
         <div className="col-span-12 lg:col-span-2">
           <div className="bg-white rounded-xl hover:shadow-lg transition     p-5">
-            <div className="flex items-center gap-4 mb-4">
-              {company.logoUrl ? (
-                <img
-                  src={company.logoUrl}
-                  alt="Company logo"
-                  className="w-16 h-16 rounded-xl object-cover border-2 border-blue-100 shadow"
-                />
-              ) : (
-                ""
-              )}
+            <div className=" items-center gap-4 mb-4">
+              <SharedImageZoom
+                id={`detail-company-${company.id}`}
+                src={company.logoUrl}
+                alt={company.companyName}
+                placeholderText={<Building2 size={24} />}
+                thumbnailClassName="w-16 h-16 rounded-xl object-cover border-2 border-blue-100 shadow mb-2"
+                modalImageClassName="w-72 h-72 rounded-xl shadow-2xl"
+              />
               <div>
-                <h2 className="font-semibold text-lg">
+                <h2 className="font-semibold text-md">
                   {company.companyName || ""}
                 </h2>
 
@@ -141,12 +146,8 @@ export default function CompanyDetailsPage({ company }) {
           </div>
         </div>
 
-        {/* Content */}
-
         <div className="col-span-12 lg:col-span-10">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Main Details */}
-
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-sm">
             <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
               <h3 className="font-semibold mb-5">Details</h3>
 
@@ -187,8 +188,6 @@ export default function CompanyDetailsPage({ company }) {
                 }
               />
             </div>
-
-            {/* Contact & Address */}
 
             <div className="space-y-6">
               <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
@@ -234,103 +233,112 @@ export default function CompanyDetailsPage({ company }) {
               </div>
             </div>
 
-
             <div className="space-y-6">
-              
-              {/* added infromation */}
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                <h3 className="font-semibold mb-5">Added Info</h3>
+              {!addedAdminRestricted && (
+                <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+                  <h3 className="font-semibold mb-5">Added Info</h3>
 
-                <div
-                  className="flex items-center gap-3 cursor-pointer group"
-                  onClick={() =>
-                    !addedAdminRestricted && company?.addedBy && router.push(`/admin/${company.addedBy}`)
-                  }
-                >
-                  {/* User Logo / Avatar */}
-                  {addedAdminRestricted ? (
-                    <div className="flex items-center gap-2 py-1.5 text-gray-400">
-                      <span className="text-xs">🔒</span>
-                      <span className="text-sm italic font-medium">Restricted Info</span>
-                    </div>
-                  ) : addedAdmin?.photoUrl ? (
-                    <img
-                      src={addedAdmin.photoUrl}
-                      alt="Added by"
-                      className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-medium text-xs border border-blue-200">
-                      {addedAdmin?.firstName?.[0] ||
-                        company?.addedBy?.[0] ||
-                        "?"}
-                    </div>
-                  )}
+                  <div
+                    className="flex items-center gap-3 cursor-pointer group"
+                    onClick={() =>
+                      setSelectedUserForDetails(addedAdmin)
+                    }
+                  >
+                    {addedAdminRestricted ? (
+                      <div className="flex items-center gap-2 py-1.5 text-gray-400">
+                        <span className="text-xs">🔒</span>
+                        <span className="text-sm italic font-medium">
+                          Restricted Info
+                        </span>
+                      </div>
+                    ) : addedAdmin?.photoUrl ? (
+                      <img
+                        src={addedAdmin.photoUrl}
+                        alt="Added by"
+                        className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-medium text-xs border border-blue-200">
+                        {addedAdmin?.firstName?.[0] ||
+                          company?.addedBy?.[0] ||
+                          "?"}
+                      </div>
+                    )}
 
-                  {!addedAdminRestricted && (
-                    <div>
-                      <span className="text-sm text-blue-700 group-hover:text-black group-hover:underline block font-medium">
-                        {addedAdmin?.firstName && addedAdmin?.lastName
-                          ? `${addedAdmin.firstName} ${addedAdmin.lastName}`
-                          : company?.addedBy || "-"}
-                      </span>
-                      <p className="text-[12px] text-gray-400 mt-0.5">
-                        {company?.addedDateFormatted || "-"}
-                      </p>
-                    </div>
-                  )}
+                    {!addedAdminRestricted && (
+                      <div>
+                        <span className="text-sm text-blue-700 group-hover:text-black group-hover:underline block font-medium">
+                          {addedAdmin?.firstName && addedAdmin?.lastName
+                            ? `${addedAdmin.firstName} ${addedAdmin.lastName}`
+                            : company?.addedBy || "-"}
+                        </span>
+                        <p className="text-[12px] text-gray-400 mt-0.5">
+                          {company?.addedDateFormatted || "-"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Updated information */}
-              <div className="bg-white rounded-xl p-6 hover:shadow-lg transition">
-                <h3 className="font-semibold mb-5">Updated Info</h3>
+              {!updatedAdminRestricted && updatedAdmin && (
+                <div className="bg-white rounded-xl p-6 hover:shadow-lg transition">
+                  <h3 className="font-semibold mb-5">Updated Info</h3>
 
-                <div
-                  className="flex items-center gap-3 cursor-pointer group"
-                  onClick={() =>
-                    !updatedAdminRestricted && company?.updatedBy &&
-                    router.push(`/admin/${company.updatedBy}`)
-                  }
-                >
-                  {/* User Logo / Avatar */}
-                  {updatedAdminRestricted ? (
-                    <div className="flex items-center gap-2 py-1.5 text-gray-400">
-                      <span className="text-xs">🔒</span>
-                      <span className="text-sm italic font-medium">Restricted Info</span>
-                    </div>
-                  ) : updatedAdmin?.photoUrl ? (
-                    <img
-                      src={updatedAdmin.photoUrl}
-                      alt="Updated by"
-                      className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-medium text-xs border border-gray-200">
-                      {updatedAdmin?.firstName?.[0] ||
-                        company?.updatedBy?.[0] ||
-                        "?"}
-                    </div>
-                  )}
+                  <div
+                    className="flex items-center gap-3 cursor-pointer group"
+                    onClick={() =>
+                      setSelectedUserForDetails(updatedAdmin)
+                    }
+                  >
+                    {/* User Logo / Avatar */}
+                    {updatedAdminRestricted ? (
+                      <div className="flex items-center gap-2 py-1.5 text-gray-400">
+                        <span className="text-xs">🔒</span>
+                        <span className="text-sm italic font-medium">
+                          Restricted Info
+                        </span>
+                      </div>
+                    ) : updatedAdmin?.photoUrl ? (
+                      <img
+                        src={updatedAdmin.photoUrl}
+                        alt="Updated by"
+                        className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-medium text-xs border border-gray-200">
+                        {updatedAdmin?.firstName?.[0] ||
+                          company?.updatedBy?.[0] ||
+                          "?"}
+                      </div>
+                    )}
 
-                  {!updatedAdminRestricted && (
-                    <div>
-                      <span className="text-sm text-blue-700 group-hover:text-black  block font-medium">
-                        {updatedAdmin?.firstName && updatedAdmin?.lastName
-                          ? `${updatedAdmin.firstName} ${updatedAdmin.lastName}`
-                          : company?.updatedBy || "-"}
-                      </span>
-                      <p className="text-[12px] text-gray-400 mt-0.5">
-                        {company?.updatedDateFormatted || "-"}
-                      </p>
-                    </div>
-                  )}
+                    {!updatedAdminRestricted && (
+                      <div>
+                        <span className="text-sm text-blue-700 group-hover:text-black  block font-medium">
+                          {updatedAdmin?.firstName && updatedAdmin?.lastName
+                            ? `${updatedAdmin.firstName} ${updatedAdmin.lastName}`
+                            : company?.updatedBy || "-"}
+                        </span>
+                        <p className="text-[12px] text-gray-400 mt-0.5">
+                          {company?.updatedDateFormatted || "-"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+
+            <UserDetailsDrawer
+              open={!!selectedUserForDetails}
+              onClose={() => setSelectedUserForDetails(null)}
+              user={selectedUserForDetails}
+            />
     </div>
   );
 }

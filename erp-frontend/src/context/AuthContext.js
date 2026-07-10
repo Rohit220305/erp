@@ -104,19 +104,20 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
 
     const prevSession = sessionStack[sessionStack.length - 1];
     const newStack = sessionStack.slice(0, -1);
-    
+    console.log("Restoring previous session:", prevSession);
     if (prevSession.token) {
       const res = await restoreSession(prevSession.token);
       if (!res || res.success !== 1) {
         logout();
         window.location.href = "/login";
+        console.error("Failed to restore backend session:", res?.message);
         throw new Error(res?.message || "Failed to restore backend session");
       }
     }
 
     setSessionStack(newStack);
     localStorage.setItem("sessionStack", JSON.stringify(newStack));
-
+    console.log("Previous session restored:", prevSession);
     setAuthData(prevSession.user, prevSession.capabilities);
     if (prevSession.token) {
       setToken(prevSession.token);

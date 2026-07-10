@@ -69,7 +69,6 @@ export default function FilterDrawer({
         open ? "pointer-events-auto" : "pointer-events-none"
       }`}
     >
-      {/* Backdrop */}
       <div
         onClick={onClose}
         className={`absolute inset-0 bg-black/30 transition-opacity duration-300 ${
@@ -77,13 +76,11 @@ export default function FilterDrawer({
         }`}
       />
 
-      {/* Drawer */}
       <div
         className={`absolute right-0 top-0 h-full w-full max-w-[380px] bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between bg-[#1565c0] px-6 py-5">
           <h2 className="text-xl font-semibold text-white">Filters</h2>
 
@@ -96,13 +93,12 @@ export default function FilterDrawer({
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex h-[calc(100%-72px)] flex-col">
           <div className="flex-1 overflow-y-auto px-6 py-6">
             {filters.hasOwnProperty("firstName") && (
               <FilterField
-                label="First Name"
-                placeholder="Please enter First Name"
+                label="User"
+                placeholder="Please enter Name"
                 value={filters.firstName}
                 onChange={(v) => setFilters((p) => ({ ...p, firstName: v }))}
               />
@@ -110,7 +106,7 @@ export default function FilterDrawer({
 
             {filters.hasOwnProperty("groupCode") && (
               <FilterField
-                label="Group Code"
+                label="Group Code "
                 placeholder="Please enter Group Code"
                 value={filters.groupCode}
                 onChange={(v) => setFilters((p) => ({ ...p, groupCode: v }))}
@@ -120,16 +116,16 @@ export default function FilterDrawer({
             {filters.hasOwnProperty("groupName") &&
               (filters.hasOwnProperty("companyName") ? (
                 <SelectField
-                  label="Group Name"
-                  placeholder="Select Group Name"
+                  label="Group"
+                  placeholder="Select Group"
                   value={filters.groupName}
                   onChange={(v) => setFilters((p) => ({ ...p, groupName: v }))}
                   options={activeGroups}
                 />
               ) : (
                 <FilterField
-                  label="Group Name"
-                  placeholder="Please enter Group Name"
+                  label="Group"
+                  placeholder="Please enter Group"
                   value={filters.groupName}
                   onChange={(v) => setFilters((p) => ({ ...p, groupName: v }))}
                 />
@@ -138,8 +134,8 @@ export default function FilterDrawer({
             {filters.hasOwnProperty("companyName") &&
               (filters.hasOwnProperty("groupName") ? (
                 <SelectField
-                  label="Company Name"
-                  placeholder="Select Company Name"
+                  label="Company"
+                  placeholder="Select Company"
                   value={filters.companyName}
                   onChange={(v) =>
                     setFilters((p) => ({ ...p, companyName: v }))
@@ -148,8 +144,8 @@ export default function FilterDrawer({
                 />
               ) : (
                 <FilterField
-                  label="Company Name"
-                  placeholder="Please enter Company Name"
+                  label="Company"
+                  placeholder="Please enter Company"
                   value={filters.companyName}
                   onChange={(v) =>
                     setFilters((p) => ({ ...p, companyName: v }))
@@ -267,7 +263,7 @@ function SelectField({ label, placeholder, value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-3 outline-none transition focus:border-[#1565c0] focus:bg-white"
+        className="w-full rounded-md border border-gray-300 bg-gray-50 cursor-pointer px-4 py-3 outline-none transition focus:border-[#1565c0] focus:bg-white"
       >
         <option value="">{placeholder}</option>
         {options.map((item) => (

@@ -133,7 +133,7 @@ export default function GroupDetailPage({ group }) {
             </div>
 
             {/* Added / Updated Info */}
-            <div className="space-y-6">
+            {/* <div className="space-y-6">
               <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
                 <h3 className="font-semibold mb-5">Added Info</h3>
                 <AdminAvatar
@@ -153,7 +153,7 @@ export default function GroupDetailPage({ group }) {
                   <p className="text-xs text-gray-400 mt-2">{group.updatedDateFormatted || "-"}</p>
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

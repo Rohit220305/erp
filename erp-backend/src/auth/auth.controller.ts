@@ -30,7 +30,6 @@ export class AuthController {
     return this.authService.refresh(req, res);
   }
 
-  /** Requires valid access token */
   @Post('logout')
   async logout(
     @Req() req: Request,
@@ -39,10 +38,7 @@ export class AuthController {
     return this.authService.logout(req, res);
   }
 
-  /**
-   * Super admin only — impersonate another user.
-   * Guard checks `isSuperAdmin` from JWT payload.
-   */
+
   @Post('login-as-user/:targetUserId')
   async loginAsUser(
     @Req() req: Request & { user: JwtPayload },
@@ -55,10 +51,7 @@ export class AuthController {
     return this.authService.loginAsUser(req, res, targetUserId);
   }
 
-  /**
-   * Authenticated users can change their own password.
-   * Validates current password and confirms new password match.
-   */
+
   @Post('change-password')
   async changePassword(
     @Req() req: Request & { user: JwtPayload },
@@ -101,6 +94,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Body('token') token: string,
   ) {
+    console.log('Received token for session restoration:', token);
     return this.authService.restoreSession(req, res, token);
   }
 

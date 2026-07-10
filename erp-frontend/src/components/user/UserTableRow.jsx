@@ -1,5 +1,6 @@
 import { LogIn, RotateCw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function UserTableRow({
   item,
@@ -33,32 +34,28 @@ export default function UserTableRow({
   if (columnKey === "firstName") {
     return (
       <div className="flex items-center gap-3">
-        {item.photoUrl ? (
-          <img
-            src={item.photoUrl}
-            alt={item.firstName}
-            className="w-8 h-8 rounded-full object-cover border border-gray-200"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-blue-100 text-[#1565c0] flex items-center justify-center font-semibold text-xs border border-blue-200">
-            {item.firstName?.[0]}
-            {item.lastName?.[0]}
-          </div>
-        )}
+        <SharedImageZoom
+          id={`table-${item.id}`}
+          src={item.photoUrl}
+          alt={`${item.firstName} ${item.lastName}`}
+          placeholderText={`${item.firstName?.[0] || ""}${item.lastName?.[0] || ""}`}
+          thumbnailClassName="w-12 h-12 rounded-full object-cover border border-gray-200"
+          modalImageClassName="w-64 h-64 rounded-full"
+        />
         <div>
           {hasViewPerm ? (
             <p
-              className="font-medium text-[#1565c0] hover:underline cursor-pointer text-sm"
+              className="font-medium text-[#1565c0] hover:underline cursor-pointer text-[15px] "
               onClick={() => setSelectedUserForDetails(item)}
             >
               {item.firstName} {item.lastName}
             </p>
           ) : (
-            <p className="font-medium text-gray-800 text-sm">
+            <p className="font-medium text-gray-800 text-[15px]">
               {item.firstName} {item.lastName}
             </p>
           )}
-          <p className="text-xs text-gray-400">{item.userName}</p>
+          <p className="text-xs text-gray-400 ">{item.userName}</p>
         </div>
       </div>
     );

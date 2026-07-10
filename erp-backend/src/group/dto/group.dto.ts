@@ -84,6 +84,18 @@ export class GroupListDto {
   @ValidateNested({ each: true })
   @Type(() => FilterDto)
   filters: FilterDto[];
+
+  @IsOptional()
+  @IsString()
+  sortField?: string;
+
+  @IsOptional()
+  @IsString()
+  sortOrder?: 'ASC' | 'DESC';
+
+  @IsOptional()
+  @IsString()
+  logicalOperator?: 'AND' | 'OR';
 }
 
 export class FilterDto {

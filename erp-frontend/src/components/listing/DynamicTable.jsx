@@ -100,13 +100,13 @@ export default function DynamicTable({
                 return (
                   <th key={`filter-${index}`} className="px-4 py-2 border-b border-gray-200">
                     <select
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal"
+                      className="w-full px-2 py-1 text-sm border cursor-pointer border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal"
                       value={localFilters[header.key] || ""}
                       onChange={(e) => handleSelectChange(header.key, e.target.value)}
                     >
-                      <option value="">All</option>
+                      <option value="" className="cursor-pointer">All</option>
                       {header.options.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
+                        <option  className="cursor-pointer" key={opt.value} value={opt.value}>
                           {opt.label}
                         </option>
                       ))}

@@ -127,6 +127,16 @@ export class CompanyListDto {
   @IsOptional()
   @IsString()
   logicalOperator: string;
+
+  @IsOptional()
+  @IsString()
+  sortField?: string;
+
+  @IsOptional()
+  @IsString()
+  sortOrder?: 'ASC' | 'DESC';
+
+
 }
 
 export class filtersDto {

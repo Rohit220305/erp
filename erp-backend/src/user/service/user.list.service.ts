@@ -203,9 +203,9 @@ export class UserListService {
         queryBuilder.orderBy('user.firstName', 'ASC');
       }
 
-      queryBuilder.skip(skip);
-      queryBuilder.take(limit);
-
+      queryBuilder.offset(skip);
+      queryBuilder.limit(limit);
+      // console.log('queryBuilder.getSql()', queryBuilder.getSql());
       const [data, total] = await queryBuilder.getManyAndCount();
       // console.log('data', data);
       const userList: any[] = [];

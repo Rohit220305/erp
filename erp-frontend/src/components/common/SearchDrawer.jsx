@@ -64,9 +64,7 @@ export default function SearchDrawer({
         className="absolute inset-0 bg-black/40 transition-opacity duration-300"
       />
 
-      {/* Modal Dialog */}
       <div className="relative z-10 w-full max-w-[700px]  rounded-lg bg-white shadow-2xl transition-all duration-300">
-        {/* Header */}
         <div className="flex items-center justify-between border-b px-6 py-4">
           <h2 className="text-2xl font-normal text-gray-800">Search...</h2>
           <button
@@ -78,7 +76,6 @@ export default function SearchDrawer({
           </button>
         </div>
 
-        {/* Form Body */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -86,7 +83,6 @@ export default function SearchDrawer({
           }}
           className="flex flex-col"
         >
-          {/* Content */}
           <div className="h-[300px] overflow-y-auto px-6 py-5">
             <div className="mb-4 flex items-center gap-2">
               <select
@@ -107,7 +103,6 @@ export default function SearchDrawer({
               </button>
             </div>
 
-            {/* Criteria Rows */}
             {filters.length === 0 ? (
               <p className="text-sm text-gray-400 italic">
                 No search criteria added. Click "+" to add filters.
@@ -120,7 +115,6 @@ export default function SearchDrawer({
 
                 return (
                   <div key={idx} className="mb-3 flex items-center gap-3">
-                    {/* Field Select */}
                     <select
                       value={row.field}
                       onChange={(e) => updateRow(idx, "field", e.target.value)}
@@ -133,7 +127,6 @@ export default function SearchDrawer({
                       ))}
                     </select>
 
-                    {/* Operator Select */}
                     <select
                       value={row.operator}
                       onChange={(e) =>

@@ -3,34 +3,41 @@ import Link from "next/link";
 import { resolvePath } from "./utils/pathResolver";
 import { useAuth } from "@/context/AuthContext";
 import { Building2 } from "lucide-react";
+import SharedImageZoom from "@/components/common/SharedImageZoom";
 
-export default function CellRenderer({ company, column, companyConfig }) {
+export default function CellRenderer({ company, column, companyConfig, setSelectedCompanyForDetails }) {
   const { can } = useAuth();
-  // console.log("Rendering CellRenderer for company:", company, "column:", column);
-  // console.log("Rendering CellRenderer for company:" , "column:", column);
+  
   const value = resolvePath(company, column.key);
-  // console.log("Resolved value for column key", column.key, ":", value);
   switch (column.type) {
     case "image":
-      return value ? (
-        <img
+      return (
+        <SharedImageZoom
+          id={`table-img-${company.id}-${column.key}`}
           src={value}
-          alt={column.label}
-          className="h-10 w-10 rounded object-cover"
+          alt={company.companyName || "Company Logo"}
+          placeholderText={<Building2 size={22} />}
+          thumbnailClassName="h-10 w-10 rounded-xl object-cover"
+          modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"
         />
-      ) : (
-        <div
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50
-                  border-2 border-gray-100 flex flex-col items-center
-                  justify-center text-blue-300 gap-1.5  
-                  transition-colors"
-        >
-          <Building2 size={22} />
-        </div>
       );
 
     case "link": {
       if (!value) return <span>-</span>;
+      if (setSelectedCompanyForDetails) {
+        return (
+          can(companyConfig.permissions?.view || "COMPANY_VIEW") ? (
+            <span
+              onClick={() => setSelectedCompanyForDetails(company)}
+              className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
+            >
+              {value || "—"}
+            </span>
+          ) : (
+            <p className="text-sm font-medium text-gray-800">{value || "—"}</p>
+          )
+        );
+      }
       let href = column.linkPath || "#";
       if (href.includes("{")) {
         const matches = href.match(/\{([^}]+)\}/g);
@@ -42,18 +49,18 @@ export default function CellRenderer({ company, column, companyConfig }) {
         }
       }
       return (
-       
+        
         can(companyConfig.permissions?.view || "COMPANY_VIEW") ? (
           <Link
             href={`/company/${company.id}`}
             className="block w-fit text-[#1565c0] "
           >
-            <p className="text-sm font-semibold hover:underline">
+            <p className="text-sm font-medium hover:underline">
               {value || "—"}
             </p>
           </Link>
         ) : (
-          <p className="text-sm font-semibold text-gray-800">{value || "—"}</p>
+          <p className="text-sm font-medium text-gray-800">{value || "—"}</p>
         )
       );
     }

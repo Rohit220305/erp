@@ -6,7 +6,9 @@ import { useAuth } from "@/context/AuthContext";
 import { resolvePath } from "@/components/core/dynamic-ui/utils/pathResolver";
 import CellRenderer from "@/components/core/dynamic-ui/CellRenderer";
 
-export default function CompanyGridCard({ company, companyConfig }) {
+import SharedImageZoom from "@/components/common/SharedImageZoom";
+
+export default function CompanyGridCard({ company, companyConfig, setSelectedCompanyForDetails }) {
   const router = useRouter();
   const { can } = useAuth();
   const hasViewPerm = can(companyConfig.permissions?.view || "COMPANY_VIEW");
@@ -21,24 +23,20 @@ export default function CompanyGridCard({ company, companyConfig }) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200">
-      {/* Top Section */}
       <div className="flex items-start justify-between">
         <div 
           className={`flex items-center gap-3 ${hasViewPerm ? "cursor-pointer" : ""}`}
-          onClick={() => hasViewPerm && router.push(`/company/${company.id}`)}
+          onClick={() => hasViewPerm && setSelectedCompanyForDetails && setSelectedCompanyForDetails(company)}
         >
           <div className="relative shrink-0">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={title}
-                className="w-14 h-14 rounded-full object-cover border border-gray-100"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-full bg-[#1565c0] text-white flex items-center justify-center font-bold text-xl">
-                {title?.[0] || "C"}
-              </div>
-            )}
+            <SharedImageZoom
+              id={`company-grid-${company.id}`}
+              src={logoUrl}
+              alt={title}
+              placeholderText={title?.[0] || "C"}
+              thumbnailClassName="w-14 h-14 rounded-xl object-cover border border-gray-100"
+              modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"
+            />
             <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${badgeValue === "Active" ? "bg-green-500" : "bg-gray-300"}`}></div>
           </div>
           <div>
@@ -58,15 +56,14 @@ export default function CompanyGridCard({ company, companyConfig }) {
 
       <hr className="border-gray-100 my-4" />
 
-      {/* Bottom Section */}
       <div className="space-y-3 text-sm">
         {config.details.map((detail, idx) => {
           const val = resolvePath(company, detail.key);
           if (!val) return null;
-
+          
           return (
             <div key={idx} className="grid grid-cols-[110px_1fr] items-center gap-2">
-              <span className="text-gray-400">{detail.header || detail.key}</span>
+              <span className="text-gray-400">{ detail.label}</span>
               <span className="text-gray-900 truncate">
                 <CellRenderer company={company} column={detail} companyConfig={companyConfig} />
               </span>

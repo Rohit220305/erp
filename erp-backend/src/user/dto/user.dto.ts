@@ -161,6 +161,18 @@ export class UserListDto {
 
   @IsOptional()
   filters?: any[];
+
+  @IsOptional()
+  @IsString()
+  sortField?: string;
+
+  @IsOptional()
+  @IsString()
+  sortOrder?: 'ASC' | 'DESC';
+
+  @IsOptional()
+  @IsString()
+  logicalOperator?: 'AND' | 'OR';
 }
 
 export class UserLoginDto {

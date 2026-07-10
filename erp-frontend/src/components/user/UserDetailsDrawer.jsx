@@ -3,11 +3,16 @@
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function UserDetailsDrawer({ open, onClose, user }) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [delayedUser, setDelayedUser] = useState(user);
+  const { can } = useAuth();
+
+  const userId = user?.userId || user?.id;
 
   useEffect(() => {
     const handleEsc = (e) => {
@@ -19,8 +24,30 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
   }, [open, onClose]);
 
   useEffect(() => {
+    async function loadUser() {
+      if (!userId) return;
+      try {
+        const { getUser } = await import("@/lib/api/user-api");
+        const res = await getUser(userId);
+        if (
+          res &&
+          res.firstName &&
+          res.success !== 0 &&
+          res.settings?.success !== 0
+        ) {
+          setDelayedUser(res);
+        } else {
+          setDelayedUser(null);
+        }
+      } catch (err) {
+        console.error("Failed to load user details in drawer", err);
+        setDelayedUser(null);
+      }
+    }
+
     if (open && user) {
-      setDelayedUser(user);
+      loadUser();
+      // setDelayedUser(user);
       const timerId = setTimeout(() => setIsVisible(true), 10);
       return () => clearTimeout(timerId);
     } else if (!open) {
@@ -30,17 +57,16 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [open, user]);
+  }, [open, user, userId]);
 
   if (!delayedUser) return null;
-
+  const hasDetailsPermission = can("USER_VIEW");
   return (
     <div
       className={`fixed inset-0 z-[100] transition-all duration-300 ${
         isVisible ? "pointer-events-auto" : "pointer-events-none"
       }`}
     >
-      {/* Backdrop */}
       <div
         onClick={onClose}
         className={`absolute inset-0 bg-black/30 transition-opacity duration-300 ${
@@ -48,38 +74,32 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
         }`}
       />
 
-      {/* Drawer */}
       <div
         className={`absolute right-0 top-0 h-full w-full max-w-[380px] bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
           isVisible ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5.5">
-          <h2 className="text-xl font-semibold text-[#1565c0]">Users</h2>
+          <h2 className="text-xl font-semibold text-[#1565c0]">User</h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-full p-1 cursor-pointer border border-gray-300 text-gray-500 transition hover:bg-gray-100"
           >
-            <X size={16 } />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex h-[calc(100%-72px)] flex-col overflow-y-auto px-6 py-6">
           <div className="flex items-center gap-4 mb-6">
-            {delayedUser.photoUrl ? (
-              <img
-                src={delayedUser.photoUrl}
-                alt={delayedUser.firstName}
-                className="w-20 h-20 rounded-full object-cover shadow-md border-2 border-white"
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-[#1565c0] text-white flex items-center justify-center font-bold text-3xl shadow-md border-2 border-white">
-                {delayedUser.firstName?.[0]}
-              </div>
-            )}
+            <SharedImageZoom
+              id={`drawer-user-${delayedUser.id}`}
+              src={delayedUser.photoUrl}
+              alt={`${delayedUser.firstName} ${delayedUser.lastName}`}
+              placeholderText={`${delayedUser.firstName?.[0] || ""}${delayedUser.lastName?.[0] || ""}`}
+              thumbnailClassName="w-20 h-20 rounded-full object-cover shadow-md border-2 border-white"
+              modalImageClassName="w-72 h-72 rounded-full"
+            />
             <div>
               <p className="font-semibold text-lg text-gray-800">
                 {delayedUser.firstName} {delayedUser.lastName}
@@ -96,7 +116,8 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
             </div>
           </div>
 
-          <button
+          { hasDetailsPermission &&
+            (<button
             onClick={() => {
               onClose();
               router.push(`/admin/${delayedUser.id}`);
@@ -104,7 +125,7 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
             className="w-full bg-gray-100 cursor-pointer hover:bg-gray-200 text-gray-800 font-medium py-2.5 rounded-md transition mb-8"
           >
             More Details
-          </button>
+          </button>)}
 
           <div className="grid grid-cols-2 gap-y-6 text-sm text-gray-600">
             <div>
@@ -116,7 +137,9 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
             <div>
               <p className="text-xs text-gray-400 mb-1">Phone</p>
               <p className="font-medium">
-                {delayedUser.phone ? `${delayedUser.dialCode || ""} ${delayedUser.phone}` : "-"}
+                {delayedUser.phone
+                  ? `${delayedUser.dialCode || ""} ${delayedUser.phone}`
+                  : "-"}
               </p>
             </div>
             <div>
@@ -133,11 +156,15 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Added Date</p>
-              <p className="font-medium">{delayedUser.addedDateFormatted || "-"}</p>
+              <p className="font-medium">
+                {delayedUser.addedDateFormatted || "-"}
+              </p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-1">Modified Date</p>
-              <p className="font-medium">{delayedUser.modifiedDateFormatted || "-"}</p>
+              <p className="text-xs text-gray-400 mb-1">Updated Date</p>
+              <p className="font-medium">
+                {delayedUser.updatedDateFormatted || "-"}
+              </p>
             </div>
           </div>
         </div>

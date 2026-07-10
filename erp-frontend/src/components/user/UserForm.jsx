@@ -18,6 +18,8 @@ import ConfirmModal from "../common/ConfirmModal";
 
 
 
+import Select from "react-select";
+
 const InputField = ({ label, required, error, register, name, type = "text", placeholder, disabled, readOnly }) => (
   <div className="space-y-1">
     <label className="block text-sm font-medium text-gray-700">
@@ -36,23 +38,70 @@ const InputField = ({ label, required, error, register, name, type = "text", pla
   </div>
 );
 
-const SelectField = ({ label, required, error, register, name, options, placeholder, disabled }) => (
+const SelectField = ({
+  label,
+  required,
+  error,
+  control,
+  name,
+  options = [],
+  placeholder,
+  disabled,
+}) => (
   <div className="space-y-1">
-    <label className="block text-sm font-medium text-gray-700">
-      {label} {required && <span className="text-red-500">*</span>}
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label}
+      {required && <span className="text-red-500 ml-1">*</span>}
     </label>
-    <select
-      disabled={disabled}
-      className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${error ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"
-        } ${disabled ? "bg-gray-50 text-gray-500" : ""}`}
-      {...register(name)}
-    >
-      <option value="">{placeholder || `Select ${label}`}</option>
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>{o.label}</option>
-      ))}
-    </select>
-    {error && <p className="text-xs text-red-500">{error}</p>}
+    <Controller
+      name={name}
+      control={control}
+      render={({ field }) => (
+        <Select
+          {...field}
+          instanceId={name}
+          isDisabled={disabled}
+          options={options}
+          placeholder={placeholder || `Select ${label}`}
+          isClearable={true}
+          isSearchable={true}
+          value={options.find((c) => String(c.value) === String(field.value)) || null}
+          onChange={(val) => field.onChange(val ? val.value : "")}
+          classNamePrefix="react-select"
+          styles={{
+            control: (base) => ({
+              ...base,
+              borderColor: error ? '#f87171' : '#d1d5db',
+              borderRadius: '0.5rem',
+              minHeight: '38px',
+              backgroundColor: disabled ? '#f9fafb' : '#ffffff',
+              boxShadow: 'none',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              '&:hover': {
+                borderColor: '#1565c0'
+              }
+            }),
+            option: (base) => ({
+              ...base,
+              fontSize: '0.875rem',
+              cursor: 'pointer'
+            }),
+            singleValue: (base) => ({
+              ...base,
+              fontSize: '0.875rem'
+            }),
+            placeholder: (base) => ({
+              ...base,
+              fontSize: '0.875rem'
+            })
+          }}
+        />
+      )}
+    />
+    {error && (
+      <p className="text-xs text-red-500 mt-1">⚠ {error}</p>
+    )}
   </div>
 );
 
@@ -69,9 +118,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const [confirmState, setConfirmState] = useState({ isOpen: false, type: null, data: null });
 
   const ALL_COUNTRIES = Country.getAllCountries();
-
-
-
 
 
   const defaultValues = useMemo(() => ({
@@ -95,7 +141,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     mode: "onBlur",
   });
 
-  // Load companies and groups for dropdowns
   useEffect(() => {
     async function loadDropdowns() {
       try {
@@ -143,12 +188,10 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
       setLoading(true);
       mode === "create" ? data.addedBy = currentUser?.id : data.updatedBy = currentUser?.id;
 
-      // Ensure id is present in edit mode
       if (mode === "edit" && initialValues?.id) {
         data.id = initialValues.id;
       }
 
-      // Ensure companyId is present for non-super admins (since select is disabled)
       if (!currentUser?.isSuperAdmin) {
         data.companyId = currentUser?.companyId || initialValues?.companyId;
       }
@@ -173,62 +216,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     }
   }, [mode, router, photoFile]);
 
-  // const onSubmit = useCallback(
-  //   async (data) => {
-  //     try {
-  //       setLoading(true);
 
-  //       const payload = {
-  //         ...data,
-  //         ...(mode === "create"
-  //           ? { addedBy: currentUser?.id }
-  //           : { updatedBy: currentUser?.id }),
-  //       };
-
-  //       const cleanedData = Object.fromEntries(
-  //         Object.entries(payload).filter(
-  //           ([, value]) =>
-  //             value !== undefined && value !== null && value !== "",
-  //         ),
-  //       );
-
-  //       console.log(
-  //         "Submitting user form with data:",
-  //         cleanedData,
-  //         "and photoFile:",
-  //         photoFile,
-  //       );
-
-  //       const response =
-  //         mode === "create"
-  //           ? await createUser(cleanedData, photoFile)
-  //           : await updateUser(cleanedData, photoFile);
-
-  //       const isSuccess =
-  //         response?.success === 1 || response?.settings?.success === 1;
-  //       const message = response?.message || response?.settings?.message;
-
-  //       if (isSuccess) {
-  //         toast.success(
-  //           mode === "create"
-  //             ? "User created successfully!"
-  //             : "User updated successfully!",
-  //         );
-  //         router.push("/admin");
-  //       } else {
-  //         toast.error(
-  //           message ||
-  //             `Failed to ${mode === "create" ? "create" : "update"} user`,
-  //         );
-  //       }
-  //     } catch (error) {
-  //       toast.error(error?.message || "Something went wrong");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   },
-  //   [mode, router, photoFile, currentUser?.id],
-  // );
 
   const statusOptions = [
     { label: "Active", value: "Active" },
@@ -241,15 +229,20 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     <div className="h-full overflow-y-auto mx-6">
     <form
       onSubmit={handleSubmit(onFormValid, (errors) => {
-        if (errors && Object.keys(errors).length > 0) {
-          console.error("Validation Errors:", errors);
+        if (errors) {
+          const safeErrors = Object.keys(errors).reduce((acc, key) => {
+            acc[key] = {
+              type: errors[key]?.type,
+              message: errors[key]?.message,
+            };
+            return acc;
+          }, {});
           const firstError = Object.values(errors)[0]?.message;
-          toast.error(firstError || "Please fix the validation errors in the form");
+          toast.error( "Please fill required fields the form");
         }
       })}
       className="bg-white rounded-xl p-6 shadow-sm space-y-6"
     >
-      {/* Hidden inputs */}
       {mode === "edit" && <input type="hidden" {...register("id")} />}
 
       {/* Photo Upload */}
@@ -332,6 +325,28 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             register={register}
             error={errors.email?.message}
           />
+          {mode === "create" && (
+            <div className="space-y-1 relative">
+              <label className="block text-sm font-medium text-gray-700">
+                Password {mode === "create" && <span className="text-red-500">*</span>}
+              </label>
+              <div className="relative">
+                <input
+                type={showPassword ? "text" : "password"}
+                placeholder={"Enter password" }
+                className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${errors.password ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}`}
+                {...register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-650 cursor-pointer"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
+          </div>)}
 
         </div>
       </div>
@@ -347,7 +362,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               label="Company"
               required
               name="companyId"
-              register={register}
+              control={control}
               options={companyOptions}
               error={errors.companyId?.message}
               disabled={!currentUser?.isSuperAdmin}
@@ -360,7 +375,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             label="Group / Role"
             required
             name="groupId"
-            register={register}
+            control={control}
             options={groupOptions}
             // placeholder="Select Group"
             error={errors.groupId?.message}
@@ -369,7 +384,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             label="Status"
             required
             name="status"
-            register={register}
+            control={control}
             options={statusOptions}
             error={errors.status?.message}
           />

@@ -43,7 +43,6 @@ export class CompanyController {
   @Post('list-company')
   @RequirePermission('COMPANY_LIST')
   getAllCompanies(@Req() req, @Body() body: CompanyListDto) {
-    console.log('body', body);
     return this.companyListService.startCompanyList(req, body);
   }
 

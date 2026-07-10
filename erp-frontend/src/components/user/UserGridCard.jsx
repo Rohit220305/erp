@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreVertical, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function UserGridCard({ user, handleLoginAs, currentUser, can, setSelectedUserForDetails, setSelectedUserForPasswordReset, setSelectedCompanyForDetails }) {
   const router = useRouter();
@@ -20,20 +21,16 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
           }}
         >
           <div className="relative shrink-0">
-            {user.photoUrl ? (
-              <img
-                src={user.photoUrl}
-                alt={user.firstName}
-                className="w-14 h-14 rounded-full object-cover border border-gray-100"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-full bg-[#1565c0] text-white flex items-center justify-center font-bold text-xl">
-                {user.firstName?.[0]}
-                {user.lastName?.[0]}
-              </div>
-            )}
+            <SharedImageZoom
+              id={`grid-${user.id}`}
+              src={user.photoUrl}
+              alt={`${user.firstName} ${user.lastName}`}
+              placeholderText={`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
+              thumbnailClassName="w-14 h-14 rounded-full object-cover border border-gray-100"
+              modalImageClassName="w-64 h-64 rounded-full"
+            />
             <div
-              className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${user.status === "Active" ? "bg-green-500" : "bg-gray-300"}`}
+              className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${user.status === "Active" ? "bg-green-500" : "bg-red-500"}`}
             ></div>
           </div>
           <div>

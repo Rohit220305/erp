@@ -106,18 +106,18 @@ export default function UserListPage() {
 
   const fields = useMemo(
     () => [
-      { label: "First Name", value: "firstName", type: "text" },
-      { label: "Last Name", value: "lastName", type: "text" },
-      { label: "Username", value: "userName", type: "text" },
+      { label: "User", value: "firstName", type: "text"  },
+      // { label: "Last Name", value: "lastName", type: "text" },
+      // { label: "Username", value: "userName", type: "text" },
       { label: "Email", value: "email", type: "text" },
       {
-        label: "Company Name",
+        label: "Company",
         value: "companyId",
         type: "select",
         options: companyOptions,
       },
       {
-        label: "Group/Role Name",
+        label: "Group",
         value: "groupId",
         type: "select",
         options: groupOptions,
@@ -293,15 +293,15 @@ export default function UserListPage() {
   const headers = useMemo(
     () =>
       [
-        { label: "User", key: "firstName", searchable: true, sortable: false },
-        { label: "Email", key: "email", searchable: true, sortable: false },
+        { label: "User", key: "firstName", searchable: true, sortable: true },
+        { label: "Email", key: "email", searchable: true, sortable: true },
         {
           label: "Company",
           key: "companyName",
           searchable: true,
-          sortable: false,
+          sortable: true,
         },
-        { label: "Group", key: "groupName", searchable: true, sortable: false },
+        { label: "Group", key: "groupName", searchable: true, sortable: true },
         {
           label: "Status",
           key: "status",
@@ -311,7 +311,7 @@ export default function UserListPage() {
             { label: "Inactive", value: "InActive" }, 
           ],
           searchable: true,
-          sortable: false ,
+          sortable: true,
         },
         currentUser?.isSuperAdmin
           ? {

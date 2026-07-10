@@ -48,10 +48,7 @@ export async function getCompany(id) {
   return res?.settings?.data || res?.data || res;
 }
 
-/**
- * PUT /company/update-company
- * Sends FormData when a logo file is provided, otherwise JSON.
- */
+
 export async function updateCompany(data, logoFile) {
   
   if (logoFile) {
