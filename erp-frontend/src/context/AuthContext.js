@@ -109,6 +109,7 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
       const res = await restoreSession(prevSession.token);
       if (!res || res.success !== 1) {
         logout();
+        
         window.location.href = "/login";
         console.error("Failed to restore backend session:", res?.message);
         throw new Error(res?.message || "Failed to restore backend session");

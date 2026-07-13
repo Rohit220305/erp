@@ -143,16 +143,15 @@ export class GroupService {
       // 5. Invalidate permission cache
       await this.permissionCacheService.invalidatePermissions(groupId);
 
-      // 6. Activity Log
-      this.activityLogService.log({
+      // Activity Log
+      await this.activityLogService.log({
+        activityCode: id ? 'GROUP_UPDATE' : 'GROUP_CREATE',
+        companyId: req.user?.companyId,
         actorUserId: userId,
         impersonatorId: req.user?.impersonatorId || undefined,
-        action: id ? 'UPDATE' : 'CREATE',
-        module: 'GROUP',
+        entityType: 'GROUP',
         entityId: groupId,
-        description: id ? `Updated group ${groupName}` : `Created new group ${groupName}`,
-        oldValue: id ? oldValue : null,
-        newValue: id ? newValue : null,
+        entityName: groupName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });
@@ -217,12 +216,14 @@ export class GroupService {
       const res = await this.groupRepo.insert(queryColumns);
 
       // Activity Log
-      this.activityLogService.log({
+      await this.activityLogService.log({
+        activityCode: 'GROUP_CREATE',
+        companyId: req.user?.companyId,
         actorUserId: req.user?.sub,
-        action: 'CREATE',
-        module: 'GROUP',
+        impersonatorId: req.user?.impersonatorId,
+        entityType: 'GROUP',
         entityId: res?.raw?.insertId,
-        description: `Created new group ${params.groupName}`,
+        entityName: params.groupName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });
@@ -303,15 +304,14 @@ export class GroupService {
       const res = await this.groupRepo.update({ id: params.id }, queryColumns);
 
       // Activity Log
-      this.activityLogService.log({
+      await this.activityLogService.log({
+        activityCode: 'GROUP_UPDATE',
+        companyId: req.user?.companyId,
         actorUserId: req.user?.sub,
         impersonatorId: req.user?.impersonatorId || undefined,
-        action: 'UPDATE',
-        module: 'GROUP',
+        entityType: 'GROUP',
         entityId: params.id,
-        description: `Updated group ID ${params.id}`,
-        oldValue: group,
-        newValue: queryColumns,
+        entityName: params.groupName || group.groupName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });
@@ -374,12 +374,14 @@ export class GroupService {
       });
 
       // Activity Log
-      this.activityLogService.log({
+      await this.activityLogService.log({
+        activityCode: 'GROUP_DELETE',
+        companyId: req.user?.companyId,
         actorUserId: req.user?.sub,
-        action: 'DELETE',
-        module: 'GROUP',
+        impersonatorId: req.user?.impersonatorId,
+        entityType: 'GROUP',
         entityId: params.id,
-        description: `Deleted group ${group.groupName}`,
+        entityName: group.groupName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });

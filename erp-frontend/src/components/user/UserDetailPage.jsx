@@ -241,7 +241,7 @@ export default function UserDetailPage({ user }) {
                 <UserIcon size={16} /> Summary
               </button>
 
-              {/* {canViewActivityLogs && (
+              {canViewActivityLogs && (
                 <button
                   onClick={() => setActiveTab("activity")}
                   className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium cursor-pointer transition ${
@@ -252,7 +252,7 @@ export default function UserDetailPage({ user }) {
                 >
                   <Activity size={16} /> Activity Logs
                 </button>
-              )} */}
+              )}
             </div>
           </div>
         </div>

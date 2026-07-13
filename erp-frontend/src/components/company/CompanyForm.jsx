@@ -490,7 +490,7 @@ export default function CompanyForm({
   };
 
   return (
-    <div className="h-full overflow-y-scroll ">
+    <div className="h-full overflow-y-scroll  mx-6">
       <form onSubmit={handleSubmit(onFormValid)} className="space-y-5 text-black">
         <div className="grid lg:grid-cols-[260px_1fr] gap-5">
           {/* Logo Card */}

@@ -1,12 +1,12 @@
 export class CreateActivityLogDto {
+  activityCode: string;
+  companyId: number;
   actorUserId: number;
   impersonatorId?: number;
-  action: string;
-  module: string;
+  entityType?: string;
   entityId?: number;
-  description: string;
-  oldValue?: any;
-  newValue?: any;
+  actorName?: string;
+  entityName?: string;
   ipAddress?: string;
   userAgent?: string;
 }

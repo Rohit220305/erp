@@ -74,7 +74,7 @@ export class AuthController {
     if (!req.user?.isSuperAdmin) {
       return { success: 0, message: 'Super admin access required' };
     }
-    return this.authService.resetPasswordBySuperAdmin(targetUserId, body.newPassword);
+    return this.authService.resetPasswordBySuperAdmin(req, targetUserId, body.newPassword);
   }
 
   @Get('get-user-permissions')
@@ -94,7 +94,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Body('token') token: string,
   ) {
-    console.log('Received token for session restoration:', token);
+    // console.log('Received token for session restoration:', token);
     return this.authService.restoreSession(req, res, token);
   }
 

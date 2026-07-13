@@ -101,12 +101,14 @@ export class CompanyService {
       const res = await this.companyRepo.insert(queryColumns);
 
       // Activity Log
-      this.activityLogService.log({
+      await this.activityLogService.log({
+        activityCode: 'COMPANY_CREATE',
+        companyId: res?.raw?.insertId,
         actorUserId: req.user?.sub,
-        action: 'CREATE',
-        module: 'COMPANY',
+        impersonatorId: req.user?.impersonatorId,
+        entityType: 'COMPANY',
         entityId: res?.raw?.insertId,
-        description: `Created new company ${params.companyName}`,
+        entityName: params.companyName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });
@@ -214,15 +216,15 @@ export class CompanyService {
         queryColumns,
       );
 
-      this.activityLogService.log({
+      // Activity Log
+      await this.activityLogService.log({
+        activityCode: 'COMPANY_UPDATE',
+        companyId: params.id,
         actorUserId: req.user?.sub,
         impersonatorId: req.user?.impersonatorId || undefined,
-        action: 'UPDATE',
-        module: 'COMPANY',
+        entityType: 'COMPANY',
         entityId: params.id,
-        description: `Updated company profile for ID ${params.id}`,
-        oldValue: company,
-        newValue: queryColumns,
+        entityName: params.companyName || company.companyName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });
@@ -297,12 +299,14 @@ export class CompanyService {
       await this.commonFileService.deleteFolder('company', `${params.id}`);
 
       // Activity Log
-      this.activityLogService.log({
+      await this.activityLogService.log({
+        activityCode: 'COMPANY_DELETE',
+        companyId: params.id,
         actorUserId: req.user?.sub,
-        action: 'DELETE',
-        module: 'COMPANY',
+        impersonatorId: req.user?.impersonatorId,
+        entityType: 'COMPANY',
         entityId: params.id,
-        description: `Deleted company ${company.companyName}`,
+        entityName: company.companyName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });

@@ -192,7 +192,7 @@ export class AuthService {
 
   async login(req: Request, res: Response, body: LoginDto) {
     const { userName, password } = body;
-    console.log(`Attempting login for user: ${userName}`);
+    // console.log(`Attempting login for user: ${userName}`);
     if (!userName || !password) {
       return { success: 0, message: 'Username and password are required' };
     }
@@ -210,7 +210,7 @@ export class AuthService {
     if (!passwordMatches) {
       return { success: 0, message: 'Invalid credentials' };
     }
-    console.log(`User ${user.userName} authenticated successfully`);
+    // console.log(`User ${user.userName} authenticated successfully`);
 
     await this.userRepo.update(
       { id: user.id },
@@ -232,11 +232,11 @@ export class AuthService {
     const capabilities = await this.getGroupCapabilities(user.groupId);
 
     // Activity Log
-    this.activityLogService.log({
+    await this.activityLogService.log({
+      activityCode: 'AUTH_LOGIN',
+      companyId: user.companyId,
       actorUserId: user.id,
-      action: 'LOGIN',
-      module: 'AUTH',
-      description: `User ${user.userName} logged in successfully`,
+      actorName: `${user.firstName} ${user.lastName}`.trim(),
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
     });
@@ -299,18 +299,16 @@ export class AuthService {
     return { success: 1, message: 'Token refreshed' };
   }
 
-
   async logout(req: Request, res: Response) {
-    console.log(req);
+    // console.log(req);
     const userPayload = req['user'] as JwtPayload | undefined;
-    console.log('Logging out user:', userPayload);
+    // console.log('Logging out user:', userPayload);
     if (userPayload) {
-      this.activityLogService.log({
+      await this.activityLogService.log({
+        activityCode: 'AUTH_LOGOUT',
+        companyId: userPayload.companyId,
         actorUserId: userPayload.sub,
         impersonatorId: userPayload.impersonatorId || undefined,
-        action: 'LOGOUT',
-        module: 'AUTH',
-        description: `User logged out`,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });
@@ -319,7 +317,6 @@ export class AuthService {
     res.clearCookie('refreshToken');
     return { success: 1, message: 'Logged out successfully' };
   }
-
 
   async loginAsUser(req: Request, res: Response, targetUserId: number) {
     const target = await this.userRepo.findOne({ where: { id: targetUserId } });
@@ -349,15 +346,16 @@ export class AuthService {
 
     const data = await this.buildSafeUser(target);
     const capabilities = await this.getGroupCapabilities(target.groupId);
-
+    const entityName = `${target.firstName} ${target.lastName}`.trim();
     // Activity Log
-    this.activityLogService.log({
+    await this.activityLogService.log({
+      activityCode: 'AUTH_IMPERSONATE',
+      companyId: target.companyId,
       actorUserId: currentAdminId || target.id,
       impersonatorId: currentAdminId,
-      action: 'IMPERSONATE',
-      module: 'AUTH',
+      entityType: 'USER',
       entityId: target.id,
-      description: `Superadmin logged in as user ${target.userName}`,
+      entityName: entityName || target.userName,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
     });
@@ -369,46 +367,47 @@ export class AuthService {
     };
   }
 
-
-  
   async changePassword(
     userId: number,
     currentPassword: string,
     newPassword: string,
     confirmPassword: string,
   ) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+    try {
+    
+      const user = await this.userRepo.findOne({ where: { id: userId } });
+      if (!user) {
+        return { success: 0, message: 'User not found' };
+      }
+
+      const isValid = await bcrypt.compare(currentPassword, user.password);
+      // console.log(`Current password validation result for user ${user.userName}:`, isValid);
+      if (!isValid) {
+        return { success: 0, message: 'Current password is incorrect' };
+      }
+
+      if (newPassword !== confirmPassword) {
+        return { success: 0, message: 'New password and confirm password do not match' };
+      }
+
+      const hashed = await bcrypt.hash(newPassword, 10);
+      await this.userRepo.update({ id: userId }, { password: hashed });
+
+      await this.activityLogService.log({
+        activityCode: 'AUTH_UPDATE_PASSWORD',
+        companyId: user.companyId,
+        actorUserId: userId,
+      });
+
+      return { success: 1, message: 'Password changed successfully' };
+    } catch (err) {
+      console.error('Change password error:', err);
+      return { success: 0, message: 'An unexpected error occurred. Please try again.' };
     }
-
-    const isValid = await bcrypt.compare(currentPassword, user.password);
-    if (!isValid) {
-      throw new UnauthorizedException('Current password is incorrect');
-    }
-
-    if (newPassword !== confirmPassword) {
-      throw new UnauthorizedException(
-        'New password and confirm password do not match',
-      );
-    }
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-    await this.userRepo.update({ id: userId }, { password: hashed });
-
-    // Activity Log
-    this.activityLogService.log({
-      actorUserId: userId,
-      action: 'UPDATE_PASSWORD',
-      module: 'AUTH',
-      description: `User changed their password`,
-    });
-
-    return { success: 1, message: 'Password changed successfully' };
   }
 
  
-  async resetPasswordBySuperAdmin(targetUserId: number, newPassword: string) {
+  async resetPasswordBySuperAdmin(req: Request & { user: JwtPayload }, targetUserId: number, newPassword: string) {
     const target = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!target) {
       return { success: 0, message: 'Target user not found' };
@@ -418,12 +417,15 @@ export class AuthService {
     await this.userRepo.update({ id: targetUserId }, { password: hashed });
 
     // Activity Log
-    this.activityLogService.log({
-      actorUserId: targetUserId,
-      action: 'ADMIN_RESET_PASSWORD',
-      module: 'AUTH',
+    await this.activityLogService.log({
+      activityCode: 'AUTH_ADMIN_RESET_PASSWORD',
+      companyId: target.companyId,
+      actorUserId: req.user.sub,
+      entityType: 'USER',
       entityId: targetUserId,
-      description: `Superadmin reset password for user ID ${targetUserId}`,
+      entityName: target.userName,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
     });
 
     return { success: 1, message: 'Password reset successfully' };
@@ -435,13 +437,11 @@ export class AuthService {
     }
 
     try {
-      console.log('Verifying session tokenin restoresession:', );
       
       const payload = this.jwtService.verify<JwtPayload>(token, {
         secret: this.config.getOrThrow<string>('JWT_SECRET'),
         ignoreExpiration: true,
       });
-      console.log('Session token verified successfully for user :', payload);
       const user = await this.userRepo.findOne({ where: { id: payload.sub } });
       if (!user || user.status !== 'Active') {
         return { success: 0, message: 'User not found or inactive' };
@@ -462,14 +462,15 @@ export class AuthService {
           activeImpersonatorId = decoded.impersonatorId;
         } catch {}
       }
-      
-      this.activityLogService.log({
-        actorUserId: activeUserId || user.id,
+      console.log(req.headers)
+      await this.activityLogService.log({
+        activityCode: 'AUTH_RETURN_SESSION',
+        companyId: user.companyId,
+        actorUserId: activeImpersonatorId || user.id,
         impersonatorId: activeImpersonatorId || user.id,
-        action: 'RETURN_SESSION',
-        module: 'AUTH',
+        entityType: 'USER',
         entityId: user.id,
-        description: `Superadmin returned from impersonated session`,
+        entityName: user.userName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });
@@ -495,7 +496,6 @@ export class AuthService {
     }
   }
 
-  // ─── Forgot Password 
 
   async forgotPassword(email: string) {
     if (!email) {
@@ -560,11 +560,10 @@ export class AuthService {
     });
 
     // Activity Log
-    this.activityLogService.log({
+    await this.activityLogService.log({
+      activityCode: 'AUTH_FORGOT_PASSWORD_RESET',
+      companyId: user.companyId,
       actorUserId: user.id,
-      action: 'FORGOT_PASSWORD_RESET',
-      module: 'AUTH',
-      description: `User reset their password via OTP`,
     });
 
     return { success: 1, message: 'Password reset successfully' };

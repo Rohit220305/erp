@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { ActivityMasterEntity } from './activity-master.entity';
 
 @Entity({
   name: 'activity_logs',
@@ -7,35 +8,42 @@ export class ActivityLogEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'actorUserId' })
+  @Column({ name: 'activityMasterId', type: 'int' })
+  activityMasterId: number;
+
+  @ManyToOne(() => ActivityMasterEntity)
+  @JoinColumn({ name: 'activityMasterId' })
+  activityMaster: ActivityMasterEntity;
+
+  @Column({ name: 'companyId', type: 'int' })
+  companyId: number;
+
+  @Column({ name: 'actorUserId', type: 'int' })
   actorUserId: number;
 
-  @Column({ name: 'impersonatorId', nullable: true })
-  impersonatorId: number;
+  @Column({ name: 'impersonatorId', type: 'int', nullable: true })
+  impersonatorId: number | null;
 
-  @Column({ length: 50 })
-  action: string;
+  @Column({ name: 'entityType', type: 'varchar', length: 50, nullable: true })
+  entityType: string | null;
 
-  @Column({ length: 50 })
-  module: string;
+  @Column({ name: 'entityId', type: 'int', nullable: true })
+  entityId: number | null;
 
-  @Column({ name: 'entityId', nullable: true })
-  entityId: number;
+  @Column({ name: 'actorName', type: 'varchar', length: 200 })
+  actorName: string;
 
-  @Column({ length: 255 })
-  description: string;
+  @Column({ name: 'entityName', type: 'varchar', length: 200, nullable: true })
+  entityName: string | null;
 
-  @Column({ type: 'json', nullable: true })
-  oldValue: any;
+  @Column({ name: 'renderedMessage', type: 'varchar', length: 500 })
+  renderedMessage: string;
 
-  @Column({ type: 'json', nullable: true })
-  newValue: any;
+  @Column({ name: 'ipAddress', type: 'varchar', length: 45, nullable: true })
+  ipAddress: string | null;
 
-  @Column({ length: 45, nullable: true })
-  ipAddress: string;
-
-  @Column({ length: 255, nullable: true })
-  userAgent: string;
+  @Column({ name: 'userAgent', type: 'varchar', length: 500, nullable: true })
+  userAgent: string | null;
 
   @Column({
     type: 'timestamp',

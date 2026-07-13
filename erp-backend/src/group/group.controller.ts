@@ -69,7 +69,7 @@ export class GroupController {
   @Put('update-with-capabilities')
   @RequirePermission('GROUP_UPDATE')
   async updateWithCapabilities(@Req() req, @Body() body: SaveGroupWithCapabilitiesDto) {
-    console.log('Received update-with-capabilities request with body:', body);
+    // console.log('Received update-with-capabilities request with body:', body);
     return await this.groupService.startSaveWithCapabilities(req, body);
   }
 }

@@ -89,7 +89,7 @@ export default function ActivityLogTimeline({ userId }) {
     <div className="relative border-l border-gray-200 ml-3 py-4 space-y-8 ">
       {logs.map((log) => (
         <div key={log.id} className="relative pl-6">
-          <span className="absolute -left-3 top-0 bg-white border border-gray-200 rounded-full p-1 shadow-sm">
+          <span className="absolute -left-3.5 top-0 bg-white border border-gray-200 rounded-full p-1 shadow-sm">
             {getActionIcon(log.action)}
           </span>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 ">
@@ -109,7 +109,7 @@ export default function ActivityLogTimeline({ userId }) {
         </div>
       ))}
 
-      {hasMore && (
+      {hasMore && ( 
         <div className="pt-4 pb-2 pl-6">
           <button 
             onClick={() => {

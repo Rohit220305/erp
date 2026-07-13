@@ -130,13 +130,14 @@ export class UserService {
       const res = await this.userRepo.insert(queryColumns);
 
       // Activity Log
-      this.activityLogService.log({
+      await this.activityLogService.log({
+        activityCode: 'USER_CREATE',
+        companyId: params.companyId,
         actorUserId: req.user?.sub,
-        impersonatorId: req.user?.impersonatorId, // Assuming if you add it later
-        action: 'CREATE',
-        module: 'USER',
+        impersonatorId: req.user?.impersonatorId,
+        entityType: 'USER',
         entityId: res?.raw?.insertId,
-        description: `Created new user ${params.userName}`,
+        entityName: params.userName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });
@@ -292,18 +293,14 @@ export class UserService {
       );
 
       // Activity Log
-      const { password: oldPassword, ...oldValue } = user;
-      const { password: newPassword, ...newValue } = queryColumns;
-
-      this.activityLogService.log({
+      await this.activityLogService.log({
+        activityCode: 'USER_UPDATE',
+        companyId: user.companyId,
         actorUserId: req.user?.sub,
         impersonatorId: req.user?.impersonatorId || undefined,
-        action: 'UPDATE',
-        module: 'USER',
+        entityType: 'USER',
         entityId: params.id,
-        description: `Updated user profile for ID ${params.id}`,
-        oldValue,
-        newValue,
+        entityName: params.userName || user.userName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });
@@ -364,12 +361,14 @@ export class UserService {
       await this.commonFileService.deleteFolder('users', `${params.id}`);
 
       // Activity Log
-      this.activityLogService.log({
+      await this.activityLogService.log({
+        activityCode: 'USER_DELETE',
+        companyId: user.companyId,
         actorUserId: req.user?.sub,
-        action: 'DELETE',
-        module: 'USER',
+        impersonatorId: req.user?.impersonatorId,
+        entityType: 'USER',
         entityId: params.id,
-        description: `Deleted user ${user.userName}`,
+        entityName: user.userName,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       });

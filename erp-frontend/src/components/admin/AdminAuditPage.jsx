@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-export default function AdminAuditPage() {
+export default function AdminActivityLogsPage() {
   const { setConfig, resetConfig } = useHeader();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,10 +66,10 @@ export default function AdminAuditPage() {
         showMenu: true,
       },
       navbar: {
-        title: "System Audit Logs",
+        title: "System Activity Logs",
         breadcrumbs: [
           { label: "Master", href: "/" },
-          { label: "Audit Logs", href: "/admin/audit-logs" },
+          { label: "Activity Logs", href: "/admin/activity-logs" },
         ],
         actionButton: null,
       },
@@ -319,24 +319,6 @@ export default function AdminAuditPage() {
                                   <span className="text-gray-700">{log.userAgent || "Unknown"}</span>
                                 </div>
                               </div>
-                              
-                              {/* Diff JSON View */}
-                              {log.action === "UPDATE" && (log.oldValue || log.newValue) && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div className="space-y-1">
-                                    <span className="text-xs font-semibold text-gray-500">Before Change (Old Value)</span>
-                                    <pre className="bg-gray-900 text-green-400 font-mono text-xs p-4 rounded-lg overflow-x-auto max-h-60 border border-gray-800">
-                                      {JSON.stringify(log.oldValue, null, 2)}
-                                    </pre>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <span className="text-xs font-semibold text-gray-500">After Change (New Value)</span>
-                                    <pre className="bg-gray-900 text-blue-400 font-mono text-xs p-4 rounded-lg overflow-x-auto max-h-60 border border-gray-800">
-                                      {JSON.stringify(log.newValue, null, 2)}
-                                    </pre>
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           </td>
                         </tr>
