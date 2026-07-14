@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
 export default function SharedImageZoom({
-  id,                      
-  src,                     
-  alt = "Avatar",         
-  placeholderText = "U",   
+  id,
+  src,
+  alt = "Avatar",
+  placeholderText = "U",
   thumbnailClassName = "w-10 h-10 rounded-full",
   modalImageClassName = "w-72 h-72 rounded-full",
   animConfig = {},
@@ -25,10 +25,11 @@ export default function SharedImageZoom({
 
   const hasImage = src && !hasError;
 
-  
   if (!hasImage) {
     return (
-      <div className={`${thumbnailClassName} bg-blue-50 text-[#1565c0] flex items-center justify-center font-bold select-none border border-blue-100`}>
+      <div
+        className={`${thumbnailClassName} bg-blue-50 text-[#1565c0] flex items-center justify-center font-bold select-none border border-blue-100`}
+      >
         {placeholderText}
       </div>
     );
@@ -45,11 +46,11 @@ export default function SharedImageZoom({
 
   return (
     <>
-      <div 
+      <div
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(true);
-        }} 
+        }}
         className="cursor-pointer select-none"
       >
         <motion.img
@@ -64,7 +65,7 @@ export default function SharedImageZoom({
 
       <AnimatePresence>
         {isOpen && (
-          <div 
+          <div
             className="fixed inset-0 z-[999] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
@@ -77,12 +78,20 @@ export default function SharedImageZoom({
             />
 
             <div className="relative z-10 flex flex-col items-center">
-              <button
-                onClick={() => setIsOpen(false)}
-                className="absolute -top-12 right-0 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/75 transition cursor-pointer"
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={transition}
+                className="absolute inset-0"
               >
-                <X size={18} />
-              </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="absolute -top-12 right-0 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/75 transition cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </motion.div>
 
               <motion.img
                 layoutId={layoutId}

@@ -342,7 +342,6 @@ export default function ChangePasswordForm() {
         </div>
 
         <div className="space-y-4">
-          {/* Current Password */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
               Current Password <span className="text-red-500">*</span>
@@ -374,7 +373,6 @@ export default function ChangePasswordForm() {
             )}
           </div>
 
-          {/* New Password */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
               New Password <span className="text-red-500">*</span>
@@ -406,7 +404,6 @@ export default function ChangePasswordForm() {
             )}
           </div>
 
-          {/* Confirm New Password */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
               Confirm New Password <span className="text-red-500">*</span>

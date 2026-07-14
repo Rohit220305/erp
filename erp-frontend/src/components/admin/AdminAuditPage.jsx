@@ -40,13 +40,29 @@ export default function AdminActivityLogsPage() {
   const fetchLogs = useCallback(async (pageNum = 1) => {
     try {
       setLoading(true);
-      const res = await getAllActivityLogs(filters, pageNum, limit);
-      if (res?.success === 1) {
-        setLogs(res.data.list);
-        setTotal(res.data.total);
+      const backendFilters = [];
+      if (filters.startDate) backendFilters.push({ key: 'createdAt', operator: 'greater than equal', value: filters.startDate });
+      if (filters.endDate) backendFilters.push({ key: 'createdAt', operator: 'less than equal', value: `${filters.endDate} 23:59:59` });
+      if (filters.actorUserId) backendFilters.push({ key: 'actorUserId', operator: 'equal', value: Number(filters.actorUserId) });
+      if (filters.entityId) backendFilters.push({ key: 'entityId', operator: 'equal', value: Number(filters.entityId) });
+      if (filters.module) backendFilters.push({ key: 'module', operator: 'equal', value: filters.module });
+      if (filters.action) backendFilters.push({ key: 'action', operator: 'equal', value: filters.action });
+
+      const res = await getAllActivityLogs({
+        page: pageNum,
+        limit,
+        filters: backendFilters.length > 0 ? backendFilters : undefined,
+      });
+
+      const isSuccess = res?.success === 1 || res?.settings?.success === 1;
+      const data = res?.settings?.data || res?.data || {};
+
+      if (isSuccess) {
+        setLogs(data.list || []);
+        setTotal(data.pagination?.total || 0);
         setPage(pageNum);
       } else {
-        toast.error(res?.message || "Failed to fetch logs");
+        toast.error(res?.message || res?.settings?.message || "Failed to fetch logs");
       }
     } catch (err) {
       toast.error(err.message || "An error occurred fetching logs");
@@ -109,7 +125,6 @@ export default function AdminActivityLogsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Premium Glassmorphic Filters Card */}
       <form onSubmit={handleSearch} className="bg-white/80 backdrop-blur-md rounded-2xl border border-gray-200/50 p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
           <div className="flex items-center gap-2">

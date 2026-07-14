@@ -354,7 +354,7 @@ export class AuthService {
       actorUserId: currentAdminId || target.id,
       impersonatorId: currentAdminId,
       entityType: 'USER',
-      entityId: target.id,
+      entityId: target.id, 
       entityName: entityName || target.userName,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],

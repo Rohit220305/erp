@@ -1,3 +1,6 @@
+import { IsString } from 'class-validator';
+import { IsOptional } from 'class-validator/types/decorator/common/IsOptional';
+
 export class CreateActivityLogDto {
   activityCode: string;
   companyId: number;
@@ -10,3 +13,4 @@ export class CreateActivityLogDto {
   ipAddress?: string;
   userAgent?: string;
 }
+

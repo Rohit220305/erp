@@ -37,7 +37,7 @@ export default function CompanyGridCard({ company, companyConfig, setSelectedCom
               thumbnailClassName="w-14 h-14 rounded-xl object-cover border border-gray-100"
               modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"
             />
-            <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${badgeValue === "Active" ? "bg-green-500" : "bg-gray-300"}`}></div>
+            <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${badgeValue === "Active" ? "bg-green-500" : "bg-red-500"}`}></div>
           </div>
           <div>
             <p className={`font-medium leading-tight mb-0.5 ${hasViewPerm ? "text-[#1565c0] hover:underline decoration-1 underline-offset-2" : "text-gray-900"}`}>

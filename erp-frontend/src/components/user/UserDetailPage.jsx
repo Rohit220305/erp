@@ -369,10 +369,8 @@ export default function UserDetailPage({ user }) {
             </div>
           ) : (
             <div className="bg-white rounded-xl hover:shadow-lg transition py-6 me-4 h-[75vh]  ">
-              <h3 className="font-semibold mb-5 text-lg border-b border-gray-100 pb-3 px-6 ">
-                Activity Logs
-              </h3>
-              <div className="overflow-y-scroll h-[90%] pb-1  px-6">
+              
+              <div className="h-full">
                 <ActivityLogTimeline userId={user.id} />
               </div>
             </div>

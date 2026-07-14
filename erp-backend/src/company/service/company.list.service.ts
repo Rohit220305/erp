@@ -231,10 +231,10 @@ export class CompanyListService {
         },
       };
     } catch (err) {
-      return_data = {
-        success: 0,
-        message: err.message,
-      };
+        return_data = {
+          success: 0,
+          message: err.message,
+        };
     }
 
     return return_data;
