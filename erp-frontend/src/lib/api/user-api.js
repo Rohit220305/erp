@@ -12,9 +12,7 @@ export async function getUser(id) {
   return res?.settings?.data || res?.data || res;
 }
 
-/**
- * POST /user/add-user — supports profile photo upload via FormData
- */
+
 export async function createUser(data, photoFile) {
   if (photoFile) {
     const formData = new FormData();
@@ -35,9 +33,7 @@ export async function createUser(data, photoFile) {
   });
 }
 
-/**
- * PUT /user/update-user — supports profile photo upload via FormData
- */
+
 export async function updateUser(data, photoFile) {
   if (photoFile) {
     const formData = new FormData();

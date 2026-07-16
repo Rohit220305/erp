@@ -79,13 +79,10 @@ export class AuthService {
       },
       relations: { capability: true },
     });
-    // console.log(mappings);
     const permissions = mappings
       .map((m) => m.capability?.capabilityCode)
       .filter(Boolean)
       .map((code) => {
-        // if (code.endsWith('_ADD')) return code.replace('_ADD', '_CREATE');
-        // if (code.endsWith('_EDIT')) return code.replace('_EDIT', '_UPDATE');
         return code;
       });
 
@@ -128,7 +125,6 @@ export class AuthService {
       expiresIn: refreshExpires as JwtSignOptions['expiresIn'],
     });
 
-    // Convert expires string to milliseconds for cookie maxAge
     const accessMaxAge = this.expiresInToMs(accessExpires);
     const refreshMaxAge = this.expiresInToMs(refreshExpires);
     return { accessToken, refreshToken, accessMaxAge, refreshMaxAge };
@@ -192,7 +188,6 @@ export class AuthService {
 
   async login(req: Request, res: Response, body: LoginDto) {
     const { userName, password } = body;
-    // console.log(`Attempting login for user: ${userName}`);
     if (!userName || !password) {
       return { success: 0, message: 'Username and password are required' };
     }
@@ -210,7 +205,6 @@ export class AuthService {
     if (!passwordMatches) {
       return { success: 0, message: 'Invalid credentials' };
     }
-    // console.log(`User ${user.userName} authenticated successfully`);
 
     await this.userRepo.update(
       { id: user.id },
@@ -231,7 +225,6 @@ export class AuthService {
     const data = await this.buildSafeUser(user);
     const capabilities = await this.getGroupCapabilities(user.groupId);
 
-    // Activity Log
     await this.activityLogService.log({
       activityCode: 'AUTH_LOGIN',
       companyId: user.companyId,
@@ -260,9 +253,7 @@ export class AuthService {
       payload = this.jwtService.verify<JwtPayload>(refreshToken, {
         secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
       });
-      // console.log('Refresh token verified successfully for user ID:', payload.sub);
     } catch (error: any) {
-      // Clear stale cookies before throwing
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
 
@@ -295,14 +286,11 @@ export class AuthService {
       accessMaxAge,
       refreshMaxAge,
     );
-    // console.log('Tokens refreshed successfully for user ID:', payload.sub);
     return { success: 1, message: 'Token refreshed' };
   }
 
   async logout(req: Request, res: Response) {
-    // console.log(req);
     const userPayload = req['user'] as JwtPayload | undefined;
-    // console.log('Logging out user:', userPayload);
     if (userPayload) {
       await this.activityLogService.log({
         activityCode: 'AUTH_LOGOUT',
@@ -347,7 +335,6 @@ export class AuthService {
     const data = await this.buildSafeUser(target);
     const capabilities = await this.getGroupCapabilities(target.groupId);
     const entityName = `${target.firstName} ${target.lastName}`.trim();
-    // Activity Log
     await this.activityLogService.log({
       activityCode: 'AUTH_IMPERSONATE',
       companyId: target.companyId,

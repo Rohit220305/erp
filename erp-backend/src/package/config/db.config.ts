@@ -7,8 +7,8 @@ import { CapabilityEntity } from "src/capability/entity/capability.entity";
 import { GroupCapabilityEntity } from "src/capability/entity/group-capability.entity";
 import { ActivityLogEntity } from "src/activity-log/entity/activity-log.entity";
 import { ActivityMasterEntity } from "src/activity-log/entity/activity-master.entity";
+import { CurrencyEntity } from "src/currency/entity/currency.entity";
 dotenv.config();
-
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: process.env.DB_CLIENT as 'mysql',
@@ -25,6 +25,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     GroupCapabilityEntity,
     ActivityLogEntity,
     ActivityMasterEntity,
+    CurrencyEntity,
   ],
   synchronize: false,
   migrationsRun: false,

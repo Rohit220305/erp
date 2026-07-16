@@ -37,15 +37,12 @@ export class PermissionGuard implements CanActivate {
       return false;
     }
 
-    // Attach user.companyId explicitly to request.user.companyId as required
     request.user.companyId = user.companyId;
 
-    // Bypass check if user is a Super Admin
     if (user.isSuperAdmin === 1 || user.isSuperAdmin === true) {
       return true;
     }
 
-    // Bypass check if user is accessing their own profile details
 
     if (
       request.path === '/user/get-user' &&
@@ -54,7 +51,6 @@ export class PermissionGuard implements CanActivate {
     ) {
       return true;
     }
-    // Caching check
     const cached = await this.permissionCacheService.getPermissions(
       user.groupId,
     );

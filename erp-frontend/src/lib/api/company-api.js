@@ -19,11 +19,7 @@ export async function listCompanies(data = { page: 1, limit: 10, search: "" }) {
   });
 }
 
-/**
- * POST /company/add-company
- * Sends FormData when a logo file is provided (required for multer),
- * otherwise sends JSON.
- */
+
 export async function createCompany(data, logoFile) {
   if (logoFile) {
     const formData = new FormData();

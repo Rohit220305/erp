@@ -94,7 +94,6 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Body('token') token: string,
   ) {
-    // console.log('Received token for session restoration:', token);
     return this.authService.restoreSession(req, res, token);
   }
 

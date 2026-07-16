@@ -11,6 +11,7 @@ import { join } from 'path';
 import { GroupModule } from './group/group.module';
 import { AuthModule } from './auth/auth.module';
 import { CapabilityModule } from './capability/capability.module';
+import { CurrencyModule } from './currency/currency.module';
 import { ActivityLogModule } from './activity-log/activity-log.module';
 
 @Module({
@@ -29,10 +30,10 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
     GroupModule,
     AuthModule,
     CapabilityModule,
+    CurrencyModule,
     ActivityLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
-
