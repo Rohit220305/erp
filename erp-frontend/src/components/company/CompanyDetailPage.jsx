@@ -13,7 +13,6 @@ import UserDetailsDrawer from "../user/UserDetailsDrawer";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function CompanyDetailsPage({ company }) {
-  // console.log("Company Details:", company); // Debug log
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
   const { can, user: currentUser } = useAuth();

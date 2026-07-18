@@ -1,6 +1,7 @@
+// GroupDetailPage.jsx
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHeader } from "@/context/HeaderContext";
 import { getUser } from "@/lib/api/user-api";
@@ -51,21 +52,26 @@ export default function GroupDetailPage({ group }) {
   const [addedAdmin, setAddedAdmin] = useState(null);
   const [updatedAdmin, setUpdatedAdmin] = useState(null);
 
-  const fetchAdmins = useCallback(async () => {
-    try {
-      if (group.addedBy) {
-        const res = await getUser(group.addedBy);
-        setAddedAdmin(res);
+  // Fetch Admins Effect (No useCallback wrapper needed)
+  useEffect(() => {
+    async function fetchAdmins() {
+      try {
+        if (group?.addedBy) {
+          const res = await getUser(group.addedBy);
+          setAddedAdmin(res);
+        }
+        if (group?.updatedBy) {
+          const res = await getUser(group.updatedBy);
+          setUpdatedAdmin(res);
+        }
+      } catch (err) {
+        console.error(err);
       }
-      if (group.updatedBy) {
-        const res = await getUser(group.updatedBy);
-        setUpdatedAdmin(res);
-      }
-    } catch (err) {
-      console.error(err);
     }
-  }, [group.addedBy, group.updatedBy]);
+    fetchAdmins();
+  }, [group?.addedBy, group?.updatedBy]);
 
+  // Header Configuration Effect
   useEffect(() => {
     setConfig({
       header: {
@@ -84,14 +90,13 @@ export default function GroupDetailPage({ group }) {
         ],
         actionButton: can("GROUP_UPDATE") ? {
           label: "Edit",
-          onClick: () => router.push(`/group/edit/${group.id}`),
+          onClick: () => router.push(`/group/edit/${group?.id}`),
         } : null,
       },
     });
 
-    fetchAdmins();
     return () => resetConfig();
-  }, [setConfig, router, group.id, fetchAdmins, resetConfig, can]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
+  }, [setConfig, router, group?.id, resetConfig, can]);
 
   return (
     <div className="p-6">
@@ -102,8 +107,8 @@ export default function GroupDetailPage({ group }) {
             <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
               <Tag size={22} className="text-[#1565c0]" />
             </div>
-            <h2 className="font-semibold text-lg">{group.groupName}</h2>
-            <p className="text-gray-500 text-sm">{group.groupCode}</p>
+            <h2 className="font-semibold text-lg">{group?.groupName}</h2>
+            <p className="text-gray-500 text-sm">{group?.groupCode}</p>
             <hr className="my-4" />
             <button className="w-full bg-[#1565c0] text-white py-3 rounded-lg text-sm font-medium">
               Summary
@@ -117,43 +122,20 @@ export default function GroupDetailPage({ group }) {
             {/* Main Details */}
             <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
               <h3 className="font-semibold mb-5">Details</h3>
-              <DetailRow label="Group Code" value={group.groupCode} />
-              <DetailRow label="Group Name" value={group.groupName} />
-              <DetailRow label="Description" value={group.description} />
+              <DetailRow label="Group Code" value={group?.groupCode} />
+              <DetailRow label="Group Name" value={group?.groupName} />
+              <DetailRow label="Description" value={group?.description} />
               <DetailRow
                 label="Status"
                 value={
                   <span className={`font-medium ${
-                    group.status === "Active" ? "text-green-600" : "text-red-600"
+                    group?.status === "Active" ? "text-green-600" : "text-red-600"
                   }`}>
-                    {group.status === "Active" ? "Active" : "Inactive"}
+                    {group?.status === "Active" ? "Active" : "Inactive"}
                   </span>
                 }
               />
             </div>
-
-            {/* Added / Updated Info */}
-            {/* <div className="space-y-6">
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                <h3 className="font-semibold mb-5">Added Info</h3>
-                <AdminAvatar
-                  admin={addedAdmin}
-                  onClick={() => group.addedBy && router.push(`/admin/${group.addedBy}`)}
-                />
-                <p className="text-xs text-gray-400 mt-2">{group.addedDateFormatted || "-"}</p>
-              </div>
-
-              {group.updatedBy && (
-                <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                  <h3 className="font-semibold mb-5">Updated Info</h3>
-                  <AdminAvatar
-                    admin={updatedAdmin}
-                    onClick={() => group.updatedBy && router.push(`/admin/${group.updatedBy}`)}
-                  />
-                  <p className="text-xs text-gray-400 mt-2">{group.updatedDateFormatted || "-"}</p>
-                </div>
-              )}
-            </div> */}
           </div>
         </div>
       </div>

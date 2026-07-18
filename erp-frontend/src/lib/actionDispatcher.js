@@ -28,7 +28,6 @@ export const useActionDispatcher = () => {
     try {
       const response = await actionFn(payload);
       
-      // Standardize response checking assuming your APIs return { success: 1|0, message, data }
       if (response && response.success === 1) {
         if (showToast) toast.success(response.message || successMessage);
         return response;

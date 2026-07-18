@@ -1,8 +1,11 @@
+import * as currencyApi from './api/currency-api';
+
 export const ActionRegistry = {
-  // We will populate this with actual API service imports as we build the modules
-  // Example: 
-  // 'CURRENCY_LIST': currencyApi.listCurrencies,
-  // 'CURRENCY_CREATE': currencyApi.createCurrency,
+  'CURRENCY_LIST': currencyApi.listCurrencies,
+  'CURRENCY_GET': currencyApi.getCurrency,
+  'CURRENCY_CREATE': currencyApi.createCurrency,
+  'CURRENCY_UPDATE': currencyApi.updateCurrency,
+  'CURRENCY_DELETE': currencyApi.deleteCurrency,
 };
 
 export const getApiAction = (actionKey) => {

@@ -1,123 +1,89 @@
+// GroupForm.jsx
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
 import Select from "react-select";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { groupAddSchema, groupEditSchema } from "@/lib/validation/group.schema";
 import { saveGroupWithCapabilities, updateGroupWithCapabilities, getCapabilityMatrix } from "@/lib/api/group-api";
 import CapabilityMatrix from "./CapabilityMatrix";
 import toast from "react-hot-toast";
 import ConfirmModal from "../common/ConfirmModal";
 
-const InputField = ({ label, required, error, register, name, type = "text", placeholder, disabled }) => (
-  <div className="space-y-1">
-    <label className="block text-sm font-medium text-gray-700">
-      {label} {required && <span className="text-red-500">*</span>}
-    </label>
-    <input
-      type={type}
-      placeholder={placeholder}
-      disabled={disabled}
-      className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 ${error ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"
-        } ${disabled ? "bg-gray-50 text-gray-500" : ""}`}
-      {...register(name)}
-    />
-    {error && <p className="text-xs text-red-500">{error}</p>}
-  </div>
-);
+// Module-level Static Constants (Computed once when module loads)
+const STATUS_OPTIONS = [
+  { label: "Active", value: "Active" },
+  { label: "Inactive", value: "InActive" },
+];
 
-const TextareaField = ({ label, error, register, name, placeholder }) => (
-  <div className="space-y-1">
-    <label className="block text-sm font-medium text-gray-700">{label}</label>
-    <textarea
-      placeholder={placeholder}
-      rows={4}
-      className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 resize-none ${error ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"
-        }`}
-      {...register(name)}
-    />
-    {error && <p className="text-xs text-red-500">{error}</p>}
-  </div>
-);
+const BASE_DEFAULTS = {
+  groupCode: "",
+  groupName: "",
+  description: "",
+  status: "Active",
+};
 
-const SelectField = ({ label, required, error, control, name, options, placeholder }) => (
-  <div className="space-y-1">
-    <label className="block text-sm font-medium text-gray-700">
-      {label} {required && <span className="text-red-500">*</span>}
-    </label>
-    <Controller
-      name={name}
-      control={control}
-      render={({ field }) => (
-        <Select
-          {...field}
-          options={options}
-          placeholder={placeholder || `Select ${label}`}
-          isClearable={true}
-          isSearchable={required ? true : false}
-          value={options.find((c) => c.value === field.value) || null}
-          onChange={(val) => field.onChange(val ? val.value : "")}
-          classNamePrefix="react-select"
-          styles={{
-            control: (base) => ({
-              ...base,
-              borderColor: error ? '#f87171' : '#d1d5db',
-              borderRadius: '0.5rem',
-              minHeight: '42px',
-              boxShadow: 'none',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              '&:hover': {
-                borderColor: '#9ca3af'
-              }
-            }),
-            option: (base) => ({
-              ...base,
-              fontSize: '0.875rem',
-              cursor: 'pointer'
-            }),
-            singleValue: (base) => ({
-              ...base,
-              fontSize: '0.875rem'
-            }),
-            placeholder: (base) => ({
-              ...base,
-              fontSize: '0.875rem'
-            })
-          }}
-        />
-      )}
-    />
-    {error && <p className="text-xs text-red-500">{error}</p>}
-  </div>
-);
+/** Dynamic Custom Styling for react-select components */
+const customSelectStyles = (error, disabled) => ({
+  control: (base) => ({
+    ...base,
+    borderColor: error ? "#f87171" : "#d1d5db",
+    borderRadius: "0.5rem",
+    minHeight: "42px",
+    backgroundColor: disabled ? "#f9fafb" : "#ffffff",
+    boxShadow: "none",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontSize: "0.875rem",
+    "&:hover": {
+      borderColor: error ? "#f87171" : "#9ca3af",
+    },
+  }),
+  option: (base, state) => ({
+    ...base,
+    fontSize: "0.875rem",
+    cursor: "pointer",
+    backgroundColor: state.isSelected ? "#1565c0" : state.isFocused ? "#eff6ff" : "#ffffff",
+    color: state.isSelected ? "#ffffff" : "#1f2937",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    fontSize: "0.875rem",
+    color: "#1f2937",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    fontSize: "0.875rem",
+    color: "#9ca3af",
+  }),
+});
 
 export default function GroupForm({ mode = "create", defaultValues: initialValues }) {
   const router = useRouter();
+  
+  // Plain variable computation
+  const defaultValues = { ...BASE_DEFAULTS, ...initialValues };
+
+  // State
+  const [formData, setFormData] = useState(defaultValues);
+  const [errors, setErrors] = useState({});
+  const [isDirty, setIsDirty] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const [capabilities, setCapabilities] = useState([]);
   const [selectedCodes, setSelectedCodes] = useState([]);
   const [matrixLoading, setMatrixLoading] = useState(true);
-  const [confirmState, setConfirmState] = useState({ isOpen: false, type: null, data: null });
-
-  const defaultValues = useMemo(() => ({
-    groupCode: "",
-    groupName: "",
-    description: "",
-    status: "Active",
-    ...initialValues,
-  }), [initialValues]);
-
-  const { register, handleSubmit, reset, control, formState: { errors, isDirty } } = useForm({
-    resolver: zodResolver(mode === "create" ? groupAddSchema : groupEditSchema),
-    defaultValues,
-    mode: "onBlur",
+  
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    type: null,
+    data: null,
   });
 
+  // Sync initialValues when prop changes
   useEffect(() => {
-    if (initialValues) reset({ ...defaultValues, ...initialValues });
+    if (initialValues) {
+      setFormData({ ...BASE_DEFAULTS, ...initialValues });
+    }
   }, [initialValues]);
 
   // Load capabilities matrix
@@ -138,21 +104,66 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
         setMatrixLoading(false);
       }
     }
-    // Only load matrix if we are in create mode OR in edit mode and initialValues are ready
     if (mode === "create" || (mode === "edit" && initialValues?.id)) {
       loadMatrix();
     }
   }, [mode, initialValues?.id]);
 
-  const onFormValid = (data) => {
+  // Handle field change
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setIsDirty(true);
+
+    if (errors[name]) {
+      setErrors((prevErrors) => {
+        const copy = { ...prevErrors };
+        delete copy[name];
+        return copy;
+      });
+    }
+  };
+
+  // Validate form using Zod schema
+  const validateForm = () => {
+    const schema = mode === "create" ? groupAddSchema : groupEditSchema;
+    const result = schema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path[0];
+        if (path && !fieldErrors[path]) {
+          fieldErrors[path] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("Please fix the validation errors in the form.");
+      return false;
+    }
+
+    setErrors({});
+    return true;
+  };
+
+  // Pre-submit trigger
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
     if (selectedCodes.length === 0) {
       toast.error("Please select at least one capability");
       return;
     }
-    setConfirmState({ isOpen: true, type: "submit", data });
+
+    setConfirmState({ isOpen: true, type: "submit", data: formData });
   };
 
-  const handleActualSubmit = useCallback(async (data) => {
+  // Actual submit handler (Standard Async Function - no useCallback)
+  const handleActualSubmit = async (data) => {
     try {
       setLoading(true);
       const payload = {
@@ -160,79 +171,129 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
         capabilityCodes: selectedCodes,
       };
 
-      const response = mode === "create"
-        ? await saveGroupWithCapabilities(payload)
-        : await updateGroupWithCapabilities(payload);
+      const response =
+        mode === "create"
+          ? await saveGroupWithCapabilities(payload)
+          : await updateGroupWithCapabilities(payload);
 
       const isSuccess = response?.success === 1 || response?.settings?.success === 1;
       const message = response?.message || response?.settings?.message;
 
       if (isSuccess) {
-        toast.success(mode === "create" ? "Group created successfully!" : "Group updated successfully!");
+        toast.success(
+          mode === "create"
+            ? "Group created successfully!"
+            : "Group updated successfully!"
+        );
         router.push("/group");
       } else {
-        toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} group`);
+        toast.error(
+          message || `Failed to ${mode === "create" ? "create" : "update"} group`
+        );
       }
     } catch (error) {
       toast.error(error?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
-  }, [mode, router, selectedCodes]);
+  };
 
-  const statusOptions = [
-    { label: "Active", value: "Active" },
-    { label: "Inactive", value: "InActive" },
-  ];
+  // Discard handler
+  const handleDiscard = () => {
+    if (isDirty || selectedCodes.length > 0) {
+      setConfirmState({ isOpen: true, type: "discard", data: null });
+    } else {
+      router.back();
+    }
+  };
 
   return (
     <div className="h-full mx-6 overflow-y-auto">
       <form
-        onSubmit={handleSubmit(onFormValid)}
-        className="bg-white rounded-xl p-6 shadow-sm space-y-6"
+        onSubmit={handleFormSubmit}
+        className="bg-white rounded-xl p-6 shadow-sm space-y-6 text-black"
       >
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
             Group Details
           </h2>
+
           <div className="grid md:grid-cols-2 gap-6">
-            <InputField
-              label="Group Code"
-              required
-              name="groupCode"
-              placeholder="e.g. SALES_TEAM"
-              register={register}
-              error={errors.groupCode?.message}
-              disabled={mode === "edit"}
-            />
-            <InputField
-              label="Group Name"
-              required
-              name="groupName"
-              placeholder="Enter group name"
-              register={register}
-              error={errors.groupName?.message}
-            />
-            <div className="md:col-span-2">
-              <TextareaField
-                label="Description"
-                name="description"
-                placeholder="Enter group description (optional)"
-                register={register}
-                error={errors.description?.message}
+            
+            {/* Group Code */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Group Code <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. SALES_TEAM"
+                disabled={mode === "edit"}
+                value={formData.groupCode}
+                onChange={(e) => handleChange("groupCode", e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20
+                  ${errors.groupCode ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
+                  ${mode === "edit" ? "bg-gray-50 text-gray-500 cursor-not-allowed" : "bg-white"}
+                `}
               />
+              {errors.groupCode && <p className="text-xs text-red-500">⚠ {errors.groupCode}</p>}
             </div>
-            <SelectField
-              label="Status"
-              required
-              name="status"
-              control={control}
-              options={statusOptions}
-              error={errors.status?.message}
-            />
+
+            {/* Group Name */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Group Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Enter group name"
+                value={formData.groupName}
+                onChange={(e) => handleChange("groupName", e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                  ${errors.groupName ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
+                `}
+              />
+              {errors.groupName && <p className="text-xs text-red-500">⚠ {errors.groupName}</p>}
+            </div>
+
+            {/* Description */}
+            <div className="md:col-span-2 space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                placeholder="Enter group description (optional)"
+                rows={4}
+                value={formData.description || ""}
+                onChange={(e) => handleChange("description", e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 resize-none bg-white
+                  ${errors.description ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
+                `}
+              />
+              {errors.description && <p className="text-xs text-red-500">⚠ {errors.description}</p>}
+            </div>
+
+            {/* Status (Direct Inline react-select with isClearable) */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Status <span className="text-red-500">*</span>
+              </label>
+              <Select
+                instanceId="select-status"
+                value={STATUS_OPTIONS.find((s) => s.value === formData.status) || null}
+                onChange={(opt) => handleChange("status", opt ? opt.value : "")}
+                options={STATUS_OPTIONS}
+                isClearable={true}
+                isSearchable={false}
+                placeholder="Select Status"
+                classNamePrefix="react-select"
+                styles={customSelectStyles(errors.status)}
+              />
+              {errors.status && <p className="text-xs text-red-500">⚠ {errors.status}</p>}
+            </div>
+
           </div>
         </div>
 
+        {/* Capability Matrix */}
         {matrixLoading ? (
           <div className="py-10 text-center text-sm text-gray-400">
             Loading capability matrix...
@@ -241,20 +302,18 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
           <CapabilityMatrix
             capabilities={capabilities}
             selectedCodes={selectedCodes}
-            onChange={setSelectedCodes}
+            onChange={(codes) => {
+              setSelectedCodes(codes);
+              setIsDirty(true);
+            }}
           />
         )}
 
-        <div className="flex gap-3 justify-center   pt-4">
+        {/* Action Buttons */}
+        <div className="flex gap-3 justify-center pt-4">
           <button
             type="button"
-            onClick={() => {
-              if (isDirty || selectedCodes.length > 0) {
-                setConfirmState({ isOpen: true, type: "discard", data: null });
-              } else {
-                router.back();
-              }
-            }}
+            onClick={handleDiscard}
             className="px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
           >
             Cancel
@@ -270,12 +329,13 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
                 ? "Creating..."
                 : "Updating..."
               : mode === "create"
-                ? "Create Group"
-                : "Update Group"}
+              ? "Create Group"
+              : "Update Group"}
           </button>
         </div>
       </form>
 
+      {/* Confirm Modal */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
         title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}

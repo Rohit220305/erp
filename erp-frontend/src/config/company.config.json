@@ -20,13 +20,15 @@
     { "label": "Added Date", "key": "addedDateFormatted", "type": "text", "searchable": false, "sortable": true }
   ],
   "actions": {
+    "viewRedirectPath": "/company/{id}",
     "header": [
       { "label": "Add Company", "type": "redirect", "path": "/company/add", "permission": "COMPANY_CREATE" }
     ],
     "row": [
-      { "label": "Edit", "type": "editRedirect", "path": "/company/{id}/edit-company", "icon": "Edit", "permission": "COMPANY_UPDATE" },
-      { "label": "View", "type": "viewRedirect", "path": "/company/{id}", "icon": "Eye", "permission": "COMPANY_VIEW" },
-      { "label": "Delete", "type": "deleteModal", "icon": "Trash2", "permission": "COMPANY_DELETE", "danger": true }
+      { "label": "Edit",         "type": "editRedirect", "path": "/company/{id}/edit-company", "icon": "Edit",  "permission": "COMPANY_UPDATE" },
+      { "label": "View",         "type": "viewRedirect", "path": "/company/{id}",               "icon": "Eye",   "permission": "COMPANY_VIEW"   },
+      { "label": "Delete",       "type": "deleteModal",                                         "icon": "Trash2","permission": "COMPANY_DELETE", "danger": true },
+      { "label": "View Details", "type": "viewDrawer" }
     ]
   },
   "searchFields": [

@@ -1,6 +1,5 @@
+// CapabilityMatrix.jsx
 "use client";
-
-import { useMemo } from "react";
 
 // All 7 action columns in display order
 const ACTION_COLUMNS = [
@@ -13,35 +12,34 @@ const ACTION_COLUMNS = [
   // { key: "PRINT",  label: "Print" },
 ];
 
-export default function CapabilityMatrix({ capabilities, selectedCodes, onChange }) {
-  // Group capabilities by moduleName, tracking all 7 action keys
-  const groupedCapabilities = useMemo(() => {
-    const groups = {};
-    capabilities.forEach((cap) => {
-      const mod = cap.moduleName;
-      if (!groups[mod]) {
-        groups[mod] = {
-          moduleName: mod,
-          LIST: null,
-          VIEW: null,
-          CREATE: null,
-          UPDATE: null,
-          DELETE: null,
-          EXPORT: null,
-          PRINT: null,
-          custom: [],
-        };
-      }
-      const actionKey = cap.actionName?.toUpperCase();
-      if (ACTION_COLUMNS.some((c) => c.key === actionKey)) {
-        groups[mod][actionKey] = cap;
-      } else {
-        groups[mod].custom.push(cap);
-      }
-    });
-    return Object.values(groups).sort((a, b) => a.moduleName.localeCompare(b.moduleName));
-  }, [capabilities]);
-
+export default function CapabilityMatrix({ capabilities = [], selectedCodes = [], onChange }) {
+  // Group capabilities by moduleName (Plain variable computation without useMemo)
+  const groups = {};
+  (capabilities || []).forEach((cap) => {
+    const mod = cap.moduleName;
+    if (!groups[mod]) {
+      groups[mod] = {
+        moduleName: mod,
+        LIST: null,
+        VIEW: null,
+        CREATE: null,
+        UPDATE: null,
+        DELETE: null,
+        EXPORT: null,
+        PRINT: null,
+        custom: [],
+      };
+    }
+    const actionKey = cap.actionName?.toUpperCase();
+    if (ACTION_COLUMNS.some((c) => c.key === actionKey)) {
+      groups[mod][actionKey] = cap;
+    } else {
+      groups[mod].custom.push(cap);
+    }
+  });
+  const groupedCapabilities = Object.values(groups).sort((a, b) =>
+    a.moduleName.localeCompare(b.moduleName)
+  );
 
   const handleCheckboxChange = (code, checked) => {
     if (checked) {
@@ -80,7 +78,6 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
     );
   };
 
-
   const capsInColumn = (actionKey) =>
     capabilities.filter((c) => c.actionName?.toUpperCase() === actionKey);
 
@@ -97,7 +94,6 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
       onChange(selectedCodes.filter((c) => !codes.includes(c)));
     }
   };
-
 
   const capsInRow = (group) =>
     ACTION_COLUMNS.map((col) => group[col.key]).filter(Boolean);
@@ -118,41 +114,21 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
-      {/* Card header — unchanged */}
       <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
         <div>
           <h3 className="text-base font-semibold text-gray-800">Capability Matrix</h3>
           <p className="text-xs text-gray-500 mt-0.5">Assign module-level permissions for this role</p>
         </div>
-        {/* <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => onChange(capabilities.map((c) => c.capabilityCode))}
-            className="text-xs text-[#1565c0] hover:underline font-medium cursor-pointer"
-          >
-            Select All
-          </button>
-          <span className="text-gray-300 text-xs">|</span>
-          <button
-            type="button"
-            onClick={() => onChange([])}
-            className="text-xs text-gray-500 hover:underline font-medium cursor-pointer"
-          >
-            Deselect All
-          </button>
-        </div> */}
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-gray-100 bg-gray-50/30">
-              {/* First column — "Select Modules" */}
               <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Select Modules
               </th>
 
-              {/* 7 action columns — header has only the select-all checkbox, label is shown in each cell */}
               {ACTION_COLUMNS.map((col) => (
                 <th
                   key={col.key}
@@ -174,7 +150,6 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
           <tbody className="divide-y divide-gray-100">
             {groupedCapabilities.map((group) => (
               <tr key={group.moduleName} className="hover:bg-gray-50/50 transition">
-                {/* Module name cell — new row-select checkbox prepended */}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     <input
@@ -187,7 +162,6 @@ export default function CapabilityMatrix({ capabilities, selectedCodes, onChange
                   </div>
                 </td>
 
-                {/* 7 action cells — each shows (checkbox) LABEL */}
                 {ACTION_COLUMNS.map((col) => (
                   <td key={col.key} className="px-6 py-4 text-center">
                     {renderCheckbox(group[col.key], col.label)}

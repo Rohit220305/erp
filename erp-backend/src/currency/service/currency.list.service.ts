@@ -1,106 +1,187 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { CurrencyEntity } from '../entity/currency.entity';
-import { ListCurrencyDto, GetCurrencyDto } from '../dto/currency.dto';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
 @Injectable()
 export class CurrencyListService {
-  private readonly logger = new Logger(CurrencyListService.name);
+  constructor(private readonly general: GeneralUtilities) {}
 
-  constructor(
-    @InjectRepository(CurrencyEntity)
-    private readonly currencyRepository: Repository<CurrencyEntity>,
-    private readonly generalUtilities: GeneralUtilities,
-  ) {}
+  @InjectRepository(CurrencyEntity)
+  private currencyRepo: Repository<CurrencyEntity>;
 
-  async startCurrencyList(req: any, body: ListCurrencyDto) {
-    const response = await this.listCurrency(body);
-    if (response.success === 1) return this.finishSuccess(response);
-    return this.finishFailure(response);
+  async startCurrencyDetails(req, params) {
+    const response = await this.getCurrencyDetails(req, params);
+
+    if (response.success == 1) {
+      return await this.finishSuccess(response);
+    } else {
+      return await this.finishFailure(response);
+    }
   }
 
-  private async listCurrency(body: ListCurrencyDto) {
+  async getCurrencyDetails(req, params) {
+    let return_data: any = {};
     try {
-      const {
-        page = 1,
-        limit = 10,
-        search,
-        filters,
-        sortField = 'currencyName',
-        sortOrder = 'DESC',
-        logicalOperator = 'AND',
-      } = body;
+      if (!params?.id) {
+        throw new Error('Currency ID is required');
+      }
 
-      const queryBuilder = this.currencyRepository.createQueryBuilder('currency');
+      const currency = await this.currencyRepo.findOne({
+        where: {
+          id: params.id,
+        },
+      });
+      if (!currency) {
+        throw new Error('Currency not found');
+      }
 
-      if (search) {
+      currency['addedDateFormatted'] = await this.general.dateFormat(
+        currency.createdAt,
+      );
+
+      if (currency.updatedAt) {
+        currency['updatedDateFormatted'] = await this.general.dateFormat(
+          currency.updatedAt,
+        );
+      }
+        return_data = {
+        success: 1,
+        message: 'Data found Successfully.',
+        data: currency,
+      };
+    } catch (err) {
+      return_data = {
+        success: 0,
+        message: err.message,
+      };
+    }
+
+    return return_data;
+  }
+
+  async startCurrencyList(req, params) {
+    const response = await this.getCurrencyList(req, params);
+
+    if (response.success == 1) {
+      return await this.finishSuccess(response);
+    } else {
+      return await this.finishFailure(response);
+    }
+  }
+
+  async getCurrencyList(req, params) {
+    let return_data: any = {};
+
+    try {
+      const page = params?.page ? parseInt(params.page) : 1;
+
+      const limit = params?.limit ? parseInt(params.limit) : 10;
+
+      const skip = (page - 1) * limit;
+
+      const queryBuilder = this.currencyRepo.createQueryBuilder('currency');
+
+      if (params?.search) {
         queryBuilder.andWhere(
-          '(currency.currencyCode LIKE :search OR currency.currencyName LIKE :search)',
-          { search: `%${search}%` },
+          `
+          (
+            currency.currencyCode LIKE :search
+            OR currency.currencyName LIKE :search
+            OR currency.currencySymbol LIKE :search
+          )
+          `,
+          {
+            search: `%${params.search}%`,
+          },
         );
       }
 
-      if (filters && filters.length > 0) {
-        const filterString = this.generalUtilities.makeFilterString(
-          filters,
-          'currency',
-          logicalOperator,
+      const columnMap: Record<string, string> = {
+        currencyCode: 'currency.currencyCode',
+        currencyName: 'currency.currencyName',
+        currencySymbol: 'currency.currencySymbol',
+        status: 'currency.status',
+        id: 'currency.id',
+        addedDateFormatted: 'currency.createdAt',
+      };
+
+      if (params?.filters) {
+        const whereString = await this.general.makeFilterString(
+          params.filters,
+          columnMap,
+          params.logicalOperator,
         );
-        if (filterString) {
-          queryBuilder.andWhere(filterString);
+
+        if (whereString) {
+          queryBuilder.andWhere(whereString);
         }
       }
 
-      queryBuilder.orderBy(`currency.${sortField}`, sortOrder);
-
-      if (limit > 0) {
-        queryBuilder.skip((page - 1) * limit).take(limit);
+      if (params?.sortField && params?.sortOrder && columnMap[params.sortField]) {
+        const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        queryBuilder.orderBy(columnMap[params.sortField], order);
+      } else {
+        queryBuilder.orderBy('currency.currencyName', 'ASC');
       }
+
+      queryBuilder.skip(skip);
+      queryBuilder.take(limit);
 
       const [data, total] = await queryBuilder.getManyAndCount();
 
-      return {
+      for (const currency of data) {
+        currency['addedDateFormatted'] = await this.general.dateFormat(
+          currency.createdAt,
+        );
+
+        if (currency.updatedAt) {
+          currency['updatedDateFormatted'] = await this.general.dateFormat(
+            currency.updatedAt,
+          );
+        }
+      }
+
+      return_data = {
         success: 1,
-        message: 'Currency list fetched successfully',
+        message: 'Currency List fetched successfully',
         data: {
-          items: data,
-          total,
-          page,
-          limit,
+          list: data,
+          pagination: {
+            total,
+            page,
+            limit,
+            total_pages: Math.ceil(total / limit),
+            prevPage: page > 1,
+            nextPage: total > skip + limit,
+          },
         },
       };
-    } catch (error) {
-      this.logger.error('Error fetching currency list', error.stack);
-      return { success: 0, message: 'Failed to fetch currency list' };
+    } catch (err) {
+      return_data = {
+        success: 0,
+        message: err.message,
+      };
     }
+
+    return return_data;
   }
 
-  async startCurrencyDetails(query: GetCurrencyDto) {
-    const response = await this.getCurrency(query.id);
-    if (response.success === 1) return this.finishSuccess(response);
-    return this.finishFailure(response);
+  async finishSuccess(params) {
+    const output: any = {
+      settings: {
+        success: params?.success,
+        message: params?.message,
+        data: params?.data ? params?.data : [],
+      },
+    };
+
+    return output;
   }
 
-  private async getCurrency(id: number) {
-    try {
-      const currency = await this.currencyRepository.findOne({ where: { id } });
-      if (!currency) {
-        return { success: 0, message: 'Currency not found' };
-      }
-      return { success: 1, message: 'Currency details fetched successfully', data: currency };
-    } catch (error) {
-      this.logger.error('Error fetching currency details', error.stack);
-      return { success: 0, message: 'Failed to fetch currency details' };
-    }
-  }
-
-  private finishSuccess(response: any) {
-    return { success: 1, message: response.message, data: response.data };
-  }
-
-  private finishFailure(response: any) {
-    return { success: 0, message: response.message };
+  async finishFailure(params) {
+    return params;
   }
 }

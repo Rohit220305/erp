@@ -5,7 +5,7 @@ import CellRenderer from "@/components/core/dynamic-ui/CellRenderer";
 import { useListing } from "@/context/ListingContext";
 import { FiChevronUp, FiChevronDown } from "react-icons/fi";
 
-export default function DynamicTableView({ data, config, onRowAction, loading = false, setSelectedItemForDetails }) {
+export default function DynamicTableView({ data, config, onRowAction, loading = false, setSelectedItemForDetails, renderTableRow }) {
   const columns = config?.columns || [];
   const { sortField, sortOrder, setSort, columnFilters, setColumnFilters } = useListing();
 
@@ -129,29 +129,34 @@ export default function DynamicTableView({ data, config, onRowAction, loading = 
                 </td>
               </tr>
             ) : (
-              data.map((item, rowIndex) => (
-                <tr
-                  key={item.id || rowIndex}
-                  className="border-b border-gray-100 hover:bg-gray-50"
-                >
-                  {tableColumns.map((col, colIndex) => {
-                    return (
-                      <td key={colIndex} className="px-4 py-3 text-sm">
-                        <CellRenderer 
-                          item={item} 
-                          company={item} 
-                          column={col} 
-                          config={config} 
-                          companyConfig={config} 
-                          onRowAction={onRowAction}
-                          setSelectedItemForDetails={setSelectedItemForDetails}
-                          setSelectedCompanyForDetails={setSelectedItemForDetails} 
-                        />
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))
+              data.map((item, rowIndex) =>
+                renderTableRow
+                  ? (
+                    <React.Fragment key={item.id || rowIndex}>
+                      {renderTableRow(item, onRowAction, setSelectedItemForDetails)}
+                    </React.Fragment>
+                  )
+                  : (
+                    <tr
+                      key={item.id || rowIndex}
+                      className="border-b border-gray-100 hover:bg-gray-50"
+                    >
+                      {tableColumns.map((col, colIndex) => {
+                        return (
+                          <td key={colIndex} className="px-4 py-3 text-sm">
+                            <CellRenderer 
+                              item={item} 
+                              column={col} 
+                              config={config} 
+                              onRowAction={onRowAction}
+                              setSelectedItemForDetails={setSelectedItemForDetails}
+                            />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  )
+              )
             )}
           </tbody>
         </table>

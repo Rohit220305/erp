@@ -37,8 +37,8 @@ export class CurrencyController {
 
   @RequirePermission('CURRENCY_VIEW')
   @Get('get-currency')
-  async getCurrency(@Query() query: GetCurrencyDto) {
-    return await this.currencyListService.startCurrencyDetails(query);
+  async getCurrency(@Req() req, @Query() query: GetCurrencyDto) {
+    return await this.currencyListService.startCurrencyDetails(req, query);
   }
 
   @RequirePermission('CURRENCY_LIST')

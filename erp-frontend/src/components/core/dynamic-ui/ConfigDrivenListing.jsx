@@ -1,6 +1,7 @@
+// ConfigDrivenListing.jsx
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import DynamicListing from "@/components/listing/DynamicListing";
 import CellRenderer from "./CellRenderer";
 import ActionRenderer from "./ActionRenderer";
@@ -17,14 +18,11 @@ export default function ConfigDrivenListing({
   const { can } = useAuth();
   const router = useRouter();
 
-  // Dynamically append an "Actions" column if there are row actions defined
-  const columns = useMemo(() => {
-    const cols = [...(config.columns || [])];
-    if (config.actions?.row?.length > 0) {
-      cols.push({ label: "Actions", key: "actions", type: "actions" });
-    }
-    return cols;
-  }, [config.columns, config.actions]);
+  // Plain variable computation for columns (no useMemo needed)
+  const columns = [...(config?.columns || [])];
+  if (config?.actions?.row?.length > 0) {
+    columns.push({ label: "Actions", key: "actions", type: "actions" });
+  }
 
   // Create the generic renderCell function
   const renderCell = (item, key) => {
@@ -44,25 +42,23 @@ export default function ConfigDrivenListing({
     return <CellRenderer item={item} column={column} />;
   };
 
-  // Resolve header action
-  const headerAction = useMemo(() => {
-    const headerConfigActions = config.actions?.header || [];
-    if (headerConfigActions.length === 0) return null;
+  // Plain variable computation for headerAction (no useMemo needed)
+  const headerConfigActions = config?.actions?.header || [];
+  const primaryHeaderAction = headerConfigActions[0];
+  const canDoHeaderAction =
+    primaryHeaderAction && (!primaryHeaderAction.permission || can(primaryHeaderAction.permission));
 
-    const action = headerConfigActions[0]; // Assuming one primary header action for now
-    if (action.permission && !can(action.permission)) return null;
+  const headerAction = canDoHeaderAction
+    ? {
+        label: primaryHeaderAction.label,
+        onClick: () => {
+          if (primaryHeaderAction.type === "redirect" && primaryHeaderAction.path) {
+            router.push(primaryHeaderAction.path);
+          }
+        },
+      }
+    : null;
 
-    return {
-      label: action.label,
-      onClick: () => {
-        if (action.type === "redirect" && action.path) {
-          router.push(action.path);
-        }
-      },
-    };
-  }, [config.actions, can, router]);
-
-  // Construct the new config for DynamicListing (to support search/filters correctly)
   const dynamicConfig = {
     title: config.title,
     columns,

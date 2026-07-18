@@ -5,23 +5,21 @@ import { ChevronDown, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-// import companyConfig from "@/config/company.config.json";
-import CellRenderer from "@/components/core/dynamic-ui/CellRenderer";
 import { resolvePath } from "@/components/core/dynamic-ui/utils/pathResolver";
 
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 
-export default function CompanyListCard({ company, companyConfig, setSelectedCompanyForDetails }) {
+export default function CompanyListCard({ item, config, setSelectedItemForDetails }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const router = useRouter();
   const { can } = useAuth();
 
-  const config = companyConfig.listCard;
-  if (!config) return null;
+  const listConfig = config.listCard;
+  if (!listConfig) return null;
 
-  const logoUrl = resolvePath(company, config.primary.image);
-  const title = resolvePath(company, config.primary.title);
-  const subtitle = resolvePath(company, config.primary.subtitle);
+  const logoUrl = resolvePath(item, listConfig.primary.image);
+  const title = resolvePath(item, listConfig.primary.title);
+  const subtitle = resolvePath(item, listConfig.primary.subtitle);
 
   return (
     <div className=" mx-2 my-2">
@@ -33,7 +31,7 @@ export default function CompanyListCard({ company, companyConfig, setSelectedCom
             </p>
             <div className="flex items-center gap-3">
               <SharedImageZoom
-                id={`company-list-${company.id}`}
+                id={`company-list-${item.id}`}
                 src={logoUrl}
                 alt={title}
                 placeholderText={<Building2 size={18} />}
@@ -41,9 +39,9 @@ export default function CompanyListCard({ company, companyConfig, setSelectedCom
                 modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"
               />
               <div className="min-w-0">
-                {can(companyConfig.permissions?.view || "COMPANY_VIEW") ? (
+                {can(config.permissions?.view || "COMPANY_VIEW") ? (
                   <span
-                    onClick={() => setSelectedCompanyForDetails && setSelectedCompanyForDetails(company)}
+                    onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
                     className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-semibold text-sm truncate"
                   >
                     {title || "—"}
@@ -61,18 +59,13 @@ export default function CompanyListCard({ company, companyConfig, setSelectedCom
           </div>
 
           {/* Configurable Columns - all equal width */}
-          {config.columns.map((col, idx) => (
+          {listConfig.columns.map((col, idx) => (
             <div key={idx} className="flex-1 ms-5 min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                 {col.label}
               </p>
               <div className="text-[13px] text-gray-800 font-medium truncate">
-                {/* <CellRenderer
-                  company={company}
-                  column={col}
-                  companyConfig={companyConfig}
-                /> */}
-                {company[col.key] || "—"}
+                {item[col.key] || "—"}
               </div>
             </div>
           ))}
@@ -95,13 +88,13 @@ export default function CompanyListCard({ company, companyConfig, setSelectedCom
           }`}
         >
           <div className="px-6 py-5 flex items-start bg-white">
-            {config.expanded.map((col, idx) => (
+            {listConfig.expanded.map((col, idx) => (
               <div key={idx} className="flex-1 min-w-0">
                 <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                   {col.label}
                 </p>
                 <p className="text-[13px] text-gray-800 font-medium truncate">
-                  {company[col.key] || "—"}
+                  {item[col.key] || "—"}
                 </p>
               </div>
             ))}

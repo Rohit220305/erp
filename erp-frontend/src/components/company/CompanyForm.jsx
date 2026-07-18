@@ -1,10 +1,8 @@
 // CompanyForm.jsx
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useWatch, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
 import {
@@ -12,12 +10,8 @@ import {
   Camera,
   X,
   MapPin,
-  Phone,
-  User,
   Briefcase,
-  Globe,
-  Hash,
-  FileText,
+  User,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -29,179 +23,7 @@ import { listCompanies } from "@/lib/api/company-api";
 import { useAuth } from "@/context/AuthContext";
 import ConfirmModal from "../common/ConfirmModal";
 
-//  Field Components 
-
-const InputField = ({
-  label,
-  required,
-  error,
-  register,
-  name,
-  type = "text",
-  placeholder,
-  disabled,
-}) => (
-  <div className="space-y-1.5">
-    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-      {label}
-      {required && <span className="text-red-400 ml-1">*</span>}
-    </label>
-    <input
-      type={type}
-      placeholder={placeholder}
-      disabled={disabled}
-      className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-        focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-        ${error ? "border-red-400 bg-red-50" : "border-gray-200"}
-        ${disabled ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white hover:border-gray-300"}
-      `}
-      {...register(name)}
-    />
-    {error && (
-      <p className="text-xs text-red-500 flex items-center gap-1">⚠ {error}</p>
-    )}
-  </div>
-);
-
-const SelectField = ({
-  label,
-  required,
-  error,
-  control,
-  name,
-  options = [],
-  placeholder,
-  disabled,
-}) => (
-  <div className="space-y-1.5">
-    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-      {label}
-      {required && <span className="text-red-400 ml-1">*</span>}
-    </label>
-    <Controller
-      name={name}
-      control={control}
-      render={({ field }) => (
-        <Select
-          {...field}
-          isDisabled={disabled}
-          options={options}
-          placeholder={placeholder || `Select ${label}`}
-          isClearable={true}
-          isSearchable={required ? true : false}
-          value={options.find((c) => String(c.value) === String(field.value)) || null}
-          onChange={(val) => field.onChange(val ? val.value : "")}
-          classNamePrefix="react-select"
-          styles={{
-            control: (base) => ({
-              ...base,
-              borderColor: error ? '#f87171' : '#e5e7eb',
-              borderRadius: '0.5rem',
-              minHeight: '42px',
-              backgroundColor: disabled ? '#f9fafb' : '#ffffff',
-              boxShadow: 'none',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              '&:hover': {
-                borderColor: '#d1d5db'
-              }
-            }),
-            option: (base) => ({
-              ...base,
-              fontSize: '0.875rem',
-              cursor: 'pointer'
-            }),
-            singleValue: (base) => ({
-              ...base,
-              fontSize: '0.875rem'
-            }),
-            placeholder: (base) => ({
-              ...base,
-              fontSize: '0.875rem'
-            })
-          }}
-        />
-      )}
-    />
-    {error && (
-      <p className="text-xs text-red-500 flex items-center gap-1">⚠ {error}</p>
-    )}
-  </div>
-);
-
-
-const PhoneField = ({
-  label,
-  required,
-  error,
-  register,
-  control,
-  name,
-  dialCodeName,
-  dialCodeOptions = [],
-}) => (
-  <div className="space-y-1.5">
-    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-      {label}
-      {required && <span className="text-red-400 ml-1">*</span>}
-    </label>
-    <div className="flex gap-2">
-      <Controller
-        name={dialCodeName}
-        control={control}
-        render={({ field }) => (
-          <Select
-            {...field}
-            options={dialCodeOptions}
-            isSearchable={true}
-            value={dialCodeOptions.find((c) => String(c.value) === String(field.value)) || null}
-            onChange={(val) => field.onChange(val ? val.value : "")}
-            classNamePrefix="react-select"
-            styles={{
-              control: (base) => ({
-                ...base,
-                borderColor: error ? '#f87171' : '#e5e7eb',
-                borderRadius: '0.5rem',
-                minHeight: '42px',
-                width: '120px',
-                boxShadow: 'none',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-              }),
-              option: (base) => ({
-                ...base,
-                fontSize: '0.875rem',
-                cursor: 'pointer'
-              }),
-              singleValue: (base) => ({
-                ...base,
-                fontSize: '0.875rem'
-              }),
-              placeholder: (base) => ({
-                ...base,
-                fontSize: '0.875rem'
-              })
-            }}
-          />
-        )}
-      />
-      <input
-        type="tel"
-        placeholder="Enter phone number"
-        className={`flex-1 px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-          focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-          ${error ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"} bg-white
-        `}
-        {...register(name)}
-      />
-    </div>
-    {error && (
-      <p className="text-xs text-red-500 flex items-center gap-1">⚠ {error}</p>
-    )}
-  </div>
-);
-
-/** Section header with icon */
+/** Section header component */
 const SectionHeader = ({
   icon: Icon,
   title,
@@ -220,10 +42,89 @@ const SectionHeader = ({
   </div>
 );
 
-
+// Module-level Static Lookups & Options (Computed once when module loads)
 const ALL_COUNTRIES = Country.getAllCountries();
 const findCountryByName = (name) => ALL_COUNTRIES.find((c) => c.name === name);
 
+const COUNTRY_OPTIONS = ALL_COUNTRIES.map((c) => ({
+  label: c.name,
+  value: c.name,
+}));
+
+const STATUS_OPTIONS = [
+  { label: "Active", value: "Active" },
+  { label: "InActive", value: "InActive" },
+];
+
+const DIAL_CODE_OPTIONS = (() => {
+  const seen = new Set();
+  return ALL_COUNTRIES.filter((c) => c.phonecode).reduce((acc, c) => {
+    const val = `+${c.phonecode}`;
+    if (!seen.has(val)) {
+      seen.add(val);
+      acc.push({ label: val, value: val });
+    }
+    return acc;
+  }, []);
+})();
+
+const BASE_DEFAULTS = {
+  companyName: "",
+  parentCompanyId: "",
+  shortName: "",
+  companyCode: "",
+  legalName: "",
+  registrationNumber: "",
+  taxNumber: "",
+  website: "",
+  email: "",
+  dialCode: "+91",
+  phone: "",
+  addressLine1: "",
+  addressLine2: "",
+  country: "",
+  state: "",
+  city: "",
+  zipCode: "",
+  contactPersonName: "",
+  contactPersonEmail: "",
+  contactPersonPhone: "",
+  status: "Active",
+};
+
+/** Dynamic Custom Styling for react-select components */
+const customSelectStyles = (error, disabled) => ({
+  control: (base) => ({
+    ...base,
+    borderColor: error ? "#f87171" : "#e5e7eb",
+    borderRadius: "0.5rem",
+    minHeight: "42px",
+    backgroundColor: disabled ? "#f9fafb" : "#ffffff",
+    boxShadow: "none",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontSize: "0.875rem",
+    "&:hover": {
+      borderColor: error ? "#f87171" : "#d1d5db",
+    },
+  }),
+  option: (base, state) => ({
+    ...base,
+    fontSize: "0.875rem",
+    cursor: "pointer",
+    backgroundColor: state.isSelected ? "#1565c0" : state.isFocused ? "#eff6ff" : "#ffffff",
+    color: state.isSelected ? "#ffffff" : "#1f2937",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    fontSize: "0.875rem",
+    color: "#1f2937",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    fontSize: "0.875rem",
+    color: "#9ca3af",
+  }),
+});
 
 export default function CompanyForm({
   mode = "create",
@@ -234,65 +135,56 @@ export default function CompanyForm({
   const router = useRouter();
   const fileInputRef = useRef(null);
   const user = useAuth();
-  //  State 
+
+  // Plain variable computation (no useMemo needed)
+  const initialData = { ...BASE_DEFAULTS, ...externalDefaults };
+  const parentCompanyOptions = (parentCompaniesProp || []).map((c) => ({
+    label: c.companyName,
+    value: c.id,
+  }));
+
+  // State
+  const [formData, setFormData] = useState(initialData);
+  const [errors, setErrors] = useState({});
+  const [isDirty, setIsDirty] = useState(false);
   const [loading, setLoading] = useState(false);
+  
   const [parentCompanies, setParentCompanies] = useState(
-    parentCompaniesProp ?? [],
+    parentCompaniesProp ?? []
   );
   const [parentLoading, setParentLoading] = useState(false);
+
   const [stateOptions, setStateOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
+
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(
-    externalDefaults?.logoUrl || null,
+    externalDefaults?.logoUrl || null
   );
-  const [confirmState, setConfirmState] = useState({ isOpen: false, type: null, data: null });
-  const isInitialMount = useRef(true);
 
-  // Form defaults 
-  const baseDefaults = {
-    companyName: "",
-    parentCompanyId: "",
-    shortName: "",
-    legalName: "",
-    registrationNumber: "",
-    taxNumber: "",
-    website: "",
-    email: "",
-    dialCode: "+91",
-    phone: "",
-    addressLine1: "",
-    addressLine2: "",
-    country: "",
-    state: "",
-    city: "",
-    zipCode: "",
-    contactPersonName: "",
-    contactPersonEmail: "",
-    contactPersonPhone: "",
-    status: "Active",
-  };
-  const mergedDefaults = { ...baseDefaults, ...externalDefaults };
-
-  //  React Hook Form 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    control,
-    setValue,
-    formState: { errors, isDirty },
-  } = useForm({
-    resolver: zodResolver(
-      mode === "create" ? companyAddSchema : companyEditSchema,
-    ),
-    defaultValues: mergedDefaults,
-    mode: "onBlur",
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    type: null,
+    data: null,
   });
 
-  const watchedCountry = useWatch({ control, name: "country" });
-  const watchedState = useWatch({ control, name: "state" });
-  // (client-side on add page) 
+  const isInitialMount = useRef(true);
+
+  // Sync initialData if externalDefaults changes (using serialized deps to prevent infinite loops)
+  const serializedDefaults = externalDefaults ? JSON.stringify(externalDefaults) : null;
+  useEffect(() => {
+    if (externalDefaults) {
+      setFormData({
+        ...BASE_DEFAULTS,
+        ...externalDefaults,
+      });
+      if (externalDefaults.logoUrl) {
+        setLogoPreview(externalDefaults.logoUrl);
+      }
+    }
+  }, [serializedDefaults]);
+
+  // Fetch Parent Companies (if not provided as prop)
   useEffect(() => {
     if (parentCompaniesProp && parentCompaniesProp.length > 0) return;
     let cancelled = false;
@@ -316,86 +208,75 @@ export default function CompanyForm({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [parentCompaniesProp, mode, externalDefaults?.id]);
 
-  //  Memoised options 
-  const countryOptions = useMemo(
-    () => ALL_COUNTRIES.map((c) => ({ label: c.name, value: c.name })),
-    [],
-  );
-
-  const dialCodeOptions = useMemo(() => {
-    const seen = new Set();
-    return ALL_COUNTRIES.filter((c) => c.phonecode).reduce((acc, c) => {
-      const val = `+${c.phonecode}`;
-      if (!seen.has(val)) {
-        seen.add(val);
-        acc.push({ label: val, value: val });
-      }
-      return acc;
-    }, []);
-  }, []);
-
-  //  Effect: country → states + auto dial code 
+  // Effect: country → states + auto dial code
   useEffect(() => {
-    if (!watchedCountry) {
+    if (!formData.country) {
       setStateOptions([]);
       setCityOptions([]);
       return;
     }
-    const countryObj = findCountryByName(watchedCountry);
+    const countryObj = findCountryByName(formData.country);
     if (!countryObj) {
       setStateOptions([]);
       setCityOptions([]);
       return;
     }
 
-    setStateOptions(
-      State.getStatesOfCountry(countryObj.isoCode).map((s) => ({
-        label: s.name,
-        value: s.name,
-        isoCode: s.isoCode,
-      })),
-    );
+    const states = State.getStatesOfCountry(countryObj.isoCode).map((s) => ({
+      label: s.name,
+      value: s.name,
+      isoCode: s.isoCode,
+    }));
+    setStateOptions(states);
     setCityOptions([]);
 
     // Auto-update dial code when country changes
     if (countryObj.phonecode) {
-      setValue("dialCode", `+${countryObj.phonecode}`, {
-        shouldValidate: false,
-      });
+      setFormData((prev) => ({
+        ...prev,
+        dialCode: `+${countryObj.phonecode}`,
+      }));
     }
 
     if (!isInitialMount.current) {
-      setValue("state", "", { shouldValidate: false });
-      setValue("city", "", { shouldValidate: false });
+      setFormData((prev) => ({
+        ...prev,
+        state: "",
+        city: "",
+      }));
     }
-  }, [watchedCountry]);
+  }, [formData.country]);
 
-  //  Effect: state → cities 
+  // Effect: state → cities
   useEffect(() => {
-    if (!watchedState || !watchedCountry) {
+    if (!formData.state || !formData.country) {
       setCityOptions([]);
       return;
     }
-    const countryObj = findCountryByName(watchedCountry);
-    const stateObj = stateOptions.find((s) => s.value === watchedState);
+    const countryObj = findCountryByName(formData.country);
+    const stateObj = stateOptions.find((s) => s.value === formData.state);
     if (!countryObj || !stateObj?.isoCode) {
       setCityOptions([]);
       return;
     }
 
-    setCityOptions(
-      City.getCitiesOfState(countryObj.isoCode, stateObj.isoCode).map((c) => ({
-        label: c.name,
-        value: c.name,
-      })),
-    );
-    if (!isInitialMount.current)
-      setValue("city", "", { shouldValidate: false });
-  }, [watchedState, stateOptions]);
+    const cities = City.getCitiesOfState(countryObj.isoCode, stateObj.isoCode).map((c) => ({
+      label: c.name,
+      value: c.name,
+    }));
+    setCityOptions(cities);
 
-  //  Mark initial mount done 
+    if (!isInitialMount.current) {
+      setFormData((prev) => ({
+        ...prev,
+        city: "",
+      }));
+    }
+  }, [formData.state, formData.country, stateOptions]);
+
+  // Mark initial mount done
   useEffect(() => {
     const t = setTimeout(() => {
       isInitialMount.current = false;
@@ -403,13 +284,31 @@ export default function CompanyForm({
     return () => clearTimeout(t);
   }, []);
 
-  //  Logo handlers 
+  // Handle Field Value Change
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setIsDirty(true);
+
+    // Clear error for field on change
+    if (errors[name]) {
+      setErrors((prevErrors) => {
+        const copy = { ...prevErrors };
+        delete copy[name];
+        return copy;
+      });
+    }
+  };
+
+  // Handle Logo File Selection
   const handleLogoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (
       !["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
-        file.type,
+        file.type
       )
     ) {
       toast.error("Only JPG, PNG, or WEBP images are allowed");
@@ -421,53 +320,83 @@ export default function CompanyForm({
     }
     setLogoFile(file);
     setLogoPreview(URL.createObjectURL(file));
+    setIsDirty(true);
   };
 
+  // Remove Logo
   const removeLogo = () => {
     setLogoFile(null);
     setLogoPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    setIsDirty(true);
   };
 
-  const statusOptions = [
-    { label: "Active", value: "Active" },
-    { label: "InActive", value: "InActive" },
-  ];
+  // Form Validation
+  const validateForm = () => {
+    const schema = mode === "create" ? companyAddSchema : companyEditSchema;
+    const result = schema.safeParse(formData);
 
-  // Submit 
-  const onFormValid = (data) => setConfirmState({ isOpen: true, type: "submit", data });
+    if (!result.success) {
+      const fieldErrors = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path[0];
+        if (path && !fieldErrors[path]) {
+          fieldErrors[path] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("Please fix the validation errors in the form.");
+      return false;
+    }
 
+    setErrors({});
+    return true;
+  };
+
+  // Pre-Submit Trigger
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      setConfirmState({ isOpen: true, type: "submit", data: formData });
+    }
+  };
+
+  // Actual Submission Handler
   const handleActualSubmit = async (data) => {
-    data.companyName = data.companyName.trim();
-    data.shortName = data.shortName.trim();
-    data.legalName = data.legalName?.trim() ?? "";
-    data.email = data.email.trim().toLowerCase();
+    const payload = { ...data };
+    payload.companyName = payload.companyName.trim();
+    payload.shortName = payload.shortName.trim();
+    payload.legalName = payload.legalName?.trim() ?? "";
+    payload.email = payload.email.trim().toLowerCase();
 
-    if (!data.companyCode) {
-      data.companyCode =
-        data.shortName
+    if (!payload.companyCode) {
+      payload.companyCode =
+        payload.shortName
           .toUpperCase()
           .replace(/[^A-Z0-9]+/g, "_")
           .replace(/^_|_$/g, "") + Date.now().toString().slice(-3);
     }
 
-    if (!data.parentCompanyId) {
-      delete data.parentCompanyId;
+    if (!payload.parentCompanyId) {
+      delete payload.parentCompanyId;
     } else {
-      data.parentCompanyId = Number(data.parentCompanyId);
+      payload.parentCompanyId = Number(payload.parentCompanyId);
     }
 
-    mode === "create"
-      ? (data.createdBy = user?.user?.id)
-      : (data.updatedBy = user?.user?.id);
+    if (mode === "create") {
+      payload.createdBy = user?.user?.id;
+    } else {
+      payload.updatedBy = user?.user?.id;
+    }
+
     try {
       setLoading(true);
-      const res = await submitFn(data, logoFile || null);
+      const res = await submitFn(payload, logoFile || null);
 
       if (res?.success === 0) {
         toast.error(
           res.message ||
-          `Failed to ${mode === "create" ? "create" : "update"} company`,
+            `Failed to ${mode === "create" ? "create" : "update"} company`
         );
         return;
       }
@@ -475,25 +404,43 @@ export default function CompanyForm({
       toast.success(
         mode === "create"
           ? "Company created successfully"
-          : "Company updated successfully",
+          : "Company updated successfully"
       );
       router.push("/company");
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-        error?.message ||
-        `Failed to ${mode === "create" ? "create" : "update"} company`,
+          error?.message ||
+          `Failed to ${mode === "create" ? "create" : "update"} company`
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // Discard Action Handler
+  const handleDiscard = () => {
+    if (isDirty) {
+      setConfirmState({ isOpen: true, type: "discard", data: null });
+    } else {
+      router.back();
+    }
+  };
+
+  // Options for parent companies fetched from state or prop
+  const activeParentCompanyOptions = (parentCompanies || []).map((c) => ({
+    label: c.companyName,
+    value: c.id,
+  }));
+
   return (
-    <div className="h-full overflow-y-scroll  mx-6">
-      <form onSubmit={handleSubmit(onFormValid)} className="space-y-5 text-black">
+    <div className="h-full overflow-y-scroll mx-6">
+      <form onSubmit={handleFormSubmit} className="space-y-5 text-black">
+        
+        {/* Top Section: Logo Card + Company Details Card */}
         <div className="grid lg:grid-cols-[260px_1fr] gap-5">
-          {/* Logo Card */}
+          
+          {/* ── 1. Logo Card ────────────────────────────────────────── */}
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <SectionHeader icon={Building2} title="Company Logo" />
 
@@ -508,9 +455,9 @@ export default function CompanyForm({
                 ) : (
                   <div
                     className="w-28 h-28 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50
-                  border-2 border-dashed border-blue-200 flex flex-col items-center
-                  justify-center text-blue-300 gap-1.5 cursor-pointer hover:border-blue-400
-                  transition-colors"
+                    border-2 border-dashed border-blue-200 flex flex-col items-center
+                    justify-center text-blue-300 gap-1.5 cursor-pointer hover:border-blue-400
+                    transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Building2 size={32} />
@@ -570,111 +517,245 @@ export default function CompanyForm({
             </div>
           </div>
 
-          {/* Company Details Card */}
+          {/* ── 2. Company Details Card ─────────────────────────────── */}
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <SectionHeader icon={Briefcase} title="Company Details" />
 
             <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
-              <InputField
-                label="Company Name"
-                required
-                error={errors.companyName?.message}
-                register={register}
-                name="companyName"
-                placeholder="Enter company name"
-              />
+              
+              {/* Company Name */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Company Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter company name"
+                  value={formData.companyName}
+                  onChange={(e) => handleChange("companyName", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.companyName ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.companyName && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.companyName}
+                  </p>
+                )}
+              </div>
 
-              {/* Parent Company */}
-              <SelectField
-                label="Parent Company"
-                control={control}
-                name="parentCompanyId"
-                options={parentCompanies.map((c) => ({
-                  label: c.companyName,
-                  value: c.id,
-                }))}
-                placeholder={parentLoading ? "Loading…" : "None (Top-level)"}
-                disabled={parentLoading}
-                error={errors.parentCompanyId?.message}
-              />
+              {/* Direct Inline Select: Parent Company */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Parent Company
+                </label>
+                <Select
+                  instanceId="select-parentCompanyId"
+                  value={activeParentCompanyOptions.find((c) => String(c.value) === String(formData.parentCompanyId)) || null}
+                  onChange={(opt) => handleChange("parentCompanyId", opt ? opt.value : "")}
+                  options={activeParentCompanyOptions}
+                  isDisabled={parentLoading}
+                  isClearable={true}
+                  isSearchable={true}
+                  placeholder={parentLoading ? "Loading…" : "None (Top-level)"}
+                  classNamePrefix="react-select"
+                  styles={customSelectStyles(errors.parentCompanyId, parentLoading)}
+                />
+                {errors.parentCompanyId && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.parentCompanyId}
+                  </p>
+                )}
+              </div>
 
-              <InputField
-                label="Short Name"
-                required
-                error={errors.shortName?.message}
-                register={register}
-                name="shortName"
-                placeholder="e.g. ACME"
-              />
+              {/* Short Name */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Short Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. ACME"
+                  value={formData.shortName}
+                  onChange={(e) => handleChange("shortName", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.shortName ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.shortName && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.shortName}
+                  </p>
+                )}
+              </div>
 
-              <InputField
-                label="Company Code"
-                error={errors.companyCode?.message}
-                register={register}
-                name="companyCode"
-                placeholder="Auto-generated or enter custom code"
-                disabled={mode === "edit"}
-              />
+              {/* Company Code */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Company Code
+                </label>
+                <input
+                  type="text"
+                  placeholder="Auto-generated or enter custom code"
+                  disabled={mode === "edit"}
+                  value={formData.companyCode}
+                  onChange={(e) => handleChange("companyCode", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                    ${mode === "edit" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white hover:border-gray-300"}
+                    ${errors.companyCode ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.companyCode && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.companyCode}
+                  </p>
+                )}
+              </div>
 
-              <InputField
-                label="Legal Name"
-                error={errors.legalName?.message}
-                register={register}
-                name="legalName"
-                placeholder="Full legal / registered name"
-              />
+              {/* Legal Name */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Legal Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Full legal / registered name"
+                  value={formData.legalName}
+                  onChange={(e) => handleChange("legalName", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.legalName ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.legalName && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.legalName}
+                  </p>
+                )}
+              </div>
 
-              <InputField
-                label="Registration Number"
-                error={errors.registrationNumber?.message}
-                register={register}
-                name="registrationNumber"
-                placeholder="Enter registration number"
-              />
+              {/* Registration Number */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Registration Number
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter registration number"
+                  value={formData.registrationNumber}
+                  onChange={(e) => handleChange("registrationNumber", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.registrationNumber ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.registrationNumber && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.registrationNumber}
+                  </p>
+                )}
+              </div>
 
-              <InputField
-                label="Tax Number (GST / VAT)"
-                error={errors.taxNumber?.message}
-                register={register}
-                name="taxNumber"
-                placeholder="Enter tax number"
-              />
+              {/* Tax Number */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Tax Number (GST / VAT)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter tax number"
+                  value={formData.taxNumber}
+                  onChange={(e) => handleChange("taxNumber", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.taxNumber ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.taxNumber && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.taxNumber}
+                  </p>
+                )}
+              </div>
 
-              <InputField
-                label="Website"
-                error={errors.website?.message}
-                register={register}
-                name="website"
-                placeholder="https://example.com"
-                type="text"
-              />
+              {/* Website */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Website
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://example.com"
+                  value={formData.website}
+                  onChange={(e) => handleChange("website", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.website ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.website && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.website}
+                  </p>
+                )}
+              </div>
 
-              <InputField
-                label="Company Email"
-                required
-                error={errors.email?.message}
-                register={register}
-                name="email"
-                placeholder="company@example.com"
-                type="email"
-              />
+              {/* Company Email */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Company Email <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="email"
+                  placeholder="company@example.com"
+                  value={formData.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.email ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.email && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.email}
+                  </p>
+                )}
+              </div>
 
-              <SelectField
-                label="Status"
-                required
-                error={errors.status?.message}
-                control={control}
-                name="status"
-                options={statusOptions}
-                placeholder="Select Status"
-              />
+              {/* Direct Inline Select: Status */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Status <span className="text-red-400">*</span>
+                </label>
+                <Select
+                  instanceId="select-status"
+                  value={STATUS_OPTIONS.find((s) => s.value === formData.status) || null}
+                  onChange={(opt) => handleChange("status", opt ? opt.value : "")}
+                  options={STATUS_OPTIONS}
+                  isClearable={true}
+                  isSearchable={false}
+                  placeholder="Select Status"
+                  classNamePrefix="react-select"
+                  styles={customSelectStyles(errors.status)}
+                />
+                {errors.status && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.status}
+                  </p>
+                )}
+              </div>
+
             </div>
           </div>
         </div>
 
-        {/*  Address and Contact */}
+        {/* Bottom Section: Address Card + Contact Person Card */}
         <div className="grid lg:grid-cols-2 gap-5">
-          {/* Address Card */}
+          
+          {/* ── 3. Address Card ─────────────────────────────────────── */}
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <SectionHeader
               icon={MapPin}
@@ -684,95 +765,201 @@ export default function CompanyForm({
             />
 
             <div className="space-y-5">
+              
               <div className="grid grid-cols-2 gap-4">
-                <InputField
-                  label="Address Line 1"
-                  required
-                  error={errors.addressLine1?.message}
-                  register={register}
-                  name="addressLine1"
-                  placeholder="Street / building"
-                />
-                <InputField
-                  label="Address Line 2"
-                  error={errors.addressLine2?.message}
-                  register={register}
-                  name="addressLine2"
-                  placeholder="Area / landmark (optional)"
-                />
+                {/* Address Line 1 */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Address Line 1 <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Street / building"
+                    value={formData.addressLine1}
+                    onChange={(e) => handleChange("addressLine1", e.target.value)}
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                      ${errors.addressLine1 ? "border-red-400 bg-red-50" : "border-gray-200"}
+                    `}
+                  />
+                  {errors.addressLine1 && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      ⚠ {errors.addressLine1}
+                    </p>
+                  )}
+                </div>
+
+                {/* Address Line 2 */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Address Line 2
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Area / landmark (optional)"
+                    value={formData.addressLine2}
+                    onChange={(e) => handleChange("addressLine2", e.target.value)}
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                      ${errors.addressLine2 ? "border-red-400 bg-red-50" : "border-gray-200"}
+                    `}
+                  />
+                  {errors.addressLine2 && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      ⚠ {errors.addressLine2}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {/* Country */}
-              <SelectField
-                label="Country"
-                required
-                error={errors.country?.message}
-                control={control}
-                name="country"
-                options={countryOptions}
-                placeholder="Select Country"
-              />
+              {/* Direct Inline Select: Country */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Country <span className="text-red-400">*</span>
+                </label>
+                <Select
+                  instanceId="select-country"
+                  value={COUNTRY_OPTIONS.find((c) => c.value === formData.country) || null}
+                  onChange={(opt) => handleChange("country", opt ? opt.value : "")}
+                  options={COUNTRY_OPTIONS}
+                  isClearable={true}
+                  isSearchable={true}
+                  placeholder="Select Country"
+                  classNamePrefix="react-select"
+                  styles={customSelectStyles(errors.country)}
+                />
+                {errors.country && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.country}
+                  </p>
+                )}
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {/* State */}
-                <SelectField
-                  label="State / Province"
-                  required
-                  error={errors.state?.message}
-                  control={control}
-                  name="state"
-                  options={stateOptions}
-                  placeholder={
-                    !watchedCountry
-                      ? "Select country first"
-                      : stateOptions.length === 0
+                {/* Direct Inline Select: State */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    State / Province <span className="text-red-400">*</span>
+                  </label>
+                  <Select
+                    instanceId="select-state"
+                    value={stateOptions.find((s) => s.value === formData.state) || null}
+                    onChange={(opt) => handleChange("state", opt ? opt.value : "")}
+                    options={stateOptions}
+                    isDisabled={!formData.country || stateOptions.length === 0}
+                    isClearable={true}
+                    isSearchable={true}
+                    placeholder={
+                      !formData.country
+                        ? "Select country first"
+                        : stateOptions.length === 0
                         ? "No states"
                         : "Select State"
-                  }
-                  disabled={!watchedCountry || stateOptions.length === 0}
-                />
+                    }
+                    classNamePrefix="react-select"
+                    styles={customSelectStyles(errors.state, !formData.country || stateOptions.length === 0)}
+                  />
+                  {errors.state && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      ⚠ {errors.state}
+                    </p>
+                  )}
+                </div>
 
-                {/* City */}
-                <SelectField
-                  label="City"
-                  required
-                  error={errors.city?.message}
-                  control={control}
-                  name="city"
-                  options={cityOptions}
-                  placeholder={
-                    !watchedState
-                      ? "Select state first"
-                      : cityOptions.length === 0
+                {/* Direct Inline Select: City */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    City <span className="text-red-400">*</span>
+                  </label>
+                  <Select
+                    instanceId="select-city"
+                    value={cityOptions.find((c) => c.value === formData.city) || null}
+                    onChange={(opt) => handleChange("city", opt ? opt.value : "")}
+                    options={cityOptions}
+                    isDisabled={!formData.state || cityOptions.length === 0}
+                    isClearable={true}
+                    isSearchable={true}
+                    placeholder={
+                      !formData.state
+                        ? "Select state first"
+                        : cityOptions.length === 0
                         ? "No cities"
                         : "Select City"
-                  }
-                  disabled={!watchedState || cityOptions.length === 0}
-                />
+                    }
+                    classNamePrefix="react-select"
+                    styles={customSelectStyles(errors.city, !formData.state || cityOptions.length === 0)}
+                  />
+                  {errors.city && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      ⚠ {errors.city}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <InputField
-                label="Zip / Postal Code"
-                required
-                error={errors.zipCode?.message}
-                register={register}
-                name="zipCode"
-                placeholder="Enter zip code"
-              />
-              <PhoneField
-                label="Phone Number"
-                required
-                error={errors.phone?.message || errors.dialCode?.message}
-                register={register}
-                control={control}
-                name="phone"
-                dialCodeName="dialCode"
-                dialCodeOptions={dialCodeOptions}
-              />
+              {/* Zip Code */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Zip / Postal Code <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter zip code"
+                  value={formData.zipCode}
+                  onChange={(e) => handleChange("zipCode", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.zipCode ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.zipCode && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.zipCode}
+                  </p>
+                )}
+              </div>
+
+              {/* Phone Number with Direct Inline Select: Dial Code */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Phone Number <span className="text-red-400">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <div className="w-[130px] shrink-0">
+                    <Select
+                      instanceId="select-dialCode"
+                      value={DIAL_CODE_OPTIONS.find((d) => d.value === formData.dialCode) || null}
+                      onChange={(opt) => handleChange("dialCode", opt ? opt.value : "")}
+                      options={DIAL_CODE_OPTIONS}
+                      isClearable={true}
+                      isSearchable={true}
+                      placeholder="Code"
+                      classNamePrefix="react-select"
+                      styles={customSelectStyles(errors.dialCode || errors.phone)}
+                    />
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                    className={`flex-1 px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                      ${errors.phone ? "border-red-400 bg-red-50" : "border-gray-200"}
+                    `}
+                  />
+                </div>
+                {(errors.phone || errors.dialCode) && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.phone || errors.dialCode}
+                  </p>
+                )}
+              </div>
+
             </div>
           </div>
 
-          {/* Contact Person Card */}
+          {/* ── 4. Contact Person Card ─────────────────────────────── */}
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <SectionHeader
               icon={User}
@@ -782,54 +969,82 @@ export default function CompanyForm({
             />
 
             <div className="space-y-5">
-              <InputField
-                label="Contact Person Name"
-                error={errors.contactPersonName?.message}
-                register={register}
-                name="contactPersonName"
-                placeholder="Full name"
-              />
+              
+              {/* Contact Person Name */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Contact Person Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Full name"
+                  value={formData.contactPersonName}
+                  onChange={(e) => handleChange("contactPersonName", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.contactPersonName ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.contactPersonName && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.contactPersonName}
+                  </p>
+                )}
+              </div>
 
-              <InputField
-                label="Contact Person Email"
-                error={errors.contactPersonEmail?.message}
-                register={register}
-                name="contactPersonEmail"
-                placeholder="contact@example.com"
-                type="email"
-              />
+              {/* Contact Person Email */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Contact Person Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="contact@example.com"
+                  value={formData.contactPersonEmail}
+                  onChange={(e) => handleChange("contactPersonEmail", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.contactPersonEmail ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.contactPersonEmail && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.contactPersonEmail}
+                  </p>
+                )}
+              </div>
 
-              <InputField
-                label="Contact Person Phone"
-                error={errors.contactPersonPhone?.message}
-                register={register}
-                name="contactPersonPhone"
-                placeholder="Phone number"
-              />
+              {/* Contact Person Phone */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Contact Person Phone
+                </label>
+                <input
+                  type="tel"
+                  placeholder="Phone number"
+                  value={formData.contactPersonPhone}
+                  onChange={(e) => handleChange("contactPersonPhone", e.target.value)}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                    ${errors.contactPersonPhone ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  `}
+                />
+                {errors.contactPersonPhone && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.contactPersonPhone}
+                  </p>
+                )}
+              </div>
+
             </div>
           </div>
         </div>
 
-        <div
-          className=" px-6 py-4  
-        flex gap-3 justify-center items-center"
-        >
+        {/* Submit & Discard Action Footer */}
+        <div className="px-6 py-4 flex gap-3 justify-center items-center">
           <button
             type="button"
-            onClick={() => {
-              if (isDirty) {
-                setConfirmState({ isOpen: true, type: "discard", data: null });
-              } else {
-                reset(mergedDefaults);
-                1;
-                setStateOptions([]);
-                setCityOptions([]);
-                setLogoFile(null);
-                setLogoPreview(externalDefaults?.logoUrl || null);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-                router.back();
-              }
-            }}
+            onClick={handleDiscard}
             className="px-5 py-2 border bg-white border-gray-300 rounded-lg text-md font-medium
             text-gray-600 hover:bg-gray-50 transition cursor-pointer"
           >
@@ -847,10 +1062,15 @@ export default function CompanyForm({
           </button>
         </div>
       </form>
-      
+
+      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}
+        title={
+          confirmState.type === "submit"
+            ? "Confirm Submission"
+            : "Discard Changes"
+        }
         message={
           confirmState.type === "submit"
             ? "Are you sure you want to save these changes?"
@@ -866,7 +1086,9 @@ export default function CompanyForm({
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}
-        onCancel={() => setConfirmState({ isOpen: false, type: null, data: null })}
+        onCancel={() =>
+          setConfirmState({ isOpen: false, type: null, data: null })
+        }
       />
     </div>
   );

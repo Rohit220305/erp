@@ -39,6 +39,16 @@ export const sitemapData = [
   //   ],
   //   path: "/admin/activity-logs",
   // },
+
+  {
+    title: "Currency",
+    permission: "CURRENCY_LIST",
+    menus: [
+      { label: "Currency Master", path: "/currency", permission: "CURRENCY_LIST" },
+      // { label: "Add Currency", path: "/currency/add" },
+    ],
+    path: "/currency",
+  }
 ];
 
 

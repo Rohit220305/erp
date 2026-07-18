@@ -18,7 +18,6 @@ export function ListingProvider({ children }) {
 
   const pathname = usePathname();
 
-  // Reset all state on every route change
   useEffect(() => {
     setPage(1);
     setTotal(0);
@@ -28,6 +27,7 @@ export function ListingProvider({ children }) {
     setSortOrder("");
   }, [pathname]);
 
+  
   const resetPagination = useCallback(() => {
     setPage(1);
     setTotal(0);
@@ -44,15 +44,16 @@ export function ListingProvider({ children }) {
     setPage(1);
   }, []);
 
+ 
   const value = useMemo(
     () => ({
       view,
       setView,
       page,
       setPage,
-      limit,
+      limit, 
       setLimit,
-      total,
+      total,  
       setTotal,
       search,
       setSearch,

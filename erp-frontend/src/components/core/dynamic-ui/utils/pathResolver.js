@@ -11,3 +11,12 @@ export const resolvePath = (obj, path) => {
 
   return result;
 };
+
+export const resolveDynamicRoute = (path, data) => {
+  if (!path) return "#";
+  if (!data) return path;
+
+  return path.replace(/\{([^}]+)\}/g, (match, key) => {
+    return data[key] !== undefined ? data[key] : match;
+  });
+};

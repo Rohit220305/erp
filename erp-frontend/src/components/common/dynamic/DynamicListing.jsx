@@ -1,11 +1,11 @@
+// DynamicListing.jsx
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useListing } from "@/context/ListingContext";
 import { useHeader } from "@/context/HeaderContext";
-import { useActionDispatcher } from "@/lib/actionDispatcher";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import FilterDrawer from "@/components/common/FilterDrawer";
@@ -14,13 +14,27 @@ import Pagination from "@/components/listing/Pagination";
 import toast from "react-hot-toast";
 import AccessDenied from "@/components/common/AccessDenied";
 import DynamicTableView from "./DynamicTableView";
+import DynamicViewDrawer from "./DynamicViewDrawer";
+import { DynamicListView, DynamicGridView } from "./DynamicViews";
 
-export default function DynamicListing({ schema }) {
+export default function DynamicListing({
+  schema,
+  fetchData,
+  fetchItem,
+  deleteFn,
+  renderTableRow,     
+  renderListCard,     
+  renderGridCard,     
+  renderDrawer,        
+}) {
   const router = useRouter();
   const { can } = useAuth();
   const { setConfig, resetConfig } = useHeader();
-  const { dispatchAction } = useActionDispatcher();
-  const { view, page, limit, setTotal, search, setLimit, setPage, total, columnFilters, sortField, sortOrder } = useListing();
+  const {
+    view, page, limit, total,
+    setTotal, setLimit, setPage,
+    search, columnFilters, sortField, sortOrder,
+  } = useListing();
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,24 +52,31 @@ export default function DynamicListing({ schema }) {
   const [appliedFilters, setAppliedFilters] = useState([]);
   const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
 
-  const listPermission = schema.actions?.fetchPermission;
-  const deletePermission = schema.actions?.deletePermission;
+  const listPermission   = schema.permissions?.list;
+  const deletePermission = schema.permissions?.delete;
 
-  const handleOpenSearch = useCallback(() => {
+  // Open Search Drawer Handler
+  const handleOpenSearch = () => {
     if (tempFilters.length === 0 && schema.searchFields?.length > 0) {
       const defaultField = schema.searchFields[0];
-      setTempFilters([
-        {
-          field: defaultField.value,
-          operator: "equal",
-          value: defaultField.type === "select" ? (defaultField.options[0]?.value || "") : "",
-        },
-      ]);
+      setTempFilters([{
+        field:    defaultField.value,
+        operator: "equal",
+        value:    defaultField.type === "select" ? (defaultField.options?.[0]?.value || "") : "",
+      }]);
     }
     setIsSearchOpen(true);
-  }, [tempFilters.length, schema.searchFields]);
+  };
 
-  const loadData = useCallback(async () => {
+  // Data Fetching Function (Standard Async Function)
+  const loadData = async () => {
+    if (!fetchData) {
+      console.warn("DynamicListing: no fetchData prop provided.");
+      setInitialLoad(false);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -89,50 +110,47 @@ export default function DynamicListing({ schema }) {
         });
       }
 
-      const fetchActionKey = schema.actions?.fetch;
-      if (!fetchActionKey) {
-        console.warn("No fetch action defined in schema.");
-        return;
-      }
-
-      const response = await dispatchAction(fetchActionKey, {
+      const response = await fetchData({
         page,
         limit,
         search,
-        filters: backendFilters.length > 0 ? backendFilters : undefined,
+        filters:         backendFilters.length > 0 ? backendFilters : undefined,
         logicalOperator: logicalOp,
-        sortField,
-        sortOrder,
-      }, { showToast: false });
+        sortField:       sortField || undefined,
+        sortOrder:       sortOrder || undefined,
+      });
 
       const data = response?.settings?.data || response?.data || {};
       setItems(data.items || data.list || []);
-      setTotal(data?.pagination?.total || data.total || 0);
-      setLimit(data?.pagination?.limit || data.limit || 10);
+      setTotal(data?.pagination?.total  || data.total  || 0);
+      setLimit(data?.pagination?.limit  || data.limit  || 10);
+    } catch (err) {
+      console.error("DynamicListing fetchData error:", err);
+      toast.error(`Failed to load ${schema.title || "data"}`);
     } finally {
       setLoading(false);
       setInitialLoad(false);
     }
-  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, columnFilters, sortField, sortOrder, setTotal, setLimit, dispatchAction, schema.actions]);
+  };
 
-  // Handle header config
+  // Header Config Effect
   useEffect(() => {
-    const headerAction = schema.actions?.header?.[0];
-    const canDoAction = headerAction && (!headerAction.permission || can(headerAction.permission));
-    
+    const headerAction  = schema.actions?.header?.[0];
+    const canDoAction   = headerAction && (!headerAction.permission || can(headerAction.permission));
+
     setConfig({
       header: {
-        icons: ["refresh", "search", "filter", "view"],
+        icons:        ["refresh", "search", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
-        showProfile: true,
-        showMenu: true,
-        showSearch: true,
+        showProfile:  true,
+        showMenu:     true,
+        showSearch:   true,
         onFilterClick: () => setIsFilterOpen(true),
         onSearchClick: handleOpenSearch,
         actionButton: canDoAction
           ? {
-              label: headerAction.label,
+              label:   headerAction.label,
               onClick: () => {
                 if (headerAction.type === "redirect" && headerAction.path) {
                   router.push(headerAction.path);
@@ -142,32 +160,31 @@ export default function DynamicListing({ schema }) {
           : null,
       },
       navbar: {
-        title: "Listing",
+        title:       "Listing",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: schema.title, href: `/${schema.moduleName.toLowerCase()}` },
+          { label: "Master",      href: "/" },
+          { label: schema.title,  href: `/${schema.moduleName.toLowerCase()}` },
         ],
       },
     });
     return () => resetConfig();
-  }, [setConfig, handleOpenSearch, can, router, schema]);
+  }, [setConfig, can, router, schema]);
 
+  // Load Data Effect
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [
+    page, limit, search,
+    appliedFilters, appliedLogicalOperator, appliedSidebarFilters,
+    columnFilters, sortField, sortOrder,
+    fetchData, schema.title
+  ]);
 
-  const handleRowAction = useCallback((action, item) => {
-    if (action.type === "editRedirect") {
-      let path = action.path;
-      if (path.includes("{id}")) {
-        path = path.replace("{id}", item.id);
-      }
-      router.push(path);
-    } else if (action.type === "viewRedirect") {
-      let path = action.path;
-      if (path.includes("{id}")) {
-        path = path.replace("{id}", item.id);
-      }
+  // Row Action Handler
+  const handleRowAction = (action, item) => {
+    if (action.type === "editRedirect" || action.type === "viewRedirect") {
+      let path = action.path || "";
+      if (path.includes("{id}")) path = path.replace("{id}", item.id);
       router.push(path);
     } else if (action.type === "deleteModal") {
       if (deletePermission && !can(deletePermission)) {
@@ -176,39 +193,33 @@ export default function DynamicListing({ schema }) {
       }
       setDeleteTarget(item);
     } else if (action.type === "viewDrawer") {
-       setSelectedItemForDetails(item);
+      setSelectedItemForDetails(item);
     }
-  }, [router, can, deletePermission]);
+  };
 
-  const handleDelete = useCallback(async () => {
+  // Delete Action Handler
+  const handleDelete = async () => {
     if (!deleteTarget) return;
-    const deleteActionKey = schema.actions?.delete;
-    if (!deleteActionKey) {
-        console.warn("No delete action defined in schema.");
-        return;
+    if (!deleteFn) {
+      console.warn("DynamicListing: no deleteFn prop provided.");
+      setDeleteTarget(null);
+      return;
     }
-    
     try {
-      const res = await dispatchAction(deleteActionKey, { id: deleteTarget.id }, {
-        successMessage: `${schema.title} deleted successfully.`,
-        errorMessage: `Failed to delete ${schema.title}.`
-      });
-      
+      const res       = await deleteFn({ id: deleteTarget.id });
       const isSuccess = res?.success === 1 || res?.settings?.success === 1;
+      const message   = res?.message  || res?.settings?.message;
       if (isSuccess) {
+        toast.success(message || `${schema.title} deleted successfully.`);
         loadData();
+      } else {
+        toast.error(message || `Failed to delete ${schema.title}.`);
       }
+    } catch {
+      toast.error(`Failed to delete ${schema.title}.`);
     } finally {
       setDeleteTarget(null);
     }
-  }, [deleteTarget, loadData, dispatchAction, schema]);
-
-  const paginationProps = {
-    page,
-    limit,
-    total,
-    onPageChange: setPage,
-    onLimitChange: setLimit,
   };
 
   if (listPermission && !can(listPermission)) {
@@ -225,23 +236,56 @@ export default function DynamicListing({ schema }) {
 
   return (
     <div className="relative px-6 h-full">
-      {/* We can expand to support Grid/List view later, for now TableView is supported */}
-      <DynamicTableView 
-        data={items} 
-        config={schema} 
-        onRowAction={handleRowAction} 
-        loading={loading} 
-        setSelectedItemForDetails={setSelectedItemForDetails} 
-      />
+
+      {view === "table" && (
+        <DynamicTableView
+          data={items}
+          config={schema}
+          onRowAction={handleRowAction}
+          loading={loading}
+          setSelectedItemForDetails={setSelectedItemForDetails}
+          renderTableRow={renderTableRow}
+        />
+      )}
+
+      {view === "list" && (
+        <DynamicListView
+          data={items}
+          config={schema}
+          setSelectedItemForDetails={setSelectedItemForDetails}
+          renderCard={renderListCard
+            ? (item) => renderListCard(item, setSelectedItemForDetails)
+            : undefined
+          }
+        />
+      )}
+
+      {view !== "table" && view !== "list" && (
+        <DynamicGridView
+          data={items}
+          config={schema}
+          setSelectedItemForDetails={setSelectedItemForDetails}
+          renderCard={renderGridCard
+            ? (item) => renderGridCard(item, setSelectedItemForDetails)
+            : undefined
+          }
+        />
+      )}
 
       <div className="absolute bottom-0 left-0 right-0 mx-6 bg-white border-t border-gray-200">
-        <Pagination {...paginationProps} />
+        <Pagination
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+        />
       </div>
 
       <ConfirmModal
         isOpen={!!deleteTarget}
         title={`Delete ${schema.title}`}
-        message={`Are you sure you want to delete this record? This action cannot be undone.`}
+        message="Are you sure you want to delete this record? This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
@@ -295,6 +339,23 @@ export default function DynamicListing({ schema }) {
           fields={schema.searchFields}
         />
       )}
+
+      {renderDrawer
+        ? renderDrawer(
+            !!selectedItemForDetails,
+            () => setSelectedItemForDetails(null),
+            selectedItemForDetails
+          )
+        : (
+          <DynamicViewDrawer
+            open={!!selectedItemForDetails}
+            onClose={() => setSelectedItemForDetails(null)}
+            item={selectedItemForDetails}
+            schema={schema}
+            fetchItem={fetchItem}
+          />
+        )
+      }
     </div>
   );
 }

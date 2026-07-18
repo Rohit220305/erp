@@ -167,9 +167,7 @@ export class CompanyListService {
         }
       }
 
-      /**
-       * Sorting
-       */
+   
       if (params?.sortField && params?.sortOrder && columnMap[params.sortField]) {
         const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
         queryBuilder.orderBy(columnMap[params.sortField], order);

@@ -1,8 +1,5 @@
-import CompanyListPage from "@/components/company/CompanyListPage";
+import CompanyListing from "@/components/company/CompanyListing";
 
-export default function CompaniesPage() {
-  
-  return <div className=" h-full">
-    <CompanyListPage />
-  </div>;
+export default function CompanyPage() {
+  return <CompanyListing />;
 }

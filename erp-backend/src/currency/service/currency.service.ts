@@ -10,121 +10,229 @@ export class CurrencyService {
   private readonly logger = new Logger(CurrencyService.name);
 
   constructor(
-    @InjectRepository(CurrencyEntity)
-    private readonly currencyRepository: Repository<CurrencyEntity>,
     private readonly activityLogService: ActivityLogService,
   ) {}
 
-  async startAddCurrency(req: any, body: CurrencyAddDto) {
-    body.createdBy = req.user.sub;
-    const response = await this.addCurrency(body);
-    if (response.success === 1) {
+  @InjectRepository(CurrencyEntity)
+  private currencyRepo: Repository<CurrencyEntity>;
+
+  async startAddCurrency(req: any, params: CurrencyAddDto) {
+    const response = await this.addCurrency(req, params);
+
+    if (response.success == 1) {
       await this.activityLogService.log({
         activityCode: 'CURRENCY_CREATE',
-        actorUserId: req.user.sub,
-        companyId: req.user.companyId || null,
-        entityType: 'Currency',
-        entityId: response.data?.id,
-        entityName: body.currencyName,
+        actorUserId: req.user?.sub,
+        impersonatorId: req.user?.impersonatorId || undefined,
+        companyId: req.user?.companyId || null,
+        entityType: 'CURRENCY',
+        entityId: response?.data?.id,
+        entityName: params.currencyName,
+        ipAddress: req.ip,
+        userAgent: req.headers?.['user-agent'],
       });
-      return this.finishSuccess(response);
+
+      return await this.finishSuccess(response, params);
     }
-    return this.finishFailure(response);
+
+    return await this.finishFailure(response);
   }
 
-  private async addCurrency(body: CurrencyAddDto) {
+  private async addCurrency(req: any, params: CurrencyAddDto) {
+    let return_data: any = {};
+
     try {
-      const newCurrency = this.currencyRepository.create(body);
-      const saved = await this.currencyRepository.save(newCurrency);
-      
-      return { success: 1, message: 'Currency created successfully', data: saved };
-    } catch (error) {
-      this.logger.error('Error adding currency', error.stack);
-      if (error.code === 'ER_DUP_ENTRY') {
-        return { success: 0, message: 'Currency code already exists' };
+      const codeExists = await this.currencyRepo.findOne({
+        where: {
+          currencyCode: params.currencyCode,
+        },
+      });
+
+      if (codeExists) {
+        throw new Error('Currency Code already exists');
       }
-      return { success: 0, message: 'Failed to create currency' };
+
+      const currencyData = this.currencyRepo.create({
+        ...params,
+        createdBy: req.user?.sub,
+      });
+
+      const saved = await this.currencyRepo.save(currencyData);
+
+      return_data = {
+        success: 1,
+        message: 'Currency Added Successfully.',
+        data: saved,
+      };
+    } catch (err) {
+      this.logger.error('Error adding currency', err.stack);
+      return_data = {
+        success: 0,
+        message: err.message || 'Failed to create currency',
+      };
     }
+
+    return return_data;
   }
 
-  async startUpdateCurrency(req: any, body: CurrencyUpdateDto) {
-    body.updatedBy = req.user.sub;
-    const response = await this.updateCurrency(body);
-    if (response.success === 1) {
+  async startUpdateCurrency(req: any, params: CurrencyUpdateDto) {
+    const response = await this.updateCurrency(req, params);
+
+    if (response.success == 1) {
+      // Activity Log
       await this.activityLogService.log({
         activityCode: 'CURRENCY_UPDATE',
-        actorUserId: req.user.sub,
-        companyId: req.user.companyId || null,
-        entityType: 'Currency',
-        entityId: body.id,
-        entityName: body.currencyName || 'Unknown',
+        actorUserId: req.user?.sub,
+        impersonatorId: req.user?.impersonatorId || undefined,
+        companyId: req.user?.companyId || null,
+        entityType: 'CURRENCY',
+        entityId: params.id,
+        entityName: params.currencyName || 'Currency',
+        ipAddress: req.ip,
+        userAgent: req.headers?.['user-agent'],
       });
-      return this.finishSuccess(response);
+
+      return await this.finishSuccess(response);
     }
-    return this.finishFailure(response);
+
+    return await this.finishFailure(response);
   }
 
-  private async updateCurrency(body: CurrencyUpdateDto) {
+  private async updateCurrency(req: any, params: CurrencyUpdateDto) {
+    let return_data: any = {};
+
     try {
-      const currency = await this.currencyRepository.findOne({ where: { id: body.id } });
-      if (!currency) {
-        return { success: 0, message: 'Currency not found' };
+      if (!params.id) {
+        throw new Error('Currency ID is required');
       }
 
-      Object.assign(currency, body);
+      const currency = await this.currencyRepo.findOne({
+        where: {
+          id: params.id,
+        },
+      });
+
+      if (!currency) {
+        throw new Error('Currency not found');
+      }
+
+      if (params.currencyCode && params.currencyCode !== currency.currencyCode) {
+        const codeExists = await this.currencyRepo.findOne({
+          where: {
+            currencyCode: params.currencyCode,
+          },
+        });
+
+        if (codeExists) {
+          throw new Error('Currency Code already exists');
+        }
+      }
+
+      Object.assign(currency, params);
+      currency.updatedBy = req.user?.sub;
       currency.updatedAt = new Date();
 
-      const saved = await this.currencyRepository.save(currency);
-      return { success: 1, message: 'Currency updated successfully', data: saved };
-    } catch (error) {
-      this.logger.error('Error updating currency', error.stack);
-      if (error.code === 'ER_DUP_ENTRY') {
-        return { success: 0, message: 'Currency code already exists' };
-      }
-      return { success: 0, message: 'Failed to update currency' };
+      const saved = await this.currencyRepo.save(currency);
+
+      return_data = {
+        success: 1,
+        message: 'Currency Updated Successfully.',
+        data: saved,
+      };
+    } catch (err) {
+      this.logger.error('Error updating currency', err.stack);
+      return_data = {
+        success: 0,
+        message: err.message || 'Failed to update currency',
+      };
     }
+
+    return return_data;
   }
 
   async startDeleteCurrency(req: any, query: DeleteCurrencyDto) {
-    const response = await this.deleteCurrency(query.id);
-    if (response.success === 1) {
+    const response = await this.deleteCurrency(req, query);
+
+    if (response.success == 1) {
+      // Activity Log
       await this.activityLogService.log({
         activityCode: 'CURRENCY_DELETE',
-        actorUserId: req.user.sub,
-        companyId: req.user.companyId || null,
-        entityType: 'Currency',
+        actorUserId: req.user?.sub,
+        impersonatorId: req.user?.impersonatorId || undefined,
+        companyId: req.user?.companyId || null,
+        entityType: 'CURRENCY',
         entityId: query.id,
-        entityName: response.data?.currencyName || 'Unknown',
+        entityName: response.data?.currencyName || 'Currency',
+        ipAddress: req.ip,
+        userAgent: req.headers?.['user-agent'],
       });
-      return this.finishSuccess(response);
+
+      return await this.finishSuccess(response);
     }
-    return this.finishFailure(response);
+
+    return await this.finishFailure(response);
   }
 
-  private async deleteCurrency(id: number) {
+  private async deleteCurrency(req: any, query: DeleteCurrencyDto) {
+    let return_data: any = {};
+
     try {
-      const currency = await this.currencyRepository.findOne({ where: { id } });
+      if (!query.id) {
+        throw new Error('Currency ID is required');
+      }
+
+      const currency = await this.currencyRepo.findOne({
+        where: {
+          id: query.id,
+        },
+      });
+
       if (!currency) {
-        return { success: 0, message: 'Currency not found' };
+        throw new Error('Currency not found');
       }
-      
-      await this.currencyRepository.delete(id);
-      return { success: 1, message: 'Currency deleted successfully', data: currency };
-    } catch (error) {
-      this.logger.error('Error deleting currency', error.stack);
-      // Catch foreign key constraint violation
-      if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-        return { success: 0, message: 'Cannot delete currency as it is currently in use. Please deactivate it instead.' };
+
+      await this.currencyRepo.delete({ id: query.id });
+
+      return_data = {
+        success: 1,
+        message: 'Currency Deleted Successfully.',
+        data: currency,
+      };
+    } catch (err) {
+      this.logger.error('Error deleting currency', err.stack);
+      if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+        return_data = {
+          success: 0,
+          message: 'Cannot delete currency as it is currently in use. Please deactivate it instead.',
+        };
+      } else {
+        return_data = {
+          success: 0,
+          message: err.message || 'Failed to delete currency',
+        };
       }
-      return { success: 0, message: 'Failed to delete currency' };
     }
+
+    return return_data;
   }
 
-  private finishSuccess(response: any) {
-    return { success: 1, message: response.message, data: response.data };
+  async finishSuccess(params: any, incomingData?: any) {
+    const output: any = {
+      settings: {
+        success: params?.success,
+        message: params?.message,
+        data: params?.data ? params.data : [],
+      },
+    };
+
+    if (incomingData) {
+      output.settings.incoming_data = incomingData;
+    }
+
+    return output;
   }
 
-  private finishFailure(response: any) {
-    return { success: 0, message: response.message };
+  async finishFailure(params: any) {
+    return params;
   }
 }

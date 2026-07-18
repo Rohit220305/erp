@@ -1,6 +1,7 @@
+// GroupListPage.jsx
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ListingPage from "@/components/listing/ListingPage";
 import TableSkeleton from "@/components/common/TableSkeleton";
@@ -16,6 +17,65 @@ import SearchDrawer from "@/components/common/SearchDrawer";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
+
+// Module-level Static Constants (Computed once when module loads)
+const SEARCH_FIELDS = [
+  { label: "Group Name", value: "groupName", type: "text" },
+  { label: "Group Code", value: "groupCode", type: "text" },
+  { label: "Description", value: "description", type: "text" },
+  {
+    label: "Status",
+    value: "status",
+    type: "select",
+    options: [
+      { label: "Active", value: "Active" },
+      { label: "Inactive", value: "InActive" },
+    ],
+  },
+];
+
+const TABLE_HEADERS = [
+  {
+    label: "Group Name",
+    key: "groupName",
+    searchable: true,
+    sortable: true,
+  },
+  {
+    label: "Group Code",
+    key: "groupCode",
+    searchable: true,
+    sortable: true,
+  },
+  {
+    label: "Description",
+    key: "description",
+    searchable: true,
+    sortable: true,
+  },
+  {
+    label: "Status",
+    key: "status",
+    searchable: true,
+    sortable: false,
+    type: "select",
+    options: [
+      { label: "Active", value: "Active" },
+      { label: "Inactive", value: "InActive" },
+    ],
+  },
+  {
+    label: "Added Date",
+    key: "addedDateFormatted",
+    searchable: false,
+    sortable: true,
+  },
+];
+
+const SIDEBAR_STATUSES = [
+  { label: "Active", value: "Active" },
+  { label: "Inactive", value: "InActive" },
+];
 
 export default function GroupListPage() {
   const { setConfig, resetConfig } = useHeader();
@@ -38,25 +98,15 @@ export default function GroupListPage() {
   const [appliedSidebarFilters, setAppliedSidebarFilters] = useState(null);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [logicalOperator, setLogicalOperator] = useState("AND");
   const [tempLogicalOperator, setTempLogicalOperator] = useState("AND");
   const [tempFilters, setTempFilters] = useState([]);
   const [appliedFilters, setAppliedFilters] = useState([]);
   const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
 
-  const fields = useMemo(() => [
-    { label: "Group Name", value: "groupName", type: "text" },
-    { label: "Group Code", value: "groupCode", type: "text" },
-    { label: "Description", value: "description", type: "text" },
-    { label: "Status", value: "status", type: "select", options: [
-      { label: "Active", value: "Active" },
-      { label: "Inactive", value: "InActive" },
-    ]}
-  ], []);
-
-  const handleOpenSearch = useCallback(() => {
-    if (tempFilters.length === 0 && fields.length > 0) {
-      const defaultField = fields[0];
+  // Open Search Drawer Handler (Standard function without useCallback)
+  const handleOpenSearch = () => {
+    if (tempFilters.length === 0 && SEARCH_FIELDS.length > 0) {
+      const defaultField = SEARCH_FIELDS[0];
       setTempFilters([
         {
           field: defaultField.value,
@@ -66,9 +116,10 @@ export default function GroupListPage() {
       ]);
     }
     setIsSearchOpen(true);
-  }, [tempFilters.length, fields]);
+  };
 
-  const fetchGroups = useCallback(async () => {
+  // Fetch Groups Data (Standard async function without useCallback)
+  const fetchGroups = async () => {
     try {
       setLoading(true);
 
@@ -121,7 +172,7 @@ export default function GroupListPage() {
         sortField,
         sortOrder,
       });
-      // console.log("Groups Response:", response);
+
       const data = response?.settings?.data || response?.data || {};
       setGroups(data.list || []);
       setTotal(data?.pagination?.total || 0);
@@ -133,16 +184,17 @@ export default function GroupListPage() {
       setLoading(false);
       setInitialLoad(false);
     }
-  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, columnFilters, sortField, sortOrder, setTotal, setLimit]);
+  };
 
+  // Header Config Effect
   useEffect(() => {
     setConfig({
       header: {
-          actionButton: can("GROUP_CREATE") ? {
-            label: "Add Group",
-            onClick: () => router.push("/group/add"),
-          } : null,
-        icons: [ "search", "filter", "view"],
+        actionButton: can("GROUP_CREATE") ? {
+          label: "Add Group",
+          onClick: () => router.push("/group/add"),
+        } : null,
+        icons: ["search", "filter", "view"],
         showBookmark: true,
         showLanguage: true,
         showProfile: true,
@@ -160,13 +212,20 @@ export default function GroupListPage() {
     });
 
     return () => resetConfig();
-  }, [setConfig, router, handleOpenSearch, setIsFilterOpen, can]); 
-  
+  }, [setConfig, router, setIsFilterOpen, can]); 
+
+  // Fetch Data Effect
   useEffect(() => {
     fetchGroups();
-  }, [fetchGroups]);
+  }, [
+    page, limit, search,
+    appliedFilters, appliedLogicalOperator, appliedSidebarFilters,
+    columnFilters, sortField, sortOrder,
+    setTotal, setLimit
+  ]);
 
-  const handleDelete = useCallback(async () => {
+  // Delete Action Handler (Standard async function without useCallback)
+  const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
       const res = await deleteGroup(deleteTarget.id);
@@ -182,56 +241,15 @@ export default function GroupListPage() {
     } catch {
       toast.error("Failed to delete group");
     }
-  }, [deleteTarget, fetchGroups]);
+  };
 
-  const headers = useMemo(() => {
-    const list = [
-      {
-        label: "Group Name",
-        key: "groupName",
-        searchable: true,
-        sortable: true,
-      },
-      {
-        label: "Group Code",
-        key: "groupCode",
-        searchable: true,
-        sortable: true,
-      },
-      {
-        label: "Description",
-        key: "description",
-        searchable: true,
-        sortable: true,
-      },
-      {
-        label: "Status",
-        key: "status",
-        searchable: true,
-        sortable: false,
-        type: "select",
-        options: [
-          { label: "Active", value: "Active" },
-          { label: "Inactive", value: "InActive" },
-        ],
-      },
-      {
-        label: "Added Date",
-        key: "addedDateFormatted",
-        searchable: false,
-        sortable: true,
-      },
-    ];
-    
-    return list;
-  }, []);
-
-  const renderCell = useCallback((item, key) => (
+  // Render Cell Handler (Standard function without useCallback)
+  const renderCell = (item, key) => (
     <GroupTableRow
       item={item}
       columnKey={key}
     />
-  ), []);
+  );
 
   if (initialLoad) {
     return (
@@ -250,7 +268,7 @@ export default function GroupListPage() {
       <ListingPage
         view={view}
         data={groups}
-        headers={headers}
+        headers={TABLE_HEADERS}
         renderCell={renderCell}
         renderListCard={(u) => <GroupListCard key={u.id} group={u} handleDelete={() => setDeleteTarget(u)} can={can} />}
         renderGridCard={(u) => <GroupGridCard key={u.id} group={u} handleDelete={() => setDeleteTarget(u)} can={can}/>}
@@ -279,10 +297,7 @@ export default function GroupListPage() {
         }}
         filters={sidebarFilters}
         setFilters={setSidebarFilters}
-        statuses={[
-          { label: "Active", value: "Active" },
-          { label: "Inactive", value: "InActive" },
-        ]}
+        statuses={SIDEBAR_STATUSES}
       />
 
       <SearchDrawer
@@ -307,7 +322,7 @@ export default function GroupListPage() {
         setFilters={setTempFilters}
         logicalOperator={tempLogicalOperator}
         setLogicalOperator={setTempLogicalOperator}
-        fields={fields}
+        fields={SEARCH_FIELDS}
       />
 
       <ConfirmModal
@@ -321,5 +336,3 @@ export default function GroupListPage() {
     </div>
   );
 }
-
-

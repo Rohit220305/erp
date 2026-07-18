@@ -8,29 +8,29 @@ import CellRenderer from "@/components/core/dynamic-ui/CellRenderer";
 
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 
-export default function CompanyGridCard({ company, companyConfig, setSelectedCompanyForDetails }) {
+export default function CompanyGridCard({ item, config, setSelectedItemForDetails }) {
   const router = useRouter();
   const { can } = useAuth();
-  const hasViewPerm = can(companyConfig.permissions?.view || "COMPANY_VIEW");
+  const hasViewPerm = can(config.permissions?.view || "COMPANY_VIEW");
 
-  const config = companyConfig.gridCard;
-  if (!config) return null;
+  const gridConfig = config.gridCard;
+  if (!gridConfig) return null;
 
-  const logoUrl = resolvePath(company, config.header.image);
-  const title = resolvePath(company, config.header.title);
-  const subtitle = resolvePath(company, config.header.subtitle);
-  const badgeValue = resolvePath(company, config.header.badge);
+  const logoUrl    = resolvePath(item, gridConfig.header.image);
+  const title      = resolvePath(item, gridConfig.header.title);
+  const subtitle   = resolvePath(item, gridConfig.header.subtitle);
+  const badgeValue = resolvePath(item, gridConfig.header.badge);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between">
         <div 
           className={`flex items-center gap-3 ${hasViewPerm ? "cursor-pointer" : ""}`}
-          onClick={() => hasViewPerm && setSelectedCompanyForDetails && setSelectedCompanyForDetails(company)}
+          onClick={() => hasViewPerm && setSelectedItemForDetails && setSelectedItemForDetails(item)}
         >
           <div className="relative shrink-0">
             <SharedImageZoom
-              id={`company-grid-${company.id}`}
+              id={`company-grid-${item.id}`}
               src={logoUrl}
               alt={title}
               placeholderText={title?.[0] || "C"}
@@ -57,23 +57,23 @@ export default function CompanyGridCard({ company, companyConfig, setSelectedCom
       <hr className="border-gray-100 my-4" />
 
       <div className="space-y-3 text-sm">
-        {config.details.map((detail, idx) => {
-          const val = resolvePath(company, detail.key);
+        {gridConfig.details.map((detail, idx) => {
+          const val = resolvePath(item, detail.key);
           if (!val) return null;
           
           return (
             <div key={idx} className="grid grid-cols-[110px_1fr] items-center gap-2">
               <span className="text-gray-400">{ detail.label}</span>
               <span className="text-gray-900 truncate">
-                <CellRenderer company={company} column={detail} companyConfig={companyConfig} />
+                <CellRenderer item={item} column={detail} config={config} />
               </span>
             </div>
           );
         })}
-        {resolvePath(company, config.footer.date) && (
+        {resolvePath(item, gridConfig.footer.date) && (
           <div className="grid grid-cols-[110px_1fr] items-center gap-2">
             <span className="text-gray-400">Created At</span>
-            <span className="text-gray-900 truncate">{resolvePath(company, config.footer.date)}</span>
+            <span className="text-gray-900 truncate">{resolvePath(item, gridConfig.footer.date)}</span>
           </div>
         )}
       </div>
