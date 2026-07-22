@@ -1,4 +1,3 @@
-// CurrencyForm.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,10 +15,9 @@ import {
   currencyEditSchema,
 } from "@/lib/validation/currency.schema";
 
-// Module-level Static Constants (Computed once when module loads)
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
-  { label: "InActive", value: "InActive" },
+  { label: "Inactive", value: "Inactive" },
 ];
 
 const BASE_DEFAULTS = {
@@ -29,7 +27,6 @@ const BASE_DEFAULTS = {
   status: "Active",
 };
 
-/** Dynamic Custom Styling for react-select components */
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
     ...base,
@@ -77,10 +74,8 @@ export default function CurrencyForm({
   const { setConfig, resetConfig } = useHeader();
   const [loading, setLoading] = useState(false);
 
-  // Plain variable computation
   const defaultValues = { ...BASE_DEFAULTS, ...initialData };
 
-  // State
   const [formData, setFormData] = useState(defaultValues);
   const [errors, setErrors] = useState({});
   const [isDirty, setIsDirty] = useState(false);
@@ -91,7 +86,6 @@ export default function CurrencyForm({
     data: null,
   });
 
-  // Sync initialData when prop changes
   useEffect(() => {
     if (initialData) {
       setFormData({ ...BASE_DEFAULTS, ...initialData });
@@ -133,7 +127,6 @@ export default function CurrencyForm({
     return <AccessDenied missingPermission={requiredPermission} />;
   }
 
-  // Handle field change
   const handleChange = (name, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -209,7 +202,6 @@ export default function CurrencyForm({
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} currency`);
       }
     } catch (error) {
-      toast.error(error?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -220,16 +212,15 @@ export default function CurrencyForm({
       <form onSubmit={handleFormSubmit} className="space-y-6 text-black">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <div className="flex items-center gap-3 pb-3 border-b border-gray-100 mb-6">
-            <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-gray-800  tracking-wide">
               Basic Details
             </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-            {/* Currency Code */}
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-gray-500  tracking-wide">
                 Currency Name <span className="text-red-400 ml-1">*</span>
               </label>
               <input
@@ -242,11 +233,11 @@ export default function CurrencyForm({
                   `}
               />
               {errors.currencyName && (
-                <p className="text-xs text-red-500">⚠ {errors.currencyName}</p>
+                <p className="text-xs text-red-500">{errors.currencyName}</p>
               )}
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-gray-500  tracking-wide">
                 Currency Code <span className="text-red-400 ml-1">*</span>
               </label>
               <input
@@ -261,12 +252,12 @@ export default function CurrencyForm({
                       `}
               />
               {errors.currencyCode && (
-                <p className="text-xs text-red-500">⚠ {errors.currencyCode}</p>
+                <p className="text-xs text-red-500">{errors.currencyCode}</p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-gray-500  tracking-wide">
                 Currency Symbol <span className="text-red-400 ml-1">*</span>
               </label>
               <input
@@ -280,13 +271,13 @@ export default function CurrencyForm({
               />
               {errors.currencySymbol && (
                 <p className="text-xs text-red-500">
-                  ⚠ {errors.currencySymbol}
+                  {errors.currencySymbol}
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-gray-500  tracking-wide">
                 Status
               </label>
               <Select
@@ -304,7 +295,7 @@ export default function CurrencyForm({
                 styles={customSelectStyles(errors.status)}
               />
               {errors.status && (
-                <p className="text-xs text-red-500">⚠ {errors.status}</p>
+                <p className="text-xs text-red-500">{errors.status}</p>
               )}
             </div>
           </div>
@@ -331,7 +322,6 @@ export default function CurrencyForm({
         </div>
       </form>
 
-      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
         title={

@@ -56,28 +56,6 @@ export async function updateUser(data, photoFile) {
     });
 }
 
-
-// export async function updateUser(data, photoFile) {
-//   // Remove keys with undefined, null or "" values
-//   const cleaned = Object.entries(data || {}).reduce((acc, [k, v]) => {
-//     if (v !== undefined && v !== null && v !== "") acc[k] = v;
-//     return acc;
-//   }, {});
-
-//   if (photoFile) {
-//     const formData = new FormData();
-//     Object.entries(cleaned).forEach(([key, val]) => formData.append(key, val));
-//     formData.append("profilePhoto", photoFile);
-//     return apiClient("/user/update-user", { method: "PUT", body: formData });
-//   }
-
-//   console.log("Updating user with data:", cleaned);
-//   return apiClient("/user/update-user", {
-//     method: "PUT",
-//     body: JSON.stringify(cleaned),
-//     headers: { "Content-Type": "application/json" },
-//   });
-// }
 export async function deleteUser(id) {
   return apiClient(`/user/delete-user?id=${id}`, { method: "DELETE" });
 }

@@ -57,7 +57,7 @@ export class UserAddDto {
   profilePhoto?: string;
 
   @IsOptional()
-  @IsIn(['Active', 'InActive'])
+  @IsIn(['Active', 'Inactive'])
   status?: string;
 
   @IsOptional()
@@ -66,11 +66,14 @@ export class UserAddDto {
   addedBy?: number;
 
   @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true || value === 1 || value === '1')
+  @Transform(
+    ({ value }) =>
+      value === 'true' || value === true || value === 1 || value === '1',
+  )
   isSuperAdmin?: boolean;
 }
 
-export class  UserUpdateDto {
+export class UserUpdateDto {
   @IsInt()
   @Transform(({ value }) => Number(value))
   id: number;
@@ -124,7 +127,7 @@ export class  UserUpdateDto {
   profilePhoto?: string;
 
   @IsOptional()
-  @IsIn(['Active', 'InActive'])
+  @IsIn(['Active', 'Inactive'])
   status?: string;
 
   @IsOptional()
@@ -133,7 +136,10 @@ export class  UserUpdateDto {
   updatedBy?: number;
 
   @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true || value === 1 || value === '1')
+  @Transform(
+    ({ value }) =>
+      value === 'true' || value === true || value === 1 || value === '1',
+  )
   isSuperAdmin?: boolean;
 }
 

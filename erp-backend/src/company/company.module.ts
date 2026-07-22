@@ -1,5 +1,7 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CompanyEntity } from './entity/company.entity';
+import { CompanyCurrencyEntity } from './entity/company-currency.entity';
+import { CurrencyEntity } from '../currency/entity/currency.entity';
 import { Module } from '@nestjs/common';
 import { CompanyController } from './company.controller';
 import { CompanyService } from './service/company.service';
@@ -9,7 +11,7 @@ import { CommonFileService } from 'src/package/service/common-file.service';
 import { ActivityLogModule } from 'src/activity-log/activity-log.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CompanyEntity]), ActivityLogModule],
+  imports: [TypeOrmModule.forFeature([CompanyEntity, CompanyCurrencyEntity, CurrencyEntity]), ActivityLogModule],
   controllers: [CompanyController],
   providers: [
     CompanyService,

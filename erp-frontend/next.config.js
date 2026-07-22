@@ -12,7 +12,6 @@ const nextConfig = {
     ],
   },
 
-  // Keep Next config minimal; path aliases are handled by jsconfig/tsconfig.
 };
 
 

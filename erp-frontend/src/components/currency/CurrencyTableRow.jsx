@@ -51,14 +51,7 @@ export default function CurrencyTableRow({ item, onRowAction, setSelectedItemFor
         </span>
       </td>
 
-      {/* <td className="px-4 py-3 text-sm">
-        <ActionRenderer
-          item={item}
-          actions={currencyConfig.actions?.row || []}
-          onActionClick={onRowAction}
-        />
-      </td> */}
-
+    
     </tr>
   );
 }

@@ -16,7 +16,6 @@ export default function GroupListCard({ group, can }) {
         <div 
           className="flex items-center px-6 py-4"
         >
-          {/* Col 1: Group Name */}
           <div className="flex-[1.5]">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Group Name</p>
               <div className="flex items-center gap-3">
@@ -38,13 +37,11 @@ export default function GroupListCard({ group, can }) {
               </div>
           </div>
           
-          {/* Col 2: Group Code */}
           <div className="flex-1">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Group Code</p>
               <p className="text-[13px] text-gray-800 font-medium">{group.groupCode || "—"}</p>
           </div>
           
-          {/* Col 3: Status */}
           <div className="flex-1">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Status</p>
               <span className={`px-3 py-1 rounded text-[11px] font-semibold ${
@@ -54,13 +51,11 @@ export default function GroupListCard({ group, can }) {
               </span>
           </div>
           
-          {/* Col 4: Added Date */}
           <div className="flex-[1.5]">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Added Date</p>
               <p className="text-[13px] font-medium text-gray-800">{group.addedDateFormatted || "—"}</p>
           </div>
 
-          {/* Chevron */}
           <div 
             className="ml-4 flex items-center justify-center cursor-pointer p-2 hover:bg-gray-100 rounded-full transition-colors"
             onClick={() => setIsExpanded(!isExpanded)}
@@ -69,20 +64,17 @@ export default function GroupListCard({ group, can }) {
           </div>
         </div>
 
-        {/* Expanded Content */}
         <div 
           className={`transition-all duration-500 ease-in-out overflow-hidden ${
             isExpanded ? "max-h-[500px] opacity-100 " : "max-h-0 opacity-0"
           }`}
         >
           <div className="px-6 py-5 flex items-start bg-white">
-              {/* Col 1: Description */}
               <div className="flex-[4]">
                 <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">Description</p>
                 <p className="text-[13px] text-gray-800 font-medium">{group.description || "—"}</p>
               </div>
               
-              {/* Spacer for Chevron alignment */}
               <div className="ml-4 w-5"></div>
           </div>
         </div>

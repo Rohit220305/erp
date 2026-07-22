@@ -51,7 +51,6 @@ export default function ProfileDropdown({
 
   return (
     <div ref={dropdownRef} className="relative">
-      {/* Trigger */}
       <button
         onClick={() => setOpen((prev) => !prev)}
         className="flex items-center gap-3 cursor-pointer"
@@ -84,7 +83,6 @@ export default function ProfileDropdown({
         />
       </button>
 
-      {/* Dropdown */}
       {open && (
         <div className="absolute right-0 top-[55px] z-[999] w-[280px] overflow-hidden rounded-md bg-white shadow-xl">
           {showBackToSession && (

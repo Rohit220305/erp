@@ -47,17 +47,14 @@ export default function ViewSwitcher() {
           transition
         "
       >
-        {/* {selectedOption.icon} */}
         <TableProperties size={18} />
       </button>
 
       {open && (
         <>
-          {/* Backdrop */}
           <div className="fixed inset-0 z-40 " onClick={() => setOpen(false)} />
 
-          {/* Dropdown */}
-          <div
+         <div
             className="
               absolute
               right-0

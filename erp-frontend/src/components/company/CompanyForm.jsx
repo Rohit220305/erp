@@ -1,4 +1,3 @@
-// CompanyForm.jsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -20,10 +19,10 @@ import {
   companyEditSchema,
 } from "@/lib/validation/company-add-update.schema";
 import { listCompanies } from "@/lib/api/company-api";
+import { listCurrencies } from "@/lib/api/currency-api";
 import { useAuth } from "@/context/AuthContext";
 import ConfirmModal from "../common/ConfirmModal";
 
-/** Section header component */
 const SectionHeader = ({
   icon: Icon,
   title,
@@ -42,7 +41,6 @@ const SectionHeader = ({
   </div>
 );
 
-// Module-level Static Lookups & Options (Computed once when module loads)
 const ALL_COUNTRIES = Country.getAllCountries();
 const findCountryByName = (name) => ALL_COUNTRIES.find((c) => c.name === name);
 
@@ -53,7 +51,7 @@ const COUNTRY_OPTIONS = ALL_COUNTRIES.map((c) => ({
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
-  { label: "InActive", value: "InActive" },
+  { label: "Inactive", value: "Inactive" },
 ];
 
 const DIAL_CODE_OPTIONS = (() => {
@@ -90,9 +88,9 @@ const BASE_DEFAULTS = {
   contactPersonEmail: "",
   contactPersonPhone: "",
   status: "Active",
+  supportedCurrencies: [],
 };
 
-/** Dynamic Custom Styling for react-select components */
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
     ...base,
@@ -136,14 +134,12 @@ export default function CompanyForm({
   const fileInputRef = useRef(null);
   const user = useAuth();
 
-  // Plain variable computation (no useMemo needed)
   const initialData = { ...BASE_DEFAULTS, ...externalDefaults };
   const parentCompanyOptions = (parentCompaniesProp || []).map((c) => ({
     label: c.companyName,
     value: c.id,
   }));
-
-  // State
+  
   const [formData, setFormData] = useState(initialData);
   const [errors, setErrors] = useState({});
   const [isDirty, setIsDirty] = useState(false);
@@ -153,6 +149,14 @@ export default function CompanyForm({
     parentCompaniesProp ?? []
   );
   const [parentLoading, setParentLoading] = useState(false);
+  
+  const [currencies, setCurrencies] = useState([]);
+  const [currencyLoading, setCurrencyLoading] = useState(false);
+
+  const currencyOptions = currencies.map((c) => ({
+    label: `${c.currencyCode} - ${c.currencyName}`,
+    value: c.id,
+  }));
 
   const [stateOptions, setStateOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
@@ -170,7 +174,6 @@ export default function CompanyForm({
 
   const isInitialMount = useRef(true);
 
-  // Sync initialData if externalDefaults changes (using serialized deps to prevent infinite loops)
   const serializedDefaults = externalDefaults ? JSON.stringify(externalDefaults) : null;
   useEffect(() => {
     if (externalDefaults) {
@@ -184,7 +187,24 @@ export default function CompanyForm({
     }
   }, [serializedDefaults]);
 
-  // Fetch Parent Companies (if not provided as prop)
+  useEffect(() => {
+    let cancelled = false;
+    setCurrencyLoading(true);
+    listCurrencies({ page: 1, limit: 100, search: "" })
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.settings?.data?.list || res?.data?.list || [];
+        setCurrencies(list);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setCurrencyLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     if (parentCompaniesProp && parentCompaniesProp.length > 0) return;
     let cancelled = false;
@@ -210,7 +230,6 @@ export default function CompanyForm({
     };
   }, [parentCompaniesProp, mode, externalDefaults?.id]);
 
-  // Effect: country → states + auto dial code
   useEffect(() => {
     if (!formData.country) {
       setStateOptions([]);
@@ -232,7 +251,6 @@ export default function CompanyForm({
     setStateOptions(states);
     setCityOptions([]);
 
-    // Auto-update dial code when country changes
     if (countryObj.phonecode) {
       setFormData((prev) => ({
         ...prev,
@@ -249,7 +267,6 @@ export default function CompanyForm({
     }
   }, [formData.country]);
 
-  // Effect: state → cities
   useEffect(() => {
     if (!formData.state || !formData.country) {
       setCityOptions([]);
@@ -276,7 +293,6 @@ export default function CompanyForm({
     }
   }, [formData.state, formData.country, stateOptions]);
 
-  // Mark initial mount done
   useEffect(() => {
     const t = setTimeout(() => {
       isInitialMount.current = false;
@@ -284,7 +300,6 @@ export default function CompanyForm({
     return () => clearTimeout(t);
   }, []);
 
-  // Handle Field Value Change
   const handleChange = (name, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -292,7 +307,6 @@ export default function CompanyForm({
     }));
     setIsDirty(true);
 
-    // Clear error for field on change
     if (errors[name]) {
       setErrors((prevErrors) => {
         const copy = { ...prevErrors };
@@ -302,7 +316,6 @@ export default function CompanyForm({
     }
   };
 
-  // Handle Logo File Selection
   const handleLogoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -323,7 +336,6 @@ export default function CompanyForm({
     setIsDirty(true);
   };
 
-  // Remove Logo
   const removeLogo = () => {
     setLogoFile(null);
     setLogoPreview(null);
@@ -331,7 +343,6 @@ export default function CompanyForm({
     setIsDirty(true);
   };
 
-  // Form Validation
   const validateForm = () => {
     const schema = mode === "create" ? companyAddSchema : companyEditSchema;
     const result = schema.safeParse(formData);
@@ -345,7 +356,6 @@ export default function CompanyForm({
         }
       });
       setErrors(fieldErrors);
-      toast.error("Please fix the validation errors in the form.");
       return false;
     }
 
@@ -353,7 +363,6 @@ export default function CompanyForm({
     return true;
   };
 
-  // Pre-Submit Trigger
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
@@ -361,13 +370,19 @@ export default function CompanyForm({
     }
   };
 
-  // Actual Submission Handler
   const handleActualSubmit = async (data) => {
     const payload = { ...data };
     payload.companyName = payload.companyName.trim();
     payload.shortName = payload.shortName.trim();
     payload.legalName = payload.legalName?.trim() ?? "";
     payload.email = payload.email.trim().toLowerCase();
+
+    delete payload.companyLogo;
+    delete payload.logoUrl;
+
+    if (!logoFile && !logoPreview) {
+      payload.companyLogo = "";
+    }
 
     if (!payload.companyCode) {
       payload.companyCode =
@@ -418,7 +433,6 @@ export default function CompanyForm({
     }
   };
 
-  // Discard Action Handler
   const handleDiscard = () => {
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
@@ -427,7 +441,6 @@ export default function CompanyForm({
     }
   };
 
-  // Options for parent companies fetched from state or prop
   const activeParentCompanyOptions = (parentCompanies || []).map((c) => ({
     label: c.companyName,
     value: c.id,
@@ -436,11 +449,7 @@ export default function CompanyForm({
   return (
     <div className="h-full overflow-y-scroll mx-6">
       <form onSubmit={handleFormSubmit} className="space-y-5 text-black">
-        
-        {/* Top Section: Logo Card + Company Details Card */}
         <div className="grid lg:grid-cols-[260px_1fr] gap-5">
-          
-          {/* ── 1. Logo Card ────────────────────────────────────────── */}
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <SectionHeader icon={Building2} title="Company Logo" />
 
@@ -517,13 +526,10 @@ export default function CompanyForm({
             </div>
           </div>
 
-          {/* ── 2. Company Details Card ─────────────────────────────── */}
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <SectionHeader icon={Briefcase} title="Company Details" />
 
             <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
-              
-              {/* Company Name */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Company Name <span className="text-red-400">*</span>
@@ -545,22 +551,31 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Direct Inline Select: Parent Company */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Parent Company
                 </label>
                 <Select
                   instanceId="select-parentCompanyId"
-                  value={activeParentCompanyOptions.find((c) => String(c.value) === String(formData.parentCompanyId)) || null}
-                  onChange={(opt) => handleChange("parentCompanyId", opt ? opt.value : "")}
+                  value={
+                    activeParentCompanyOptions.find(
+                      (c) =>
+                        String(c.value) === String(formData.parentCompanyId),
+                    ) || null
+                  }
+                  onChange={(opt) =>
+                    handleChange("parentCompanyId", opt ? opt.value : "")
+                  }
                   options={activeParentCompanyOptions}
                   isDisabled={parentLoading}
                   isClearable={true}
                   isSearchable={true}
                   placeholder={parentLoading ? "Loading…" : "None (Top-level)"}
                   classNamePrefix="react-select"
-                  styles={customSelectStyles(errors.parentCompanyId, parentLoading)}
+                  styles={customSelectStyles(
+                    errors.parentCompanyId,
+                    parentLoading,
+                  )}
                 />
                 {errors.parentCompanyId && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
@@ -569,7 +584,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Short Name */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Short Name <span className="text-red-400">*</span>
@@ -591,7 +605,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Company Code */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Company Code
@@ -615,7 +628,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Legal Name */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Legal Name
@@ -637,7 +649,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Registration Number */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Registration Number
@@ -646,7 +657,9 @@ export default function CompanyForm({
                   type="text"
                   placeholder="Enter registration number"
                   value={formData.registrationNumber}
-                  onChange={(e) => handleChange("registrationNumber", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("registrationNumber", e.target.value)
+                  }
                   className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
                     focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
                     ${errors.registrationNumber ? "border-red-400 bg-red-50" : "border-gray-200"}
@@ -659,7 +672,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Tax Number */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Tax Number (GST / VAT)
@@ -681,7 +693,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Website */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Website
@@ -703,7 +714,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Company Email */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Company Email <span className="text-red-400">*</span>
@@ -725,15 +735,19 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Direct Inline Select: Status */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Status <span className="text-red-400">*</span>
                 </label>
                 <Select
                   instanceId="select-status"
-                  value={STATUS_OPTIONS.find((s) => s.value === formData.status) || null}
-                  onChange={(opt) => handleChange("status", opt ? opt.value : "")}
+                  value={
+                    STATUS_OPTIONS.find((s) => s.value === formData.status) ||
+                    null
+                  }
+                  onChange={(opt) =>
+                    handleChange("status", opt ? opt.value : "")
+                  }
                   options={STATUS_OPTIONS}
                   isClearable={true}
                   isSearchable={false}
@@ -748,14 +762,50 @@ export default function CompanyForm({
                 )}
               </div>
 
+              <div className="space-y-1.5 lg:col-span-1 ">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Currency
+                </label>
+                {/* <Select
+                  instanceId="select-currencies"
+                  isMulti
+                  value={currencyOptions.filter(opt => (formData.supportedCurrencies || []).some(id => String(id) === String(opt.value)))}
+                  onChange={(selected) => handleChange("supportedCurrencies", selected ? selected.map(s => Number(s.value)) : [])}
+                  options={currencyOptions}
+                  isLoading={currencyLoading}
+                  placeholder="Select Supported Currencies"
+                  classNamePrefix="react-select"
+                  styles={customSelectStyles(errors.supportedCurrencies)}
+                /> */}
+
+                <Select
+                  instanceId="select-currencies"
+                  value={
+                    currencyOptions.find(
+                      (opt) =>
+                        String(opt.value) ===
+                        String(formData.supportedCurrencies),
+                    ) || null
+                  }
+                  onChange={(selected) =>
+                    handleChange(
+                      "supportedCurrencies",
+                      selected ? Number(selected.value) : null,
+                    )
+                  }
+                  options={currencyOptions}
+                  isLoading={currencyLoading}
+                  isClearable
+                  placeholder="Select Supported Currency"
+                  classNamePrefix="react-select"
+                  styles={customSelectStyles(errors.supportedCurrencies)}
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Section: Address Card + Contact Person Card */}
         <div className="grid lg:grid-cols-2 gap-5">
-          
-          {/* ── 3. Address Card ─────────────────────────────────────── */}
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <SectionHeader
               icon={MapPin}
@@ -765,9 +815,7 @@ export default function CompanyForm({
             />
 
             <div className="space-y-5">
-              
               <div className="grid grid-cols-2 gap-4">
-                {/* Address Line 1 */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     Address Line 1 <span className="text-red-400">*</span>
@@ -776,7 +824,9 @@ export default function CompanyForm({
                     type="text"
                     placeholder="Street / building"
                     value={formData.addressLine1}
-                    onChange={(e) => handleChange("addressLine1", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("addressLine1", e.target.value)
+                    }
                     className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
                       focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
                       ${errors.addressLine1 ? "border-red-400 bg-red-50" : "border-gray-200"}
@@ -789,7 +839,6 @@ export default function CompanyForm({
                   )}
                 </div>
 
-                {/* Address Line 2 */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     Address Line 2
@@ -798,7 +847,9 @@ export default function CompanyForm({
                     type="text"
                     placeholder="Area / landmark (optional)"
                     value={formData.addressLine2}
-                    onChange={(e) => handleChange("addressLine2", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("addressLine2", e.target.value)
+                    }
                     className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
                       focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
                       ${errors.addressLine2 ? "border-red-400 bg-red-50" : "border-gray-200"}
@@ -812,15 +863,19 @@ export default function CompanyForm({
                 </div>
               </div>
 
-              {/* Direct Inline Select: Country */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Country <span className="text-red-400">*</span>
                 </label>
                 <Select
                   instanceId="select-country"
-                  value={COUNTRY_OPTIONS.find((c) => c.value === formData.country) || null}
-                  onChange={(opt) => handleChange("country", opt ? opt.value : "")}
+                  value={
+                    COUNTRY_OPTIONS.find((c) => c.value === formData.country) ||
+                    null
+                  }
+                  onChange={(opt) =>
+                    handleChange("country", opt ? opt.value : "")
+                  }
                   options={COUNTRY_OPTIONS}
                   isClearable={true}
                   isSearchable={true}
@@ -836,15 +891,19 @@ export default function CompanyForm({
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {/* Direct Inline Select: State */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     State / Province <span className="text-red-400">*</span>
                   </label>
                   <Select
                     instanceId="select-state"
-                    value={stateOptions.find((s) => s.value === formData.state) || null}
-                    onChange={(opt) => handleChange("state", opt ? opt.value : "")}
+                    value={
+                      stateOptions.find((s) => s.value === formData.state) ||
+                      null
+                    }
+                    onChange={(opt) =>
+                      handleChange("state", opt ? opt.value : "")
+                    }
                     options={stateOptions}
                     isDisabled={!formData.country || stateOptions.length === 0}
                     isClearable={true}
@@ -853,11 +912,14 @@ export default function CompanyForm({
                       !formData.country
                         ? "Select country first"
                         : stateOptions.length === 0
-                        ? "No states"
-                        : "Select State"
+                          ? "No states"
+                          : "Select State"
                     }
                     classNamePrefix="react-select"
-                    styles={customSelectStyles(errors.state, !formData.country || stateOptions.length === 0)}
+                    styles={customSelectStyles(
+                      errors.state,
+                      !formData.country || stateOptions.length === 0,
+                    )}
                   />
                   {errors.state && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
@@ -866,15 +928,18 @@ export default function CompanyForm({
                   )}
                 </div>
 
-                {/* Direct Inline Select: City */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     City <span className="text-red-400">*</span>
                   </label>
                   <Select
                     instanceId="select-city"
-                    value={cityOptions.find((c) => c.value === formData.city) || null}
-                    onChange={(opt) => handleChange("city", opt ? opt.value : "")}
+                    value={
+                      cityOptions.find((c) => c.value === formData.city) || null
+                    }
+                    onChange={(opt) =>
+                      handleChange("city", opt ? opt.value : "")
+                    }
                     options={cityOptions}
                     isDisabled={!formData.state || cityOptions.length === 0}
                     isClearable={true}
@@ -883,11 +948,14 @@ export default function CompanyForm({
                       !formData.state
                         ? "Select state first"
                         : cityOptions.length === 0
-                        ? "No cities"
-                        : "Select City"
+                          ? "No cities"
+                          : "Select City"
                     }
                     classNamePrefix="react-select"
-                    styles={customSelectStyles(errors.city, !formData.state || cityOptions.length === 0)}
+                    styles={customSelectStyles(
+                      errors.city,
+                      !formData.state || cityOptions.length === 0,
+                    )}
                   />
                   {errors.city && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
@@ -897,7 +965,6 @@ export default function CompanyForm({
                 </div>
               </div>
 
-              {/* Zip Code */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Zip / Postal Code <span className="text-red-400">*</span>
@@ -919,7 +986,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Phone Number with Direct Inline Select: Dial Code */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Phone Number <span className="text-red-400">*</span>
@@ -928,14 +994,22 @@ export default function CompanyForm({
                   <div className="w-[130px] shrink-0">
                     <Select
                       instanceId="select-dialCode"
-                      value={DIAL_CODE_OPTIONS.find((d) => d.value === formData.dialCode) || null}
-                      onChange={(opt) => handleChange("dialCode", opt ? opt.value : "")}
+                      value={
+                        DIAL_CODE_OPTIONS.find(
+                          (d) => d.value === formData.dialCode,
+                        ) || null
+                      }
+                      onChange={(opt) =>
+                        handleChange("dialCode", opt ? opt.value : "")
+                      }
                       options={DIAL_CODE_OPTIONS}
                       isClearable={true}
                       isSearchable={true}
                       placeholder="Code"
                       classNamePrefix="react-select"
-                      styles={customSelectStyles(errors.dialCode || errors.phone)}
+                      styles={customSelectStyles(
+                        errors.dialCode || errors.phone,
+                      )}
                     />
                   </div>
                   <input
@@ -955,11 +1029,9 @@ export default function CompanyForm({
                   </p>
                 )}
               </div>
-
             </div>
           </div>
 
-          {/* ── 4. Contact Person Card ─────────────────────────────── */}
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <SectionHeader
               icon={User}
@@ -969,8 +1041,6 @@ export default function CompanyForm({
             />
 
             <div className="space-y-5">
-              
-              {/* Contact Person Name */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Contact Person Name
@@ -979,7 +1049,9 @@ export default function CompanyForm({
                   type="text"
                   placeholder="Full name"
                   value={formData.contactPersonName}
-                  onChange={(e) => handleChange("contactPersonName", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("contactPersonName", e.target.value)
+                  }
                   className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
                     focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
                     ${errors.contactPersonName ? "border-red-400 bg-red-50" : "border-gray-200"}
@@ -992,7 +1064,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Contact Person Email */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Contact Person Email
@@ -1001,7 +1072,9 @@ export default function CompanyForm({
                   type="email"
                   placeholder="contact@example.com"
                   value={formData.contactPersonEmail}
-                  onChange={(e) => handleChange("contactPersonEmail", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("contactPersonEmail", e.target.value)
+                  }
                   className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
                     focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
                     ${errors.contactPersonEmail ? "border-red-400 bg-red-50" : "border-gray-200"}
@@ -1014,7 +1087,6 @@ export default function CompanyForm({
                 )}
               </div>
 
-              {/* Contact Person Phone */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Contact Person Phone
@@ -1023,7 +1095,9 @@ export default function CompanyForm({
                   type="tel"
                   placeholder="Phone number"
                   value={formData.contactPersonPhone}
-                  onChange={(e) => handleChange("contactPersonPhone", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("contactPersonPhone", e.target.value)
+                  }
                   className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
                     focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
                     ${errors.contactPersonPhone ? "border-red-400 bg-red-50" : "border-gray-200"}
@@ -1035,12 +1109,10 @@ export default function CompanyForm({
                   </p>
                 )}
               </div>
-
             </div>
           </div>
         </div>
 
-        {/* Submit & Discard Action Footer */}
         <div className="px-6 py-4 flex gap-3 justify-center items-center">
           <button
             type="button"
@@ -1063,7 +1135,6 @@ export default function CompanyForm({
         </div>
       </form>
 
-      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
         title={

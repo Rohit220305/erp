@@ -3,7 +3,7 @@
 
 function seededWidth(row, col) {
   const n = Math.sin(row * 127 + col * 311) * 43758.5453123;
-  return 60 + (n - Math.floor(n)) * 40; // range [60, 100)
+  return 60 + (n - Math.floor(n)) * 40; 
 }
 
 export default function TableSkeleton({ rows = 8, cols = 5 }) {

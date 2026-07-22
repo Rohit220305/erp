@@ -129,7 +129,6 @@ export class UserService {
 
       const res = await this.userRepo.insert(queryColumns);
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'USER_CREATE',
         companyId: params.companyId,
@@ -292,7 +291,6 @@ export class UserService {
         queryColumns,
       );
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'USER_UPDATE',
         companyId: user.companyId,
@@ -360,7 +358,6 @@ export class UserService {
 
       await this.commonFileService.deleteFolder('users', `${params.id}`);
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'USER_DELETE',
         companyId: user.companyId,

@@ -30,7 +30,6 @@ export class GroupCapabilityService {
     try {
       const { groupId, capabilityIds } = params;
 
-      // Verify group exists
       const groupExists = await this.groupRepo.findOne({
         where: { id: groupId },
       });
@@ -40,15 +39,14 @@ export class GroupCapabilityService {
 
       const insertedIds: number[] = [];
       for (const capId of capabilityIds) {
-        // Verify capability exists
+        
         const capExists = await this.capabilityRepo.findOne({
           where: { id: capId },
         });
         if (!capExists) {
-          continue; // or throw Error
+          continue; 
         }
 
-        // Check if already mapped
         let mapping = await this.groupCapabilityRepo.findOne({
           where: { groupId, capabilityId: capId },
         });

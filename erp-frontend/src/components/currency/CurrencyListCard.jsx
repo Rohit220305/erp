@@ -16,12 +16,10 @@ export default function CurrencyListCard({ item, config, setSelectedItemForDetai
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center px-6 py-4 gap-4">
 
-          {/* ── Currency Symbol Badge ─────────────────────────────── */}
           <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 flex items-center justify-center font-bold text-xl text-blue-600 select-none">
             {item.currencySymbol || item.currencyCode?.[0] || "¤"}
           </div>
 
-          {/* ── Primary: Name + Code ──────────────────────────────── */}
           <div className="flex-1 min-w-0">
             <p className="text-[10px] text-gray-400 mb-0.5 tracking-widest font-semibold uppercase">
               {config.moduleName || "Currency"}
@@ -43,7 +41,6 @@ export default function CurrencyListCard({ item, config, setSelectedItemForDetai
             </p>
           </div>
 
-          {/* ── Symbol Column ─────────────────────────────────────── */}
           <div className="flex-1 min-w-0 hidden sm:block">
             <p className="text-[10px] text-gray-400 mb-1 tracking-widest font-semibold uppercase">
               Symbol
@@ -53,7 +50,6 @@ export default function CurrencyListCard({ item, config, setSelectedItemForDetai
             </p>
           </div>
 
-          {/* ── Status Badge ──────────────────────────────────────── */}
           <div className="flex-shrink-0">
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${

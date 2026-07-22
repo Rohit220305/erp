@@ -18,7 +18,6 @@ export default async function CompanyEditPage({ params }) {
   const allCompanies = companiesRes?.settings?.data?.list ||
     companiesRes?.data?.list || [];
 
-  // Exclude self from parent options
   const parentCompanies = allCompanies.filter((c) => c.id !== company.id);
 
   return (

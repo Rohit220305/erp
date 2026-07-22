@@ -19,7 +19,7 @@ export class GeneralUtilities {
         return true;
       }
 
-      return filterString;
+      return filterString;  
     } catch (err) {
       console.log(err);
       throw err;

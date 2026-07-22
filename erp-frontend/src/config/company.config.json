@@ -9,42 +9,163 @@
     "delete": "COMPANY_DELETE"
   },
   "columns": [
-    { "label": "Logo", "key": "logoUrl", "type": "image", "searchable": false, "sortable": false },
-    { "label": "Company Name", "key": "companyName", "type": "link", "linkPath": "/company/{id}", "searchable": true, "sortable": true },
-    { "label": "Short Name", "key": "shortName", "type": "text", "searchable": true, "sortable": true },
-    { "label": "Company Code", "key": "companyCode", "type": "text", "searchable": true, "sortable": true },
-    { "label": "Contact Person", "key": "contactPersonName", "type": "text", "searchable": true, "sortable": true },
-    { "label": "Email", "key": "email", "type": "text", "searchable": true, "sortable": true },
-    { "label": "Phone", "key": "phone", "type": "phone", "searchable": true, "sortable": true },
-    { "label": "Status", "key": "status", "type": "statusBadge", "searchable": true, "sortable": true, "options": [{ "label": "Active", "value": "Active" }, { "label": "Inactive", "value": "InActive" }] },
-    { "label": "Added Date", "key": "addedDateFormatted", "type": "text", "searchable": false, "sortable": true }
+    {
+      "label": "Logo",
+      "key": "logoUrl",
+      "type": "image",
+      "searchable": false,
+      "sortable": false
+    },
+    {
+      "label": "Company Name",
+      "key": "companyName",
+      "type": "link",
+      "linkPath": "/company/{id}",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Short Name",
+      "key": "shortName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Company Code",
+      "key": "companyCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Contact Person",
+      "key": "contactPersonName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Email",
+      "key": "email",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Phone",
+      "key": "phone",
+      "type": "phone",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
   ],
   "actions": {
     "viewRedirectPath": "/company/{id}",
     "header": [
-      { "label": "Add Company", "type": "redirect", "path": "/company/add", "permission": "COMPANY_CREATE" }
+      {
+        "label": "Add Company",
+        "type": "redirect",
+        "path": "/company/add",
+        "permission": "COMPANY_CREATE"
+      }
     ],
     "row": [
-      { "label": "Edit",         "type": "editRedirect", "path": "/company/{id}/edit-company", "icon": "Edit",  "permission": "COMPANY_UPDATE" },
-      { "label": "View",         "type": "viewRedirect", "path": "/company/{id}",               "icon": "Eye",   "permission": "COMPANY_VIEW"   },
-      { "label": "Delete",       "type": "deleteModal",                                         "icon": "Trash2","permission": "COMPANY_DELETE", "danger": true },
-      { "label": "View Details", "type": "viewDrawer" }
+      {
+        "label": "Edit",
+        "type": "editRedirect",
+        "path": "/company/{id}/edit-company",
+        "icon": "Edit",
+        "permission": "COMPANY_UPDATE"
+      },
+      {
+        "label": "View",
+        "type": "viewRedirect",
+        "path": "/company/{id}",
+        "icon": "Eye",
+        "permission": "COMPANY_VIEW"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "COMPANY_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
     ]
   },
   "searchFields": [
-    { "label": "Company Name", "value": "companyName", "type": "text" },
-    { "label": "Short Name", "value": "shortName", "type": "text" },
-    { "label": "Company Code", "value": "companyCode", "type": "text" },
-    { "label": "Email", "value": "email", "type": "text" },
-    { "label": "Phone", "value": "phone", "type": "text" },
-    { "label": "Contact Person", "value": "contactPersonName", "type": "text" },
+    {
+      "label": "Company Name",
+      "value": "companyName",
+      "type": "text"
+    },
+    {
+      "label": "Short Name",
+      "value": "shortName",
+      "type": "text"
+    },
+    {
+      "label": "Company Code",
+      "value": "companyCode",
+      "type": "text"
+    },
+    {
+      "label": "Email",
+      "value": "email",
+      "type": "text"
+    },
+    {
+      "label": "Phone",
+      "value": "phone",
+      "type": "text"
+    },
+    {
+      "label": "Contact Person",
+      "value": "contactPersonName",
+      "type": "text"
+    },
     {
       "label": "Status",
       "value": "status",
       "type": "select",
       "options": [
-        { "label": "Active", "value": "Active" },
-        { "label": "Inactive", "value": "Inactive" }
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
       ]
     }
   ],
@@ -58,8 +179,14 @@
     "status": ""
   },
   "sidebarStatuses": [
-    { "label": "Active", "value": "Active" },
-    { "label": "Inactive", "value": "Inactive" }
+    {
+      "label": "Active",
+      "value": "Active"
+    },
+    {
+      "label": "Inactive",
+      "value": "Inactive"
+    }
   ],
   "listCard": {
     "primary": {
@@ -68,15 +195,49 @@
       "subtitle": "companyCode"
     },
     "columns": [
-      { "label": "Email", "key": "email", "type": "text" },
-      { "label": "Phone", "key": "phone", "type": "phone" },
-      { "label": "Status", "key": "status", "type": "statusBadge" }
+      {
+        "label": "Email",
+        "key": "email",
+        "type": "text"
+      },
+      {
+        "label": "Phone",
+        "key": "phone",
+        "type": "phone"
+      },
+      {
+        "label": "Currencies",
+        "key": "currencies",
+        "type": "badges",
+        "badgeKey": "currencyCode"
+      },
+      {
+        "label": "Status",
+        "key": "status",
+        "type": "statusBadge"
+      }
     ],
     "expanded": [
-      { "label": "Legal Name", "key": "legalName", "type": "text" },
-      { "label": "Registration No.", "key": "registrationNumber", "type": "text" },
-      { "label": "Contact Person", "key": "contactPersonName", "type": "text" },
-      { "label": "Added Date", "key": "addedDateFormatted", "type": "text" }
+      {
+        "label": "Legal Name",
+        "key": "legalName",
+        "type": "text"
+      },
+      {
+        "label": "Registration No.",
+        "key": "registrationNumber",
+        "type": "text"
+      },
+      {
+        "label": "Contact Person",
+        "key": "contactPersonName",
+        "type": "text"
+      },
+      {
+        "label": "Added Date",
+        "key": "addedDateFormatted",
+        "type": "text"
+      }
     ]
   },
   "gridCard": {
@@ -87,13 +248,21 @@
       "badge": "status"
     },
     "details": [
-      { "label": "Email", "icon": "Mail", "key": "email", "type": "text" },
-      { "label": "Phone", "icon": "Phone", "key": "phone", "type": "phone" }
+      {
+        "label": "Email",
+        "icon": "Mail",
+        "key": "email",
+        "type": "text"
+      },
+      {
+        "label": "Phone",
+        "icon": "Phone",
+        "key": "phone",
+        "type": "phone"
+      }
     ],
     "footer": {
       "date": "addedDateFormatted"
     }
   }
 }
-
-   

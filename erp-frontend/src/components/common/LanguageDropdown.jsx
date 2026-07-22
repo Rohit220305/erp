@@ -67,7 +67,6 @@ export default function LanguageDropdown() {
 
   return (
     <div ref={dropdownRef} className="relative">
-      {/* Selected Language */}
     
       <button
         type="button"
@@ -81,7 +80,6 @@ export default function LanguageDropdown() {
         {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </button>
 
-      {/* Dropdown */}
 
       {open && (
         <div className="absolute right-0 top-full z-50  overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">

@@ -11,9 +11,7 @@ import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from 'src/package/decorator/decorator.public';
 import { JwtPayload } from 'src/package/types/jwt-payload.type';
 
-/**
- * Global JWT Auth Guard.
-/** Paths that are always public regardless of @Public() decorator */
+
 const FALLBACK_PUBLIC_PATHS: RegExp[] = [
   /^\/uploads\//,   // static file serving
 ];

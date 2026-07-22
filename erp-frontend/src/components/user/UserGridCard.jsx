@@ -103,7 +103,6 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
 
       <hr className="border-gray-100 my-4" />
 
-      {/* Bottom Section */}
       <div className="space-y-3 text-sm">
         <div className="grid grid-cols-[110px_1fr] items-center gap-2">
           <span className="text-gray-400">User Name</span>

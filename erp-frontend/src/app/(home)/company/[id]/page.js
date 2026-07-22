@@ -7,9 +7,6 @@ export default async function Page({ params }) {
 
   const company = await getCompany(params.id);
 
-  // getCompany() returns null when the API errors or the record doesn't exist.
-  // Render 404 instead of crashing CompanyDetailsPage with a null prop.
-  
 
   return <CompanyDetailsPage company={company} />;
 }

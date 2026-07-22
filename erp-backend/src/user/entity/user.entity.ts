@@ -78,7 +78,7 @@ export class UserEntity {
 
   @Column({
     type: 'enum',
-    enum: ['Active', 'InActive'],
+    enum: ['Active', 'Inactive'],
     default: 'Active',
   })
   status: string;

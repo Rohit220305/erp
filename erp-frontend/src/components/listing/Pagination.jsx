@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 
 function getPages(current, total) {
-  // show all pages for small totals
   if (total <= 5) {
     return Array.from({ length: total }, (_, i) => i + 1);
   }
@@ -18,30 +17,25 @@ function getPages(current, total) {
   let start = current - 1;
   let end = current + 1;
 
-  // fix left boundary
   if (start < 1) {
     start = 1;
     end = 3;
   }
 
-  // fix right boundary
   if (end > total) {
     end = total;
     start = total - 2;
   }
 
-  // first page + ellipsis
   if (start > 1) {
     pages.push(1);
     if (start > 2) pages.push("...");
   }
 
-  // middle range
   for (let i = start; i <= end; i++) {
     pages.push(i);
   }
 
-  // ellipsis + last page
   if (end < total) {
     if (end < total - 1) pages.push("...");
     pages.push(total);
@@ -59,7 +53,6 @@ export default function Pagination({
 }) {
   const totalPages = Math.ceil(total / limit) || 1;
 
-  // Range info: "Showing 1–10 of 42 entries" (graceful when total is 0)
   const rangeStart = total === 0 ? 0 : (page - 1) * limit + 1;
   const rangeEnd = total === 0 ? 0 : Math.min(page * limit, total);
 
@@ -80,7 +73,6 @@ export default function Pagination({
 
   return (
     <div className="sticky bottom-0 z-30 w-full  bg-white/95 backdrop-blur-sm flex flex-wrap items-center justify-between px-5 py-3 gap-4 border-t border-gray-200 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
-      {/* Left: Show N + range info */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 whitespace-nowrap">Show</span>
@@ -108,11 +100,7 @@ export default function Pagination({
           entries
         </span>
       </div>
-
-      {/* Center: Page buttons */}
-      <nav className="flex items-center gap-1" aria-label="Pagination">
-        {/* First */}
-        <button
+      <nav className="flex items-center gap-1" aria-label="Pagination">        <button
           type="button"
           disabled={page === 1}
           onClick={() => onPageChange(1)}
@@ -121,9 +109,7 @@ export default function Pagination({
         >
           <ChevronsLeft size={15} />
         </button>
-
-        {/* Prev */}
-        <button
+      <button
           type="button"
           disabled={page === 1}
           onClick={() => onPageChange(page - 1)}
@@ -131,7 +117,7 @@ export default function Pagination({
           aria-label="Previous page"
         >
           <ChevronLeft size={15} />
-        </button>
+     </button>
 
         {getPages(page, totalPages).map((p, idx) =>
           p === "..." ? (
@@ -156,9 +142,7 @@ export default function Pagination({
             </button>
           ),
         )}
-
-        {/* Next */}
-        <button
+       <button
           type="button"
           disabled={page === totalPages}
           onClick={() => onPageChange(page + 1)}
@@ -168,8 +152,7 @@ export default function Pagination({
           <ChevronRight size={15} />
         </button>
 
-        {/* Last */}
-        <button
+       <button
           type="button"
           disabled={page === totalPages}
           onClick={() => onPageChange(totalPages)}
@@ -180,7 +163,6 @@ export default function Pagination({
         </button>
       </nav>
 
-      {/* Right: Go to page */}
       <div className="flex items-center gap-2">
         <span className="text-xs text-gray-400 whitespace-nowrap">Go to</span>
         <input

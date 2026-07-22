@@ -52,9 +52,7 @@ export class GroupService {
       let oldValue: any = null;
       let newValue: any = null;
 
-      // 1. Group validation & insert/update
       if (id) {
-        // Update mode
         const group = await queryRunner.manager.findOne(GroupEntity, {
           where: { id },
         });
@@ -66,7 +64,6 @@ export class GroupService {
         oldValue = group;
         newValue = { groupName, groupCode, description, status, capabilityCodes };
         
-        // Check code uniqueness if changing code
         if (groupCode !== group.groupCode) {
           const codeExists = await queryRunner.manager.findOne(GroupEntity, {
             where: { groupCode },
@@ -89,7 +86,6 @@ export class GroupService {
           },
         );
       } else {
-        // Add mode
         const codeExists = await queryRunner.manager.findOne(GroupEntity, {
           where: { groupCode },
         });
@@ -108,8 +104,6 @@ export class GroupService {
         groupId = insertRes.raw.insertId;
       }
 
-      // 2. Fetch Capability IDs for the provided codes
-      // Reject if any capability code is invalid
       let capabilityIds: number[] = [];
       if (capabilityCodes && capabilityCodes.length > 0) {
         const capabilities = await queryRunner.manager.find(CapabilityEntity, {
@@ -122,10 +116,8 @@ export class GroupService {
         capabilityIds = capabilities.map((c) => c.id);
       }
 
-      // 3. Delete existing capabilities for the group
       await queryRunner.manager.delete(GroupCapabilityEntity, { groupId });
 
-      // 4. Insert new capability mappings
       if (capabilityIds.length > 0) {
         const mappings = capabilityIds.map((capId) => ({
           groupId,
@@ -137,13 +129,10 @@ export class GroupService {
         await queryRunner.manager.insert(GroupCapabilityEntity, mappings);
       }
 
-      // Commit transaction
       await queryRunner.commitTransaction();
 
-      // 5. Invalidate permission cache
       await this.permissionCacheService.invalidatePermissions(groupId);
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: id ? 'GROUP_UPDATE' : 'GROUP_CREATE',
         companyId: req.user?.companyId,
@@ -215,7 +204,6 @@ export class GroupService {
 
       const res = await this.groupRepo.insert(queryColumns);
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'GROUP_CREATE',
         companyId: req.user?.companyId,
@@ -303,7 +291,6 @@ export class GroupService {
 
       const res = await this.groupRepo.update({ id: params.id }, queryColumns);
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'GROUP_UPDATE',
         companyId: req.user?.companyId,
@@ -373,7 +360,6 @@ export class GroupService {
         id: params.id,
       });
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'GROUP_DELETE',
         companyId: req.user?.companyId,

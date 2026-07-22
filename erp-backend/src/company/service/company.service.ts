@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CompanyEntity } from '../entity/company.entity';
+import { CompanyCurrencyEntity } from '../entity/company-currency.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { COMPANY_INSERT_FIELDS, COMPANY_UPDATE_FIELDS } from 'src/package/constants/company-fields.constant';
 import { CommonFileService } from 'src/package/service/common-file.service';
@@ -18,6 +19,9 @@ export class CompanyService {
   @InjectRepository(CompanyEntity)
   private companyRepo: Repository<CompanyEntity>;
 
+  @InjectRepository(CompanyCurrencyEntity)
+  private companyCurrencyRepo: Repository<CompanyCurrencyEntity>;
+
 
 
   async startInsertCompany(req, params) {
@@ -25,6 +29,16 @@ export class CompanyService {
 
     if (response.success == 1) {
       const insertId = response?.data?.insert_id;
+
+      if (params.supportedCurrencies && Array.isArray(params.supportedCurrencies)) {
+        for (const currencyId of params.supportedCurrencies) {
+          await this.companyCurrencyRepo.insert({
+            companyId: insertId,
+            currencyId,
+            addedBy: req.user?.sub,
+          });
+        }
+      }
 
       if (params.companyLogo && insertId) {
         const fileResponse = await this.commonFileService.transferFile(
@@ -100,7 +114,6 @@ export class CompanyService {
 
       const res = await this.companyRepo.insert(queryColumns);
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'COMPANY_CREATE',
         companyId: res?.raw?.insertId,
@@ -136,9 +149,21 @@ export class CompanyService {
 
 
   async startUpdateCompany(req, params) {
+    
     const response = await this.updateCompany(req, params);
 
     if (response.success == 1) {
+      if (params.supportedCurrencies && Array.isArray(params.supportedCurrencies)) {
+        await this.companyCurrencyRepo.delete({ companyId: params.id });
+        for (const currencyId of params.supportedCurrencies) {
+          await this.companyCurrencyRepo.insert({
+            companyId: params.id,
+            currencyId,
+            addedBy: req.user?.sub,
+          });
+        }
+      }
+
       if (params.companyLogo && params.id) {
         const fileResponse = await this.commonFileService.transferFile(
           params.companyLogo,
@@ -216,7 +241,6 @@ export class CompanyService {
         queryColumns,
       );
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'COMPANY_UPDATE',
         companyId: params.id,
@@ -292,13 +316,16 @@ export class CompanyService {
         throw new Error('Child companies exist. Cannot delete company.');
       }
 
+      await this.companyCurrencyRepo.delete({
+        companyId: params.id,
+      });
+
       const res = await this.companyRepo.delete({
         id: params.id,
       });
 
       await this.commonFileService.deleteFolder('company', `${params.id}`);
 
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'COMPANY_DELETE',
         companyId: params.id,

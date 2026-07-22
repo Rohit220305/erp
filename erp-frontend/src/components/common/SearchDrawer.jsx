@@ -44,7 +44,6 @@ export default function SearchDrawer({
       prev.map((row, i) => {
         if (i !== idx) return row;
         
-        // If changing the field, reset the value to match the field type
         if (key === "field") {
           const targetDef = fields.find((f) => f.value === value);
           const newVal = targetDef?.type === "select" ? (targetDef.options[0]?.value || "") : "";
@@ -58,7 +57,6 @@ export default function SearchDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div
         onClick={onClose}
         className="absolute inset-0 bg-black/40 transition-opacity duration-300"
@@ -145,7 +143,6 @@ export default function SearchDrawer({
                       <option value="less than equal">less than equal</option>
                     </select>
 
-                    {/* Value Field */}
                     <div className="flex-1">
                       {currentFieldDef?.type === "select" ? (
                         <select
@@ -174,7 +171,6 @@ export default function SearchDrawer({
                       )}
                     </div>
 
-                    {/* Delete button */}
                     <button
                       type="button"
                       onClick={() => removeRow(idx)}
@@ -188,7 +184,6 @@ export default function SearchDrawer({
             )}
           </div>
 
-          {/* Footer Actions */}
           <div className="flex items-center justify-between border-t rounded-b-lg bg-gray-50 px-6 py-4">
             <button
               type="button"

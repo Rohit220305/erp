@@ -34,7 +34,6 @@ export class UserAuthService {
 
   async login(params) {
     let return_data: any = {};
-    // console.log( params);
     try {
       if (!params.userName) {
         throw new Error('Username is required');
@@ -55,7 +54,7 @@ export class UserAuthService {
       }
 
       if (user.status !== 'Active') {
-        throw new Error('User is InActive');
+        throw new Error('User is Inactive');
       }
         
       const passwordMatch = await bcrypt.compare(
@@ -87,7 +86,6 @@ export class UserAuthService {
         },
       });
 
-      //   delete user.password;
 
       user['companyName'] = company?.companyName || '';
 

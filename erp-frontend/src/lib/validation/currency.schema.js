@@ -1,14 +1,18 @@
 import { z } from "zod";
 
 export const currencyAddSchema = z.object({
-  currencyCode: z.string().min(1, "Currency code is required").max(10, "Max 10 characters"),
-  currencyName: z.string().min(1, "Currency name is required").max(100, "Max 100 characters"),
-  currencySymbol: z.string().min(1, "Currency symbol is required").max(10, "Max 10 characters"),
-  status: z.enum(["Active", "InActive"]).default("Active"),
+  currencyCode: z.string().min(1, "⚠Please enter Currency Code."),
+  currencyName: z.string().min(1, "⚠Please enter Currency Name."),
+  currencySymbol: z.string().min(1, "⚠Please enter Currency Symbol."),
+  status: z
+    .enum(["Active", "Inactive"], "⚠Please select Status.")
+    .default("Active"),
 });
 
 export const currencyEditSchema = z.object({
-  currencyName: z.string().min(1, "Currency name is required").max(100, "Max 100 characters"),
-  currencySymbol: z.string().min(1, "Currency symbol is required").max(10, "Max 10 characters"),
-  status: z.enum(["Active", "InActive"]).default("Active"),
+  currencyName: z.string().min(1, "⚠Please enter Currency Name."),
+  currencySymbol: z.string().min(1, "⚠Please enter Currency Symbol."),
+  status: z
+    .enum(["Active", "Inactive"], "⚠Please select Status.")
+    .default("Active"),
 });

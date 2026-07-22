@@ -1,4 +1,3 @@
-// GroupListPage.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -18,7 +17,6 @@ import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
 
-// Module-level Static Constants (Computed once when module loads)
 const SEARCH_FIELDS = [
   { label: "Group Name", value: "groupName", type: "text" },
   { label: "Group Code", value: "groupCode", type: "text" },
@@ -29,7 +27,7 @@ const SEARCH_FIELDS = [
     type: "select",
     options: [
       { label: "Active", value: "Active" },
-      { label: "Inactive", value: "InActive" },
+      { label: "Inactive", value: "Inactive" },
     ],
   },
 ];
@@ -54,6 +52,12 @@ const TABLE_HEADERS = [
     sortable: true,
   },
   {
+    label: "Added Date",
+    key: "addedDateFormatted",
+    searchable: false,
+    sortable: true,
+  },
+  {
     label: "Status",
     key: "status",
     searchable: true,
@@ -61,20 +65,14 @@ const TABLE_HEADERS = [
     type: "select",
     options: [
       { label: "Active", value: "Active" },
-      { label: "Inactive", value: "InActive" },
+      { label: "Inactive", value: "Inactive" },
     ],
-  },
-  {
-    label: "Added Date",
-    key: "addedDateFormatted",
-    searchable: false,
-    sortable: true,
   },
 ];
 
 const SIDEBAR_STATUSES = [
   { label: "Active", value: "Active" },
-  { label: "Inactive", value: "InActive" },
+  { label: "Inactive", value: "Inactive" },
 ];
 
 export default function GroupListPage() {
@@ -88,7 +86,6 @@ export default function GroupListPage() {
   const router = useRouter();
   const { can } = useAuth();
 
-  // Search/Filter states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sidebarFilters, setSidebarFilters] = useState({
     groupCode: "",
@@ -103,7 +100,6 @@ export default function GroupListPage() {
   const [appliedFilters, setAppliedFilters] = useState([]);
   const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
 
-  // Open Search Drawer Handler (Standard function without useCallback)
   const handleOpenSearch = () => {
     if (tempFilters.length === 0 && SEARCH_FIELDS.length > 0) {
       const defaultField = SEARCH_FIELDS[0];
@@ -118,7 +114,6 @@ export default function GroupListPage() {
     setIsSearchOpen(true);
   };
 
-  // Fetch Groups Data (Standard async function without useCallback)
   const fetchGroups = async () => {
     try {
       setLoading(true);
@@ -154,7 +149,6 @@ export default function GroupListPage() {
           .filter(Boolean);
       }
 
-      // Add column filters
       if (columnFilters && Object.keys(columnFilters).length > 0) {
         Object.entries(columnFilters).forEach(([key, val]) => {
           if (val === undefined || val === null || val === "") return;
@@ -186,7 +180,6 @@ export default function GroupListPage() {
     }
   };
 
-  // Header Config Effect
   useEffect(() => {
     setConfig({
       header: {
@@ -214,7 +207,6 @@ export default function GroupListPage() {
     return () => resetConfig();
   }, [setConfig, router, setIsFilterOpen, can]); 
 
-  // Fetch Data Effect
   useEffect(() => {
     fetchGroups();
   }, [
@@ -224,7 +216,6 @@ export default function GroupListPage() {
     setTotal, setLimit
   ]);
 
-  // Delete Action Handler (Standard async function without useCallback)
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
@@ -243,7 +234,6 @@ export default function GroupListPage() {
     }
   };
 
-  // Render Cell Handler (Standard function without useCallback)
   const renderCell = (item, key) => (
     <GroupTableRow
       item={item}

@@ -17,7 +17,7 @@ const ALL_COUNTRIES = Country.getAllCountries();
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
-  { label: "Inactive", value: "InActive" },
+  { label: "Inactive", value: "Inactive" },
 ];
 
 const DIAL_CODE_OPTIONS = (() => {
@@ -108,7 +108,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     data: null,
   });
 
-  // Sync initialValues when prop changes
   useEffect(() => {
     if (initialValues) {
       setFormData({
@@ -120,7 +119,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     }
   }, [initialValues, currentUser]);
 
-  // Load Companies & Groups dropdown lists
   useEffect(() => {
     async function loadDropdowns() {
       try {
@@ -139,7 +137,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     loadDropdowns();
   }, []);
 
-  // Handle Field Value Change
   const handleChange = (name, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -159,7 +156,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const companyOptions = (companies || []).map((c) => ({ label: c.companyName, value: c.id }));
   const groupOptions = (groups || []).map((g) => ({ label: g.groupName, value: g.id }));
 
-  // Photo Change Handler (Standard function without useCallback)
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -176,7 +172,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     setIsDirty(true);
   };
 
-  // Validate form using Zod schema
   const validateForm = () => {
     const schema = mode === "create" ? userAddSchema : userEditSchema;
     const result = schema.safeParse(formData);
@@ -198,7 +193,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     return true;
   };
 
-  // Pre-submit trigger
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
@@ -206,9 +200,15 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     }
   };
 
-  // Actual submit handler (Standard Async Function without useCallback)
   const handleActualSubmit = async (data) => {
     const payload = { ...data };
+    
+    delete payload.profilePhoto;
+    delete payload.photoUrl;
+
+    if (!photoFile && !photoPreview) {
+      payload.profilePhoto = "";
+    }
     try {
       setLoading(true);
       mode === "create"
@@ -248,7 +248,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     }
   };
 
-  // Discard handler
   const handleDiscard = () => {
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
@@ -263,7 +262,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
         onSubmit={handleFormSubmit}
         className="bg-white rounded-xl p-6 shadow-sm space-y-6 text-black"
       >
-        {/* Photo Upload Section */}
         <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
           <div className="relative">
             {photoPreview ? (
@@ -303,8 +301,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             )}
           </div>
         </div>
-
-        {/* ── 1. Personal Information ───────────────────────────────── */}
+            
         <div className="space-y-4">
           <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
             Personal Information
@@ -312,7 +309,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
 
           <div className="grid md:grid-cols-2 gap-6">
             
-            {/* First Name */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 First Name <span className="text-red-500">*</span>
@@ -329,7 +325,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               {errors.firstName && <p className="text-xs text-red-500 mt-1">⚠ {errors.firstName}</p>}
             </div>
 
-            {/* Last Name */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Last Name <span className="text-red-500">*</span>
@@ -346,7 +341,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               {errors.lastName && <p className="text-xs text-red-500 mt-1">⚠ {errors.lastName}</p>}
             </div>
 
-            {/* Username */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Username <span className="text-red-500">*</span>
@@ -365,7 +359,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               {errors.userName && <p className="text-xs text-red-500 mt-1">⚠ {errors.userName}</p>}
             </div>
 
-            {/* Email */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Email <span className="text-red-500">*</span>
@@ -382,7 +375,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               {errors.email && <p className="text-xs text-red-500 mt-1">⚠ {errors.email}</p>}
             </div>
 
-            {/* Password (Create Mode only) */}
             {mode === "create" && (
               <div className="space-y-1 relative">
                 <label className="block text-sm font-medium text-gray-700">
@@ -413,15 +405,13 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
           </div>
         </div>
 
-        {/* ── 2. Company & Role ─────────────────────────────────────── */}
         <div className="space-y-4">
           <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
             Company & Role
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          {(<div className="grid md:grid-cols-2 gap-6">
             
-            {/* Direct Inline Select: Company */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Company <span className="text-red-500">*</span>
@@ -440,8 +430,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               />
               {errors.companyId && <p className="text-xs text-red-500 mt-1">⚠ {errors.companyId}</p>}
             </div>
-
-            {/* Direct Inline Select: Group / Role */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Group / Role <span className="text-red-500">*</span>
@@ -460,7 +448,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               {errors.groupId && <p className="text-xs text-red-500 mt-1">⚠ {errors.groupId}</p>}
             </div>
 
-            {/* Direct Inline Select: Status */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Status <span className="text-red-500">*</span>
@@ -479,10 +466,9 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
               {errors.status && <p className="text-xs text-red-500 mt-1">⚠ {errors.status}</p>}
             </div>
 
-          </div>
+          </div>)}
         </div>
 
-        {/* ── 3. Contact ────────────────────────────────────────────── */}
         <div className="space-y-4">
           <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
             Contact
@@ -490,7 +476,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
 
           <div className="grid md:grid-cols-2 gap-6">
             
-            {/* Phone Number with Direct Inline Select: Dial Code */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Phone Number
@@ -527,7 +512,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex gap-3 justify-center border-t pt-4">
           <button
             type="button"
@@ -547,7 +531,6 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
         </div>
       </form>
 
-      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
         title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}

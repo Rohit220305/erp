@@ -14,6 +14,8 @@ export default function FilterDrawer({
   companies = [],
   statuses = [],
 }) {
+
+  // console.log("FilterDrawer filters:", filters, "groups:", groups, "companies:", companies, "statuses:", statuses);
   const [internalGroups, setInternalGroups] = useState([]);
   const [internalCompanies, setInternalCompanies] = useState([]);
 
@@ -200,6 +202,33 @@ export default function FilterDrawer({
               />
             )}
 
+            {filters.hasOwnProperty("currencyCode") && (
+              <FilterField
+                label="Currency Code"
+                placeholder="Please enter Currency Code"
+                value={filters.currencyCode}
+                onChange={(v) => setFilters((p) => ({ ...p, currencyCode: v }))}
+              />
+            )}
+
+            {filters.hasOwnProperty("currencyName") && (
+              <FilterField
+                label="Currency Name"
+                placeholder="Please enter Currency Name"
+                value={filters.currencyName}
+                onChange={(v) => setFilters((p) => ({ ...p, currencyName: v }))}
+              />
+            )}
+
+            {filters.hasOwnProperty("currencySymbol") && (
+              <FilterField
+                label="Currency Symbol"
+                placeholder="Please enter Currency Symbol"
+                value={filters.currencySymbol}
+                onChange={(v) => setFilters((p) => ({ ...p, currencySymbol: v }))}
+              />
+            )}
+
             {filters.hasOwnProperty("status") && (
               <SelectField
                 label="Status"
@@ -211,7 +240,6 @@ export default function FilterDrawer({
             )}
           </div>
 
-          {/* Actions */}
           <div className="border-t bg-white px-6 pt-5 pb-10">
             <div className="flex gap-2">
               <button

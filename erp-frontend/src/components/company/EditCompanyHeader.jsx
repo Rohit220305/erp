@@ -29,7 +29,7 @@ export default function EditCompanyHeader({ company }) {
       },
     });
     return () => resetConfig();
-  }, [setConfig, router, company.companyName]); // resetConfig is stable via useCallback — not a dep
+  }, [setConfig, router, company.companyName]); 
 
   return null;
 }

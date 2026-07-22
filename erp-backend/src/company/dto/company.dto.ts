@@ -82,6 +82,18 @@ export class CompanyAddDto {
 
   @IsOptional()
   addedBy: number;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').filter(Boolean).map(Number);
+    }
+    if (Array.isArray(value)) {
+      return value.map(Number);
+    }
+    return value;
+  })
+  supportedCurrencies?: number[];
 }
 
 

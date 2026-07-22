@@ -38,12 +38,10 @@ export default function LoginForm() {
 
     try {
       setLoading(true);
-      // console.log("Submitting login form with data:" , form);
       const response = await loginUser(form);
 
       if (response?.success === 1 && response?.data) {
         toast.success(response.message || "Login successful");
-        // Store user metadata in context (tokens are httpOnly cookies)
         login(response.data, response.data.token);
         router.push("/");
       } else {
@@ -65,8 +63,7 @@ export default function LoginForm() {
       </h1>
 
       <form onSubmit={handleSubmit}>
-        {/* Username */}
-        <div className="mb-3">
+<div className="mb-3">
           <label className="mb-3 block text-sm font-medium text-gray-700">
             Username
           </label>
@@ -90,7 +87,6 @@ export default function LoginForm() {
           )}
         </div>
 
-        {/* Password */}
         <div className="mb-3">
           <label className="mb-3 block text-sm font-medium text-gray-700">
             Password
@@ -118,7 +114,6 @@ export default function LoginForm() {
           )}
         </div>
 
-        {/* Login Button */}
         <button
           type="submit"
           disabled={loading}
@@ -126,8 +121,6 @@ export default function LoginForm() {
         >
           {loading ? "Logging In..." : "Login"}
         </button>
-
-        {/* Footer */}
         <div className="mt-7 flex items-center ">
           {/* <label className="flex cursor-pointer items-center gap-3 text-sm text-gray-700">
             <input type="checkbox" className="h-4 w-4 cursor-pointer" />

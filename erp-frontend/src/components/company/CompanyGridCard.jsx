@@ -49,9 +49,7 @@ export default function CompanyGridCard({ item, config, setSelectedItemForDetail
           </div>
         </div>
         
-        {/* <button className="text-gray-400 hover:text-gray-600 p-1">
-          <MoreVertical size={18} />
-        </button> */}
+  
       </div>
 
       <hr className="border-gray-100 my-4" />

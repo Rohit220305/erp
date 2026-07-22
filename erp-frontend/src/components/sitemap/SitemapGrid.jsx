@@ -20,12 +20,10 @@ export default function SitemapGrid({ data }) {
         return null;
       }
       
-      // If the section itself equires a permission and user does not have it, return null
       if (section.permission && !can(section.permission)) {
         return null;
       }
 
-      // Filter menus in this section
       const filteredMenus = section.menus.filter((menu) => {
         if (menu.superAdminOnly && !user?.isSuperAdmin) {
           return false;
@@ -36,7 +34,6 @@ export default function SitemapGrid({ data }) {
         return true;
       });
 
-      // If no menus are left in the section, don't show the section card
       if (filteredMenus.length === 0) {
         return null;
       }

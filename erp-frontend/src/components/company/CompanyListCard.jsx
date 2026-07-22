@@ -58,7 +58,6 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
             </div>
           </div>
 
-          {/* Configurable Columns - all equal width */}
           {listConfig.columns.map((col, idx) => (
             <div key={idx} className="flex-1 ms-5 min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
@@ -70,7 +69,6 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
             </div>
           ))}
 
-          {/* Chevron - fixed size, not a flex column */}
           <div
             className="flex-shrink-0 ml-4 flex items-center justify-center cursor-pointer p-2 hover:bg-gray-100 rounded-full transition-colors"
             onClick={() => setIsExpanded(!isExpanded)}

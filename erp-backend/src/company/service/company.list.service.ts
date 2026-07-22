@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CompanyEntity } from '../entity/company.entity';
+import { CompanyCurrencyEntity } from '../entity/company-currency.entity';
+import { CurrencyEntity } from '../../currency/entity/currency.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
+import { In } from 'typeorm';
 
 @Injectable()
 export class CompanyListService {
@@ -11,6 +14,12 @@ export class CompanyListService {
 
   @InjectRepository(CompanyEntity)
   private companyRepo: Repository<CompanyEntity>;
+
+  @InjectRepository(CompanyCurrencyEntity)
+  private companyCurrencyRepo: Repository<CompanyCurrencyEntity>;
+
+  @InjectRepository(CurrencyEntity)
+  private currencyRepo: Repository<CurrencyEntity>;
 
   async startCompanyDetails(req, params) {
     const response = await this.getCompanyDetails(req, params);
@@ -40,7 +49,6 @@ export class CompanyListService {
         throw new Error('Company not found');
       }
 
-      // Scoping Check
       const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
         throw new ForbiddenException('Cannot view company outside your company hierarchy');
@@ -76,6 +84,20 @@ export class CompanyListService {
           `${company.id}`,
           company.companyLogo,
         );
+      }
+
+      const mappings = await this.companyCurrencyRepo.find({
+        where: { companyId: company.id }
+      });
+      
+      if (mappings.length > 0) {
+        const currencyIds = mappings.map(m => m.currencyId);
+        const currencies = await this.currencyRepo.find({ where: { id: In(currencyIds) } });
+        company['supportedCurrencies'] = currencyIds;
+        company['currencies'] = currencies;
+      } else {
+        company['supportedCurrencies'] = [];
+        company['currencies'] = [];
       }
 
       return_data = {
@@ -155,7 +177,6 @@ export class CompanyListService {
       };
 
       if (params?.filters) {
-        // console.log("DE BUG: params.filters =", JSON.stringify(params.filters));
         const whereString = await this.general.makeFilterString(
           params.filters,
           columnMap,
@@ -211,8 +232,20 @@ export class CompanyListService {
             company.companyLogo,
           );
         }
-      }
 
+        const mappings = await this.companyCurrencyRepo.find({
+          where: { companyId: company.id }
+        });
+          
+        if (mappings.length > 0) {
+          const currencyIds = mappings.map(m => m.currencyId);
+          const currencies = await this.currencyRepo.find({ where: { id: In(currencyIds) } });
+          company['currencies'] = currencies;
+        } else {
+          company['currencies'] = [];
+        }
+      }
+      
       return_data = {
         success: 1,
         message: 'Company List fetched successfully',

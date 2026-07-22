@@ -1,4 +1,3 @@
-// GroupForm.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,10 +9,9 @@ import CapabilityMatrix from "./CapabilityMatrix";
 import toast from "react-hot-toast";
 import ConfirmModal from "../common/ConfirmModal";
 
-// Module-level Static Constants (Computed once when module loads)
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
-  { label: "Inactive", value: "InActive" },
+  { label: "Inactive", value: "Inactive" },
 ];
 
 const BASE_DEFAULTS = {
@@ -23,7 +21,6 @@ const BASE_DEFAULTS = {
   status: "Active",
 };
 
-/** Dynamic Custom Styling for react-select components */
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
     ...base,
@@ -60,10 +57,8 @@ const customSelectStyles = (error, disabled) => ({
 export default function GroupForm({ mode = "create", defaultValues: initialValues }) {
   const router = useRouter();
   
-  // Plain variable computation
   const defaultValues = { ...BASE_DEFAULTS, ...initialValues };
 
-  // State
   const [formData, setFormData] = useState(defaultValues);
   const [errors, setErrors] = useState({});
   const [isDirty, setIsDirty] = useState(false);
@@ -79,14 +74,12 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
     data: null,
   });
 
-  // Sync initialValues when prop changes
   useEffect(() => {
     if (initialValues) {
       setFormData({ ...BASE_DEFAULTS, ...initialValues });
     }
   }, [initialValues]);
 
-  // Load capabilities matrix
   useEffect(() => {
     async function loadMatrix() {
       try {
@@ -109,7 +102,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
     }
   }, [mode, initialValues?.id]);
 
-  // Handle field change
   const handleChange = (name, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -126,7 +118,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
     }
   };
 
-  // Validate form using Zod schema
   const validateForm = () => {
     const schema = mode === "create" ? groupAddSchema : groupEditSchema;
     const result = schema.safeParse(formData);
@@ -140,7 +131,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
         }
       });
       setErrors(fieldErrors);
-      toast.error("Please fix the validation errors in the form.");
       return false;
     }
 
@@ -148,7 +138,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
     return true;
   };
 
-  // Pre-submit trigger
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
@@ -162,7 +151,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
     setConfirmState({ isOpen: true, type: "submit", data: formData });
   };
 
-  // Actual submit handler (Standard Async Function - no useCallback)
   const handleActualSubmit = async (data) => {
     try {
       setLoading(true);
@@ -198,7 +186,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
     }
   };
 
-  // Discard handler
   const handleDiscard = () => {
     if (isDirty || selectedCodes.length > 0) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
@@ -220,7 +207,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
 
           <div className="grid md:grid-cols-2 gap-6">
             
-            {/* Group Code */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Group Code <span className="text-red-500">*</span>
@@ -239,7 +225,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
               {errors.groupCode && <p className="text-xs text-red-500">⚠ {errors.groupCode}</p>}
             </div>
 
-            {/* Group Name */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Group Name <span className="text-red-500">*</span>
@@ -256,7 +241,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
               {errors.groupName && <p className="text-xs text-red-500">⚠ {errors.groupName}</p>}
             </div>
 
-            {/* Description */}
             <div className="md:col-span-2 space-y-1">
               <label className="block text-sm font-medium text-gray-700">Description</label>
               <textarea
@@ -271,7 +255,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
               {errors.description && <p className="text-xs text-red-500">⚠ {errors.description}</p>}
             </div>
 
-            {/* Status (Direct Inline react-select with isClearable) */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Status <span className="text-red-500">*</span>
@@ -293,7 +276,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
           </div>
         </div>
 
-        {/* Capability Matrix */}
         {matrixLoading ? (
           <div className="py-10 text-center text-sm text-gray-400">
             Loading capability matrix...
@@ -309,7 +291,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
           />
         )}
 
-        {/* Action Buttons */}
         <div className="flex gap-3 justify-center pt-4">
           <button
             type="button"
@@ -335,7 +316,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
         </div>
       </form>
 
-      {/* Confirm Modal */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
         title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}

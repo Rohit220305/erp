@@ -43,9 +43,16 @@ export const companyAddSchema = z.object({
     .trim()
     .optional()
     .or(z.literal(""))
-    .refine((value) => !value || /^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+(\/[^\s]*)?$/i.test(value), {
-      message: "Please enter a valid website URL.",
-    }),
+    .refine(
+      (value) =>
+        !value ||
+        /^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+(\/[^\s]*)?$/i.test(
+          value,
+        ),
+      {
+        message: "Please enter a valid website URL.",
+      },
+    ),
 
   email: z
     .string()
@@ -94,7 +101,7 @@ export const companyAddSchema = z.object({
       message: "Please enter a valid Contact Person Phone.",
     }),
 
-  status: z.enum(["Active", "InActive"], {
+  status: z.enum(["Active", "Inactive"], {
     errorMap: () => ({
       message: "Please select Status.",
     }),

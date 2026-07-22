@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Building, Building2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +13,7 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
   const [isVisible, setIsVisible] = useState(false);
   const [delayedCompany, setDelayedCompany] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const companyId = company?.companyId || company?.id;
 
@@ -31,7 +32,12 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
       try {
         setLoading(true);
         const res = await getCompany(companyId);
-        if (res && res.companyName && res.success !== 0 && res.settings?.success !== 0) {
+        if (
+          res &&
+          res.companyName &&
+          res.success !== 0 &&
+          res.settings?.success !== 0
+        ) {
           setDelayedCompany(res);
         } else {
           setDelayedCompany(null);
@@ -95,9 +101,10 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
           isVisible ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5.5">
-          <h2 className="text-xl font-semibold text-[#1565c0]">Company Details</h2>
+          <h2 className="text-xl font-semibold text-[#1565c0]">
+            Company Details
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -109,14 +116,19 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
 
         <div className="flex h-[calc(100%-72px)] flex-col overflow-y-auto px-6 py-6">
           <div className="flex items-center gap-4 mb-6">
-            <SharedImageZoom
-              id={`drawer-company-${delayedCompany.id}`}
-              src={delayedCompany.logoUrl}
-              alt={delayedCompany.companyName}
-              placeholderText={delayedCompany.companyName?.[0] || "C"}
-              thumbnailClassName="w-16 h-16 rounded-xl object-cover shadow-sm border border-gray-200"
-              modalImageClassName="w-64 h-64 rounded-xl"
-            />
+            
+            {delayedCompany.logoUrl && !imgError ? (
+              <img
+                src={delayedCompany.logoUrl}
+                alt={delayedCompany.companyName}
+                onError={() => setImgError(true)}
+                className="w-14 h-14 rounded-lg object-cover border border-blu-200 p-1"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-blue-100  text-blue-500 flex items-center justify-center font-medium text-xs border border-gray-200">
+                <Building2 size={22} />
+              </div>
+            )}
             <div>
               <p className="font-semibold text-lg text-gray-800">
                 {delayedCompany.companyName}
@@ -137,7 +149,9 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
             <button
               onClick={() => {
                 onClose();
-                router.push(`/company/${delayedCompany.companyId || delayedCompany.id}`);
+                router.push(
+                  `/company/${delayedCompany.companyId || delayedCompany.id}`,
+                );
               }}
               className="w-full bg-gray-100 cursor-pointer hover:bg-gray-200 text-gray-800 font-medium py-2.5 rounded-md transition mb-8"
             >
@@ -159,12 +173,16 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
             <div>
               <p className="text-xs text-gray-400 mb-1">Phone</p>
               <p className="font-medium">
-                {delayedCompany.phone ? `${delayedCompany.dialCode || ""} ${delayedCompany.phone}` : "-"}
+                {delayedCompany.phone
+                  ? `${delayedCompany.dialCode || ""} ${delayedCompany.phone}`
+                  : "-"}
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Contact Person</p>
-              <p className="font-medium">{delayedCompany.contactPersonName || "-"}</p>
+              <p className="font-medium">
+                {delayedCompany.contactPersonName || "-"}
+              </p>
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Legal Name</p>
@@ -172,7 +190,10 @@ export default function CompanyDetailsDrawer({ open, onClose, company }) {
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Website</p>
-              <p className="font-medium truncate" title={delayedCompany.website}>
+              <p
+                className="font-medium truncate"
+                title={delayedCompany.website}
+              >
                 {delayedCompany.website || "-"}
               </p>
             </div>

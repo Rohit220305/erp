@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Fragment } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useHeader } from "@/context/HeaderContext";
 import { getAllActivityLogs } from "@/lib/api/activity-log-api";
 import { 
@@ -25,7 +25,6 @@ export default function AdminActivityLogsPage() {
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
   
-  // Filters state
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
@@ -37,7 +36,7 @@ export default function AdminActivityLogsPage() {
   
   const [expandedLogId, setExpandedLogId] = useState(null);
 
-  const fetchLogs = useCallback(async (pageNum = 1) => {
+  const fetchLogs = async (pageNum = 1) => {
     try {
       setLoading(true);
       const backendFilters = [];
@@ -69,7 +68,7 @@ export default function AdminActivityLogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [filters, limit]);
+  };
 
   useEffect(() => {
     setConfig({
@@ -90,9 +89,9 @@ export default function AdminActivityLogsPage() {
         actionButton: null,
       },
     });
-    fetchLogs(1);
+    setTimeout(() => fetchLogs(1), 0);
     return () => resetConfig();
-  }, [setConfig, resetConfig, fetchLogs]);
+  }, [setConfig, resetConfig]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -113,7 +112,6 @@ export default function AdminActivityLogsPage() {
       actorUserId: "",
       entityId: ""
     });
-    // Immediately fetch logs with reset filters
     setTimeout(() => fetchLogs(1), 0);
   };
 
@@ -141,7 +139,6 @@ export default function AdminActivityLogsPage() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {/* Start Date */}
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
               <Calendar size={12} /> Start Date
@@ -155,7 +152,6 @@ export default function AdminActivityLogsPage() {
             />
           </div>
 
-          {/* End Date */}
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
               <Calendar size={12} /> End Date
@@ -169,7 +165,6 @@ export default function AdminActivityLogsPage() {
             />
           </div>
 
-          {/* Module */}
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
               <Layers size={12} /> Module
@@ -188,7 +183,6 @@ export default function AdminActivityLogsPage() {
             </select>
           </div>
 
-          {/* Action */}
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
               <Activity size={12} /> Action
@@ -210,7 +204,6 @@ export default function AdminActivityLogsPage() {
             </select>
           </div>
 
-          {/* Actor User ID */}
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
               <User size={12} /> Actor ID
@@ -225,7 +218,6 @@ export default function AdminActivityLogsPage() {
             />
           </div>
 
-          {/* Entity ID */}
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
               <Database size={12} /> Entity ID
@@ -251,7 +243,6 @@ export default function AdminActivityLogsPage() {
         </div>
       </form>
 
-      {/* Logs Table Card */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -323,7 +314,6 @@ export default function AdminActivityLogsPage() {
                         <tr className="bg-gray-50/50">
                           <td colSpan="8" className="py-4 px-6 border-t border-gray-100">
                             <div className="space-y-4">
-                              {/* Metadata Row */}
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs bg-white p-3 rounded-lg border border-gray-100">
                                 <div>
                                   <span className="font-semibold text-gray-500 block">IP Address</span>
@@ -346,7 +336,6 @@ export default function AdminActivityLogsPage() {
           </table>
         </div>
         
-        {/* Pagination Footer */}
         {totalPages > 1 && (
           <div className="bg-white border-t border-gray-150 px-6 py-4 flex items-center justify-between">
             <span className="text-xs text-gray-500">

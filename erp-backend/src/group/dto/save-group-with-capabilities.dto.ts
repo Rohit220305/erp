@@ -28,7 +28,7 @@ export class SaveGroupWithCapabilitiesDto {
 
   @IsString()
   @IsNotEmpty()
-  @IsIn(['Active', 'InActive'])
+  @IsIn(['Active', 'Inactive'])
   status: string;
 
   @IsArray()

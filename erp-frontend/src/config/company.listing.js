@@ -1,7 +1,6 @@
 export const companyListingConfig = {
   title: "Company Master",
   
-  // Table Columns
   columns: [
     { label: "Logo", key: "logoUrl" },
     { label: "Company Name", key: "companyName" },
@@ -9,11 +8,10 @@ export const companyListingConfig = {
     { label: "Contact Person", key: "contactPersonName" },
     { label: "Email", key: "email" },
     { label: "Phone", key: "phone" },
-    { label: "Status", key: "status" },
     { label: "Added Date", key: "addedDateFormatted" },
+    { label: "Status", key: "status" },
   ],
 
-  // Search Drawer Fields
   searchFields: [
     { label: "Company Name", value: "companyName", type: "text" },
     { label: "Short Name", value: "shortName", type: "text" },
@@ -27,7 +25,6 @@ export const companyListingConfig = {
     ]}
   ],
 
-  // Default Sidebar Filters
   defaultFilters: {
     companyName: "",
     shortName: "",
@@ -38,7 +35,6 @@ export const companyListingConfig = {
     status: "",
   },
   
-  // Sidebar Filter Statuses 
   sidebarStatuses: [
     { label: "Active", value: "Active" },
     { label: "Inactive", value: "Inactive" },

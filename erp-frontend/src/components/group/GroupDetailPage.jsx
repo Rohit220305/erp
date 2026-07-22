@@ -1,4 +1,3 @@
-// GroupDetailPage.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -52,7 +51,6 @@ export default function GroupDetailPage({ group }) {
   const [addedAdmin, setAddedAdmin] = useState(null);
   const [updatedAdmin, setUpdatedAdmin] = useState(null);
 
-  // Fetch Admins Effect (No useCallback wrapper needed)
   useEffect(() => {
     async function fetchAdmins() {
       try {
@@ -71,7 +69,6 @@ export default function GroupDetailPage({ group }) {
     fetchAdmins();
   }, [group?.addedBy, group?.updatedBy]);
 
-  // Header Configuration Effect
   useEffect(() => {
     setConfig({
       header: {
@@ -101,7 +98,6 @@ export default function GroupDetailPage({ group }) {
   return (
     <div className="p-6">
       <div className="grid grid-cols-12 gap-6">
-        {/* Sidebar */}
         <div className="col-span-12 lg:col-span-2">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
             <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
@@ -116,10 +112,8 @@ export default function GroupDetailPage({ group }) {
           </div>
         </div>
 
-        {/* Content */}
         <div className="col-span-12 lg:col-span-10">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Main Details */}
             <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
               <h3 className="font-semibold mb-5">Details</h3>
               <DetailRow label="Group Code" value={group?.groupCode} />

@@ -1,4 +1,3 @@
-// UserDetailPage.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -94,11 +93,10 @@ export default function UserDetailPage({ user }) {
   const [updatedAdmin, setUpdatedAdmin] = useState(null);
   const [addedAdminRestricted, setAddedAdminRestricted] = useState(false);
   const [updatedAdminRestricted, setUpdatedAdminRestricted] = useState(false);
-  const [activeTab, setActiveTab] = useState("summary"); // "summary" | "activity"
+  const [activeTab, setActiveTab] = useState("summary"); 
   const [loginAsLoading, setLoginAsLoading] = useState(false);
   const [backToSessionLoading, setBackToSessionLoading] = useState(false);
 
-  // Fetch Admins Effect (No useCallback wrapper needed)
   useEffect(() => {
     async function fetchAdmins() {
       const canViewOthers = can("USER_VIEW") || currentUser?.isSuperAdmin;
@@ -155,7 +153,6 @@ export default function UserDetailPage({ user }) {
     fetchAdmins();
   }, [user?.addedBy, user?.updatedBy, can, currentUser?.id, currentUser?.isSuperAdmin]);
 
-  // Header Config Effect
   useEffect(() => {
     setConfig({
       header: {
@@ -205,13 +202,9 @@ export default function UserDetailPage({ user }) {
               {user?.firstName} {user?.lastName}
             </h2>
             <p className="text-gray-500 text-sm">{user?.groupName || "—"}</p>
-            <p className="text-xs text-gray-400">{user?.companyName || "—"}</p>
+            <p className="text-xs text-gray-400">{user?.companyName }</p>
 
-            {user?.isSuperAdmin ? (
-              <span className="mt-2 inline-block px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium">
-                Super Admin
-              </span>
-            ) : null}
+            
 
             <hr className="my-4" />
 

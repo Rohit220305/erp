@@ -79,7 +79,6 @@ export class CurrencyService {
     const response = await this.updateCurrency(req, params);
 
     if (response.success == 1) {
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'CURRENCY_UPDATE',
         actorUserId: req.user?.sub,
@@ -154,7 +153,6 @@ export class CurrencyService {
     const response = await this.deleteCurrency(req, query);
 
     if (response.success == 1) {
-      // Activity Log
       await this.activityLogService.log({
         activityCode: 'CURRENCY_DELETE',
         actorUserId: req.user?.sub,

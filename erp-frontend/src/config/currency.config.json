@@ -43,15 +43,15 @@
   },
 
   "defaultFilters": {
-    "currencyCode": "",
     "currencyName": "",
+    "currencyCode": "",
     "currencySymbol": "",
     "status": ""
   },
 
   "sidebarStatuses": [
     { "label": "Active", "value": "Active" },
-    { "label": "InActive", "value": "InActive" }
+    { "label": "Inactive", "value": "Inactive" }
   ],
 
   "searchFields": [
@@ -64,7 +64,7 @@
       "type": "select",
       "options": [
         { "label": "Active",   "value": "Active" },
-        { "label": "InActive", "value": "InActive" }
+        { "label": "Inactive", "value": "Inactive" }
       ]
     }
   ],
@@ -81,7 +81,7 @@
       "sortable": true,
       "options": [
         { "label": "Active",   "value": "Active" },
-        { "label": "InActive", "value": "InActive" }
+        { "label": "Inactive", "value": "Inactive" }
       ]
     }
   ],

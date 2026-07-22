@@ -8,6 +8,7 @@ import { GroupCapabilityEntity } from "src/capability/entity/group-capability.en
 import { ActivityLogEntity } from "src/activity-log/entity/activity-log.entity";
 import { ActivityMasterEntity } from "src/activity-log/entity/activity-master.entity";
 import { CurrencyEntity } from "src/currency/entity/currency.entity";
+import { CompanyCurrencyEntity } from "src/company/entity/company-currency.entity";
 dotenv.config();
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -26,6 +27,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     ActivityLogEntity,
     ActivityMasterEntity,
     CurrencyEntity,
+    CompanyCurrencyEntity,
   ],
   synchronize: false,
   migrationsRun: false,

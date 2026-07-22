@@ -62,6 +62,9 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
         {item.phone ? `${item.dialCode || ""} ${item.phone}`.trim() : "—"}
       </td>
 
+      <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+        {item.addedDateFormatted || "—"}
+      </td>
       <td className="px-4 py-3 text-sm">
         <span
           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
@@ -72,19 +75,8 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
           {item.status || "—"}
         </span>
       </td>
+          
 
-      <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-        {item.addedDateFormatted || "—"}
-      </td>
-
-      {/* Actions */}
-      {/* <td className="px-4 py-3 text-sm">
-        <ActionRenderer
-          item={item}
-          actions={companyConfig.actions?.row || []}
-          onActionClick={onRowAction}
-        />
-      </td> */}
 
     </tr>
   );

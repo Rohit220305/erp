@@ -10,6 +10,7 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [delayedUser, setDelayedUser] = useState(user);
+  const [imgError, setImgError] = useState(false); 
   const { can } = useAuth();
 
   const userId = user?.userId || user?.id;
@@ -36,6 +37,7 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
           res.settings?.success !== 0
         ) {
           setDelayedUser(res);
+          setImgError(false); // ← reset error state for the newly loaded user
         } else {
           setDelayedUser(null);
         }
@@ -47,7 +49,6 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
 
     if (open && user) {
       loadUser();
-      // setDelayedUser(user);
       const timerId = setTimeout(() => setIsVisible(true), 10);
       return () => clearTimeout(timerId);
     } else if (!open) {
@@ -92,14 +93,19 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
 
         <div className="flex h-[calc(100%-72px)] flex-col overflow-y-auto px-6 py-6">
           <div className="flex items-center gap-4 mb-6">
-            <SharedImageZoom
-              id={`drawer-user-${delayedUser.id}`}
-              src={delayedUser.photoUrl}
-              alt={`${delayedUser.firstName} ${delayedUser.lastName}`}
-              placeholderText={`${delayedUser.firstName?.[0] || ""}${delayedUser.lastName?.[0] || ""}`}
-              thumbnailClassName="w-20 h-20 rounded-full object-cover shadow-md border-2 border-white"
-              modalImageClassName="w-72 h-72 rounded-full"
-            />
+            {delayedUser.photoUrl && !imgError ? (
+              <img
+                src={delayedUser.photoUrl}
+                alt="Updated by"
+                onError={() => setImgError(true)}
+                className="w-10 h-10 rounded-full object-cover border border-gray-200"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-medium text-xs border border-gray-200">
+                  {delayedUser?.firstName?.[0]}{
+                  delayedUser?.lastName?.[0]}
+              </div>
+            )}
             <div>
               <p className="font-semibold text-lg text-gray-800">
                 {delayedUser.firstName} {delayedUser.lastName}
@@ -116,16 +122,17 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
             </div>
           </div>
 
-          { hasDetailsPermission &&
-            (<button
-            onClick={() => {
-              onClose();
-              router.push(`/admin/${delayedUser.id}`);
-            }}
-            className="w-full bg-gray-100 cursor-pointer hover:bg-gray-200 text-gray-800 font-medium py-2.5 rounded-md transition mb-8"
-          >
-            More Details
-          </button>)}
+          {hasDetailsPermission && (
+            <button
+              onClick={() => {
+                onClose();
+                router.push(`/admin/${delayedUser.id}`);
+              }}
+              className="w-full bg-gray-100 cursor-pointer hover:bg-gray-200 text-gray-800 font-medium py-2.5 rounded-md transition mb-8"
+            >
+              More Details
+            </button>
+          )}
 
           <div className="grid grid-cols-2 gap-y-6 text-sm text-gray-600">
             <div>

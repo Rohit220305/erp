@@ -5,7 +5,6 @@ import { Building2, MapPin, Phone, Mail } from "lucide-react";
 import DetailRow from "./DetailsRow";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect, useState } from "react";
-// import { getAdmin } from "@/lib/api/admin-api";
 import { getUser } from "@/lib/api/user-api";
 import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
@@ -173,6 +172,26 @@ export default function CompanyDetailsPage({ company }) {
               <DetailRow label="Zip Code" value={company.zipCode || "-"} />
 
               <DetailRow
+                label="Currency"
+                value={
+                  company?.currencies?.length > 0 ? (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {company.currencies.map((c, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-0.5  text-gray-700 rounded  font-medium"
+                        >
+                          {c.currencySymbol}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    "-"
+                  )
+                }
+              />
+
+              <DetailRow
                 label="Status"
                 value={
                   <span
@@ -239,9 +258,7 @@ export default function CompanyDetailsPage({ company }) {
 
                   <div
                     className="flex items-center gap-3 cursor-pointer group"
-                    onClick={() =>
-                      setSelectedUserForDetails(addedAdmin)
-                    }
+                    onClick={() => setSelectedUserForDetails(addedAdmin)}
                   >
                     {addedAdminRestricted ? (
                       <div className="flex items-center gap-2 py-1.5 text-gray-400">
@@ -286,11 +303,8 @@ export default function CompanyDetailsPage({ company }) {
 
                   <div
                     className="flex items-center gap-3 cursor-pointer group"
-                    onClick={() =>
-                      setSelectedUserForDetails(updatedAdmin)
-                    }
+                    onClick={() => setSelectedUserForDetails(updatedAdmin)}
                   >
-                    {/* User Logo / Avatar */}
                     {updatedAdminRestricted ? (
                       <div className="flex items-center gap-2 py-1.5 text-gray-400">
                         <span className="text-xs">🔒</span>
@@ -332,12 +346,11 @@ export default function CompanyDetailsPage({ company }) {
         </div>
       </div>
 
-
-            <UserDetailsDrawer
-              open={!!selectedUserForDetails}
-              onClose={() => setSelectedUserForDetails(null)}
-              user={selectedUserForDetails}
-            />
+      <UserDetailsDrawer
+        open={!!selectedUserForDetails}
+        onClose={() => setSelectedUserForDetails(null)}
+        user={selectedUserForDetails}
+      />
     </div>
   );
 }

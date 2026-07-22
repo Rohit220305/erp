@@ -5,13 +5,19 @@ export const groupAddSchema = z.object({
     .string()
     .min(2, "Group code must be at least 2 characters")
     .max(20, "Group code must be at most 20 characters")
-    .regex(/^[A-Z0-9_-]+$/i, "Group code can only contain letters, numbers, hyphens and underscores"),
+    .regex(
+      /^[A-Z0-9_-]+$/i,
+      "Group code can only contain letters, numbers, hyphens and underscores",
+    ),
   groupName: z
     .string()
     .min(2, "Group name must be at least 2 characters")
     .max(100, "Group name must be at most 100 characters"),
-  description: z.string().max(500, "Description must be at most 500 characters").optional(),
-  status: z.enum(["Active", "InActive"], {
+  description: z
+    .string()
+    .max(500, "Description must be at most 500 characters")
+    .optional(),
+  status: z.enum(["Active", "Inactive"], {
     errorMap: () => ({ message: "Status must be Active or Inactive" }),
   }),
 });

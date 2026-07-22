@@ -24,7 +24,6 @@ export default function ActivityLogTimeline({ userId }) {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
-  // Custom Date Range Picker state
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -32,7 +31,6 @@ export default function ActivityLogTimeline({ userId }) {
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [activeShortcut, setActiveShortcut] = useState(null);
 
-  // Trigger position tracking for portal rendering
   const triggerRef = useRef(null);
   const [triggerRect, setTriggerRect] = useState({
     top: 0,
@@ -97,7 +95,7 @@ export default function ActivityLogTimeline({ userId }) {
         setStartDate(date);
       } else {
         setEndDate(date);
-        setIsPickerOpen(false); // Close popover when end date is successfully set
+        setIsPickerOpen(false);
       }
     }
   };
@@ -116,7 +114,7 @@ export default function ActivityLogTimeline({ userId }) {
     if (start) {
       setCurrentMonth(start);
     }
-    setIsPickerOpen(false); // Close popover when shortcut is selected
+    setIsPickerOpen(false);
   };
 
   const togglePicker = () => {
@@ -127,7 +125,6 @@ export default function ActivityLogTimeline({ userId }) {
     setIsPickerOpen((prev) => !prev);
   };
 
-  // Recalculate position on scroll/resize if picker is open to ensure popover tracks trigger button
   useEffect(() => {
     if (!isPickerOpen) return;
     const updatePosition = () => {
@@ -337,8 +334,7 @@ export default function ActivityLogTimeline({ userId }) {
                   className="bg-white rounded-xl shadow-xl border border-gray-100 p-5 flex flex-col md:flex-row gap-6"
                   onMouseLeave={() => setHoverDate(null)}
                 >
-                  {/* Left Side Vertical Pill Shortcuts */}
-                  <div className="flex flex-row md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-2 md:pb-0 min-w-[130px] border-b md:border-b-0 md:border-r border-gray-100 pr-0 md:pr-4">
+                 <div className="flex flex-row md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-2 md:pb-0 min-w-[130px] border-b md:border-b-0 md:border-r border-gray-100 pr-0 md:pr-4">
                     {shortcuts.map((shortcut) => {
                       const isSelected =
                         activeShortcut === shortcut.label ||
@@ -362,9 +358,7 @@ export default function ActivityLogTimeline({ userId }) {
                     })}
                   </div>
 
-                  {/* Calendars Row */}
                   <div className="flex-grow flex flex-col justify-center">
-                    {/* Header Display */}
                     <div className="flex flex-col mb-4 px-1">
                       <span className="text-[10px] tracking-wider text-gray-400 font-bold uppercase">
                         SELECT DATE RANGE
@@ -377,8 +371,7 @@ export default function ActivityLogTimeline({ userId }) {
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-6">
-                      {/* Left Month Calendar */}
-                      <div className="flex-grow">
+                     <div className="flex-grow">
                         <div className="flex items-center justify-between px-1 mb-3">
                           <button
                             type="button"
@@ -405,10 +398,8 @@ export default function ActivityLogTimeline({ userId }) {
                         </div>
                       </div>
 
-                      {/* Divider */}
                       <div className="hidden md:block w-[1px] bg-gray-100 self-stretch" />
 
-                      {/* Right Month Calendar */}
                       <div className="flex-grow">
                         <div className="flex items-center justify-between px-1 mb-3">
                           <div className="w-6" />

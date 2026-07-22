@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect,  } from "react";
 import { useListing } from "@/context/ListingContext";
 import { FiChevronUp, FiChevronDown } from "react-icons/fi";
 
@@ -10,10 +10,8 @@ export default function DynamicTable({
 }) {
   const { sortField, sortOrder, setSort, columnFilters, setColumnFilters } = useListing();
 
-  // Local state for debounced text inputs
   const [localFilters, setLocalFilters] = useState({});
 
-  // Sync localFilters with context on mount/change
   useEffect(() => {
     setLocalFilters(columnFilters || {});
   }, [columnFilters]);
@@ -31,12 +29,10 @@ export default function DynamicTable({
     setLocalFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Debounce the localFilter changes to update the context (and trigger fetch)
   useEffect(() => {
     const timer = setTimeout(() => {
       
       if (JSON.stringify(localFilters) !== JSON.stringify(columnFilters)) {
-        // Strip out empty values
         const cleanedFilters = {};
         Object.entries(localFilters).forEach(([k, v]) => {
           if (v !== "" && v !== undefined && v !== null) {
@@ -53,7 +49,6 @@ export default function DynamicTable({
     const updated = { ...localFilters, [key]: value };
     setLocalFilters(updated);
     
-    // For selects, we update context immediately instead of waiting for debounce
     const cleanedFilters = {};
     Object.entries(updated).forEach(([k, v]) => {
       if (v !== "" && v !== undefined && v !== null) {
@@ -95,7 +90,6 @@ export default function DynamicTable({
                 return <th key={`filter-${index}`} className="px-4 py-2 border-b border-gray-200"></th>;
               }
 
-              // Determine if we should render a select or text input based on config type
               if (header.type === "select" && header.options) {
                 return (
                   <th key={`filter-${index}`} className="px-4 py-2 border-b border-gray-200">

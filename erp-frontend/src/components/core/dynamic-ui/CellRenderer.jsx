@@ -8,13 +8,13 @@ import ActionRenderer from "./ActionRenderer";
 
 export default function CellRenderer({
   item,
-  company, 
+  company,
   column,
   config,
   companyConfig,
   onRowAction,
   setSelectedItemForDetails,
-  setSelectedCompanyForDetails 
+  setSelectedCompanyForDetails
 }) {
   const { can } = useAuth();
 
@@ -39,9 +39,9 @@ export default function CellRenderer({
 
     case "link": {
       if (!value) return <span>-</span>;
-      
+
       const viewPermission = cfg?.permissions?.view || "COMPANY_VIEW";
-      
+
       if (openDetails) {
         return can(viewPermission) ? (
           <span
@@ -54,9 +54,9 @@ export default function CellRenderer({
           <p className="text-sm font-medium text-gray-800">{value || "—"}</p>
         );
       }
-      
+
       const href = resolveDynamicRoute(column.linkPath || "#", data);
-      
+
       return can(viewPermission) ? (
         <Link href={href} className="block w-fit text-[#1565c0] ">
           <p className="text-sm font-medium hover:underline">{value || "—"}</p>
@@ -80,11 +80,10 @@ export default function CellRenderer({
     case "status":
       return (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            value === "Active"
+          className={`px-3 py-1 rounded-full text-xs font-medium ${value === "Active"
               ? "bg-green-100 text-green-700"
               : "bg-red-100 text-red-700"
-          }`}
+            }`}
         >
           {value || "-"}
         </span>
@@ -97,6 +96,18 @@ export default function CellRenderer({
           {value || "-"}
         </span>
       );
+
+    // case "badges":
+    //   if (!value || !Array.isArray(value) || value.length === 0) return <span>-</span>;
+    //   return (
+    //     <div className="flex flex-wrap gap-1">
+    //       {value.map((v, idx) => (
+    //         <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-medium">
+    //           {column.badgeKey ? resolvePath(v, column.badgeKey) : v}
+    //         </span>
+    //       ))}
+    //     </div>
+    //   );
 
     case "text":
     default:

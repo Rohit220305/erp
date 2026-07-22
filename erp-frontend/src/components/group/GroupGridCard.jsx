@@ -9,7 +9,6 @@ export default function GroupGridCard({ group, onDelete }) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200">
-      {/* Top Section */}
       <div className="flex items-start justify-between">
         <div 
           className="flex items-center gap-3 cursor-pointer"
@@ -35,7 +34,6 @@ export default function GroupGridCard({ group, onDelete }) {
 
       <hr className="border-gray-100 my-4" />
 
-      {/* Bottom Section */}
       <div className="space-y-6 text-sm">
         {group.description && (
           <div className="grid grid-cols-[110px_1fr] gap-2">

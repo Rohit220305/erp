@@ -38,7 +38,6 @@ export async function getGroupById(id) {
 }
 
 export async function saveGroupWithCapabilities(payload) {
-  // console.log('Saving group with capabilities:', payload);
   return apiClient("/group/save-with-capabilities", {
     method: "POST",
     body: JSON.stringify(payload),

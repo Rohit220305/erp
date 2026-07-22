@@ -19,7 +19,6 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
   const [token, setToken] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // Load session stack and tokens on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedStack = localStorage.getItem("sessionStack");

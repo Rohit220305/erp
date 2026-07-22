@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ListingPage from "@/components/listing/ListingPage";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import FilterDrawer from "@/components/common/FilterDrawer";
@@ -23,7 +23,6 @@ export default function DynamicListing({
   const [loading, setLoading] = useState(true);
   const { view, page, limit, setTotal, search, setLimit, setPage } = useListing();
 
-  // Search/Filter states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sidebarFilters, setSidebarFilters] = useState(config.defaultFilters || {});
   const [appliedSidebarFilters, setAppliedSidebarFilters] = useState(null);
@@ -34,7 +33,7 @@ export default function DynamicListing({
   const [appliedFilters, setAppliedFilters] = useState([]);
   const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
 
-  const handleOpenSearch = useCallback(() => {
+  const handleOpenSearch = () => {
     if (tempFilters.length === 0 && config.searchFields?.length > 0) {
       const defaultField = config.searchFields[0];
       setTempFilters([
@@ -46,9 +45,9 @@ export default function DynamicListing({
       ]);
     }
     setIsSearchOpen(true);
-  }, [tempFilters.length, config.searchFields]);
+  };
 
-  const loadData = useCallback(async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
 
@@ -60,7 +59,7 @@ export default function DynamicListing({
         Object.keys(appliedSidebarFilters).forEach((key) => {
           const val = appliedSidebarFilters[key];
           if (val) {
-            // simple heuristic: status is usually equal, strings are usually like
+
             const op = key === "status" ? "equal" : "like";
             backendFilters.push({ key, value: val, operator: op });
           }
@@ -93,7 +92,7 @@ export default function DynamicListing({
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, setTotal, setLimit, fetchData, config.title]);
+  };
 
   useEffect(() => {
     setConfig({
@@ -115,11 +114,11 @@ export default function DynamicListing({
       },
     });
     return () => resetConfig();
-  }, [setConfig, handleOpenSearch, headerConfig, navbarConfig]);
+  }, [setConfig, headerConfig, navbarConfig]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    setTimeout(() => loadData(), 0);
+  }, [page, limit, search, appliedFilters, appliedLogicalOperator, appliedSidebarFilters, fetchData, config.title]);
 
   if (loading) {
     return (

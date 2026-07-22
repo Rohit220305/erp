@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn, RotateCw } from "lucide-react";
 import ListingPage from "@/components/listing/ListingPage";
@@ -39,7 +39,7 @@ export default function UserListPage() {
   const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
   const router = useRouter();
 
-  const handleLoginAs = useCallback(async (targetUserId) => {
+  const handleLoginAs = async (targetUserId) => {
     try {
       const res = await loginAsUser(targetUserId);
       if (res?.success === 1 || res?.settings?.success === 1) {
@@ -54,14 +54,12 @@ export default function UserListPage() {
       toast.error("Failed to login as user");
       console.error(error);
     }
-  }, [loginAs, router]);
+  };
 
-  // Dynamic dropdown options
   const [companyOptions, setCompanyOptions] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
 
 
-  // const canLoginAsThisUser = canImpersonate && currentUser?.sub !== user.id;
   
   useEffect(() => {
     const loadOptions = async () => {
@@ -86,7 +84,6 @@ export default function UserListPage() {
     loadOptions();
   }, []);
 
-  // Search/Filter states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sidebarFilters, setSidebarFilters] = useState({
     firstName: "",
@@ -104,38 +101,35 @@ export default function UserListPage() {
   const [appliedFilters, setAppliedFilters] = useState([]);
   const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
 
-  const fields = useMemo(
-    () => [
-      { label: "User", value: "firstName", type: "text"  },
-      // { label: "Last Name", value: "lastName", type: "text" },
-      // { label: "Username", value: "userName", type: "text" },
-      { label: "Email", value: "email", type: "text" },
-      {
-        label: "Company",
-        value: "companyId",
-        type: "select",
-        options: companyOptions,
-      },
-      {
-        label: "Group",
-        value: "groupId",
-        type: "select",
-        options: groupOptions,
-      },
-      {
-        label: "Status",
-        value: "status",
-        type: "select",
-        options: [
-          { label: "Active", value: "Active" },
-          { label: "Inactive", value: "InActive" },
-        ],
-      },
-    ],
-    [companyOptions, groupOptions],
-  );
+  const fields = [
+    { label: "User", value: "firstName", type: "text" },
+    // { label: "Last Name", value: "lastName", type: "text" },
+    // { label: "Username", value: "userName", type: "text" },
+    { label: "Email", value: "email", type: "text" },
+    {
+      label: "Company",
+      value: "companyId",
+      type: "select",
+      options: companyOptions,
+    },
+    {
+      label: "Group",
+      value: "groupId",
+      type: "select",
+      options: groupOptions,
+    },
+    {
+      label: "Status",
+      value: "status",
+      type: "select",
+      options: [
+        { label: "Active", value: "Active" },
+        { label: "Inactive", value: "Inactive" },
+      ],
+    },
+  ];
 
-  const handleOpenSearch = useCallback(() => {
+  const handleOpenSearch = () => {
     if (tempFilters.length === 0 && fields.length > 0) {
       const defaultField = fields[0];
       setTempFilters([
@@ -150,9 +144,9 @@ export default function UserListPage() {
       ]);
     }
     setIsSearchOpen(true);
-  }, [tempFilters.length, fields]);
+  };
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
 
@@ -198,7 +192,6 @@ export default function UserListPage() {
           .filter(Boolean);
       }
 
-      // Add column filters
       if (columnFilters && Object.keys(columnFilters).length > 0) {
         Object.entries(columnFilters).forEach(([key, val]) => {
           if (val === undefined || val === null || val === "") return;
@@ -228,19 +221,7 @@ export default function UserListPage() {
       setLoading(false);
       setInitialLoad(false);
     }
-  }, [
-    page,
-    limit,
-    search,
-    appliedFilters,
-    appliedLogicalOperator,
-    appliedSidebarFilters,
-    columnFilters,
-    sortField,
-    sortOrder,
-    setTotal,
-    setLimit,
-  ]);
+  };
 
   useEffect(() => {
     setConfig({
@@ -266,13 +247,23 @@ export default function UserListPage() {
       },
     });
     return () => resetConfig();
-  }, [setConfig, router, handleOpenSearch, setIsFilterOpen, can]); // resetConfig is stable (useCallback) and only used in cleanup — not a dep
+  }, [setConfig, router, setIsFilterOpen, can]); 
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    setTimeout(() => fetchUsers(), 0);
+  }, [
+    page,
+    limit,
+    search,
+    appliedFilters,
+    appliedLogicalOperator,
+    appliedSidebarFilters,
+    columnFilters,
+    sortField,
+    sortOrder,
+  ]);
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
       const res = await deleteUser(deleteTarget.id);
@@ -288,50 +279,46 @@ export default function UserListPage() {
     } catch {
       toast.error("Failed to delete user");
     }
-  }, [deleteTarget, fetchUsers]);
+  };
 
-  const headers = useMemo(
-    () =>
-      [
-        { label: "User", key: "firstName", searchable: true, sortable: true },
-        { label: "Email", key: "email", searchable: true, sortable: true },
-        {
-          label: "Company",
-          key: "companyName",
-          searchable: true,
-          sortable: true,
-        },
-        { label: "Group", key: "groupName", searchable: true, sortable: true },
-        {
-          label: "Status",
-          key: "status",
-          type: "select",
-          options: [
-            { label: "Active", value: "Active" },
-            { label: "Inactive", value: "InActive" }, 
-          ],
-          searchable: true,
-          sortable: true,
-        },
-        currentUser?.isSuperAdmin
-          ? {
-              label: "Login As",
-              key: "loginAs",
-              sortable: false,
-              searchable: false,
-            }
-          : null,
-        {
-          label: "Last Login",
-          key: "lastLoginDateFormatted",
+  const headers = [
+    { label: "User", key: "firstName", searchable: true, sortable: true },
+    { label: "Email", key: "email", searchable: true, sortable: true },
+    {
+      label: "Company",
+      key: "companyName",
+      searchable: true,
+      sortable: true,
+    },
+    { label: "Group", key: "groupName", searchable: true, sortable: true },
+    currentUser?.isSuperAdmin
+      ? {
+          label: "Login As",
+          key: "loginAs",
           sortable: false,
           searchable: false,
-        },
-      ].filter(Boolean),
-    [currentUser?.isSuperAdmin],
-  );
+        }
+      : null,
+    {
+      label: "Last Login",
+      key: "lastLoginDateFormatted",
+      sortable: false,
+      searchable: false,
+    },
+    {
+      label: "Status",
+      key: "status",
+      type: "select",
+      options: [
+        { label: "Active", value: "Active" },
+        { label: "Inactive", value: "Inactive" },
+      ],
+      searchable: true,
+      sortable: true,
+    },
+  ].filter(Boolean);
 
-  const renderCell = useCallback(
+  const renderCell = 
     (item, key) => (
       <UserTableRow
         item={item}
@@ -342,9 +329,7 @@ export default function UserListPage() {
         setSelectedUserForDetails={setSelectedUserForDetails}
         setSelectedCompanyForDetails={setSelectedCompanyForDetails}
       />
-    ),
-    [currentUser, handleLoginAs],
-  );
+    );
 
   if (!can("USER_LIST")) {
     return <AccessDenied missingPermission="USER_LIST" />;
@@ -364,8 +349,29 @@ export default function UserListPage() {
         data={users}
         headers={headers}
         renderCell={renderCell}
-        renderListCard={(u) => <UserListCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} setSelectedUserForDetails={setSelectedUserForDetails} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />}
-        renderGridCard={(u) => <UserGridCard key={u.id} user={u} handleLoginAs={handleLoginAs} currentUser={currentUser} can={can} setSelectedUserForDetails={setSelectedUserForDetails} setSelectedUserForPasswordReset={setSelectedUserForPasswordReset} setSelectedCompanyForDetails={setSelectedCompanyForDetails} />}
+        renderListCard={(u) => (
+          <UserListCard
+            key={u.id}
+            user={u}
+            handleLoginAs={handleLoginAs}
+            currentUser={currentUser}
+            can={can}
+            setSelectedUserForDetails={setSelectedUserForDetails}
+            setSelectedCompanyForDetails={setSelectedCompanyForDetails}
+          />
+        )}
+        renderGridCard={(u) => (
+          <UserGridCard
+            key={u.id}
+            user={u}
+            handleLoginAs={handleLoginAs}
+            currentUser={currentUser}
+            can={can}
+            setSelectedUserForDetails={setSelectedUserForDetails}
+            setSelectedUserForPasswordReset={setSelectedUserForPasswordReset}
+            setSelectedCompanyForDetails={setSelectedCompanyForDetails}
+          />
+        )}
         loading={loading}
       />
 
@@ -380,12 +386,12 @@ export default function UserListPage() {
         onClose={() => setSelectedCompanyForDetails(null)}
         company={selectedCompanyForDetails}
       />
-      
+
       <ResetPasswordDrawer
         open={!!selectedUserForPasswordReset}
         onClose={() => setSelectedUserForPasswordReset(null)}
         user={selectedUserForPasswordReset}
-        />
+      />
 
       <FilterDrawer
         open={isFilterOpen}
@@ -415,7 +421,7 @@ export default function UserListPage() {
         companies={companyOptions}
         statuses={[
           { label: "Active", value: "Active" },
-          { label: "Inactive", value: "InActive" },
+          { label: "Inactive", value: "Inactive" },
         ]}
       />
 

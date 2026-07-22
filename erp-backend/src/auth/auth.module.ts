@@ -18,7 +18,6 @@ import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.en
 
 @Module({
   imports: [
-    // Global JwtModule — available across all modules
     JwtModule.register({ global: true }),
     TypeOrmModule.forFeature([UserEntity, CompanyEntity, GroupEntity, GroupCapabilityEntity]),
     forwardRef(() => ActivityLogModule),

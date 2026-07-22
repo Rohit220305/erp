@@ -1,4 +1,3 @@
-// CompanyEditForm.jsx
 "use client";
 
 import CompanyForm from "./CompanyForm";

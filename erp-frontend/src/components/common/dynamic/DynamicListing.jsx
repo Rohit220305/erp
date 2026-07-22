@@ -1,4 +1,3 @@
-// DynamicListing.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -55,7 +54,6 @@ export default function DynamicListing({
   const listPermission   = schema.permissions?.list;
   const deletePermission = schema.permissions?.delete;
 
-  // Open Search Drawer Handler
   const handleOpenSearch = () => {
     if (tempFilters.length === 0 && schema.searchFields?.length > 0) {
       const defaultField = schema.searchFields[0];
@@ -68,7 +66,6 @@ export default function DynamicListing({
     setIsSearchOpen(true);
   };
 
-  // Data Fetching Function (Standard Async Function)
   const loadData = async () => {
     if (!fetchData) {
       console.warn("DynamicListing: no fetchData prop provided.");
@@ -119,7 +116,6 @@ export default function DynamicListing({
         sortField:       sortField || undefined,
         sortOrder:       sortOrder || undefined,
       });
-
       const data = response?.settings?.data || response?.data || {};
       setItems(data.items || data.list || []);
       setTotal(data?.pagination?.total  || data.total  || 0);
@@ -133,7 +129,6 @@ export default function DynamicListing({
     }
   };
 
-  // Header Config Effect
   useEffect(() => {
     const headerAction  = schema.actions?.header?.[0];
     const canDoAction   = headerAction && (!headerAction.permission || can(headerAction.permission));
@@ -160,7 +155,7 @@ export default function DynamicListing({
           : null,
       },
       navbar: {
-        title:       "Listing",
+        title: "Listing",
         breadcrumbs: [
           { label: "Master",      href: "/" },
           { label: schema.title,  href: `/${schema.moduleName.toLowerCase()}` },
@@ -170,7 +165,6 @@ export default function DynamicListing({
     return () => resetConfig();
   }, [setConfig, can, router, schema]);
 
-  // Load Data Effect
   useEffect(() => {
     loadData();
   }, [
@@ -180,7 +174,6 @@ export default function DynamicListing({
     fetchData, schema.title
   ]);
 
-  // Row Action Handler
   const handleRowAction = (action, item) => {
     if (action.type === "editRedirect" || action.type === "viewRedirect") {
       let path = action.path || "";
@@ -197,7 +190,6 @@ export default function DynamicListing({
     }
   };
 
-  // Delete Action Handler
   const handleDelete = async () => {
     if (!deleteTarget) return;
     if (!deleteFn) {

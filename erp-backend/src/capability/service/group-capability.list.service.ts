@@ -161,8 +161,6 @@ export class GroupCapabilityListService {
         });
         assignedCapIds = new Set(mappings.map((m) => m.capabilityId));
       }
-      // console.log("Assigned Capability IDs:", assignedCapIds);
-      // console.log("All Capabilities:", allCapabilities);
       const matrix = allCapabilities.map((cap) => ({
         id: cap.id,
         moduleName: cap.moduleName,

@@ -6,7 +6,7 @@ export async function apiClient(path, options = {}) {
   const url = path.startsWith("http") ? path : `${API_URL}${path}`;
   const isServer = typeof window === "undefined";
 
-  console.log(`API Request: ${options.method} ${url}`, options);
+  // console.log(`API Request: ${options.method} ${url}`, options);
 
   const makeRequest = async (overrideHeaders = {}) => {
     const isFormData = options.body instanceof FormData;
@@ -61,7 +61,6 @@ export async function apiClient(path, options = {}) {
         return null;
       }
     } else {
-      // Server side refresh
       try {
         let serverCookieHeader = {};
         try {
@@ -78,7 +77,6 @@ export async function apiClient(path, options = {}) {
         });
 
         if (refreshRes.ok) {
-          // Extract new cookies from set-cookie header if needed
           const setCookie = refreshRes.headers.get("set-cookie");
           const overrideHeaders = setCookie ? { Cookie: setCookie } : {};
           res = await makeRequest(overrideHeaders);

@@ -13,7 +13,6 @@ export default function DynamicViewDrawer({ open, onClose, item, schema, fetchIt
   const [loading, setLoading] = useState(false);
 
   const itemId = item?.id;
-
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") onClose?.();
@@ -28,7 +27,6 @@ export default function DynamicViewDrawer({ open, onClose, item, schema, fetchIt
       if (!itemId) return;
 
       if (!fetchItem) {
-        // No fetchItem provided — use the row data directly from the listing
         setDelayedItem(item);
         return;
       }
@@ -91,7 +89,6 @@ export default function DynamicViewDrawer({ open, onClose, item, schema, fetchIt
       />
 
       <div className={`absolute right-0 top-0 h-full w-full max-w-[380px] bg-white shadow-2xl transition-transform duration-300 ease-in-out ${isVisible ? "translate-x-0" : "translate-x-full"}`}>
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="text-xl font-semibold text-blue-700">{schema.title || "Details"}</h2>
           <button

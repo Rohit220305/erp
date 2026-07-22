@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { changePassword } from "@/lib/api/auth-api";
@@ -12,13 +12,13 @@ const changePasswordSchema = z
   .object({
     currentPassword: z
       .string()
-      .min(1, "Current password is required")
-      .min(6, "Password must be at least 6 characters"),
+      .min(1, "⚠Please enter your Current Password.")
+      .min(6, "⚠Password must be at least 6 characters."),
     newPassword: z
       .string()
-      .min(1, "New password is required")
-      .min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your new password"),
+      .min(1, "⚠Please enter a New Password.")
+      .min(6, "⚠Password must be at least 6 characters."),
+    confirmPassword: z.string().min(1, "⚠Please re-enter your New Password."),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords do not match",
@@ -86,7 +86,7 @@ export default function ChangePasswordForm() {
     setConfirmOpen(true);
   };
 
-  const handleActualSubmit = useCallback(
+  const handleActualSubmit = 
     async (data) => {
       try {
         setLoading(true);
@@ -109,9 +109,7 @@ export default function ChangePasswordForm() {
       } finally {
         setLoading(false);
       }
-    },
-    [router],
-  );
+    };
 
   const toggleShow = (field) =>
     setShow((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -150,7 +148,7 @@ export default function ChangePasswordForm() {
               <input
                 type={show.current ? "text" : "password"}
                 name="currentPassword"
-                placeholder="Enter your current password"
+                placeholder="Enter Current Password"
                 value={values.currentPassword}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -181,7 +179,7 @@ export default function ChangePasswordForm() {
               <input
                 type={show.newPwd ? "text" : "password"}
                 name="newPassword"
-                placeholder="Enter new password"
+                placeholder="Enter New Password"
                 value={values.newPassword}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -212,7 +210,7 @@ export default function ChangePasswordForm() {
               <input
                 type={show.confirm ? "text" : "password"}
                 name="confirmPassword"
-                placeholder="Re-enter new password"
+                placeholder="Re-enter New Password"
                 value={values.confirmPassword}
                 onChange={handleChange}
                 onBlur={handleBlur}

@@ -68,7 +68,6 @@ export default function Header() {
   return (
     <header className="bg-white border-b border-dashed border-gray-300 h-[74px]">
       <div className="h-full flex items-center justify-between px-8">
-        {/* LEFT */}
         <div className="flex items-center">
           <div
             className="flex items-center hover:cursor-pointer"
@@ -104,7 +103,6 @@ export default function Header() {
           </div> */}
         </div>
 
-        {/* RIGHT */}
         <div className="flex items-center gap-5">
           {header.actionButton && (
             <button

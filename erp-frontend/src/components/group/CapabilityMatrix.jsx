@@ -1,7 +1,5 @@
-// CapabilityMatrix.jsx
 "use client";
 
-// All 7 action columns in display order
 const ACTION_COLUMNS = [
   { key: "LIST",   label: "List" },
   { key: "VIEW",   label: "View" },
@@ -13,7 +11,6 @@ const ACTION_COLUMNS = [
 ];
 
 export default function CapabilityMatrix({ capabilities = [], selectedCodes = [], onChange }) {
-  // Group capabilities by moduleName (Plain variable computation without useMemo)
   const groups = {};
   (capabilities || []).forEach((cap) => {
     const mod = cap.moduleName;
