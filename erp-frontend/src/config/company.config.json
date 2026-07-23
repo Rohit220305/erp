@@ -234,6 +234,10 @@
         "type": "text"
       },
       {
+        "label": "",
+        "key": ""
+      },
+      {
         "label": "Added Date",
         "key": "addedDateFormatted",
         "type": "text"

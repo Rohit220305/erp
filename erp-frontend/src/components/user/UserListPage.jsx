@@ -27,7 +27,7 @@ import CompanyDetailsDrawer from "@/components/company/CompanyDetailsDrawer";
 export default function UserListPage() {
   const {loginAs,backToSession,isImpersonating,sessionStack, canImpersonate,} = useAuth();
   const { setConfig, resetConfig } = useHeader();
-  const { view, page, limit, setTotal, search, setLimit, setPage, total, columnFilters, sortField, sortOrder } =
+  const { view, page, limit, setTotal, search, setLimit, setPage, total, columnFilters, sortField, sortOrder, toggleColumnSearch, isFilterDrawerOpen, setIsFilterDrawerOpen } =
     useListing();
   const { user: currentUser, can } = useAuth();
   const [users, setUsers] = useState([]);
@@ -230,12 +230,14 @@ export default function UserListPage() {
           label: "Add User",
           onClick: () => router.push("/admin/add"),
         } : null,
-        icons: ["refresh", "search", "filter", "view"],
+        icons: ["refresh", "search", "filter", "filterDrawer", "view"],
         showBookmark: true,
         showLanguage: true,
         showProfile: true,
         showMenu: true,
-        onFilterClick: () => setIsFilterOpen(true),
+        onColumnSearchClick: toggleColumnSearch,
+        onFilterDrawerClick: () => setIsFilterDrawerOpen(true),
+        onFilterClick: () => setIsFilterDrawerOpen(true),
         onSearchClick: handleOpenSearch,
       },
       navbar: {
@@ -247,7 +249,7 @@ export default function UserListPage() {
       },
     });
     return () => resetConfig();
-  }, [setConfig, router, setIsFilterOpen, can]); 
+  }, [setConfig, router, toggleColumnSearch, setIsFilterDrawerOpen, can]); 
 
   useEffect(() => {
     setTimeout(() => fetchUsers(), 0);
@@ -394,13 +396,13 @@ export default function UserListPage() {
       />
 
       <FilterDrawer
-        open={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
+        open={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
         onSearch={() => {
           setAppliedSidebarFilters(sidebarFilters);
           setAppliedFilters([]);
           setPage(1);
-          setIsFilterOpen(false);
+          setIsFilterDrawerOpen(false);
         }}
         onReset={() => {
           const defaultSidebar = {
@@ -413,7 +415,7 @@ export default function UserListPage() {
           setSidebarFilters(defaultSidebar);
           setAppliedSidebarFilters(null);
           setPage(1);
-          setIsFilterOpen(false);
+          setIsFilterDrawerOpen(false);
         }}
         filters={sidebarFilters}
         setFilters={setSidebarFilters}

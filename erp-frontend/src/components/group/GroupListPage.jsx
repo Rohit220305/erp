@@ -77,7 +77,7 @@ const SIDEBAR_STATUSES = [
 
 export default function GroupListPage() {
   const { setConfig, resetConfig } = useHeader();
-  const { view, page, limit, setTotal, search, setLimit, setPage, total, columnFilters, sortField, sortOrder } =
+  const { view, page, limit, setTotal, search, setLimit, setPage, total, columnFilters, sortField, sortOrder, toggleColumnSearch } =
     useListing();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -192,6 +192,7 @@ export default function GroupListPage() {
         showLanguage: true,
         showProfile: true,
         showMenu: true,
+        onColumnSearchClick: toggleColumnSearch,
         onFilterClick: () => setIsFilterOpen(true),
         onSearchClick: handleOpenSearch,
       },
@@ -205,7 +206,7 @@ export default function GroupListPage() {
     });
 
     return () => resetConfig();
-  }, [setConfig, router, setIsFilterOpen, can]); 
+  }, [setConfig, router, toggleColumnSearch, can]); 
 
   useEffect(() => {
     fetchGroups();

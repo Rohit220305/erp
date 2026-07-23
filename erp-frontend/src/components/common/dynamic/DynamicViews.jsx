@@ -10,6 +10,24 @@ const resolvePath = (obj, path) => {
   return path.split('.').reduce((acc, part) => acc && acc[part], obj);
 };
 
+const formatValue = (val, colKey) => {
+  if (val === null || val === undefined) return "—";
+  if (typeof val === "object") {
+    if (Array.isArray(val)) {
+      if (val.length === 0) return "—";
+      return val
+        .map((item) =>
+          typeof item === "object" && item !== null
+            ? item.currencyCode || item.code || item.name || JSON.stringify(item)
+            : String(item)
+        )
+        .join(", ");
+    }
+    return val.currencyCode || val.code || val.name || JSON.stringify(val);
+  }
+  return String(val);
+};
+
 export const DynamicListCard = ({ item, config, setSelectedItemForDetails }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { can } = useAuth();
@@ -24,55 +42,62 @@ export const DynamicListCard = ({ item, config, setSelectedItemForDetails }) => 
   const viewPermission = config.actions?.viewPermission || config.permissions?.view;
   const hasViewPerm = !viewPermission || can(viewPermission);
 
+  const totalCols = 1 + (listConfig.columns?.length || 0);
+
   return (
     <div className="mx-2 my-2">
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-400 shadow-sm hover:shadow-md">
         <div className="flex items-center px-6 py-4">
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
-              {config.moduleName || "Record"}
-            </p>
-            <div className="flex items-center gap-3">
-              {listConfig.primary?.image && (
-                 <SharedImageZoom
-                   id={`list-${item.id}`}
-                   src={image}
-                   alt={title}
-                   placeholderText={<ImageIcon size={18} />}
-                   thumbnailClassName="w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0"
-                   modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"
-                 />
-              )}
-              <div className="min-w-0">
-                {hasViewPerm ? (
-                  <span
-                    onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
-                    className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-semibold text-sm truncate"
-                  >
-                    {title || "—"}
-                  </span>
-                ) : (
-                  <p className="text-sm font-semibold text-gray-800 truncate">
-                    {title || "—"}
-                  </p>
-                )}
-                <p className="text-[11px] text-gray-400 mt-0.5 no-underline truncate">
-                  {subtitle || "—"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {(listConfig.columns || []).map((col, idx) => (
-            <div key={idx} className="flex-1 ms-5 min-w-0">
+          <div
+            className="grid gap-4 items-center flex-1 min-w-0"
+            style={{ gridTemplateColumns: `repeat(${totalCols}, minmax(0, 1fr))` }}
+          >
+            <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
-                {col.label}
+                {config.moduleName || "Record"}
               </p>
-              <div className="text-[13px] text-gray-800 font-medium truncate">
-                {String(item[col.key] || "—")}
+              <div className="flex items-center gap-3">
+                {listConfig.primary?.image && (
+                   <SharedImageZoom
+                     id={`list-${item.id}`}
+                     src={image}
+                     alt={title}
+                     placeholderText={<ImageIcon size={18} />}
+                     thumbnailClassName="w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0"
+                     modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"
+                   />
+                )}
+                <div className="min-w-0">
+                  {hasViewPerm ? (
+                    <span
+                      onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
+                      className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-semibold text-sm truncate"
+                    >
+                      {title || "—"}
+                    </span>
+                  ) : (
+                    <p className="text-sm font-semibold text-gray-800 truncate">
+                      {title || "—"}
+                    </p>
+                  )}
+                  <p className="text-[11px] text-gray-400 mt-0.5 no-underline truncate">
+                    {subtitle || "—"}
+                  </p>
+                </div>
               </div>
             </div>
-          ))}
+
+            {(listConfig.columns || []).map((col, idx) => (
+              <div key={idx} className="min-w-0">
+                <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
+                  {col.label}
+                </p>
+                <div className="text-[13px] text-gray-800 font-medium truncate">
+                  {formatValue(item[col.key], col.key)}
+                </div>
+              </div>
+            ))}
+          </div>
 
           {(listConfig.expanded && listConfig.expanded.length > 0) && (
             <div
@@ -93,17 +118,27 @@ export const DynamicListCard = ({ item, config, setSelectedItemForDetails }) => 
               isExpanded ? "max-h-[500px] opacity-100 " : "max-h-0 opacity-0"
             }`}
           >
-            <div className="px-6 py-5 flex items-start bg-gray-50 border-t border-gray-100">
-              {listConfig.expanded.map((col, idx) => (
-                <div key={idx} className="flex-1 min-w-0">
-                  <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
-                    {col.label}
-                  </p>
-                  <p className="text-[13px] text-gray-800 font-medium truncate">
-                    {String(item[col.key] || "—")}
-                  </p>
-                </div>
-              ))}
+            <div className="px-6 py-5 bg-gray-50/50 border-t border-gray-100">
+              <div
+                className="grid gap-4 items-start pr-[52px]"
+                style={{ gridTemplateColumns: `repeat(${totalCols}, minmax(0, 1fr))` }}
+              >
+                {listConfig.expanded.map((col, idx) => {
+                  if (!col.key && !col.label) {
+                    return <div key={idx} className="min-w-0" />;
+                  }
+                  return (
+                    <div key={idx} className="min-w-0">
+                      <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
+                        {col.label}
+                      </p>
+                      <p className="text-[13px] text-gray-800 font-medium truncate">
+                        {formatValue(item[col.key], col.key)}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
@@ -170,7 +205,7 @@ export const DynamicGridCard = ({ item, config, setSelectedItemForDetails }) => 
             <div key={idx} className="grid grid-cols-[110px_1fr] items-center gap-2">
               <span className="text-gray-400">{detail.label}</span>
               <span className="text-gray-900 truncate">
-                {String(val)}
+                {formatValue(val, detail.key)}
               </span>
             </div>
           );

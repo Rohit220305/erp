@@ -66,7 +66,7 @@ export class GroupCapabilityListService {
     try {
       const page = params.page ? parseInt(params.page) : 1;
       const limit = params.limit ? parseInt(params.limit) : 10;
-      const skip = (page - 1) * limit;
+      const skip = (page - 1) * limit;  
 
       const queryBuilder = this.groupCapabilityRepo.createQueryBuilder('group_capabilities')
         .leftJoinAndSelect('group_capabilities.group', 'group')

@@ -122,7 +122,7 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
           )}
         </div>
         <div className="grid grid-cols-[110px_1fr] items-center gap-2">
-          <span className="text-gray-400">Last Access</span>
+          <span className="text-gray-400">Last Login</span>
           <span className="text-gray-900 truncate">
             {user.lastLoginDateFormatted || "Never logged in"}
           </span>

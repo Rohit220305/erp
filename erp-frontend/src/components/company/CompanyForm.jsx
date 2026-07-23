@@ -251,12 +251,12 @@ export default function CompanyForm({
     setStateOptions(states);
     setCityOptions([]);
 
-    if (countryObj.phonecode) {
-      setFormData((prev) => ({
-        ...prev,
-        dialCode: `+${countryObj.phonecode}`,
-      }));
-    }
+    // if (countryObj.phonecode) {
+    //   setFormData((prev) => ({
+    //     ...prev,
+    //     dialCode: `+${countryObj.phonecode}`,
+    //   }));
+    // }
 
     if (!isInitialMount.current) {
       setFormData((prev) => ({
@@ -767,39 +767,93 @@ export default function CompanyForm({
                   Currency
                 </label>
                 {/* <Select
-                  instanceId="select-currencies"
-                  isMulti
-                  value={currencyOptions.filter(opt => (formData.supportedCurrencies || []).some(id => String(id) === String(opt.value)))}
-                  onChange={(selected) => handleChange("supportedCurrencies", selected ? selected.map(s => Number(s.value)) : [])}
-                  options={currencyOptions}
-                  isLoading={currencyLoading}
-                  placeholder="Select Supported Currencies"
-                  classNamePrefix="react-select"
-                  styles={customSelectStyles(errors.supportedCurrencies)}
-                /> */}
+                    instanceId="select-currencies"
+                    isMulti
+                    value={currencyOptions.filter((opt) =>
+                      (formData.supportedCurrencies || []).some(
+                        (id) => String(id) === String(opt.value),
+                      ),
+                    )}
+                    onChange={(selected) =>
+                      handleChange(
+                        "supportedCurrencies",
+                        selected ? selected.map((s) => Number(s.value)) : [],
+                      )
+                    }
+                    options={currencyOptions}
+                    isLoading={currencyLoading}
+                    placeholder="Select Supported Currencies"
+                    classNamePrefix="react-select"
+                    styles={customSelectStyles(errors.supportedCurrencies)}
+                  /> */}
 
                 <Select
                   instanceId="select-currencies"
-                  value={
-                    currencyOptions.find(
-                      (opt) =>
-                        String(opt.value) ===
-                        String(formData.supportedCurrencies),
-                    ) || null
-                  }
-                  onChange={(selected) =>
+                  isMulti
+                  value={currencyOptions.filter((opt) =>
+                    (formData.supportedCurrencies || []).some(
+                      (id) => String(id) === String(opt.value),
+                    ),
+                  )}
+                  onChange={(selected) => {
+                    const limited =
+                      selected && selected.length > 0
+                        ? [selected[selected.length - 1]]
+                        : [];
                     handleChange(
                       "supportedCurrencies",
-                      selected ? Number(selected.value) : null,
-                    )
-                  }
+                      limited.map((s) => Number(s.value)),
+                    );
+                  }}
                   options={currencyOptions}
                   isLoading={currencyLoading}
-                  isClearable
                   placeholder="Select Supported Currency"
                   classNamePrefix="react-select"
                   styles={customSelectStyles(errors.supportedCurrencies)}
                 />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Phone Number <span className="text-red-400">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <div className="w-[130px] shrink-0">
+                    <Select
+                      instanceId="select-dialCode"
+                      value={
+                        DIAL_CODE_OPTIONS.find(
+                          (d) => d.value === formData.dialCode,
+                        ) || null
+                      }
+                      onChange={(opt) =>
+                        handleChange("dialCode", opt ? opt.value : "")
+                      }
+                      options={DIAL_CODE_OPTIONS}
+                      isClearable={true}
+                      isSearchable={true}
+                      placeholder="Code"
+                      classNamePrefix="react-select"
+                      styles={customSelectStyles(
+                        errors.dialCode || errors.phone,
+                      )}
+                    />
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                    className={`flex-1 px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                      ${errors.phone ? "border-red-400 bg-red-50" : "border-gray-200"}
+                    `}
+                  />
+                </div>
+                {(errors.phone || errors.dialCode) && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    ⚠ {errors.phone || errors.dialCode}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -862,35 +916,34 @@ export default function CompanyForm({
                   )}
                 </div>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Country <span className="text-red-400">*</span>
-                </label>
-                <Select
-                  instanceId="select-country"
-                  value={
-                    COUNTRY_OPTIONS.find((c) => c.value === formData.country) ||
-                    null
-                  }
-                  onChange={(opt) =>
-                    handleChange("country", opt ? opt.value : "")
-                  }
-                  options={COUNTRY_OPTIONS}
-                  isClearable={true}
-                  isSearchable={true}
-                  placeholder="Select Country"
-                  classNamePrefix="react-select"
-                  styles={customSelectStyles(errors.country)}
-                />
-                {errors.country && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.country}
-                  </p>
-                )}
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Country <span className="text-red-400">*</span>
+                  </label>
+                  <Select
+                    instanceId="select-country"
+                    value={
+                      COUNTRY_OPTIONS.find(
+                        (c) => c.value === formData.country,
+                      ) || null
+                    }
+                    onChange={(opt) =>
+                      handleChange("country", opt ? opt.value : "")
+                    }
+                    options={COUNTRY_OPTIONS}
+                    isClearable={true}
+                    isSearchable={true}
+                    placeholder="Select Country"
+                    classNamePrefix="react-select"
+                    styles={customSelectStyles(errors.country)}
+                  />
+                  {errors.country && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      ⚠ {errors.country}
+                    </p>
+                  )}
+                </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     State / Province <span className="text-red-400">*</span>
@@ -927,7 +980,9 @@ export default function CompanyForm({
                     </p>
                   )}
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     City <span className="text-red-400">*</span>
@@ -963,71 +1018,26 @@ export default function CompanyForm({
                     </p>
                   )}
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Zip / Postal Code <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter zip code"
-                  value={formData.zipCode}
-                  onChange={(e) => handleChange("zipCode", e.target.value)}
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Zip / Postal Code <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter zip code"
+                    value={formData.zipCode}
+                    onChange={(e) => handleChange("zipCode", e.target.value)}
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
                     focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
                     ${errors.zipCode ? "border-red-400 bg-red-50" : "border-gray-200"}
                   `}
-                />
-                {errors.zipCode && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.zipCode}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Phone Number <span className="text-red-400">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <div className="w-[130px] shrink-0">
-                    <Select
-                      instanceId="select-dialCode"
-                      value={
-                        DIAL_CODE_OPTIONS.find(
-                          (d) => d.value === formData.dialCode,
-                        ) || null
-                      }
-                      onChange={(opt) =>
-                        handleChange("dialCode", opt ? opt.value : "")
-                      }
-                      options={DIAL_CODE_OPTIONS}
-                      isClearable={true}
-                      isSearchable={true}
-                      placeholder="Code"
-                      classNamePrefix="react-select"
-                      styles={customSelectStyles(
-                        errors.dialCode || errors.phone,
-                      )}
-                    />
-                  </div>
-                  <input
-                    type="tel"
-                    placeholder="Enter phone number"
-                    value={formData.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
-                    className={`flex-1 px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                      ${errors.phone ? "border-red-400 bg-red-50" : "border-gray-200"}
-                    `}
                   />
+                  {errors.zipCode && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      ⚠ {errors.zipCode}
+                    </p>
+                  )}
                 </div>
-                {(errors.phone || errors.dialCode) && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.phone || errors.dialCode}
-                  </p>
-                )}
               </div>
             </div>
           </div>
@@ -1091,23 +1101,47 @@ export default function CompanyForm({
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Contact Person Phone
                 </label>
-                <input
-                  type="tel"
-                  placeholder="Phone number"
-                  value={formData.contactPersonPhone}
-                  onChange={(e) =>
-                    handleChange("contactPersonPhone", e.target.value)
-                  }
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.contactPersonPhone ? "border-red-400 bg-red-50" : "border-gray-200"}
-                  `}
-                />
-                {errors.contactPersonPhone && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.contactPersonPhone}
-                  </p>
-                )}
+                <div className="space-y-1.5">
+                  <div className="flex gap-2">
+                    <div className="w-[130px] shrink-0">
+                      <Select
+                        instanceId="select-dialCode"
+                        value={
+                          DIAL_CODE_OPTIONS.find(
+                            (d) => d.value === formData.dialCode,
+                          ) || null
+                        }
+                        onChange={(opt) =>
+                          handleChange("dialCode", opt ? opt.value : "")
+                        }
+                        options={DIAL_CODE_OPTIONS}
+                        isClearable={true}
+                        isSearchable={true}
+                        placeholder="Code"
+                        classNamePrefix="react-select"
+                        styles={customSelectStyles(
+                          errors.dialCode || errors.contactPersonPhone,
+                        )}
+                      />
+                    </div>
+                    <input
+                      type="tel"
+                      placeholder="Enter phone number"
+                      value={formData.phone}
+                      onChange={(e) => handleChange("phone", e.target.value)}
+                      className={`flex-1 px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
+                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
+                      ${errors.contactPersonPhone ? "border-red-400 bg-red-50" : "border-gray-200"}
+                    `}
+                    />
+                  </div>
+
+                  {errors.contactPersonPhone && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      ⚠ {errors.contactPersonPhone}
+                    </p>
+                  )}    
+                </div>
               </div>
             </div>
           </div>

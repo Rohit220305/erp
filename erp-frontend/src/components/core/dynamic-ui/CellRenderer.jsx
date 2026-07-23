@@ -97,20 +97,51 @@ export default function CellRenderer({
         </span>
       );
 
-    // case "badges":
-    //   if (!value || !Array.isArray(value) || value.length === 0) return <span>-</span>;
-    //   return (
-    //     <div className="flex flex-wrap gap-1">
-    //       {value.map((v, idx) => (
-    //         <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-medium">
-    //           {column.badgeKey ? resolvePath(v, column.badgeKey) : v}
-    //         </span>
-    //       ))}
-    //     </div>
-    //   );
+    case "badges": {
+      if (!value) return <span>-</span>;
+      const list = Array.isArray(value) ? value : [value];
+      if (list.length === 0) return <span>-</span>;
+      return (
+        <div className="flex flex-wrap gap-1">
+          {list.map((v, idx) => {
+            let label = "-";
+            if (typeof v === "object" && v !== null) {
+              label = column.badgeKey ? resolvePath(v, column.badgeKey) : (v.currencyCode || v.code || v.name || "-");
+            } else {
+              label = v;
+            }
+            return (
+              <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-medium">
+                {label || "-"}
+              </span>
+            );
+          })}
+        </div>
+      );
+    }
 
     case "text":
-    default:
-      return <span>{value || "-"}</span>;
+    default: {
+      if (value === null || value === undefined) return <span>-</span>;
+      if (typeof value === "object") {
+        if (Array.isArray(value)) {
+          if (value.length === 0) return <span>-</span>;
+          return (
+            <span>
+              {value
+                .map((val) =>
+                  typeof val === "object" && val !== null
+                    ? (column?.badgeKey ? resolvePath(val, column.badgeKey) : (val.currencyCode || val.code || val.name || JSON.stringify(val)))
+                    : String(val)
+                )
+                .join(", ")}
+            </span>
+          );
+        }
+        const objLabel = column?.badgeKey ? resolvePath(value, column.badgeKey) : (value.currencyCode || value.code || value.name || JSON.stringify(value));
+        return <span>{objLabel || "-"}</span>;
+      }
+      return <span>{String(value)}</span>;
+    }
   }
 }

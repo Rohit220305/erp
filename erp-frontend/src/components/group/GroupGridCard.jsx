@@ -42,7 +42,7 @@ export default function GroupGridCard({ group, onDelete }) {
           </div>
         )}
         <div className="grid grid-cols-[110px_1fr] items-center gap-2">
-          <span className="text-gray-400">Created At</span>
+          <span className="text-gray-400">Added Date</span>
           <span className="text-gray-900 truncate">{group.addedDateFormatted || "—"}</span>
         </div>
       </div>

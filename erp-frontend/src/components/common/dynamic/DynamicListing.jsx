@@ -33,7 +33,10 @@ export default function DynamicListing({
     view, page, limit, total,
     setTotal, setLimit, setPage,
     search, columnFilters, sortField, sortOrder,
+    toggleColumnSearch, isFilterDrawerOpen, setIsFilterDrawerOpen,
   } = useListing();
+
+  const activeView = schema.forceView || view;
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,15 +136,21 @@ export default function DynamicListing({
     const headerAction  = schema.actions?.header?.[0];
     const canDoAction   = headerAction && (!headerAction.permission || can(headerAction.permission));
 
+    const defaultIcons = schema.defaultFilters
+      ? ["refresh", "search", "filter", "filterDrawer", "view"]
+      : ["refresh", "search", "filter", "view"];
+
     setConfig({
       header: {
-        icons:        ["refresh", "search", "filter", "view"],
+        icons:        schema.headerIcons || defaultIcons,
         showBookmark: true,
         showLanguage: true,
         showProfile:  true,
         showMenu:     true,
         showSearch:   true,
-        onFilterClick: () => setIsFilterOpen(true),
+        onColumnSearchClick: toggleColumnSearch,
+        onFilterDrawerClick: () => setIsFilterDrawerOpen(true),
+        onFilterClick: () => setIsFilterDrawerOpen(true),
         onSearchClick: handleOpenSearch,
         actionButton: canDoAction
           ? {
@@ -163,7 +172,7 @@ export default function DynamicListing({
       },
     });
     return () => resetConfig();
-  }, [setConfig, can, router, schema]);
+  }, [setConfig, can, router, schema, toggleColumnSearch, setIsFilterDrawerOpen]);
 
   useEffect(() => {
     loadData();
@@ -229,7 +238,7 @@ export default function DynamicListing({
   return (
     <div className="relative px-6 h-full">
 
-      {view === "table" && (
+      {(activeView === "table" || (schema.forceView === "table")) && (
         <DynamicTableView
           data={items}
           config={schema}
@@ -240,7 +249,7 @@ export default function DynamicListing({
         />
       )}
 
-      {view === "list" && (
+      {schema.forceView !== "table" && activeView === "list" && (
         <DynamicListView
           data={items}
           config={schema}
@@ -252,7 +261,7 @@ export default function DynamicListing({
         />
       )}
 
-      {view !== "table" && view !== "list" && (
+      {schema.forceView !== "table" && activeView !== "table" && activeView !== "list" && (
         <DynamicGridView
           data={items}
           config={schema}
@@ -285,19 +294,19 @@ export default function DynamicListing({
 
       {schema.defaultFilters && (
         <FilterDrawer
-          open={isFilterOpen}
-          onClose={() => setIsFilterOpen(false)}
+          open={isFilterDrawerOpen}
+          onClose={() => setIsFilterDrawerOpen(false)}
           onSearch={() => {
             setAppliedSidebarFilters(sidebarFilters);
             setAppliedFilters([]);
             setPage(1);
-            setIsFilterOpen(false);
+            setIsFilterDrawerOpen(false);
           }}
           onReset={() => {
             setSidebarFilters(schema.defaultFilters);
             setAppliedSidebarFilters(null);
             setPage(1);
-            setIsFilterOpen(false);
+            setIsFilterDrawerOpen(false);
           }}
           filters={sidebarFilters}
           setFilters={setSidebarFilters}

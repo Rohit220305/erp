@@ -15,7 +15,7 @@ export default function GroupTableRow({
         
         <div>
           {hasViewPerm ? (
-            <p
+            <p  
               className="font-medium text-[#1565c0] hover:underline cursor-pointer text-sm"
               onClick={() => router.push(`/group/${item.id}`)}
             >

@@ -16,6 +16,9 @@ export function ListingProvider({ children }) {
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState("");
 
+  const [showColumnSearch, setShowColumnSearch] = useState(true);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
   const pathname = usePathname();
 
   useEffect(() => {
@@ -25,9 +28,17 @@ export function ListingProvider({ children }) {
     setColumnFilters({});
     setSortField("");
     setSortOrder("");
+    setIsFilterDrawerOpen(false);
   }, [pathname]);
 
-  
+  const toggleColumnSearch = useCallback(() => {
+    setShowColumnSearch((prev) => !prev);
+  }, []);
+
+  const toggleFilterDrawer = useCallback(() => {
+    setIsFilterDrawerOpen((prev) => !prev);
+  }, []);
+
   const resetPagination = useCallback(() => {
     setPage(1);
     setTotal(0);
@@ -44,7 +55,6 @@ export function ListingProvider({ children }) {
     setPage(1);
   }, []);
 
- 
   const value = useMemo(
     () => ({
       view,
@@ -63,8 +73,18 @@ export function ListingProvider({ children }) {
       sortOrder,
       setSort: handleSetSort,
       resetPagination,
+      showColumnSearch,
+      setShowColumnSearch,
+      toggleColumnSearch,
+      isFilterDrawerOpen,
+      setIsFilterDrawerOpen,
+      toggleFilterDrawer,
     }),
-    [view, page, limit, total, search, columnFilters, handleSetColumnFilters, sortField, sortOrder, handleSetSort, resetPagination]
+    [
+      view, page, limit, total, search, columnFilters, handleSetColumnFilters,
+      sortField, sortOrder, handleSetSort, resetPagination,
+      showColumnSearch, toggleColumnSearch, isFilterDrawerOpen, toggleFilterDrawer
+    ]
   );
 
   return (

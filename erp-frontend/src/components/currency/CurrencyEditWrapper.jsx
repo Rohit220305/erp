@@ -12,7 +12,7 @@ export default function CurrencyEditWrapper({ id }) {
   
   const [initialData, setInitialData] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     let isMounted = true;
     async function loadData() {

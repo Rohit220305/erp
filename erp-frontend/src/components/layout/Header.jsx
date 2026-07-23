@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Upload,
   Filter,
+  SlidersHorizontal,
   LayoutGrid,
 } from "lucide-react";
 import LanguageDropdown from "../common/LanguageDropdown";
@@ -25,6 +26,7 @@ const iconMap = {
   // refresh: RefreshCw,
   // export: Upload,
   filter: Filter,
+  filterDrawer: SlidersHorizontal,
   search: Search,
   view: LayoutGrid,
 };
@@ -126,7 +128,13 @@ export default function Header() {
                 type="button"
                 onClick={() => {
                   if (icon === "filter") {
-                    header.onFilterClick?.();
+                    if (header.onColumnSearchClick) {
+                      header.onColumnSearchClick();
+                    } else {
+                      header.onFilterClick?.();
+                    }
+                  } else if (icon === "filterDrawer") {
+                    header.onFilterDrawerClick?.();
                   } else if (icon === "search") {
                     if (header.onSearchClick) {
                       header.onSearchClick();

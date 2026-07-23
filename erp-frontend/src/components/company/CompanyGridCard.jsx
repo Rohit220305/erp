@@ -1,77 +1,78 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { MoreVertical } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { resolvePath } from "@/components/core/dynamic-ui/utils/pathResolver";
-import CellRenderer from "@/components/core/dynamic-ui/CellRenderer";
-
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function CompanyGridCard({ item, config, setSelectedItemForDetails }) {
-  const router = useRouter();
   const { can } = useAuth();
-  const hasViewPerm = can(config.permissions?.view || "COMPANY_VIEW");
+  if (!item) return null;
 
-  const gridConfig = config.gridCard;
-  if (!gridConfig) return null;
+  const viewPerm = config?.permissions?.view || "COMPANY_VIEW";
+  const hasViewPerm = can(viewPerm);
+  const isActive = item.status === "Active";
 
-  const logoUrl    = resolvePath(item, gridConfig.header.image);
-  const title      = resolvePath(item, gridConfig.header.title);
-  const subtitle   = resolvePath(item, gridConfig.header.subtitle);
-  const badgeValue = resolvePath(item, gridConfig.header.badge);
+  const formattedPhone = item.phone ? `${item.dialCode || ""} ${item.phone}`.trim() : null;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between">
-        <div 
+        <div
           className={`flex items-center gap-3 ${hasViewPerm ? "cursor-pointer" : ""}`}
           onClick={() => hasViewPerm && setSelectedItemForDetails && setSelectedItemForDetails(item)}
         >
           <div className="relative shrink-0">
             <SharedImageZoom
               id={`company-grid-${item.id}`}
-              src={logoUrl}
-              alt={title}
-              placeholderText={title?.[0] || "C"}
+              src={item.logoUrl}
+              alt={item.companyName}
+              placeholderText={item.companyName?.[0] || "C"}
               thumbnailClassName="w-14 h-14 rounded-xl object-cover border border-gray-100"
               modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"
             />
-            <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${badgeValue === "Active" ? "bg-green-500" : "bg-red-500"}`}></div>
+            <div
+              className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                isActive ? "bg-green-500" : "bg-red-500"
+              }`}
+            />
           </div>
           <div>
-            <p className={`font-medium leading-tight mb-0.5 ${hasViewPerm ? "text-[#1565c0] hover:underline decoration-1 underline-offset-2" : "text-gray-900"}`}>
-              {title || "—"}
+            <p
+              className={`font-medium leading-tight mb-0.5 ${
+                hasViewPerm ? "text-[#1565c0] hover:underline decoration-1 underline-offset-2" : "text-gray-900"
+              }`}
+            >
+              {item.companyName || "—"}
             </p>
             <p className="text-gray-400 text-sm mt-2 leading-tight">
-              {subtitle || "—"}
+              {item.shortName || item.companyCode || "—"}
             </p>
           </div>
         </div>
-        
-  
       </div>
 
       <hr className="border-gray-100 my-4" />
 
       <div className="space-y-3 text-sm">
-        {gridConfig.details.map((detail, idx) => {
-          const val = resolvePath(item, detail.key);
-          if (!val) return null;
-          
-          return (
-            <div key={idx} className="grid grid-cols-[110px_1fr] items-center gap-2">
-              <span className="text-gray-400">{ detail.label}</span>
-              <span className="text-gray-900 truncate">
-                <CellRenderer item={item} column={detail} config={config} />
-              </span>
-            </div>
-          );
-        })}
-        {resolvePath(item, gridConfig.footer.date) && (
+        {item.email && (
           <div className="grid grid-cols-[110px_1fr] items-center gap-2">
-            <span className="text-gray-400">Created At</span>
-            <span className="text-gray-900 truncate">{resolvePath(item, gridConfig.footer.date)}</span>
+            <span className="text-gray-400">Email</span>
+            <span className="text-gray-900 truncate" title={item.email}>
+              {item.email}
+            </span>
+          </div>
+        )}
+
+        {formattedPhone && (
+          <div className="grid grid-cols-[110px_1fr] items-center gap-2">
+            <span className="text-gray-400">Phone</span>
+            <span className="text-gray-900 truncate">{formattedPhone}</span>
+          </div>
+        )}
+
+        {item.addedDateFormatted && (
+          <div className="grid grid-cols-[110px_1fr] items-center gap-2">
+            <span className="text-gray-400">Added date</span>
+            <span className="text-gray-900 truncate">{item.addedDateFormatted}</span>
           </div>
         )}
       </div>

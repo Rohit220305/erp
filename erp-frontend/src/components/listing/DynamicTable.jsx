@@ -8,7 +8,7 @@ export default function DynamicTable({
   renderCell,
   maxHeight = "500px",
 }) {
-  const { sortField, sortOrder, setSort, columnFilters, setColumnFilters } = useListing();
+  const { sortField, sortOrder, setSort, columnFilters, setColumnFilters, showColumnSearch } = useListing();
 
   const [localFilters, setLocalFilters] = useState({});
 
@@ -60,16 +60,18 @@ export default function DynamicTable({
 
   return (
     <div className="overflow-auto max-h-[92%]">
-      <table className="w-full">
+      <table className="w-full table-fixed">
         <thead className="sticky top-0 z-10 bg-white border-b border-gray-200">
           <tr>
             {headers.map((header, index) => {
               const isSortable = header.sortable !== false;
               const isActiveSort = sortField === header.key;
+              const widthStyle = header.width ? { width: header.width } : {};
               return (
                 <th
                   key={index}
-                  className={`px-4 py-4 text-left font-medium text-sm ${isSortable ? 'cursor-pointer select-none hover:bg-gray-50' : ''} ${isActiveSort ? 'text-blue-600 font-semibold' : ''}`}
+                  style={widthStyle}
+                  className={`px-4 py-4 text-left font-medium text-sm transition-all duration-300 ${isSortable ? 'cursor-pointer select-none hover:bg-gray-50' : ''} ${isActiveSort ? 'text-blue-600 font-semibold' : ''}`}
                   onClick={() => handleSortClick(header.key, header.sortable)}
                 >
                   <div className="flex items-center space-x-1">
@@ -86,38 +88,41 @@ export default function DynamicTable({
           </tr>
           <tr className="bg-gray-50/50">
             {headers.map((header, index) => {
-              if (header.searchable === false) {
-                return <th key={`filter-${index}`} className="px-4 py-2 border-b border-gray-200"></th>;
-              }
-
-              if (header.type === "select" && header.options) {
-                return (
-                  <th key={`filter-${index}`} className="px-4 py-2 border-b border-gray-200">
-                    <select
-                      className="w-full px-2 py-1 text-sm border cursor-pointer border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal"
-                      value={localFilters[header.key] || ""}
-                      onChange={(e) => handleSelectChange(header.key, e.target.value)}
-                    >
-                      <option value="" className="cursor-pointer">All</option>
-                      {header.options.map((opt) => (
-                        <option  className="cursor-pointer" key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </th>
-                );
-              }
-
+              const widthStyle = header.width ? { width: header.width } : {};
               return (
-                <th key={`filter-${index}`} className="px-4 py-2 border-b border-gray-200">
-                  <input
-                    type="text"
-                    placeholder={`Search...`}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal"
-                    value={localFilters[header.key] || ""}
-                    onChange={(e) => handleFilterChange(header.key, e.target.value)}
-                  />
+                <th key={`filter-${index}`} style={widthStyle} className="p-0 border-b border-gray-200">
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      showColumnSearch ? "grid-rows-[1fr] opacity-100 py-2 px-4" : "grid-rows-[0fr] opacity-0 py-0 px-4"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      {header.searchable !== false && (
+                        header.type === "select" && header.options ? (
+                          <select
+                            className="w-full px-2 py-1 text-sm border cursor-pointer border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal"
+                            value={localFilters[header.key] || ""}
+                            onChange={(e) => handleSelectChange(header.key, e.target.value)}
+                          >
+                            <option value="" className="cursor-pointer">All</option>
+                            {header.options.map((opt) => (
+                              <option className="cursor-pointer" key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            placeholder={`Search...`}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal"
+                            value={localFilters[header.key] || ""}
+                            onChange={(e) => handleFilterChange(header.key, e.target.value)}
+                          />
+                        )
+                      )}
+                    </div>
+                  </div>
                 </th>
               );
             })}
