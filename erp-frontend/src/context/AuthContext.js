@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { restoreSession } from "@/lib/api/auth-api";
+import { restoreSession, switchProfile as switchProfileApi } from "@/lib/api/auth-api";
 
 const AuthContext = createContext();
 
@@ -18,6 +18,9 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
   const [sessionStack, setSessionStack] = useState([]);
   const [token, setToken] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
+
+  const [allGroups, setAllGroups] = useState(() => initialUser?.groups || []);
+  const [activeGroupId, setActiveGroupId] = useState(() => initialUser?.groupId || null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -47,6 +50,8 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
       : null;
     setUser(normalizedData);
     setCapabilities(userCapabilities);
+    setAllGroups(userData?.groups || []);
+    setActiveGroupId(userData?.groupId || null);
     localStorage.setItem("userCapabilities", userCapabilities);
   };
 
@@ -55,6 +60,8 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
     setCapabilities([]);
     setSessionStack([]);
     setToken(null);
+    setAllGroups([]);
+    setActiveGroupId(null);
   };
 
   const can = (permission) => {
@@ -75,6 +82,19 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
     clearAuth();
     localStorage.removeItem("sessionStack");
     localStorage.removeItem("authToken");
+  };
+
+  const switchProfile = async (groupId) => {
+    const res = await switchProfileApi(groupId);
+    if (res?.success === 1 && res?.data) {
+      setAuthData(res.data, res.data.capabilities || []);
+      if (res.data.token) {
+        setToken(res.data.token);
+        localStorage.setItem("authToken", res.data.token);
+      }
+      return res;
+    }
+    throw new Error(res?.message || "Failed to switch profile");
   };
 
   const loginAs = (newUserData, newToken = null) => {
@@ -139,12 +159,15 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
       value={{
         user,
         capabilities,
+        allGroups,
+        activeGroupId,
         isAuthenticated,
         can,
         setAuthData,
         clearAuth,
         login,
         logout,
+        switchProfile,
         loginAs,
         backToSession,
         sessionStack,

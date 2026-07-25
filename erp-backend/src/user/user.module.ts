@@ -13,9 +13,18 @@ import { UserListService } from './service/user.list.service';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CommonFileService } from 'src/package/service/common-file.service';
+import { UserGroupEntity } from './entity/user-group.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, CompanyEntity, GroupEntity]), ActivityLogModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      UserEntity,
+      CompanyEntity,
+      GroupEntity,
+      UserGroupEntity,
+    ]),
+    ActivityLogModule,
+  ],
   controllers: [UserController],
   providers: [
     UserService,

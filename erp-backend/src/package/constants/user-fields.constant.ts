@@ -1,6 +1,5 @@
 export const USER_INSERT_FIELDS = [
   'companyId',
-  'groupId',
   'userName',
   'firstName',
   'lastName',
@@ -16,7 +15,6 @@ export const USER_INSERT_FIELDS = [
 
 export const USER_UPDATE_FIELDS = [
   'companyId',
-  'groupId',
   'userName',
   'firstName',
   'lastName',

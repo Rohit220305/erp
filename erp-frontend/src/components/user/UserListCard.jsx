@@ -84,9 +84,8 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
               </p>
               <div>
                 <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                    isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                  }`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                    }`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
                   {user.status || "—"}
@@ -100,22 +99,19 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <ChevronDown
-              className={`text-[#1565c0] transition-transform duration-300 ${
-                isExpanded ? "rotate-180" : ""
-              }`}
+              className={`text-[#1565c0] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""
+                }`}
               size={20}
             />
           </div>
         </div>
 
         <div
-          className={`transition-all duration-300 ease-in-out overflow-hidden ${
-            isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-          }`}
+          className={`transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+            }`}
         >
           <div className="px-6 py-5 bg-gray-50/50 border-t border-gray-100">
             <div className="grid grid-cols-4 gap-4 items-start pr-[52px]">
-              {/* 1. Email (under User) */}
               <div className="min-w-0">
                 <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                   Email
@@ -125,7 +121,6 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                 </p>
               </div>
 
-              {/* 2. Contact (under User Name) */}
               <div className="min-w-0">
                 <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                   Contact

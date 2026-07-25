@@ -84,7 +84,7 @@ export default function GroupListPage() {
   const [initialLoad, setInitialLoad] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user: currentUser } = useAuth();
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sidebarFilters, setSidebarFilters] = useState({
@@ -165,6 +165,7 @@ export default function GroupListPage() {
         logicalOperator: logicalOp,
         sortField,
         sortOrder,
+        includeSuperAdmin: currentUser?.isSuperAdmin === true,
       });
 
       const data = response?.settings?.data || response?.data || {};
@@ -214,6 +215,7 @@ export default function GroupListPage() {
     page, limit, search,
     appliedFilters, appliedLogicalOperator, appliedSidebarFilters,
     columnFilters, sortField, sortOrder,
+    currentUser?.isSuperAdmin,
     setTotal, setLimit
   ]);
 

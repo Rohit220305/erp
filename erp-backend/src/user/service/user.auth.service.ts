@@ -82,7 +82,7 @@ export class UserAuthService {
 
       const group = await this.groupRepo.findOne({
         where: {
-          id: user.groupId,
+          id: (user as any).groupId,
         },
       });
 

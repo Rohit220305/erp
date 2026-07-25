@@ -7,11 +7,16 @@ import {
   Lock,
   LogOut,
   ArrowLeftCircle,
-  LogIn,
+  Shield,
+  Check,
+  Repeat,
 } from "lucide-react";
 
 export default function ProfileDropdown({
   user,
+  allGroups = [],
+  activeGroupId = null,
+  onSwitchProfile,
   onProfile,
   onChangePassword,
   onLogout,
@@ -21,12 +26,14 @@ export default function ProfileDropdown({
   backToSessionLoading = false,
 }) {
   const [open, setOpen] = useState(false);
+  const [switchExpanded, setSwitchExpanded] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setOpen(false);
+        setSwitchExpanded(false);
       }
     }
 
@@ -84,7 +91,7 @@ export default function ProfileDropdown({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-[55px] z-[999] w-[280px] overflow-hidden rounded-md bg-white shadow-xl">
+        <div className="absolute right-0 top-[55px] z-[999] w-[280px] overflow-hidden rounded-md bg-white shadow-xl border border-gray-100 transition-all duration-200 ease-out animate-in fade-in slide-in-from-top-2">
           {showBackToSession && (
             <button
               type="button"
@@ -110,6 +117,82 @@ export default function ProfileDropdown({
                 Back to previous session
               </span>
             </button>
+          )}
+
+          {allGroups && allGroups.length > 1 && (
+            <div className="border-b border-gray-200">
+              <button
+                type="button"
+                onClick={() => setSwitchExpanded((prev) => !prev)}
+                className="group flex w-full items-center justify-between px-3 py-3 hover:bg-gray-50 transition cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 group-hover:border-blue-600 transition">
+                    <Repeat
+                      size={16}
+                      className="text-gray-600 group-hover:text-blue-600 transition"
+                    />
+                  </div>
+                  <span className="font-medium text-[14px] text-gray-700 group-hover:text-blue-600 transition">
+                    Switch Profile
+                  </span>
+                </div>
+                <ChevronDown
+                  size={16}
+                  className={`text-gray-500 transition-transform duration-300 ease-in-out ${
+                    switchExpanded ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  switchExpanded
+                    ? "max-h-[300px] opacity-100 border-t border-gray-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <div className="bg-gray-50/80 py-1.5 space-y-1">
+                  {allGroups.map((grp) => {
+                    const isActive =
+                      Number(grp.groupId) ===
+                      Number(activeGroupId || user?.groupId);
+                    return (
+                      <button
+                        key={grp.groupId}
+                        onClick={async () => {
+                          if (isActive) return;
+                          setOpen(false);
+                          setSwitchExpanded(false);
+                          await onSwitchProfile?.(grp.groupId);
+                        }}
+                        className={`flex w-full items-center justify-between px-5 py-2 text-xs font-medium transition-colors cursor-pointer ${
+                          isActive
+                            ? "bg-blue-100/70 text-[#1565c0] font-semibold"
+                            : "text-gray-700 hover:bg-gray-200/60"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              isActive ? "bg-[#1565c0]" : "bg-gray-400"
+                            }`}
+                          />
+                          {grp.groupName}
+                        </span>
+                        {isActive ? (
+                          <Check size={14} className="text-[#1565c0]" />
+                        ) : grp.isPrimary ? (
+                          <span className="text-[10px] bg-white border border-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
+                            Primary
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           )}
 
           {menuItems.map((item) => {

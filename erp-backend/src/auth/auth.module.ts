@@ -15,11 +15,18 @@ import { UserEntity } from 'src/user/entity/user.entity';
 import { CompanyEntity } from 'src/company/entity/company.entity';
 import { GroupEntity } from 'src/group/entity/group.entity';
 import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
+import { UserGroupEntity } from 'src/user/entity/user-group.entity';
 
 @Module({
   imports: [
     JwtModule.register({ global: true }),
-    TypeOrmModule.forFeature([UserEntity, CompanyEntity, GroupEntity, GroupCapabilityEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      CompanyEntity,
+      GroupEntity,
+      GroupCapabilityEntity,
+      UserGroupEntity,
+    ]),
     forwardRef(() => ActivityLogModule),
   ],
   controllers: [AuthController],

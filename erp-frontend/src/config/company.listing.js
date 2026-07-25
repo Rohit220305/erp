@@ -2,14 +2,14 @@ export const companyListingConfig = {
   title: "Company Master",
   
   columns: [
-    { label: "Logo", key: "logoUrl" },
-    { label: "Company Name", key: "companyName" },
-    { label: "Company Code", key: "companyCode" },
-    { label: "Contact Person", key: "contactPersonName" },
-    { label: "Email", key: "email" },
-    { label: "Phone", key: "phone" },
-    { label: "Added Date", key: "addedDateFormatted" },
-    { label: "Status", key: "status" },
+    { label: "Logo", key: "logoUrl", width: "80px" },
+    { label: "Company Name", key: "companyName", width: "220px" },
+    { label: "Company Code", key: "companyCode", width: "130px" },
+    { label: "Contact Person", key: "contactPersonName", width: "160px" },
+    { label: "Email", key: "email", width: "220px" },
+    { label: "Phone", key: "phone", width: "150px" },
+    { label: "Added Date", key: "addedDateFormatted", width: "180px" },
+    { label: "Status", key: "status", width: "110px" },
   ],
 
   searchFields: [

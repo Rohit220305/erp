@@ -11,7 +11,7 @@ import type { JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import * as nodemailer from 'nodemailer';
 
 import { UserEntity } from 'src/user/entity/user.entity';
@@ -24,24 +24,25 @@ import { LoginDto } from './dto/login.dto';
 import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
 import { PermissionCacheService } from './permission.cache.service';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
+import { UserGroupEntity } from 'src/user/entity/user-group.entity';
 
-
-const IS_PROD = () => process.env.NODE_ENV === 'production';
+// const IS_PROD = () => process.env.NODE_ENV === 'production';
 
 const accessCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
-  secure: IS_PROD(),
+  // secure: IS_PROD(),
+  secure: false,
   maxAge: maxAgeMs,
 });
 
 const refreshCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
-  secure: IS_PROD(),
+  // secure: IS_PROD(),
+  secure: false, 
   maxAge: maxAgeMs,
 });
-
 
 @Injectable()
 export class AuthService {
@@ -57,11 +58,12 @@ export class AuthService {
     private readonly groupRepo: Repository<GroupEntity>,
     @InjectRepository(GroupCapabilityEntity)
     private readonly groupCapabilityRepo: Repository<GroupCapabilityEntity>,
+    @InjectRepository(UserGroupEntity)
+    private readonly userGroupRepo: Repository<UserGroupEntity>,
     private readonly permissionCacheService: PermissionCacheService,
     @Inject(forwardRef(() => ActivityLogService))
     private readonly activityLogService: ActivityLogService,
   ) {}
-
 
   async getGroupCapabilities(groupId: number): Promise<string[]> {
     const cached = await this.permissionCacheService.getPermissions(groupId);
@@ -81,39 +83,43 @@ export class AuthService {
     });
     const permissions = mappings
       .map((m) => m.capability?.capabilityCode)
-      .filter(Boolean)
-      .map((code) => {
-        return code;
-      });
+      .filter((code): code is string => Boolean(code));
 
     await this.permissionCacheService.setPermissions(groupId, permissions);
     return permissions;
   }
 
-  private buildPayload(user: UserEntity, impersonatorId?: number): Omit<JwtPayload, 'iat' | 'exp'> {
+  private buildPayload(
+    user: UserEntity,
+    groupId: number,
+    impersonatorId?: number,
+  ): Omit<JwtPayload, 'iat' | 'exp'> {
     return {
       sub: user.id,
       email: user.email,
       companyId: user.companyId,
-      groupId: user.groupId,
+      groupId,
       isSuperAdmin: user.isSuperAdmin,
       ...(impersonatorId ? { impersonatorId } : {}),
     };
   }
 
-
-  private generateTokens(user: UserEntity, impersonatorId?: number): {
+  private generateTokens(
+    user: UserEntity,
+    groupId: number,
+    impersonatorId?: number,
+  ): {
     accessToken: string;
     refreshToken: string;
     accessMaxAge: number;
     refreshMaxAge: number;
   } {
-    const payload = this.buildPayload(user, impersonatorId);
+    const payload = this.buildPayload(user, groupId, impersonatorId);
 
     const accessExpires =
       this.config.get<string>('JWT_ACCESS_EXPIRES') ?? '15m';
     const refreshExpires =
-      this.config.get<string>('JWT_REFRESH_EXPIRES') ?? '7d'; 
+      this.config.get<string>('JWT_REFRESH_EXPIRES') ?? '7d';
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.config.getOrThrow<string>('JWT_SECRET'),
@@ -144,20 +150,40 @@ export class AuthService {
     return value * multipliers[unit];
   }
 
-
-  private async buildSafeUser(user: UserEntity): Promise<Record<string, any>> {
+  private async buildSafeUser(
+    user: UserEntity,
+    activeGroupId?: number,
+    prebuiltProfiles?: any[],
+  ): Promise<Record<string, any>> {
     const company = await this.companyRepo.findOne({
       where: { id: user.companyId },
     });
 
-    const group = await this.groupRepo.findOne({
-      where: { id: user.groupId },
-    });
+    let groups = prebuiltProfiles;
+    if (!groups) {
+      const userGroupMappings = await this.userGroupRepo.find({
+        where: { userId: user.id, status: 'Active' },
+        relations: { group: true },
+        order: { isPrimary: 'DESC' },
+      });
+
+      groups = userGroupMappings.map((ug) => ({
+        groupId: ug.groupId,
+        groupName: ug.group?.groupName || '',
+        groupCode: ug.group?.groupCode || '',
+        isPrimary: ug.isPrimary === true || (ug.isPrimary as any) === 1,
+      }));
+    }
+
+    const activeGroup =
+      groups.find((g) => g.groupId === activeGroupId) || groups[0];
 
     const { password, ...safeUser } = user as any;
 
     safeUser.companyName = company?.companyName ?? '';
-    safeUser.groupName = group?.groupName ?? '';
+    safeUser.groups = groups;
+    safeUser.groupName = activeGroup?.groupName ?? '';
+    safeUser.groupId = activeGroup?.groupId;
 
     if (user.profilePhoto) {
       safeUser.photoUrl = await this.general.generateUrl(
@@ -185,7 +211,6 @@ export class AuthService {
     );
   }
 
-
   async login(req: Request, res: Response, body: LoginDto) {
     const { userName, password } = body;
     if (!userName || !password) {
@@ -211,8 +236,131 @@ export class AuthService {
       { lastLoginDate: () => 'NOW()' as any },
     );
 
+    const userGroups = await this.userGroupRepo.find({
+      where: { userId: user.id, status: 'Active' },
+      relations: { group: true },
+      order: { isPrimary: 'DESC' },
+    });
+
+    if (!userGroups || userGroups.length === 0) {
+      return {
+        success: 0,
+        message: 'No active profiles assigned to this account',
+      };
+    }
+
+    const profiles = userGroups.map((ug) => ({
+      groupId: ug.groupId,
+      groupName: ug.group?.groupName || '',
+      groupCode: ug.group?.groupCode || '',
+      isPrimary: ug.isPrimary === true || (ug.isPrimary as any) === 1,
+    }));
+
+    if (profiles.length === 1) {
+      const selectedGroupId = profiles[0].groupId;
+      const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
+        this.generateTokens(user, selectedGroupId);
+
+      this.setCookies(
+        res,
+        accessToken,
+        refreshToken,
+        accessMaxAge,
+        refreshMaxAge,
+      );
+
+      const data = await this.buildSafeUser(user, selectedGroupId, profiles);
+      const capabilities = await this.getGroupCapabilities(selectedGroupId);
+
+      await this.activityLogService.log({
+        activityCode: 'AUTH_LOGIN',
+        companyId: user.companyId,
+        actorUserId: user.id,
+        actorName: `${user.firstName} ${user.lastName}`.trim(),
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+
+      return {
+        success: 1,
+        message: 'Login successful',
+        data: { ...data, token: accessToken, capabilities },
+      };
+    } else {
+      const selectionToken = this.jwtService.sign(
+        { sub: user.id, purpose: 'profile-selection' },
+        {
+          secret: this.config.getOrThrow<string>('JWT_SECRET'),
+          expiresIn: '5m',
+        },
+      );
+
+      // await this.activityLogService.log({
+      //   activityCode: 'AUTH_LOGIN',
+      //   companyId: user.companyId,
+      //   actorUserId: user.id,
+      //   actorName: `${user.firstName} ${user.lastName}`.trim(),
+      //   ipAddress: req.ip,
+      //   userAgent: req.headers['user-agent'],
+      // });
+
+      return {
+        success: 1,
+        message: 'Profile selection required',
+        data: {
+          requiresProfileSelection: true,
+          selectionToken,
+          userId: user.id,
+          profiles,
+        },
+      };
+    }
+  }
+
+  async selectProfile(
+    req: Request,
+    res: Response,
+    body: { selectionToken: string; groupId: number },
+  ) {
+    const { selectionToken, groupId } = body;
+    if (!selectionToken || !groupId) {
+      return {
+        success: 0,
+        message: 'Selection token and group ID are required',
+      };
+    }
+
+    let payload: any;
+    try {
+      payload = this.jwtService.verify(selectionToken, {
+        secret: this.config.getOrThrow<string>('JWT_SECRET'),
+      });
+    } catch (err) {
+      return {
+        success: 0,
+        message: 'Selection session expired or invalid. Please log in again.',
+      };
+    }
+
+    if (!payload || payload.purpose !== 'profile-selection') {
+      return { success: 0, message: 'Invalid profile selection session' };
+    }
+
+    const userGroup = await this.userGroupRepo.findOne({
+      where: { userId: payload.sub, groupId, status: 'Active' },
+    });
+
+    if (!userGroup) {
+      return { success: 0, message: 'You are not assigned to this profile' };
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    if (!user || user.status !== 'Active') {
+      return { success: 0, message: 'User account is inactive or not found' };
+    }
+
     const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
-      this.generateTokens(user);
+      this.generateTokens(user, groupId);
 
     this.setCookies(
       res,
@@ -222,8 +370,8 @@ export class AuthService {
       refreshMaxAge,
     );
 
-    const data = await this.buildSafeUser(user);
-    const capabilities = await this.getGroupCapabilities(user.groupId);
+    const data = await this.buildSafeUser(user, groupId);
+    const capabilities = await this.getGroupCapabilities(groupId);
 
     await this.activityLogService.log({
       activityCode: 'AUTH_LOGIN',
@@ -236,13 +384,67 @@ export class AuthService {
 
     return {
       success: 1,
-      message: 'Login successful',
+      message: 'Profile selected successfully',
+      data: { ...data, token: accessToken, capabilities },
+    };
+  }
+
+  async switchProfile(
+    req: Request & { user: JwtPayload },
+    res: Response,
+    body: { groupId: number },
+  ) {
+    const { groupId } = body;
+    const userId = req.user?.sub;
+    if (!userId || !groupId) {
+      return { success: 0, message: 'Group ID is required' };
+    }
+
+    const userGroup = await this.userGroupRepo.findOne({
+      where: { userId, groupId, status: 'Active' },
+    });
+
+    if (!userGroup) {
+      return { success: 0, message: 'You are not assigned to this profile' };
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user || user.status !== 'Active') {
+      return { success: 0, message: 'User account is inactive or not found' };
+    }
+
+    const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
+      this.generateTokens(user, groupId, req.user?.impersonatorId);
+
+    this.setCookies(
+      res,
+      accessToken,
+      refreshToken,
+      accessMaxAge,
+      refreshMaxAge,
+    );
+
+    const data = await this.buildSafeUser(user, groupId);
+    const capabilities = await this.getGroupCapabilities(groupId);
+
+    await this.activityLogService.log({
+      activityCode: 'AUTH_LOGIN',
+      companyId: user.companyId,
+      actorUserId: userId,
+      impersonatorId: req.user?.impersonatorId,
+      actorName: `${user.firstName} ${user.lastName}`.trim(),
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    return {
+      success: 1,
+      message: 'Profile switched successfully',
       data: { ...data, token: accessToken, capabilities },
     };
   }
 
   async refresh(req: Request, res: Response) {
-    
     const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
@@ -272,12 +474,28 @@ export class AuthService {
       throw new UnauthorizedException('User not found or inactive');
     }
 
+    const userGroup = await this.userGroupRepo.findOne({
+      where: {
+        userId: payload.sub,
+        groupId: payload.groupId,
+        status: 'Active',
+      },
+    });
+
+    if (!userGroup) {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      throw new UnauthorizedException(
+        'Selected profile is no longer active for this account. Please log in again.',
+      );
+    }
+
     const {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
       accessMaxAge,
       refreshMaxAge,
-    } = this.generateTokens(user, payload.impersonatorId);
+    } = this.generateTokens(user, payload.groupId, payload.impersonatorId);
 
     this.setCookies(
       res,
@@ -307,7 +525,9 @@ export class AuthService {
   }
 
   async loginAsUser(req: Request, res: Response, targetUserId: number) {
-    const target = await this.userRepo.findOne({ where: { id: targetUserId } });
+    const target = await this.userRepo.findOne({
+      where: { id: targetUserId },
+    });
     if (!target) {
       return { success: 0, message: 'Target user not found' };
     }
@@ -316,9 +536,22 @@ export class AuthService {
       return { success: 0, message: 'User is inactive' };
     }
 
+    const targetUserGroup = await this.userGroupRepo.findOne({
+      where: { userId: target.id, status: 'Active' },
+      order: { isPrimary: 'DESC' },
+    });
+
+    if (!targetUserGroup) {
+      return {
+        success: 0,
+        message: 'Target user has no active profiles assigned',
+      };
+    }
+
+    const selectedGroupId = targetUserGroup.groupId;
     const currentAdminId = req['user']?.sub;
     const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
-      this.generateTokens(target, currentAdminId);
+      this.generateTokens(target, selectedGroupId, currentAdminId);
 
     await this.userRepo.update(
       { id: target.id },
@@ -332,8 +565,8 @@ export class AuthService {
       refreshMaxAge,
     );
 
-    const data = await this.buildSafeUser(target);
-    const capabilities = await this.getGroupCapabilities(target.groupId);
+    const data = await this.buildSafeUser(target, selectedGroupId);
+    const capabilities = await this.getGroupCapabilities(selectedGroupId);
     const entityName = `${target.firstName} ${target.lastName}`.trim();
     await this.activityLogService.log({
       activityCode: 'AUTH_IMPERSONATE',
@@ -341,7 +574,7 @@ export class AuthService {
       actorUserId: currentAdminId || target.id,
       impersonatorId: currentAdminId,
       entityType: 'USER',
-      entityId: target.id, 
+      entityId: target.id,
       entityName: entityName || target.userName,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
@@ -361,20 +594,21 @@ export class AuthService {
     confirmPassword: string,
   ) {
     try {
-    
       const user = await this.userRepo.findOne({ where: { id: userId } });
       if (!user) {
         return { success: 0, message: 'User not found' };
       }
 
       const isValid = await bcrypt.compare(currentPassword, user.password);
-      // console.log(`Current password validation result for user ${user.userName}:`, isValid);
       if (!isValid) {
         return { success: 0, message: 'Current password is incorrect' };
       }
 
       if (newPassword !== confirmPassword) {
-        return { success: 0, message: 'New password and confirm password do not match' };
+        return {
+          success: 0,
+          message: 'New password and confirm password do not match',
+        };
       }
 
       const hashed = await bcrypt.hash(newPassword, 10);
@@ -389,13 +623,21 @@ export class AuthService {
       return { success: 1, message: 'Password changed successfully' };
     } catch (err) {
       console.error('Change password error:', err);
-      return { success: 0, message: 'An unexpected error occurred. Please try again.' };
+      return {
+        success: 0,
+        message: 'An unexpected error occurred. Please try again.',
+      };
     }
   }
 
- 
-  async resetPasswordBySuperAdmin(req: Request & { user: JwtPayload }, targetUserId: number, newPassword: string) {
-    const target = await this.userRepo.findOne({ where: { id: targetUserId } });
+  async resetPasswordBySuperAdmin(
+    req: Request & { user: JwtPayload },
+    targetUserId: number,
+    newPassword: string,
+  ) {
+    const target = await this.userRepo.findOne({
+      where: { id: targetUserId },
+    });
     if (!target) {
       return { success: 0, message: 'Target user not found' };
     }
@@ -403,7 +645,6 @@ export class AuthService {
     const hashed = await bcrypt.hash(newPassword, 10);
     await this.userRepo.update({ id: targetUserId }, { password: hashed });
 
-    // Activity Log
     await this.activityLogService.log({
       activityCode: 'AUTH_ADMIN_RESET_PASSWORD',
       companyId: target.companyId,
@@ -424,7 +665,6 @@ export class AuthService {
     }
 
     try {
-      
       const payload = this.jwtService.verify<JwtPayload>(token, {
         secret: this.config.getOrThrow<string>('JWT_SECRET'),
         ignoreExpiration: true,
@@ -434,10 +674,10 @@ export class AuthService {
         return { success: 0, message: 'User not found or inactive' };
       }
 
+      const selectedGroupId = payload.groupId;
       const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
-        this.generateTokens(user);
+        this.generateTokens(user, selectedGroupId);
 
-      let activeUserId: number | undefined = undefined;
       let activeImpersonatorId: number | undefined = undefined;
       const activeToken = req.cookies?.accessToken;
       if (activeToken) {
@@ -445,11 +685,9 @@ export class AuthService {
           const decoded = this.jwtService.verify<JwtPayload>(activeToken, {
             secret: this.config.getOrThrow<string>('JWT_SECRET'),
           });
-          activeUserId = decoded.sub;
           activeImpersonatorId = decoded.impersonatorId;
         } catch {}
       }
-      console.log(req.headers)
       await this.activityLogService.log({
         activityCode: 'AUTH_RETURN_SESSION',
         companyId: user.companyId,
@@ -470,8 +708,8 @@ export class AuthService {
         refreshMaxAge,
       );
 
-      const data = await this.buildSafeUser(user);
-      const capabilities = await this.getGroupCapabilities(user.groupId);
+      const data = await this.buildSafeUser(user, selectedGroupId);
+      const capabilities = await this.getGroupCapabilities(selectedGroupId);
 
       return {
         success: 1,
@@ -483,7 +721,6 @@ export class AuthService {
     }
   }
 
-
   async forgotPassword(email: string) {
     if (!email) {
       return { success: 0, message: 'Email is required' };
@@ -493,15 +730,17 @@ export class AuthService {
       return { success: 0, message: 'User does not exist with email' };
     }
 
-    // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiry = new Date();
-    expiry.setMinutes(expiry.getMinutes() + 10); // 10 minutes
+    expiry.setMinutes(expiry.getMinutes() + 10);
 
-    await this.userRepo.update({ id: user.id }, {
-      resetPasswordOtp: otp,
-      resetPasswordOtpExpiry: expiry
-    });
+    await this.userRepo.update(
+      { id: user.id },
+      {
+        resetPasswordOtp: otp,
+        resetPasswordOtpExpiry: expiry,
+      },
+    );
 
     try {
       await this.sendOtpEmail(email, otp);
@@ -521,7 +760,10 @@ export class AuthService {
     if (!user || user.resetPasswordOtp !== otp) {
       return { success: 0, message: 'Invalid OTP' };
     }
-    if (user.resetPasswordOtpExpiry && new Date() > user.resetPasswordOtpExpiry) {
+    if (
+      user.resetPasswordOtpExpiry &&
+      new Date() > user.resetPasswordOtpExpiry
+    ) {
       return { success: 0, message: 'OTP expired' };
     }
     return { success: 1, message: 'OTP verified successfully' };
@@ -529,24 +771,32 @@ export class AuthService {
 
   async resetPassword(email: string, otp: string, newPassword: string) {
     if (!email || !otp || !newPassword) {
-      return { success: 0, message: 'Email, OTP, and new password are required' };
+      return {
+        success: 0,
+        message: 'Email, OTP, and new password are required',
+      };
     }
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user || user.resetPasswordOtp !== otp) {
       return { success: 0, message: 'Invalid OTP' };
     }
-    if (user.resetPasswordOtpExpiry && new Date() > user.resetPasswordOtpExpiry) {
+    if (
+      user.resetPasswordOtpExpiry &&
+      new Date() > user.resetPasswordOtpExpiry
+    ) {
       return { success: 0, message: 'OTP expired' };
     }
 
     const hashed = await bcrypt.hash(newPassword, 10);
-    await this.userRepo.update({ id: user.id }, {
-      password: hashed,
-      resetPasswordOtp: null as any,
-      resetPasswordOtpExpiry: null as any,
-    });
+    await this.userRepo.update(
+      { id: user.id },
+      {
+        password: hashed,
+        resetPasswordOtp: null as any,
+        resetPasswordOtpExpiry: null as any,
+      },
+    );
 
-    // Activity Log
     await this.activityLogService.log({
       activityCode: 'AUTH_FORGOT_PASSWORD_RESET',
       companyId: user.companyId,
@@ -557,19 +807,19 @@ export class AuthService {
   }
 
   private async sendOtpEmail(to: string, otp: string) {
-    console.log(`Sending OTP ${otp} to email: ${to}`);
     const transporter = nodemailer.createTransport({
       host: this.config.get<string>('SMTP_HOST') || 'smtp.gmail.com',
       port: parseInt(this.config.get<string>('SMTP_PORT') || '587', 10),
-      secure: false, 
+      secure: false,
       auth: {
         user: this.config.get<string>('SMTP_USER'),
         pass: this.config.get<string>('SMTP_PASS'),
       },
     });
 
-    const from = this.config.get<string>('SMTP_FROM_EMAIL') || '"ERP System" <noreply@erp.com>';
-    console.log(`Using SMTP from: ${from} to send OTP email to: ${to}`);
+    const from =
+      this.config.get<string>('SMTP_FROM_EMAIL') ||
+      '"ERP System" <noreply@erp.com>';
     await transporter.sendMail({
       from,
       to,
@@ -577,7 +827,6 @@ export class AuthService {
       text: `Your OTP for password reset is ${otp}. It is valid for 10 minutes.`,
       html: `<b>Your OTP for password reset is ${otp}.</b><br>It is valid for 10 minutes.`,
     });
-    console.log(`OTP email sent to ${to} successfully`);
   }
 
   async getUserPermissions(req: Request) {
@@ -600,8 +849,9 @@ export class AuthService {
     if (!user || user.status !== 'Active') {
       throw new UnauthorizedException('User not found or inactive');
     }
-    const safeUser = await this.buildSafeUser(user);
-    const capabilities = await this.getGroupCapabilities(user.groupId);
+    const activeGroupId = userPayload.groupId;
+    const safeUser = await this.buildSafeUser(user, activeGroupId);
+    const capabilities = await this.getGroupCapabilities(activeGroupId);
     return {
       success: 1,
       data: {

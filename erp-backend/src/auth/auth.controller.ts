@@ -21,6 +21,25 @@ export class AuthController {
   }
 
   @Public()
+  @Post('select-profile')
+  async selectProfile(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Body() body: { selectionToken: string; groupId: number },
+  ) {
+    return this.authService.selectProfile(req, res, body);
+  }
+
+  @Post('switch-profile')
+  async switchProfile(
+    @Req() req: Request & { user: JwtPayload },
+    @Res({ passthrough: true }) res: Response,
+    @Body() body: { groupId: number },
+  ) {
+    return this.authService.switchProfile(req, res, body);
+  }
+
+  @Public()
   @Post('refresh')
   async refresh(
     @Req() req: Request,

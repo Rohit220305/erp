@@ -156,7 +156,6 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                 </div>
               </div>
 
-              {/* <div className="min-w-0" /> */}
               <div className="min-w-0">
                 <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                   Currencies

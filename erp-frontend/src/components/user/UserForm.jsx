@@ -39,7 +39,7 @@ const BASE_DEFAULTS = {
   email: "",
   password: "",
   companyId: "",
-  groupId: "",
+  groupIds: [],
   dialCode: "+91",
   phone: "",
   status: "Active",
@@ -84,10 +84,17 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const { user: currentUser } = useAuth();
   const fileInputRef = useRef(null);
 
+  const initialGroupIds = initialValues?.groups
+    ? initialValues.groups.map((g) => Number(g.groupId))
+    : initialValues?.groupId
+    ? [Number(initialValues.groupId)]
+    : [];
+
   const defaultValues = {
     ...BASE_DEFAULTS,
     companyId: !currentUser?.isSuperAdmin ? currentUser?.companyId : "",
     ...initialValues,
+    groupIds: initialGroupIds,
   };
 
   const [formData, setFormData] = useState(defaultValues);
@@ -110,10 +117,17 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
 
   useEffect(() => {
     if (initialValues) {
+      const gIds = initialValues?.groups
+        ? initialValues.groups.map((g) => Number(g.groupId))
+        : initialValues?.groupId
+        ? [Number(initialValues.groupId)]
+        : [];
+
       setFormData({
         ...BASE_DEFAULTS,
         companyId: !currentUser?.isSuperAdmin ? currentUser?.companyId : "",
         ...initialValues,
+        groupIds: gIds,
       });
       setPhotoPreview(initialValues.photoUrl || null);
     }
@@ -153,8 +167,16 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     }
   };
 
+  const EXCLUDED_SUPER_ADMIN_ROLES = ["super_admin", "superadmin", "super admin"];
+
   const companyOptions = (companies || []).map((c) => ({ label: c.companyName, value: c.id }));
-  const groupOptions = (groups || []).map((g) => ({ label: g.groupName, value: g.id }));
+  const groupOptions = (groups || [])
+    .filter(
+      (g) =>
+        !EXCLUDED_SUPER_ADMIN_ROLES.includes(g.groupCode?.toLowerCase()) &&
+        !EXCLUDED_SUPER_ADMIN_ROLES.includes(g.groupName?.toLowerCase())
+    )
+    .map((g) => ({ label: g.groupName, value: g.id }));
 
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
@@ -185,7 +207,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
         }
       });
       setErrors(fieldErrors);
-      toast.error("Please fill required fields in the form");
+      // toast.error("Please fill required fields in the form");
       return false;
     }
 
@@ -432,20 +454,33 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             </div>
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
-                Group / Role <span className="text-red-500">*</span>
+                Roles / Groups <span className="text-red-500">*</span>
               </label>
               <Select
-                instanceId="select-groupId"
-                value={groupOptions.find((g) => String(g.value) === String(formData.groupId)) || null}
-                onChange={(opt) => handleChange("groupId", opt ? opt.value : "")}
+                isMulti
+                instanceId="select-groupIds"
+                value={(formData.groupIds || [])
+                  .map((id) => groupOptions.find((g) => Number(g.value) === Number(id)))
+                  .filter(Boolean)}
+                onChange={(opts) =>
+                  handleChange(
+                    "groupIds",
+                    opts ? opts.map((o) => Number(o.value)) : []
+                  )
+                }
                 options={groupOptions}
                 isClearable={true}
                 isSearchable={true}
-                placeholder="Select Group"
+                placeholder="Select Roles / Groups..."
                 classNamePrefix="react-select"
-                styles={customSelectStyles(errors.groupId)}
+                styles={customSelectStyles(errors.groupIds)}
               />
-              {errors.groupId && <p className="text-xs text-red-500 mt-1">⚠ {errors.groupId}</p>}
+              {errors.groupIds && <p className="text-xs text-red-500 mt-1">⚠ {errors.groupIds}</p>}
+              {formData.groupIds && formData.groupIds.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  ★ Primary profile: <span className="font-semibold text-[#1565c0]">{groupOptions.find((g) => Number(g.value) === formData.groupIds[0])?.label}</span>
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">

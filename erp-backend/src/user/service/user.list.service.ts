@@ -1,13 +1,14 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 
 import { UserEntity } from '../entity/user.entity';
 import { CompanyEntity } from 'src/company/entity/company.entity';
 import { GroupEntity } from 'src/group/entity/group.entity';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
+import { UserGroupEntity } from '../entity/user-group.entity';
 
 @Injectable()
 export class UserListService {
@@ -22,11 +23,13 @@ export class UserListService {
   @InjectRepository(GroupEntity)
   private groupRepo: Repository<GroupEntity>;
 
+  @InjectRepository(UserGroupEntity)
+  private userGroupRepo: Repository<UserGroupEntity>;
+
   async startUserDetails(req, params) {
     const response = await this.getUserDetails(req, params);
-    // console.log('response', response);
     if (response.success == 1) {
-       return await this.finishSuccess(response);
+      return await this.finishSuccess(response);
     }
 
     return await this.finishFailure(response);
@@ -50,7 +53,8 @@ export class UserListService {
         throw new Error('User not found');
       }
 
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      const isSuperAdmin =
+        req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin && user.companyId !== req.user.companyId) {
         throw new ForbiddenException('Cannot view user outside your company');
       }
@@ -61,16 +65,45 @@ export class UserListService {
         },
       });
 
-
-      const group = await this.groupRepo.findOne({
+      const userGroups = await this.userGroupRepo.find({
         where: {
-          id: user.groupId,
+          userId: user.id,
+          status: 'Active',
         },
+        order: {
+          isPrimary: 'DESC',
+        },
+      });
+
+      const groupIds = userGroups.map((ug) => ug.groupId);
+
+      let groups: GroupEntity[] = [];
+      if (groupIds.length > 0) {
+        groups = await this.groupRepo.find({
+          where: {
+            id: In(groupIds),
+          },
+        });
+      }
+      const mappedGroups = userGroups.map((ug) => {
+        const g = groups.find((grp) => grp.id === ug.groupId);
+        return {
+          groupId: ug.groupId,
+          groupName: g?.groupName || '',
+          groupCode: g?.groupCode || '',
+          isPrimary: ug.isPrimary === true || (ug.isPrimary as any) === 1,
+        };
       });
 
       user['companyName'] = company?.companyName || '';
 
-      user['groupName'] = group?.groupName || '';
+      user['groups'] = mappedGroups;
+      user['groupName'] = mappedGroups[0]?.groupName || '';
+
+      user['groupNames'] = mappedGroups
+        .map((g) => g.groupName)
+        .filter(Boolean)
+        .join(', ');
 
       user['addedDateFormatted'] = await this.general.dateFormat(
         user.addedDate,
@@ -88,16 +121,14 @@ export class UserListService {
         );
       }
 
-
       if (user.profilePhoto) {
         user['photoUrl'] = await this.general.generateUrl(
-          'users',  
+          'users',
           `${user.id}`,
           user.profilePhoto,
         );
       }
 
-     
       const { password, ...safeUser } = user;
 
       return_data = {
@@ -129,7 +160,6 @@ export class UserListService {
 
   async getUserList(req, params) {
     let return_data: any = {};
-    // console.log('params', params);
     try {
       const page = params.page ? parseInt(params.page) : 1;
 
@@ -138,20 +168,46 @@ export class UserListService {
       const skip = (page - 1) * limit;
 
       const queryBuilder = this.userRepo.createQueryBuilder('user');
-      
-      // Join for sorting and filtering
-      queryBuilder.leftJoin(CompanyEntity, 'company', 'company.id = user.companyId');
-      queryBuilder.leftJoin(GroupEntity, 'group', 'group.id = user.groupId');
+
+      // Join for company filter and sort
+      queryBuilder.leftJoin(
+        CompanyEntity,
+        'company',
+        'company.id = user.companyId',
+      );
 
       // Scoping Check
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      const isSuperAdmin =
+        req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin) {
         queryBuilder.andWhere('user.companyId = :scopedCompanyId', {
           scopedCompanyId: req.user.companyId,
         });
       }
 
+      let groupFilterId: number | null = null;
 
+      if (params?.filters && Array.isArray(params.filters)) {
+        const remainingFilters: any[] = [];
+        for (const f of params.filters) {
+          if (f.key === 'groupId' || f.key === 'groupName') {
+            const parsed = Number(f.value);
+            if (!isNaN(parsed) && parsed > 0) {
+              groupFilterId = parsed;
+            }
+          } else {
+            remainingFilters.push(f);
+          }
+        }
+        params.filters = remainingFilters;
+      }
+
+      if (groupFilterId) {
+        queryBuilder.andWhere(
+          `EXISTS (SELECT 1 FROM user_groups ug WHERE ug.userId = user.id AND ug.groupId = :filterGroupId AND ug.status = 'Active')`,
+          { filterGroupId: groupFilterId },
+        );
+      }
 
       if (params?.search) {
         queryBuilder.andWhere(
@@ -176,18 +232,15 @@ export class UserListService {
         userName: 'user.userName',
         status: 'user.status',
         companyName: 'company.companyName',
-        groupName: 'group.groupName',
         companyId: 'user.companyId',
-        groupId: 'user.groupId',
         id: 'user.id',
       };
 
-
-      if (params?.filters) {
+      if (params?.filters && params.filters.length > 0) {
         const whereString = await this.general.makeFilterString(
           params.filters,
           columnMap,
-          params.logicalOperator
+          params.logicalOperator,
         );
 
         if (whereString) {
@@ -195,9 +248,13 @@ export class UserListService {
         }
       }
 
-
-      if (params?.sortField && params?.sortOrder && columnMap[params.sortField]) {
-        const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+      if (
+        params?.sortField &&
+        params?.sortOrder &&
+        columnMap[params.sortField]
+      ) {
+        const order =
+          params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
         queryBuilder.orderBy(columnMap[params.sortField], order);
       } else {
         queryBuilder.orderBy('user.firstName', 'ASC');
@@ -205,10 +262,36 @@ export class UserListService {
 
       queryBuilder.offset(skip);
       queryBuilder.limit(limit);
-      // console.log('queryBuilder.getSql()', queryBuilder.getSql());
+
       const [data, total] = await queryBuilder.getManyAndCount();
-      // console.log('data', data);
       const userList: any[] = [];
+      const userIds = data.map((u) => u.id);
+
+      let allUserGroups: UserGroupEntity[] = [];
+      let allGroups: GroupEntity[] = [];
+
+      if (userIds.length > 0) {
+        allUserGroups = await this.userGroupRepo.find({
+          where: {
+            userId: In(userIds),
+            status: 'Active',
+          },
+          order: {
+            isPrimary: 'DESC',
+          },
+        });
+
+        const allGroupIds = Array.from(
+          new Set(allUserGroups.map((ug) => ug.groupId)),
+        );
+        if (allGroupIds.length > 0) {
+          allGroups = await this.groupRepo.find({
+            where: {
+              id: In(allGroupIds),
+            },
+          });
+        }
+      }
 
       for (const user of data) {
         const company = await this.companyRepo.findOne({
@@ -217,17 +300,26 @@ export class UserListService {
           },
         });
 
-        const group = await this.groupRepo.findOne({
-          where: {
-            id: user.groupId,
-          },
+        const uUserGroups = allUserGroups.filter((ug) => ug.userId === user.id);
+        const mappedGroups = uUserGroups.map((ug) => {
+          const g = allGroups.find((grp) => grp.id === ug.groupId);
+          return {
+            groupId: ug.groupId,
+            groupName: g?.groupName || '',
+            groupCode: g?.groupCode || '',
+            isPrimary: ug.isPrimary === true || (ug.isPrimary as any) === 1,
+          };
         });
 
         const { password, ...safeUser } = user;
 
         safeUser['companyName'] = company?.companyName || '';
-
-        safeUser['groupName'] = group?.groupName || '';
+        safeUser['groups'] = mappedGroups;
+        safeUser['groupName'] = mappedGroups[0]?.groupName || '';
+        safeUser['groupNames'] = mappedGroups
+          .map((g) => g.groupName)
+          .filter(Boolean)
+          .join(', ');
 
         safeUser['addedDateFormatted'] = await this.general.dateFormat(
           user.addedDate,
@@ -255,6 +347,7 @@ export class UserListService {
 
         userList.push(safeUser);
       }
+
       return_data = {
         success: 1,
         message: 'User List fetched successfully',
@@ -279,7 +372,7 @@ export class UserListService {
 
     return return_data;
   }
-  
+
   async finishSuccess(params) {
     return {
       settings: {

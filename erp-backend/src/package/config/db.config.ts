@@ -9,6 +9,7 @@ import { ActivityLogEntity } from "src/activity-log/entity/activity-log.entity";
 import { ActivityMasterEntity } from "src/activity-log/entity/activity-master.entity";
 import { CurrencyEntity } from "src/currency/entity/currency.entity";
 import { CompanyCurrencyEntity } from "src/company/entity/company-currency.entity";
+import { UserGroupEntity } from "src/user/entity/user-group.entity";
 dotenv.config();
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -28,6 +29,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     ActivityMasterEntity,
     CurrencyEntity,
     CompanyCurrencyEntity,
+    UserGroupEntity,
   ],
   synchronize: false,
   migrationsRun: false,

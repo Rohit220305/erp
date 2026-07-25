@@ -7,6 +7,8 @@ import {
   MaxLength,
   MinLength,
   IsIn,
+  IsArray,
+  ArrayMinSize,
 } from 'class-validator';
 
 import { Transform } from 'class-transformer';
@@ -16,9 +18,20 @@ export class UserAddDto {
   @Transform(({ value }) => Number(value))
   companyId: number;
 
-  @IsInt()
-  @Transform(({ value }) => Number(value))
-  groupId: number;
+  // @IsInt()
+  // @Transform(({ value }) => Number(value))
+  // groupId: number;
+
+  @IsArray()
+  @ArrayMinSize(1, { message: 'Please select at least one group' })
+  @IsInt({ each: true })
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value.map(Number);
+    if (typeof value === 'string') return value.split(',').map(Number);
+    return [Number(value)];
+  })
+
+  groupIds: number[];
 
   @IsString()
   @IsNotEmpty()
@@ -84,9 +97,15 @@ export class UserUpdateDto {
   companyId?: number;
 
   @IsOptional()
-  @IsInt()
-  @Transform(({ value }) => Number(value))
-  groupId?: number;
+  @IsArray()
+  @IsInt({ each: true })
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    if (Array.isArray(value)) return value.map(Number);
+    if (typeof value === 'string') return value.split(',').map(Number);
+    return [Number(value)];
+  })
+  groupIds?: number[];
 
   @IsOptional()
   @IsString()

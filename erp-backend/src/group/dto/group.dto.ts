@@ -1,5 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -96,6 +97,10 @@ export class GroupListDto {
   @IsOptional()
   @IsString()
   logicalOperator?: 'AND' | 'OR';
+
+  @IsOptional()
+  @IsBoolean()
+  includeSuperAdmin?: boolean;
 }
 
 export class FilterDto {

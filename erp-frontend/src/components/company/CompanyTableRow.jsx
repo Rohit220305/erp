@@ -54,7 +54,7 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
         {item.contactPersonName || "—"}
       </td>
 
-      <td className="px-4 py-3 text-sm text-gray-700 max-w-[180px] truncate">
+      <td className="px-4 py-3 text-sm text-gray-700 truncate">
         <span title={item.email}>{item.email || "—"}</span>
       </td>
 

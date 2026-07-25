@@ -33,8 +33,16 @@ const iconMap = {
 
 export default function Header() {
   const { config } = useHeader();
-  const { user, logout, isImpersonating, sessionStack, backToSession } =
-    useAuth();
+  const {
+    user,
+    allGroups,
+    activeGroupId,
+    switchProfile,
+    logout,
+    isImpersonating,
+    sessionStack,
+    backToSession,
+  } = useAuth();
   const router = useRouter();
   const header = config.header;
 
@@ -45,6 +53,16 @@ export default function Header() {
     } finally {
       logout();
       router.push("/login");
+    }
+  };
+
+  const handleSwitchProfile = async (groupId) => {
+    try {
+      const res = await switchProfile(groupId);
+      toast.success(res?.message || "Profile switched successfully");
+      router.push("/");
+    } catch (err) {
+      toast.error(err?.message || "Failed to switch profile");
     }
   };
 
@@ -159,6 +177,9 @@ export default function Header() {
           {header.showProfile && (
             <ProfileDropdown
               user={user}
+              allGroups={allGroups}
+              activeGroupId={activeGroupId}
+              onSwitchProfile={handleSwitchProfile}
               onProfile={() => user?.id && router.push(`/admin/${user.id}`)}
               onChangePassword={() => router.push("/settings/change-password")}
               onLogout={handleLogout}

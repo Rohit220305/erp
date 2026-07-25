@@ -17,7 +17,6 @@ export default function GroupListCard({ group, can }) {
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md">
         <div className="flex items-center px-6 py-4">
           <div className="grid grid-cols-4 gap-4 items-center flex-1 min-w-0">
-            {/* 1. Group Name */}
             <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                 Group Name

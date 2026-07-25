@@ -12,6 +12,7 @@ import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CommonFileService } from 'src/package/service/common-file.service';
 import { USER_INSERT_FIELDS, USER_UPDATE_FIELDS } from 'src/package/constants/user-fields.constant';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
+import { UserGroupEntity } from '../entity/user-group.entity';
 
 
 @Injectable()
@@ -20,7 +21,7 @@ export class UserService {
     private readonly general: GeneralUtilities,
     private readonly commonFileService: CommonFileService,
     private readonly activityLogService: ActivityLogService,
-  ) {}
+  ) { }
 
   @InjectRepository(UserEntity)
   private userRepo: Repository<UserEntity>;
@@ -30,6 +31,9 @@ export class UserService {
 
   @InjectRepository(GroupEntity)
   private groupRepo: Repository<GroupEntity>;
+
+    @InjectRepository(UserGroupEntity)
+    private userGroupRepo: Repository<UserGroupEntity>;
 
   async startInsertUser(req, params) {
     const response = await this.insertUser(req, params);
@@ -62,9 +66,7 @@ export class UserService {
         throw new ForbiddenException('Cannot create user outside your company');
       }
 
-      /**
-       * Company Validation
-       */
+
       const company = await this.companyRepo.findOne({
         where: {
           id: params.companyId,
@@ -75,22 +77,23 @@ export class UserService {
         throw new Error('Company not found');
       }
 
-      /**
-       * Group Validation
-       */
-      const group = await this.groupRepo.findOne({
-        where: {
-          id: params.groupId,
-        },
-      });
 
-      if (!group) {
-        throw new Error('Group not found');
+      const groupIds: number[] = params.groupIds || (params.groupId ? [Number(params.groupId)] : []);
+      if (!groupIds || groupIds.length === 0) {
+        throw new Error('Please select at least one group');
       }
 
-      /**
-       * Email Validation
-       */
+      for (const gid of groupIds) {
+        const group = await this.groupRepo.findOne({
+          where: {
+            id: gid,
+          },
+        });
+        if (!group) {
+          throw new Error(`Group not found (ID: ${gid})`);
+        }
+      }
+
       const emailExists = await this.userRepo.findOne({
         where: {
           email: params.email,
@@ -101,9 +104,6 @@ export class UserService {
         throw new Error('Email already exists');
       }
 
-      /**
-       * Username Validation
-       */
       const usernameExists = await this.userRepo.findOne({
         where: {
           userName: params.userName,
@@ -114,9 +114,6 @@ export class UserService {
         throw new Error('Username already exists');
       }
 
-      /**
-       * Password Hashing
-       */
       params.password = await bcrypt.hash(params.password, 10);
 
       const queryColumns = await this.general.mapFields(
@@ -128,6 +125,19 @@ export class UserService {
       queryColumns.addedDate = () => 'NOW()';
 
       const res = await this.userRepo.insert(queryColumns);
+      const insertId = res?.raw?.insertId;
+
+      if (insertId && groupIds.length > 0) {
+        const userGroupsToInsert = groupIds.map((gid, index) => ({
+          userId: insertId,
+          groupId: gid,
+          isPrimary: index === 0 ? true : false,
+          status: 'Active',
+          addedBy: req.user?.sub,
+        }));
+
+        await this.userGroupRepo.insert(userGroupsToInsert);
+      }
 
       await this.activityLogService.log({
         activityCode: 'USER_CREATE',
@@ -209,9 +219,7 @@ export class UserService {
         throw new ForbiddenException('Cannot move user outside your company');
       }
 
-      /**
-       * Company Validation
-       */
+     
       if (params.companyId) {
         const company = await this.companyRepo.findOne({
           where: {
@@ -224,24 +232,20 @@ export class UserService {
         }
       }
 
-      /**
-       * Group Validation
-       */
-      if (params.groupId) {
-        const group = await this.groupRepo.findOne({
-          where: {
-            id: params.groupId,
-          },
-        });
-
-        if (!group) {
-          throw new Error('Group not found');
+      const groupIds: number[] | undefined = params.groupIds || (params.groupId ? [Number(params.groupId)] : undefined);
+      if (groupIds && groupIds.length > 0) {
+        for (const gid of groupIds) {
+          const group = await this.groupRepo.findOne({
+            where: {
+              id: gid,
+            },
+          });
+          if (!group) {
+            throw new Error(`Group not found (ID: ${gid})`);
+          }
         }
       }
 
-      /**
-       * Email Validation
-       */
       if (params.email && params.email !== user.email) {
         const emailExists = await this.userRepo.findOne({
           where: {
@@ -254,9 +258,7 @@ export class UserService {
         }
       }
 
-      /**
-       * Username Validation
-       */
+  
       if (params.userName && params.userName !== user.userName) {
         const usernameExists = await this.userRepo.findOne({
           where: {
@@ -269,9 +271,6 @@ export class UserService {
         }
       }
 
-      /**
-       * Password Hashing
-       */
       if (params.password) {
         params.password = await bcrypt.hash(params.password, 10);
       }
@@ -290,6 +289,19 @@ export class UserService {
         },
         queryColumns,
       );
+
+      if (groupIds && groupIds.length > 0) {
+        await this.userGroupRepo.delete({ userId: params.id });
+        const userGroupsToInsert = groupIds.map((gid, index) => ({
+          userId: params.id,
+          groupId: gid,
+          isPrimary: index === 0 ? true : false,
+          status: 'Active',
+          addedBy: req.user?.sub,
+        }));
+
+        await this.userGroupRepo.insert(userGroupsToInsert);
+      }
 
       await this.activityLogService.log({
         activityCode: 'USER_UPDATE',

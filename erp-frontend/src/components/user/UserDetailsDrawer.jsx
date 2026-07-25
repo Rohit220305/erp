@@ -10,7 +10,7 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [delayedUser, setDelayedUser] = useState(user);
-  const [imgError, setImgError] = useState(false); 
+  const [imgError, setImgError] = useState(false);
   const { can } = useAuth();
 
   const userId = user?.userId || user?.id;
@@ -64,21 +64,18 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
   const hasDetailsPermission = can("USER_VIEW");
   return (
     <div
-      className={`fixed inset-0 z-[100] transition-all duration-300 ${
-        isVisible ? "pointer-events-auto" : "pointer-events-none"
-      }`}
+      className={`fixed inset-0 z-[100] transition-all duration-300 ${isVisible ? "pointer-events-auto" : "pointer-events-none"
+        }`}
     >
       <div
         onClick={onClose}
-        className={`absolute inset-0 bg-black/30 transition-opacity duration-300 ${
-          isVisible ? "opacity-100" : "opacity-0"
-        }`}
+        className={`absolute inset-0 bg-black/30 transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"
+          }`}
       />
 
       <div
-        className={`absolute right-0 top-0 h-full w-full max-w-[380px] bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
-          isVisible ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`absolute right-0 top-0 h-full w-full max-w-[380px] bg-white shadow-2xl transition-transform duration-300 ease-in-out ${isVisible ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5.5">
           <h2 className="text-xl font-semibold text-[#1565c0]">User</h2>
@@ -102,7 +99,7 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-medium text-xs border border-gray-200">
-                  {delayedUser?.firstName?.[0]}{
+                {delayedUser?.firstName?.[0]}{
                   delayedUser?.lastName?.[0]}
               </div>
             )}
@@ -111,11 +108,10 @@ export default function UserDetailsDrawer({ open, onClose, user }) {
                 {delayedUser.firstName} {delayedUser.lastName}
               </p>
               <span
-                className={`mt-1 inline-block px-3 py-1 rounded-sm text-xs font-semibold ${
-                  delayedUser.status === "Active"
+                className={`mt-1 inline-block px-3 py-1 rounded-sm text-xs font-semibold ${delayedUser.status === "Active"
                     ? "bg-[#2ecc71] text-white"
                     : "bg-red-500 text-white"
-                }`}
+                  }`}
               >
                 {delayedUser.status}
               </span>

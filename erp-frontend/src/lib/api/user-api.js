@@ -18,7 +18,11 @@ export async function createUser(data, photoFile) {
     const formData = new FormData();
     Object.entries(data).forEach(([key, val]) => {
       if (val !== undefined && val !== null && val !== "") {
-        formData.append(key, val);
+        if (Array.isArray(val)) {
+          val.forEach((item) => formData.append(key, item));
+        } else {
+          formData.append(key, val);
+        }
       }
     });
     formData.append("profilePhoto", photoFile);
@@ -39,7 +43,11 @@ export async function updateUser(data, photoFile) {
     const formData = new FormData();
     Object.entries(data).forEach(([key, val]) => {  
       if (val !== undefined && val !== null && val !== "") {
-        formData.append(key, val);
+        if (Array.isArray(val)) {
+          val.forEach((item) => formData.append(key, item));
+        } else {
+          formData.append(key, val);
+        }
       }
     });
     formData.append("profilePhoto", photoFile);

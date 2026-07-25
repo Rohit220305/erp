@@ -14,7 +14,8 @@
       "key": "logoUrl",
       "type": "image",
       "searchable": false,
-      "sortable": false
+      "sortable": false,
+      "width": "80px"
     },
     {
       "label": "Company Name",
@@ -22,49 +23,56 @@
       "type": "link",
       "linkPath": "/company/{id}",
       "searchable": true,
-      "sortable": true
+      "sortable": true,
+      "width": "220px"
     },
     {
       "label": "Short Name",
       "key": "shortName",
       "type": "text",
       "searchable": true,
-      "sortable": true
+      "sortable": true,
+      "width": "120px"
     },
     {
       "label": "Company Code",
       "key": "companyCode",
       "type": "text",
       "searchable": true,
-      "sortable": true
+      "sortable": true,
+      "width": "130px"
     },
     {
       "label": "Contact Person",
       "key": "contactPersonName",
       "type": "text",
       "searchable": true,
-      "sortable": true
+      "sortable": true,
+      "width": "160px"
     },
     {
       "label": "Email",
       "key": "email",
       "type": "text",
       "searchable": true,
-      "sortable": true
+      "sortable": true,
+      "width": "220px"
     },
     {
       "label": "Phone",
       "key": "phone",
       "type": "phone",
       "searchable": true,
-      "sortable": true
+      "sortable": true,
+      "width": "150px"
     },
     {
       "label": "Added Date",
       "key": "addedDateFormatted",
       "type": "text",
       "searchable": false,
-      "sortable": true
+      "sortable": true,
+      "width": "180px"
     },
     {
       "label": "Status",
@@ -72,6 +80,7 @@
       "type": "statusBadge",
       "searchable": true,
       "sortable": true,
+      "width": "110px",
       "options": [
         {
           "label": "Active",

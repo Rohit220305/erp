@@ -102,7 +102,7 @@ export class GeneralUtilities {
   async encryptPassword(password) {
     const encryptedpass = password;
 
-    console.log('Future encryption implementation : ', encryptedpass);
+    // console.log('Future encryption implementation : ', encryptedpass);
 
     return encryptedpass;
   }

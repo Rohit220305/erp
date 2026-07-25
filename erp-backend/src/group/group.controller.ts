@@ -21,6 +21,7 @@ import { SaveGroupWithCapabilitiesDto } from './dto/save-group-with-capabilities
 import { GroupService } from './service/group.service';
 import { GroupListService } from './service/group.list.service';
 import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
+import { Public } from 'src/package/decorator/decorator.public';
 
 @Controller('group')
 export class GroupController {
@@ -54,21 +55,27 @@ export class GroupController {
   }
 
   @Post('list-group')
-  @RequirePermission('GROUP_LIST')
+  @Public()
+  // @RequirePermission('GROUP_LIST')
   async listGroup(@Req() req, @Body() body: GroupListDto) {
     return await this.groupListService.startGroupList(req, body);
   }
 
   @Post('save-with-capabilities')
   @RequirePermission('GROUP_CREATE')
-  async saveWithCapabilities(@Req() req, @Body() body: SaveGroupWithCapabilitiesDto) {
+  async saveWithCapabilities(
+    @Req() req,
+    @Body() body: SaveGroupWithCapabilitiesDto,
+  ) {
     return await this.groupService.startSaveWithCapabilities(req, body);
   }
 
   @Put('update-with-capabilities')
   @RequirePermission('GROUP_UPDATE')
-  async updateWithCapabilities(@Req() req, @Body() body: SaveGroupWithCapabilitiesDto) {
+  async updateWithCapabilities(
+    @Req() req,
+    @Body() body: SaveGroupWithCapabilitiesDto,
+  ) {
     return await this.groupService.startSaveWithCapabilities(req, body);
   }
 }
-

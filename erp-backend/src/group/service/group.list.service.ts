@@ -7,7 +7,7 @@ import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
 @Injectable()
 export class GroupListService {
-  constructor(private readonly general: GeneralUtilities) {}
+  constructor(private readonly general: GeneralUtilities) { }
 
   @InjectRepository(GroupEntity)
   private groupRepo: Repository<GroupEntity>;
@@ -87,6 +87,11 @@ export class GroupListService {
 
       const queryBuilder = this.groupRepo.createQueryBuilder('group_master');
 
+      if (!params?.includeSuperAdmin) {
+        queryBuilder.andWhere("LOWER(group_master.groupCode) NOT IN ('superadmin', 'super_admin')");
+      }
+
+
 
       if (params?.search) {
         queryBuilder.andWhere(
@@ -103,9 +108,7 @@ export class GroupListService {
         );
       }
 
-      /**
-       * Filters
-       */
+
       if (params?.filters) {
         const whereString = await this.general.makeFilterString(
           params.filters,
@@ -118,9 +121,6 @@ export class GroupListService {
         }
       }
 
-      /**
-       * Sorting
-       */
       const allowedSortFields = {
         groupCode: 'group_master.groupCode',
         groupName: 'group_master.groupName',

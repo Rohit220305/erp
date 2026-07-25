@@ -10,9 +10,6 @@ export class UserEntity {
   @Column()
   companyId: number;
 
-  @Column()
-  groupId: number;
-
   @Column({
     length: 100,
     unique: true,

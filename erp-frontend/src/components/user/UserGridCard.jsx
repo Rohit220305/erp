@@ -43,7 +43,7 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
           </div>
         </div>
 
-  
+
       </div>
 
       <hr className="border-gray-100 my-4" />
@@ -111,7 +111,7 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
         <div className="grid grid-cols-[110px_1fr] items-center gap-2">
           <span className="text-gray-400">Company Name</span>
           {can("COMPANY_VIEW") ? (
-            <span 
+            <span
               className="text-[#1565c0] font-medium truncate hover:underline cursor-pointer"
               onClick={() => setSelectedCompanyForDetails(user)}
             >

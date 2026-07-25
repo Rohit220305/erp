@@ -82,3 +82,20 @@ export async function resetPasswordOtp(data) {
   return res.json();
 }
 
+export async function selectProfile(selectionToken, groupId) {
+  const res = await fetch(`${API_URL}/auth/select-profile`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ selectionToken, groupId }),
+  });
+  return res.json();
+}
+
+export async function switchProfile(groupId) {
+  return apiClient("/auth/switch-profile", {
+    method: "POST",
+    body: JSON.stringify({ groupId }),
+  });
+}
+
