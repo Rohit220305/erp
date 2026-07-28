@@ -26,7 +26,7 @@ export const sitemapData = [
     title: "Users & Staff Management",
     permission: "USER_LIST",
     menus: [
-      { label: "Admin Users", path: "/admin", permission: "USER_LIST" },
+      { label: "Users", path: "/admin", permission: "USER_LIST" },
       // { label: "Add User", path: "/admin/add" },
     ],
     path: "/admin",

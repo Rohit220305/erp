@@ -26,21 +26,18 @@ import { PermissionCacheService } from './permission.cache.service';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 import { UserGroupEntity } from 'src/user/entity/user-group.entity';
 
-// const IS_PROD = () => process.env.NODE_ENV === 'production';
 
 const accessCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
-  // secure: IS_PROD(),
-  secure: false,
+  secure: true,
   maxAge: maxAgeMs,
 });
 
 const refreshCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
-  // secure: IS_PROD(),
-  secure: false, 
+  secure: true,
   maxAge: maxAgeMs,
 });
 

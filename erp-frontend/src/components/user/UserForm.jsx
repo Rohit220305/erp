@@ -64,7 +64,11 @@ const customSelectStyles = (error, disabled) => ({
     ...base,
     fontSize: "0.875rem",
     cursor: "pointer",
-    backgroundColor: state.isSelected ? "#1565c0" : state.isFocused ? "#eff6ff" : "#ffffff",
+    backgroundColor: state.isSelected
+      ? "#1565c0"
+      : state.isFocused
+        ? "#eff6ff"
+        : "#ffffff",
     color: state.isSelected ? "#ffffff" : "#1f2937",
   }),
   singleValue: (base) => ({
@@ -79,7 +83,10 @@ const customSelectStyles = (error, disabled) => ({
   }),
 });
 
-export default function UserForm({ mode = "create", defaultValues: initialValues }) {
+export default function UserForm({
+  mode = "create",
+  defaultValues: initialValues,
+}) {
   const router = useRouter();
   const { user: currentUser } = useAuth();
   const fileInputRef = useRef(null);
@@ -87,8 +94,8 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const initialGroupIds = initialValues?.groups
     ? initialValues.groups.map((g) => Number(g.groupId))
     : initialValues?.groupId
-    ? [Number(initialValues.groupId)]
-    : [];
+      ? [Number(initialValues.groupId)]
+      : [];
 
   const defaultValues = {
     ...BASE_DEFAULTS,
@@ -104,7 +111,9 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
   const [showPassword, setShowPassword] = useState(false);
 
   const [photoFile, setPhotoFile] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(initialValues?.photoUrl || null);
+  const [photoPreview, setPhotoPreview] = useState(
+    initialValues?.photoUrl || null,
+  );
 
   const [companies, setCompanies] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -120,8 +129,8 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
       const gIds = initialValues?.groups
         ? initialValues.groups.map((g) => Number(g.groupId))
         : initialValues?.groupId
-        ? [Number(initialValues.groupId)]
-        : [];
+          ? [Number(initialValues.groupId)]
+          : [];
 
       setFormData({
         ...BASE_DEFAULTS,
@@ -167,14 +176,21 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
     }
   };
 
-  const EXCLUDED_SUPER_ADMIN_ROLES = ["super_admin", "superadmin", "super admin"];
+  const EXCLUDED_SUPER_ADMIN_ROLES = [
+    "super_admin",
+    "superadmin",
+    "super admin",
+  ];
 
-  const companyOptions = (companies || []).map((c) => ({ label: c.companyName, value: c.id }));
+  const companyOptions = (companies || []).map((c) => ({
+    label: c.companyName,
+    value: c.id,
+  }));
   const groupOptions = (groups || [])
     .filter(
       (g) =>
         !EXCLUDED_SUPER_ADMIN_ROLES.includes(g.groupCode?.toLowerCase()) &&
-        !EXCLUDED_SUPER_ADMIN_ROLES.includes(g.groupName?.toLowerCase())
+        !EXCLUDED_SUPER_ADMIN_ROLES.includes(g.groupName?.toLowerCase()),
     )
     .map((g) => ({ label: g.groupName, value: g.id }));
 
@@ -224,7 +240,7 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
 
   const handleActualSubmit = async (data) => {
     const payload = { ...data };
-    
+
     delete payload.profilePhoto;
     delete payload.photoUrl;
 
@@ -250,18 +266,22 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
           ? await createUser(payload, photoFile)
           : await updateUser(payload, photoFile);
 
-      const isSuccess = response?.success === 1 || response?.settings?.success === 1;
+      const isSuccess =
+        response?.success === 1 || response?.settings?.success === 1;
       const message = response?.message || response?.settings?.message;
 
       if (isSuccess) {
         toast.success(
           mode === "create"
             ? "User created successfully!"
-            : "User updated successfully!"
+            : "User updated successfully!",
         );
         router.push("/admin");
       } else {
-        toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} user`);
+        toast.error(
+          message ||
+            `Failed to ${mode === "create" ? "create" : "update"} user`,
+        );
       }
     } catch (error) {
       toast.error(error?.message || "Something went wrong");
@@ -323,14 +343,13 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             )}
           </div>
         </div>
-            
+
         <div className="space-y-4">
           <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
             Personal Information
           </h2>
 
           <div className="grid md:grid-cols-2 gap-6">
-            
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 First Name <span className="text-red-500">*</span>
@@ -344,7 +363,11 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
                   ${errors.firstName ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                 `}
               />
-              {errors.firstName && <p className="text-xs text-red-500 mt-1">⚠ {errors.firstName}</p>}
+              {errors.firstName && (
+                <p className="text-xs text-red-500 mt-1">
+                  ⚠ {errors.firstName}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -360,7 +383,9 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
                   ${errors.lastName ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                 `}
               />
-              {errors.lastName && <p className="text-xs text-red-500 mt-1">⚠ {errors.lastName}</p>}
+              {errors.lastName && (
+                <p className="text-xs text-red-500 mt-1">⚠ {errors.lastName}</p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -378,7 +403,9 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
                   ${mode === "edit" ? "bg-gray-50 text-gray-500" : "bg-white"}
                 `}
               />
-              {errors.userName && <p className="text-xs text-red-500 mt-1">⚠ {errors.userName}</p>}
+              {errors.userName && (
+                <p className="text-xs text-red-500 mt-1">⚠ {errors.userName}</p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -394,7 +421,9 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
                   ${errors.email ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                 `}
               />
-              {errors.email && <p className="text-xs text-red-500 mt-1">⚠ {errors.email}</p>}
+              {errors.email && (
+                <p className="text-xs text-red-500 mt-1">⚠ {errors.email}</p>
+              )}
             </div>
 
             {mode === "create" && (
@@ -420,10 +449,13 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                {errors.password && <p className="text-xs text-red-500 mt-1">⚠ {errors.password}</p>}
+                {errors.password && (
+                  <p className="text-xs text-red-500 mt-1">
+                    ⚠ {errors.password}
+                  </p>
+                )}
               </div>
             )}
-
           </div>
         </div>
 
@@ -432,64 +464,130 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
             Company & Role
           </h2>
 
-          {(<div className="grid md:grid-cols-2 gap-6">
-            
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Company <span className="text-red-500">*</span>
-              </label>
-              <Select
-                instanceId="select-companyId"
-                value={companyOptions.find((c) => String(c.value) === String(formData.companyId)) || null}
-                onChange={(opt) => handleChange("companyId", opt ? opt.value : "")}
-                options={companyOptions}
-                isDisabled={!currentUser?.isSuperAdmin}
-                isClearable={true}
-                isSearchable={true}
-                placeholder="Select Company"
-                classNamePrefix="react-select"
-                styles={customSelectStyles(errors.companyId, !currentUser?.isSuperAdmin)}
-              />
-              {errors.companyId && <p className="text-xs text-red-500 mt-1">⚠ {errors.companyId}</p>}
-            </div>
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Roles / Groups <span className="text-red-500">*</span>
-              </label>
-              <Select
-                isMulti
-                instanceId="select-groupIds"
-                value={(formData.groupIds || [])
-                  .map((id) => groupOptions.find((g) => Number(g.value) === Number(id)))
-                  .filter(Boolean)}
-                onChange={(opts) =>
-                  handleChange(
-                    "groupIds",
-                    opts ? opts.map((o) => Number(o.value)) : []
-                  )
-                }
-                options={groupOptions}
-                isClearable={true}
-                isSearchable={true}
-                placeholder="Select Roles / Groups..."
-                classNamePrefix="react-select"
-                styles={customSelectStyles(errors.groupIds)}
-              />
-              {errors.groupIds && <p className="text-xs text-red-500 mt-1">⚠ {errors.groupIds}</p>}
-              {formData.groupIds && formData.groupIds.length > 0 && (
-                <p className="text-xs text-gray-500 mt-1">
-                  ★ Primary profile: <span className="font-semibold text-[#1565c0]">{groupOptions.find((g) => Number(g.value) === formData.groupIds[0])?.label}</span>
-                </p>
-              )}
-            </div>
+          {formData.isSuperAdmin ? (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Company
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    disabled
+                    readOnly
+                    value="System (All Companies)"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed font-medium"
+                  />
+                    
+                </div>
+              </div>
 
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Roles / Groups
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    disabled
+                    readOnly
+                    value="Super Admin"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed font-medium"
+                  />
+                  
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Company <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  instanceId="select-companyId"
+                  value={
+                    companyOptions.find(
+                      (c) => String(c.value) === String(formData.companyId),
+                    ) || null
+                  }
+                  onChange={(opt) =>
+                    handleChange("companyId", opt ? opt.value : "")
+                  }
+                  options={companyOptions}
+                  isDisabled={!currentUser?.isSuperAdmin}
+                  isClearable={true}
+                  isSearchable={true}
+                  placeholder="Select Company"
+                  classNamePrefix="react-select"
+                  styles={customSelectStyles(
+                    errors.companyId,
+                    !currentUser?.isSuperAdmin,
+                  )}
+                />
+                {errors.companyId && (
+                  <p className="text-xs text-red-500 mt-1">
+                    ⚠ {errors.companyId}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Roles / Groups <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  isMulti
+                  instanceId="select-groupIds"
+                  value={(formData.groupIds || [])
+                    .map((id) =>
+                      groupOptions.find((g) => Number(g.value) === Number(id)),
+                    )
+                    .filter(Boolean)}
+                  onChange={(opts) =>
+                    handleChange(
+                      "groupIds",
+                      opts ? opts.map((o) => Number(o.value)) : [],
+                    )
+                  }
+                  options={groupOptions}
+                  isClearable={true}
+                  isSearchable={true}
+                  placeholder="Select Roles / Groups..."
+                  classNamePrefix="react-select"
+                  styles={customSelectStyles(errors.groupIds)}
+                />
+                {errors.groupIds && (
+                  <p className="text-xs text-red-500 mt-1">
+                    ⚠ {errors.groupIds}
+                  </p>
+                )}
+                {formData.groupIds && formData.groupIds.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    ★ Primary profile:{" "}
+                    <span className="font-semibold text-[#1565c0]">
+                      {
+                        groupOptions.find(
+                          (g) => Number(g.value) === formData.groupIds[0],
+                        )?.label
+                      }
+                    </span>
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Status <span className="text-red-500">*</span>
               </label>
               <Select
                 instanceId="select-status"
-                value={STATUS_OPTIONS.find((s) => s.value === formData.status) || null}
+                value={
+                  STATUS_OPTIONS.find((s) => s.value === formData.status) ||
+                  null
+                }
                 onChange={(opt) => handleChange("status", opt ? opt.value : "")}
                 options={STATUS_OPTIONS}
                 isClearable={true}
@@ -498,19 +596,11 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
                 classNamePrefix="react-select"
                 styles={customSelectStyles(errors.status)}
               />
-              {errors.status && <p className="text-xs text-red-500 mt-1">⚠ {errors.status}</p>}
+              {errors.status && (
+                <p className="text-xs text-red-500 mt-1">⚠ {errors.status}</p>
+              )}
             </div>
 
-          </div>)}
-        </div>
-
-        <div className="space-y-4">
-          <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
-            Contact
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Phone Number
@@ -519,8 +609,14 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
                 <div className="w-[120px] shrink-0">
                   <Select
                     instanceId="select-dialCode"
-                    value={DIAL_CODE_OPTIONS.find((d) => d.value === formData.dialCode) || null}
-                    onChange={(opt) => handleChange("dialCode", opt ? opt.value : "")}
+                    value={
+                      DIAL_CODE_OPTIONS.find(
+                        (d) => d.value === formData.dialCode,
+                      ) || null
+                    }
+                    onChange={(opt) =>
+                      handleChange("dialCode", opt ? opt.value : "")
+                    }
                     options={DIAL_CODE_OPTIONS}
                     isClearable={true}
                     isSearchable={true}
@@ -540,12 +636,62 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
                 />
               </div>
               {(errors.phone || errors.dialCode) && (
-                <p className="text-xs text-red-500 mt-1">⚠ {errors.phone || errors.dialCode}</p>
+                <p className="text-xs text-red-500 mt-1">
+                  ⚠ {errors.phone || errors.dialCode}
+                </p>
               )}
             </div>
-
           </div>
         </div>
+{/* 
+        <div className="space-y-4">
+          <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
+            Contact
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
+              <div className="flex gap-2">
+                <div className="w-[120px] shrink-0">
+                  <Select
+                    instanceId="select-dialCode"
+                    value={
+                      DIAL_CODE_OPTIONS.find(
+                        (d) => d.value === formData.dialCode,
+                      ) || null
+                    }
+                    onChange={(opt) =>
+                      handleChange("dialCode", opt ? opt.value : "")
+                    }
+                    options={DIAL_CODE_OPTIONS}
+                    isClearable={true}
+                    isSearchable={true}
+                    placeholder="Code"
+                    classNamePrefix="react-select"
+                    styles={customSelectStyles(errors.dialCode || errors.phone)}
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Phone number"
+                  value={formData.phone || ""}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  className={`flex-1 px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                    ${errors.phone ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
+                  `}
+                />
+              </div>
+              {(errors.phone || errors.dialCode) && (
+                <p className="text-xs text-red-500 mt-1">
+                  ⚠ {errors.phone || errors.dialCode}
+                </p>
+              )}
+            </div>
+          </div>
+        </div> */}
 
         <div className="flex gap-3 justify-center border-t pt-4">
           <button
@@ -568,7 +714,11 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}
+        title={
+          confirmState.type === "submit"
+            ? "Confirm Submission"
+            : "Discard Changes"
+        }
         message={
           confirmState.type === "submit"
             ? "Are you sure you want to save these changes?"
@@ -584,7 +734,9 @@ export default function UserForm({ mode = "create", defaultValues: initialValues
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}
-        onCancel={() => setConfirmState({ isOpen: false, type: null, data: null })}
+        onCancel={() =>
+          setConfirmState({ isOpen: false, type: null, data: null })
+        }
       />
     </div>
   );

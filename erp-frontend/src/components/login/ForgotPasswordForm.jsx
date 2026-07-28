@@ -136,7 +136,7 @@ export default function ForgotPasswordForm() {
         {step === 3 && "Reset Password"}
       </h1>
 
-   {step === 1 && (
+      {step === 1 && (
         <form onSubmit={handleSendOtp}>
           <div className="mb-3">
             <label className="mb-3 block text-sm font-medium text-gray-700">
@@ -172,8 +172,8 @@ export default function ForgotPasswordForm() {
         </form>
       )}
 
-    {step === 2 && (
-        <form onSubmit={handleVerifsetStepyOtp}>
+      {step === 2 && (
+        <form onSubmit={handleVerifyOtp}>
           <div className="mb-4 text-sm text-gray-600">
             Please enter the 6-digit OTP sent to{" "}
             <span className="font-semibold text-black">{form.email}</span>.

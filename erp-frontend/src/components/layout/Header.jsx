@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
+
 import Image from "next/image";
 import {
   Search,
   ChevronDown,
   Menu,
+  X,
   Bookmark,
   Plus,
   RefreshCw,
@@ -13,6 +16,7 @@ import {
   SlidersHorizontal,
   LayoutGrid,
 } from "lucide-react";
+import MenuDrawer from "../common/MenuDrawer";
 import LanguageDropdown from "../common/LanguageDropdown";
 import { useHeader } from "@/context/HeaderContext";
 import { useAuth } from "@/context/AuthContext";
@@ -45,6 +49,7 @@ export default function Header() {
   } = useAuth();
   const router = useRouter();
   const header = config.header;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -189,18 +194,30 @@ export default function Header() {
             />
           )}
 
-          {/* {header.showMenu && (
+          {header.showMenu && (
             <>
-              <div className="h-10 w-px bg-gray-300" />
+              <div className="h-10 w-px bg-gray-500" />
               <button
                 type="button"
+                onClick={() => setIsMenuOpen((prev) => !prev)}
                 className="flex items-center gap-2 cursor-pointer"
               >
-                <Menu size={22} />
+                <span
+                  className={`inline-flex transition-transform duration-500 ease-in-out ${
+                    isMenuOpen ? "rotate-180" : "rotate-0"
+                  }`}
+                >
+                  {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                </span>
                 <span>Menu</span>
               </button>
             </>
-          )} */}
+          )}
+
+          <MenuDrawer
+            open={isMenuOpen}
+            onClose={() => setIsMenuOpen(false)}
+          />
         </div>
       </div>
     </header>

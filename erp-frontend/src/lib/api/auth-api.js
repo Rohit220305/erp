@@ -1,30 +1,21 @@
-import { apiClient, API_URL } from "./api-client";
-
+import { apiClient } from "./api-client";
 
 export async function loginUser(data) {
- 
-  const res = await fetch(`${API_URL}/auth/login`, {
+  return apiClient("/auth/login", {
     method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  return res.json();
 }
 
 export async function refreshToken() {
-  const res = await fetch(`${API_URL}/auth/refresh`, {
+  return apiClient("/auth/refresh", {
     method: "POST",
-    credentials: "include",
   });
-  return res.json();
 }
-
 
 export async function logoutUser() {
   return apiClient("/auth/logout", { method: "POST" });
 }
-
 
 export async function loginAsUser(targetUserId) {
   return apiClient(`/auth/login-as-user/${targetUserId}`, { method: "POST" });
@@ -36,7 +27,6 @@ export async function changePassword(data) {
     body: JSON.stringify(data),
   });
 }
-
 
 export async function restoreSession(token) {
   return apiClient("/auth/restore-session", {
@@ -52,44 +42,32 @@ export async function resetPasswordAsAdmin(targetUserId, newPassword) {
   });
 }
 
-
 export async function forgotPassword(data) {
-  const res = await fetch(`${API_URL}/auth/forgot-password`, {
+  return apiClient("/auth/forgot-password", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  return res.json();
 }
-
 
 export async function verifyOtp(data) {
-  const res = await fetch(`${API_URL}/auth/verify-otp`, {
+  return apiClient("/auth/verify-otp", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  return res.json();
 }
 
-
 export async function resetPasswordOtp(data) {
-  const res = await fetch(`${API_URL}/auth/reset-password-otp`, {
+  return apiClient("/auth/reset-password-otp", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  return res.json();
 }
 
 export async function selectProfile(selectionToken, groupId) {
-  const res = await fetch(`${API_URL}/auth/select-profile`, {
+  return apiClient("/auth/select-profile", {
     method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ selectionToken, groupId }),
   });
-  return res.json();
 }
 
 export async function switchProfile(groupId) {
@@ -98,4 +76,3 @@ export async function switchProfile(groupId) {
     body: JSON.stringify({ groupId }),
   });
 }
-

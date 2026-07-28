@@ -32,8 +32,8 @@ export class UserService {
   @InjectRepository(GroupEntity)
   private groupRepo: Repository<GroupEntity>;
 
-    @InjectRepository(UserGroupEntity)
-    private userGroupRepo: Repository<UserGroupEntity>;
+  @InjectRepository(UserGroupEntity)
+  private userGroupRepo: Repository<UserGroupEntity>;
 
   async startInsertUser(req, params) {
     const response = await this.insertUser(req, params);
@@ -67,32 +67,38 @@ export class UserService {
       }
 
 
-      const company = await this.companyRepo.findOne({
-        where: {
-          id: params.companyId,
-        },
-      });
-
-      if (!company) {
-        throw new Error('Company not found');
-      }
-
-
       const groupIds: number[] = params.groupIds || (params.groupId ? [Number(params.groupId)] : []);
-      if (!groupIds || groupIds.length === 0) {
-        throw new Error('Please select at least one group');
-      }
 
-      for (const gid of groupIds) {
-        const group = await this.groupRepo.findOne({
+      if (!params.isSuperAdmin) {
+        if (!params.companyId) {
+          throw new Error('Please select a company');
+        }
+        const company = await this.companyRepo.findOne({
           where: {
-            id: gid,
+            id: params.companyId,
           },
         });
-        if (!group) {
-          throw new Error(`Group not found (ID: ${gid})`);
+
+        if (!company) {
+          throw new Error('Company not found');
+        }
+
+        if (!groupIds || groupIds.length === 0) {
+          throw new Error('Please select at least one group');
+        }
+
+        for (const gid of groupIds) {
+          const group = await this.groupRepo.findOne({
+            where: {
+              id: gid,
+            },
+          });
+          if (!group) {
+            throw new Error(`Group not found (ID: ${gid})`);
+          }
         }
       }
+
 
       const emailExists = await this.userRepo.findOne({
         where: {
@@ -103,6 +109,7 @@ export class UserService {
       if (emailExists) {
         throw new Error('Email already exists');
       }
+
 
       const usernameExists = await this.userRepo.findOne({
         where: {
@@ -219,7 +226,9 @@ export class UserService {
         throw new ForbiddenException('Cannot move user outside your company');
       }
 
-     
+      /**
+       * Company Validation
+       */
       if (params.companyId) {
         const company = await this.companyRepo.findOne({
           where: {
@@ -232,6 +241,9 @@ export class UserService {
         }
       }
 
+      /**
+       * Group Validation
+       */
       const groupIds: number[] | undefined = params.groupIds || (params.groupId ? [Number(params.groupId)] : undefined);
       if (groupIds && groupIds.length > 0) {
         for (const gid of groupIds) {
@@ -246,6 +258,9 @@ export class UserService {
         }
       }
 
+      /**
+       * Email Validation
+       */
       if (params.email && params.email !== user.email) {
         const emailExists = await this.userRepo.findOne({
           where: {
@@ -258,7 +273,9 @@ export class UserService {
         }
       }
 
-  
+      /**
+       * Username Validation
+       */
       if (params.userName && params.userName !== user.userName) {
         const usernameExists = await this.userRepo.findOne({
           where: {
@@ -271,6 +288,9 @@ export class UserService {
         }
       }
 
+      /**
+       * Password Hashing
+       */
       if (params.password) {
         params.password = await bcrypt.hash(params.password, 10);
       }

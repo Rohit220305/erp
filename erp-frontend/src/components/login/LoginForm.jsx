@@ -153,7 +153,11 @@ export default function LoginForm() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
                 >
-                  {showPassword ? <LockOpen size={18} /> : <LockKeyhole size={18} />}
+                  {showPassword ? (
+                    <LockOpen size={18} />
+                  ) : (
+                    <LockKeyhole size={18} />
+                  )}
                 </button>
               </div>
               {errors.password && (
@@ -164,7 +168,7 @@ export default function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-3 h-14 w-full cursor-pointer rounded-md bg-[#1565c0] text-base font-medium text-white transition hover:bg-[#0f57a8] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="mt-3 h-14 w-full cursor-pointer rounded-md bg-[#1565c0] text-base font-medium text-white transition hover:bg-white hover:text-[#1565c0] border-1 hover:border-[#1565c0] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? "Logging In..." : "Login"}
             </button>
@@ -229,11 +233,11 @@ export default function LoginForm() {
                           </p>
                           {profile.isPrimary && (
                             <span className="inline-flex items-center gap-0.5 text-[10px] font-medium bg-blue-100 text-[#1565c0] px-1.5 py-0.5 rounded-full">
-                              <Star size={9} className="fill-[#1565c0]" /> Primary
+                              <Star size={9} className="fill-[#1565c0]" />{" "}
+                              Primary
                             </span>
                           )}
                         </div>
-                        
                       </div>
                     </div>
 

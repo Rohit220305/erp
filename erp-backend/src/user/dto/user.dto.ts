@@ -14,24 +14,21 @@ import {
 import { Transform } from 'class-transformer';
 
 export class UserAddDto {
+  @IsOptional()
   @IsInt()
-  @Transform(({ value }) => Number(value))
-  companyId: number;
+  @Transform(({ value }) => (value ? Number(value) : undefined))
+  companyId?: number;
 
-  // @IsInt()
-  // @Transform(({ value }) => Number(value))
-  // groupId: number;
-
+  @IsOptional()
   @IsArray()
-  @ArrayMinSize(1, { message: 'Please select at least one group' })
   @IsInt({ each: true })
   @Transform(({ value }) => {
+    if (!value) return undefined;
     if (Array.isArray(value)) return value.map(Number);
     if (typeof value === 'string') return value.split(',').map(Number);
     return [Number(value)];
   })
-
-  groupIds: number[];
+  groupIds?: number[];
 
   @IsString()
   @IsNotEmpty()

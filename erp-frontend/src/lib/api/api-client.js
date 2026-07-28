@@ -1,12 +1,12 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL || "/relay";
+const BACKEND_URL = process.env.API_BACKEND_URL || "http://localhost:4000";
 
 let clientRefreshPromise = null;
 
 export async function apiClient(path, options = {}) {
-  const url = path.startsWith("http") ? path : `${API_URL}${path}`;
   const isServer = typeof window === "undefined";
-
-  // console.log(`API Request: ${options.method} ${url}`, options);
+  const baseUrl = isServer ? BACKEND_URL : RELAY_URL;
+  const url = path.startsWith("http") ? path : `${baseUrl}${path}`;
 
   const makeRequest = async (overrideHeaders = {}) => {
     const isFormData = options.body instanceof FormData;
@@ -37,8 +37,9 @@ export async function apiClient(path, options = {}) {
 
   if (res.status === 401) {
     if (!isServer) {
+      const refreshUrl = `${RELAY_URL}/auth/refresh`;
       if (!clientRefreshPromise) {
-        clientRefreshPromise = fetch(`${API_URL}/auth/refresh`, {
+        clientRefreshPromise = fetch(refreshUrl, {
           method: "POST",
           credentials: "include",
         }).then(refreshRes => {
@@ -70,7 +71,7 @@ export async function apiClient(path, options = {}) {
           if (rawCookies) serverCookieHeader = { Cookie: rawCookies };
         } catch { }
 
-        const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
+        const refreshRes = await fetch(`${BACKEND_URL}/auth/refresh`, {
           method: "POST",
           credentials: "include",
           headers: serverCookieHeader
@@ -115,8 +116,12 @@ export async function apiClient(path, options = {}) {
     return null;
   }
 
-  return res.json();
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    return { success: 0, message: "Invalid server response" };
+  }
 }
 
-export { API_URL };
-
+export { RELAY_URL, RELAY_URL as API_URL };
