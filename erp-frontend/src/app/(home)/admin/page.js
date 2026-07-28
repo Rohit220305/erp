@@ -1,5 +1,5 @@
-import UserListPage from "@/components/user/UserListPage";
+import UserListing from "@/components/user/UserListing";
 
 export default function AdminPage() {
-  return <UserListPage />;
+  return <UserListing />;
 }

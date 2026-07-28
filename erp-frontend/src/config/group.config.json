@@ -1,0 +1,95 @@
+{
+  "moduleName": "Group",
+  "title": "Group Master",
+  "permissions": {
+    "list": "GROUP_LIST",
+    "create": "GROUP_CREATE",
+    "view": "GROUP_VIEW",
+    "update": "GROUP_UPDATE",
+    "delete": "GROUP_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Group Name",
+      "key": "groupName",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Group Code",
+      "key": "groupCode",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Description",
+      "key": "description",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "searchable": false,
+      "sortable": true
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": false,
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Group",
+        "type": "redirect",
+        "path": "/group/add",
+        "permission": "GROUP_CREATE"
+      }
+    ],
+    "row": []
+  },
+  "searchFields": [
+    { "label": "Group Name", "value": "groupName", "type": "text" },
+    { "label": "Group Code", "value": "groupCode", "type": "text" },
+    { "label": "Description", "value": "description", "type": "text" },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "sidebarFields": [
+    { "label": "Group Code", "value": "groupCode", "type": "text" },
+    { "label": "Group Name", "value": "groupName", "type": "text" },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "groupCode": "",
+    "groupName": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ]
+}

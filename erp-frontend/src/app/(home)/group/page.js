@@ -1,5 +1,5 @@
-import GroupListPage from "@/components/group/GroupListPage";
+import GroupListing from "@/components/group/GroupListing";
 
 export default function GroupPage() {
-  return <GroupListPage />;
+  return <GroupListing />;
 }

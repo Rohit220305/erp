@@ -25,6 +25,7 @@ export default function DynamicListing({
   renderListCard,     
   renderGridCard,     
   renderDrawer,        
+  extraApiParams,
 }) {
   const router = useRouter();
   const { can } = useAuth();
@@ -118,6 +119,7 @@ export default function DynamicListing({
         logicalOperator: logicalOp,
         sortField:       sortField || undefined,
         sortOrder:       sortOrder || undefined,
+        ...extraApiParams,
       });
       const data = response?.settings?.data || response?.data || {};
       setItems(data.items || data.list || []);
@@ -142,7 +144,7 @@ export default function DynamicListing({
 
     setConfig({
       header: {
-        icons:        schema.headerIcons || defaultIcons,
+        icons: schema.headerIcons || defaultIcons,
         showBookmark: true,
         showLanguage: true,
         showProfile:  true,
@@ -261,7 +263,7 @@ export default function DynamicListing({
         />
       )}
 
-      {schema.forceView !== "table" && activeView !== "table" && activeView !== "list" && (
+      {schema.forceView !== "table"  && activeView === "grid" && (
         <DynamicGridView
           data={items}
           config={schema}
@@ -311,6 +313,7 @@ export default function DynamicListing({
           filters={sidebarFilters}
           setFilters={setSidebarFilters}
           statuses={schema.sidebarStatuses || []}
+          fields={schema.sidebarFields}
         />
       )}
 

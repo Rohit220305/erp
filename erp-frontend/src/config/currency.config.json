@@ -54,6 +54,21 @@
     { "label": "Inactive", "value": "Inactive" }
   ],
 
+  "sidebarFields": [
+    { "label": "Currency Code",   "value": "currencyCode",   "type": "text" },
+    { "label": "Currency Name",   "value": "currencyName",   "type": "text" },
+    { "label": "Currency Symbol", "value": "currencySymbol", "type": "text" },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active",   "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+
   "searchFields": [
     { "label": "Currency Code",   "value": "currencyCode",   "type": "text" },
     { "label": "Currency Name",   "value": "currencyName",   "type": "text" },

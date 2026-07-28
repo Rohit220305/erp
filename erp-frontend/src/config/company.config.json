@@ -131,6 +131,53 @@
       }
     ]
   },
+  "sidebarFields": [
+    {
+      "label": "Company Name",
+      "value": "companyName",
+      "type": "text"
+    },
+    {
+      "label": "Short Name",
+      "value": "shortName",
+      "type": "text"
+    },
+    {
+      "label": "Company Code",
+      "value": "companyCode",
+      "type": "text"
+    },
+    {
+      "label": "Email",
+      "value": "email",
+      "type": "text"
+    },
+    {
+      "label": "Phone",
+      "value": "phone",
+      "type": "text"
+    },
+    {
+      "label": "Contact Person",
+      "value": "contactPersonName",
+      "type": "text"
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
   "searchFields": [
     {
       "label": "Company Name",

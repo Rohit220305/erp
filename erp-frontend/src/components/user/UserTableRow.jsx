@@ -1,116 +1,113 @@
+"use client";
+
 import { LogIn, RotateCw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function UserTableRow({
   item,
-  columnKey,
   currentUser,
   handleLoginAs,
   setSelectedUserForPasswordReset,
-  setSelectedUserForDetails,
+  setSelectedItemForDetails,
   setSelectedCompanyForDetails,
 }) {
   const { can } = useAuth();
   const hasViewPerm = can("USER_VIEW");
+  const isActive = item.status === "Active" || item.status === "active";
 
-  if (columnKey === "companyName") {
-    return (
-      <div>
+  return (
+    <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
+      <td className="px-4 py-3 text-sm">
+        <div className="flex items-center gap-3">
+          <SharedImageZoom
+            id={`table-${item.id}`}
+            src={item.photoUrl}
+            alt={`${item.firstName} ${item.lastName}`}
+            placeholderText={`${item.firstName?.[0] || ""}${item.lastName?.[0] || ""}`}
+            thumbnailClassName="w-12 h-12 rounded-full object-cover border border-gray-200"
+            modalImageClassName="w-64 h-64 rounded-full"
+          />
+          <div>
+            {hasViewPerm ? (
+              <p
+                className="font-medium text-[#1565c0] hover:underline cursor-pointer text-[15px]"
+                onClick={() => setSelectedItemForDetails(item)}
+              >
+                {item.firstName} {item.lastName}
+              </p>
+            ) : (
+              <p className="font-medium text-gray-800 text-[15px]">
+                {item.firstName} {item.lastName}
+              </p>
+            )}
+            <p className="text-xs text-gray-400">{item.userName}</p>
+          </div>
+        </div>
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-700">
+        {item.email || "—"}
+      </td>
+
+      <td className="px-4 py-3 text-sm">
         {can("COMPANY_VIEW") ? (
           <span
-            className="font-medium text-[#1565c0] hover:underline cursor-pointer text-sm"
+            className="font-medium text-[#1565c0] hover:underline cursor-pointer"
             onClick={() => setSelectedCompanyForDetails(item)}
           >
-            {item.companyName || "-"}
+            {item.companyName || "—"}
           </span>
         ) : (
-          <span className="text-gray-800 text-sm">{item.companyName || "-"}</span>
+          <span className="font-medium text-gray-800">{item.companyName || "—"}</span>
         )}
-      </div>
-    );
-  }
+      </td>
 
-  if (columnKey === "firstName") {
-    return (
-      <div className="flex items-center gap-3">
-        <SharedImageZoom
-          id={`table-${item.id}`}
-          src={item.photoUrl}
-          alt={`${item.firstName} ${item.lastName}`}
-          placeholderText={`${item.firstName?.[0] || ""}${item.lastName?.[0] || ""}`}
-          thumbnailClassName="w-12 h-12 rounded-full object-cover border border-gray-200"
-          modalImageClassName="w-64 h-64 rounded-full"
-        />
-        <div>
-          {hasViewPerm ? (
-            <p
-              className="font-medium text-[#1565c0] hover:underline cursor-pointer text-[15px] "
-              onClick={() => setSelectedUserForDetails(item)}
+      <td className="px-4 py-3 text-sm text-gray-700">
+        {item.groupName || "—"}
+      </td>
+
+      <td className="px-4 py-3 text-sm">
+        {item.id !== currentUser?.id ? (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLoginAs(item.id);
+              }}
+              className="flex items-center gap-1 px-3 py-1 cursor-pointer rounded-full text-xs font-medium w-fit transition hover:bg-blue-100 text-blue-600"
+              title="Login As"
             >
-              {item.firstName} {item.lastName}
-            </p>
-          ) : (
-            <p className="font-medium text-gray-800 text-[15px]">
-              {item.firstName} {item.lastName}
-            </p>
-          )}
-          <p className="text-xs text-gray-400 ">{item.userName}</p>
-        </div>
-      </div>
-    );
-  }
+              <LogIn size={16} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedUserForPasswordReset(item);
+              }}
+              className="flex items-center gap-1 cursor-pointer rounded-full text-xs font-medium w-fit transition hover:bg-gray-200 p-1.5 text-gray-600"
+              title="Reset Password"
+            >
+              <RotateCw size={16} /> 
+            </button>
+          </div>
+        ) : (
+          <span className="text-gray-400 text-xs italic">Current User</span>
+        )}
+      </td>
 
-  if (columnKey === "status") {
-    return (
-      <div className="flex flex-col gap-1">
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
-            item.status === "Active"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {item.status}
+      <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+        {item.lastLoginDateFormatted || "—"}
+      </td>
+
+      <td className="px-4 py-3 text-sm">
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+          isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
+          {isActive ? "Active" : "Inactive"}
         </span>
-        
-      </div>
-    );
-  }
-
-  if (columnKey === "loginAs") {
-    if (item.id === currentUser?.id) {
-      return null;
-    }
-    return (
-      <div className="flex items-center gap-2">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleLoginAs(item.id);
-          }}
-          className="flex items-center gap-1 px-3 py-1 cursor-pointer rounded-full text-xs font-medium w-fit transition"
-          title="Login As"
-        >
-          <LogIn size={16} />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedUserForPasswordReset(item);
-          }}
-          className="flex items-center gap-1  cursor-pointer rounded-full  text-xs font-medium w-fit   transition"
-          title="Reset Password"
-        >
-          <RotateCw size={16} /> 
-        </button>
-      </div>
-    );
-  }
-
-  if (columnKey === "lastLoginDateFormatted") {
-    return item.lastLoginDateFormatted || "-";
-  }
-
-  return item[columnKey] || "-";
+      </td>
+    </tr>
+  );
 }
