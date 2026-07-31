@@ -225,7 +225,6 @@ export default function CurrencyForm({
               </label>
               <input
                 type="text"
-                // placeholder="e.g. US Dollar"
                 value={formData.currencyName || ""}
                 onChange={(e) => handleChange("currencyName", e.target.value)}
                 className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
@@ -243,7 +242,6 @@ export default function CurrencyForm({
               <input
                 type="text"
                 disabled={mode === "edit"}
-                // placeholder="e.g. USD"
                 value={formData.currencyCode || ""}
                 onChange={(e) => handleChange("currencyCode", e.target.value)}
                 className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
@@ -262,7 +260,6 @@ export default function CurrencyForm({
               </label>
               <input
                 type="text"
-                // placeholder="e.g. $"
                 value={formData.currencySymbol || ""}
                 onChange={(e) => handleChange("currencySymbol", e.target.value)}
                 className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white

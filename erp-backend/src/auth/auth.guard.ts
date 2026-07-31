@@ -13,7 +13,7 @@ import { JwtPayload } from 'src/package/types/jwt-payload.type';
 
 
 const FALLBACK_PUBLIC_PATHS: RegExp[] = [
-  /^\/uploads\//,   // static file serving
+  /^\/uploads\//,   
 ];
 
 @Injectable()

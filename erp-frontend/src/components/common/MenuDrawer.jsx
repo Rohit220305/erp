@@ -192,7 +192,6 @@ export default function MenuDrawer({ open, onClose }) {
             </div>
           </div>
 
-          {/*  Right panel: Recent Activities & Bookmarks  */}
           {/* <div className="w-[280px] shrink-0 border-l border-gray-200 bg-white overflow-y-auto">
             <div className="p-5 border-b border-gray-200">
               <div className="flex items-center justify-between mb-4">

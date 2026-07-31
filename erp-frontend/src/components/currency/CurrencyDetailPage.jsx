@@ -57,7 +57,6 @@ export default function CurrencyDetailPage({ currency }) {
   if (!currency) {
     return <div className="p-6">Currency not found.</div>;
   }
-  console.log("CurrencyDetailPage  currency:", currency);  
   return (
     <div className="p-6">
       <div className="grid grid-cols-12 gap-6">

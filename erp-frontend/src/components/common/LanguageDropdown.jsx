@@ -62,7 +62,6 @@ export default function LanguageDropdown() {
     setSelected(language);
     setOpen(false);
 
-    console.log("Selected Language:", language);
   };
 
   return (

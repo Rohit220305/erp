@@ -18,7 +18,6 @@ const { chromium } = require('playwright');
   await page.goto('http://localhost:3001/admin');
   await page.waitForTimeout(2000);
   
-  // click edit on first user
   const editButtons = await page.$$('a[href*="/admin/edit/"]');
   if (editButtons.length > 0) {
     await editButtons[0].click();

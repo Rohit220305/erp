@@ -21,10 +21,10 @@ export default function DynamicListing({
   fetchData,
   fetchItem,
   deleteFn,
-  renderTableRow,     
-  renderListCard,     
-  renderGridCard,     
-  renderDrawer,        
+  renderTableRow,
+  renderListCard,
+  renderGridCard,
+  renderDrawer,
   extraApiParams,
 }) {
   const router = useRouter();
@@ -55,20 +55,32 @@ export default function DynamicListing({
   const [appliedFilters, setAppliedFilters] = useState([]);
   const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
 
-  const listPermission   = schema.permissions?.list;
+  const listPermission = schema.permissions?.list;
   const deletePermission = schema.permissions?.delete;
 
   const handleOpenSearch = () => {
-    if (tempFilters.length === 0 && schema.searchFields?.length > 0) {
-      const defaultField = schema.searchFields[0];
-      setTempFilters([{
-        field:    defaultField.value,
-        operator: "equal",
-        value:    defaultField.type === "select" ? (defaultField.options?.[0]?.value || "") : "",
-      }]);
-    }
     setIsSearchOpen(true);
   };
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      if (appliedFilters.length > 0) {
+        setTempFilters(JSON.parse(JSON.stringify(appliedFilters)));
+        setTempLogicalOperator(appliedLogicalOperator);
+      } else if (schema.searchFields?.length > 0) {
+        const defaultField = schema.searchFields[0];
+        setTempFilters([{
+          field: defaultField.value,
+          operator: "equal",
+          value: defaultField.type === "select" ? (defaultField.options?.[0]?.value || "") : "",
+        }]);
+        setTempLogicalOperator("AND");
+      } else {
+        setTempFilters([]);
+        setTempLogicalOperator("AND");
+      }
+    }
+  }, [isSearchOpen, appliedFilters, appliedLogicalOperator, schema.searchFields]);
 
   const loadData = async () => {
     if (!fetchData) {
@@ -115,16 +127,16 @@ export default function DynamicListing({
         page,
         limit,
         search,
-        filters:         backendFilters.length > 0 ? backendFilters : undefined,
+        filters: backendFilters.length > 0 ? backendFilters : undefined,
         logicalOperator: logicalOp,
-        sortField:       sortField || undefined,
-        sortOrder:       sortOrder || undefined,
+        sortField: sortField || undefined,
+        sortOrder: sortOrder || undefined,
         ...extraApiParams,
       });
       const data = response?.settings?.data || response?.data || {};
       setItems(data.items || data.list || []);
-      setTotal(data?.pagination?.total  || data.total  || 0);
-      setLimit(data?.pagination?.limit  || data.limit  || 10);
+      setTotal(data?.pagination?.total || data.total || 0);
+      setLimit(data?.pagination?.limit || data.limit || 10);
     } catch (err) {
       console.error("DynamicListing fetchData error:", err);
       toast.error(`Failed to load ${schema.title || "data"}`);
@@ -135,8 +147,8 @@ export default function DynamicListing({
   };
 
   useEffect(() => {
-    const headerAction  = schema.actions?.header?.[0];
-    const canDoAction   = headerAction && (!headerAction.permission || can(headerAction.permission));
+    const headerAction = schema.actions?.header?.[0];
+    const canDoAction = headerAction && (!headerAction.permission || can(headerAction.permission));
 
     const defaultIcons = schema.defaultFilters
       ? ["refresh", "search", "filter", "filterDrawer", "view"]
@@ -147,29 +159,29 @@ export default function DynamicListing({
         icons: schema.headerIcons || defaultIcons,
         showBookmark: true,
         showLanguage: true,
-        showProfile:  true,
-        showMenu:     true,
-        showSearch:   true,
+        showProfile: true,
+        showMenu: true,
+        showSearch: true,
         onColumnSearchClick: toggleColumnSearch,
         onFilterDrawerClick: () => setIsFilterDrawerOpen(true),
         onFilterClick: () => setIsFilterDrawerOpen(true),
         onSearchClick: handleOpenSearch,
         actionButton: canDoAction
           ? {
-              label:   headerAction.label,
-              onClick: () => {
-                if (headerAction.type === "redirect" && headerAction.path) {
-                  router.push(headerAction.path);
-                }
-              },
-            }
+            label: headerAction.label,
+            onClick: () => {
+              if (headerAction.type === "redirect" && headerAction.path) {
+                router.push(headerAction.path);
+              }
+            },
+          }
           : null,
       },
       navbar: {
         title: "Listing",
         breadcrumbs: [
-          { label: "Master",      href: "/" },
-          { label: schema.title,  href: `/${schema.moduleName.toLowerCase()}` },
+          { label: "Master", href: "/" },
+          { label: schema.title, href: schema.modulePath || `/${schema.moduleName.toLowerCase()}` },
         ],
       },
     });
@@ -209,9 +221,9 @@ export default function DynamicListing({
       return;
     }
     try {
-      const res       = await deleteFn({ id: deleteTarget.id });
+      const res = await deleteFn({ id: deleteTarget.id });
       const isSuccess = res?.success === 1 || res?.settings?.success === 1;
-      const message   = res?.message  || res?.settings?.message;
+      const message = res?.message || res?.settings?.message;
       if (isSuccess) {
         toast.success(message || `${schema.title} deleted successfully.`);
         loadData();
@@ -263,7 +275,7 @@ export default function DynamicListing({
         />
       )}
 
-      {schema.forceView !== "table"  && activeView === "grid" && (
+      {schema.forceView !== "table" && activeView === "grid" && (
         <DynamicGridView
           data={items}
           config={schema}
@@ -346,10 +358,10 @@ export default function DynamicListing({
 
       {renderDrawer
         ? renderDrawer(
-            !!selectedItemForDetails,
-            () => setSelectedItemForDetails(null),
-            selectedItemForDetails
-          )
+          !!selectedItemForDetails,
+          () => setSelectedItemForDetails(null),
+          selectedItemForDetails
+        )
         : (
           <DynamicViewDrawer
             open={!!selectedItemForDetails}

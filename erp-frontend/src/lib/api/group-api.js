@@ -45,7 +45,6 @@ export async function saveGroupWithCapabilities(payload) {
 }
 
 export async function updateGroupWithCapabilities(payload) {
-  console.log('Updating group with capabilities:', payload);
   
   return apiClient("/group/update-with-capabilities", {
     method: "PUT",

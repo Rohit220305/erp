@@ -97,7 +97,6 @@ export class ActivityLogListService {
       const queryBuilder = this.activityLogRepository.createQueryBuilder('log');
       queryBuilder.leftJoin(ActivityMasterEntity, 'master', 'log.activityMasterId = master.id');
 
-      // Scoping Check
       const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin) {
         queryBuilder.andWhere('log.companyId = :scopedCompanyId', {
@@ -220,7 +219,6 @@ export class ActivityLogListService {
         throw new Error('User ID is required');
       }
 
-      // Check access permissions
       const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       const isSelf = req.user?.sub === userId;
 

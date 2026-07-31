@@ -44,7 +44,6 @@ export default function Header() {
     switchProfile,
     logout,
     isImpersonating,
-    sessionStack,
     backToSession,
   } = useAuth();
   const router = useRouter();
@@ -77,7 +76,7 @@ export default function Header() {
 
       if (prevSession) {
         toast.success(
-          `Back to ${prevSession.user.firstName} ${prevSession.user.lastName}'s session`,
+          `Back to ${prevSession.firstName} ${prevSession.lastName}'s session`,
         );
         window.location.href = "/";
       } else {
@@ -190,7 +189,6 @@ export default function Header() {
               onLogout={handleLogout}
               onBackToSession={handleBackToSession}
               isImpersonating={isImpersonating}
-              sessionStack={sessionStack || []}
             />
           )}
 

@@ -56,8 +56,6 @@ export async function apiClient(path, options = {}) {
         await clientRefreshPromise;
         res = await makeRequest();
       } catch (err) {
-        localStorage.removeItem("sessionStack");
-        localStorage.removeItem("authToken");
         window.location.href = "/login";
         return null;
       }
@@ -100,8 +98,6 @@ export async function apiClient(path, options = {}) {
 
   if (res.status === 401) {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("sessionStack");
-      localStorage.removeItem("authToken");
       window.location.href = "/login";
     } else {
       try {

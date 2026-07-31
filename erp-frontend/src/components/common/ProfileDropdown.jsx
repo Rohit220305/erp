@@ -22,7 +22,6 @@ export default function ProfileDropdown({
   onLogout,
   onBackToSession,
   isImpersonating = false,
-  sessionStack = [],
   backToSessionLoading = false,
 }) {
   const [open, setOpen] = useState(false);
@@ -41,7 +40,7 @@ export default function ProfileDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const showBackToSession = isImpersonating && sessionStack.length > 0;
+  const showBackToSession = isImpersonating;
 
   const menuItems = [
     {

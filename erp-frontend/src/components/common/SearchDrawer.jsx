@@ -23,7 +23,7 @@ export default function SearchDrawer({
     return () => window.removeEventListener("keydown", handleEsc);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open) return null; 
 
   const addRow = () => {
     if (fields.length === 0) return;

@@ -175,7 +175,8 @@
           "label": "Inactive",
           "value": "Inactive"
         }
-      ]
+      ],
+      "isMuqltiSelect": true
     }
   ],
   "searchFields": [

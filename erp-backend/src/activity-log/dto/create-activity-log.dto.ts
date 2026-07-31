@@ -8,8 +8,8 @@ export class CreateActivityLogDto {
   impersonatorId?: number;
   entityType?: string;
   entityId?: number;
-  actorName?: string;
   entityName?: string;
+  actorName?: string;
   ipAddress?: string;
   userAgent?: string;
 }

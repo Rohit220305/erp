@@ -1,11 +1,11 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { restoreSession, switchProfile as switchProfileApi } from "@/lib/api/auth-api";
+import { backToSessionApi, switchProfile as switchProfileApi } from "@/lib/api/auth-api";
 
 const AuthContext = createContext();
 
-export function AuthProvider({ children, initialUser = null, initialCapabilities = [] }) {
+export function AuthProvider({ children, initialUser = null, initialCapabilities = [], initialIsImpersonating = false }) {
   const [user, setUser] = useState(() => {
     if (!initialUser) return null;
     return {
@@ -15,8 +15,7 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
     };
   });
   const [capabilities, setCapabilities] = useState(initialCapabilities || []);
-  const [sessionStack, setSessionStack] = useState([]);
-  const [token, setToken] = useState(null);
+  const [isImpersonating, setIsImpersonating] = useState(initialIsImpersonating || false);
   const [isInitializing, setIsInitializing] = useState(true);
 
   const [allGroups, setAllGroups] = useState(() => initialUser?.groups || []);
@@ -24,23 +23,11 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedStack = localStorage.getItem("sessionStack");
-      if (storedStack) {
-        try {
-          setSessionStack(JSON.parse(storedStack));
-        } catch (e) {
-          console.error("Failed to parse sessionStack from localStorage", e);
-        }
-      }
-      const storedToken = localStorage.getItem("authToken");
-      if (storedToken) {
-        setToken(storedToken);
-      }
       setIsInitializing(false);
     }
   }, []);
 
-  const setAuthData = (userData, userCapabilities = []) => {
+  const setAuthData = (userData, userCapabilities = [], impersonatingStatus = false) => {
     const normalizedData = userData
       ? {
           ...userData,
@@ -50,16 +37,15 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
       : null;
     setUser(normalizedData);
     setCapabilities(userCapabilities);
+    setIsImpersonating(impersonatingStatus || userData?.isImpersonating || false);
     setAllGroups(userData?.groups || []);
     setActiveGroupId(userData?.groupId || null);
-    localStorage.setItem("userCapabilities", userCapabilities);
   };
 
   const clearAuth = () => {
     setUser(null);
     setCapabilities([]);
-    setSessionStack([]);
-    setToken(null);
+    setIsImpersonating(false);
     setAllGroups([]);
     setActiveGroupId(null);
   };
@@ -70,88 +56,42 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
     return capabilities.includes(permission);
   };
 
-  const login = (userData, userToken = null) => {
+  const login = (userData) => {
     setAuthData(userData, userData.capabilities || []);
-    if (userToken) {
-      setToken(userToken);
-      localStorage.setItem("authToken", userToken);
-    }
   };
 
   const logout = () => {
     clearAuth();
-    localStorage.removeItem("sessionStack");
-    localStorage.removeItem("authToken");
   };
 
   const switchProfile = async (groupId) => {
     const res = await switchProfileApi(groupId);
     if (res?.success === 1 && res?.data) {
       setAuthData(res.data, res.data.capabilities || []);
-      if (res.data.token) {
-        setToken(res.data.token);
-        localStorage.setItem("authToken", res.data.token);
-      }
       return res;
     }
     throw new Error(res?.message || "Failed to switch profile");
   };
 
-  const loginAs = (newUserData, newToken = null) => {
-    const currentToken = localStorage.getItem("authToken") || token;
-    const newStack = [
-      ...sessionStack,
-      {
-        user: user,
-        capabilities: capabilities,
-        token: currentToken,
-      },
-    ];
-
-    setSessionStack(newStack);
-    localStorage.setItem("sessionStack", JSON.stringify(newStack));
-
-    setAuthData(newUserData, newUserData.capabilities || []);
-    if (newToken) {
-      setToken(newToken);
-      localStorage.setItem("authToken", newToken);
-    }
+  const loginAs = (newUserData) => {
+    setAuthData(newUserData, newUserData.capabilities || [], true);
   };
 
   const backToSession = async () => {
-    if (sessionStack.length === 0) return null;
-
-    const prevSession = sessionStack[sessionStack.length - 1];
-    const newStack = sessionStack.slice(0, -1);
-    console.log("Restoring previous session:", prevSession);
-    if (prevSession.token) {
-      const res = await restoreSession(prevSession.token);
-      if (!res || res.success !== 1) {
-        logout();
-        
-        window.location.href = "/login";
-        console.error("Failed to restore backend session:", res?.message);
-        throw new Error(res?.message || "Failed to restore backend session");
-      }
+    const res = await backToSessionApi();
+    if (!res || res.success !== 1) {
+      logout();
+      window.location.href = "/login";
+      console.error("Failed to restore backend session:", res?.message);
+      throw new Error(res?.message || "Failed to restore backend session");
     }
 
-    setSessionStack(newStack);
-    localStorage.setItem("sessionStack", JSON.stringify(newStack));
-    console.log("Previous session restored:", prevSession);
-    setAuthData(prevSession.user, prevSession.capabilities);
-    if (prevSession.token) {
-      setToken(prevSession.token);
-      localStorage.setItem("authToken", prevSession.token);
-    } else {
-      setToken(null);
-      localStorage.removeItem("authToken");
-    }
+    setAuthData(res.data, res.data.capabilities, false);
 
-    return prevSession;
+    return res.data;
   };
 
   const isAuthenticated = !!user;
-  const isImpersonating = sessionStack.length > 0;
   const canImpersonate = user?.isSuperAdmin === true;
 
   return (
@@ -170,7 +110,6 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
         switchProfile,
         loginAs,
         backToSession,
-        sessionStack,
         isImpersonating,
         canImpersonate,
         isInitializing,

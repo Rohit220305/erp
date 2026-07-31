@@ -28,11 +28,8 @@ export async function changePassword(data) {
   });
 }
 
-export async function restoreSession(token) {
-  return apiClient("/auth/restore-session", {
-    method: "POST",
-    body: JSON.stringify({ token }),
-  });
+export async function backToSessionApi() {
+  return apiClient("/auth/back-to-session", { method: "POST" });
 }
 
 export async function resetPasswordAsAdmin(targetUserId, newPassword) {

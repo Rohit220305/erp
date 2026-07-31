@@ -7,7 +7,6 @@ import toast from "react-hot-toast";
 import CurrencyForm from "./CurrencyForm";
 
 export default function CurrencyEditWrapper({ id }) {
-  console.log("CurrencyEditWrapper id:", id);
   const router = useRouter();
   
   const [initialData, setInitialData] = useState(null);

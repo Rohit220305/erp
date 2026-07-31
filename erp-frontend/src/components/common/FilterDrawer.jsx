@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useEffect } from "react";
+import Select from "react-select";
 
 export default function FilterDrawer({
   open,
@@ -60,9 +61,12 @@ export default function FilterDrawer({
                     key={field.value}
                     label={field.label}
                     placeholder={`Select ${field.label}`}
-                    value={filters[field.value] || ""}
-                    onChange={(v) => setFilters((p) => ({ ...p, [field.value]: v }))}
+                    value={filters[field.value]}
+                    onChange={(v) =>
+                      setFilters((p) => ({ ...p, [field.value]: v }))
+                    }
                     options={field.options || []}
+                    isMultiSelect={field.isMultiSelect}
                   />
                 );
               }
@@ -120,24 +124,72 @@ function FilterField({ label, placeholder, value, onChange }) {
   );
 }
 
-function SelectField({ label, placeholder, value, onChange, options }) {
+function SelectField({ label, placeholder, value, onChange, options, isMultiSelect }) {
+  const selectedValue = isMultiSelect
+    ? options.filter((opt) => (value || []).includes(opt.value))
+    : options.find((opt) => opt.value === value) || null;
+
+  const handleChange = (selected) => {
+    if (isMultiSelect) {
+      onChange(selected ? selected.map((item) => item.value) : []);
+    } else {
+      onChange(selected ? selected.value : "");
+    }
+  };
+
+  const customSelectStyles = {
+    control: (base) => ({
+      ...base,
+      borderColor: "#d1d5db",
+      borderRadius: "0.5rem",
+      minHeight: "40px",
+      backgroundColor: "#ffffff",
+      boxShadow: "none",
+      cursor: "pointer",
+      fontSize: "0.875rem",
+      "&:hover": {
+        borderColor: "#1565c0",
+      },
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "0.875rem",
+      cursor: "pointer",
+      backgroundColor: state.isSelected
+        ? "#1565c0"
+        : state.isFocused
+          ? "#eff6ff"
+          : "#ffffff",
+      color: state.isSelected ? "#ffffff" : "#1f2937",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#1f2937",
+    }),
+    placeholder: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#9ca3af",
+    }),
+  };
+
   return (
     <div className="mb-5">
       <label className="mb-2 block text-sm font-medium text-gray-700">
         {label}
       </label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-gray-300 bg-gray-50 cursor-pointer px-4 py-3 outline-none transition focus:border-[#1565c0] focus:bg-white"
-      >
-        <option value="">{placeholder}</option>
-        {options.map((item) => (
-          <option key={item.value} value={item.value}>
-            {item.label}
-          </option>
-        ))}
-      </select>
+      <Select
+        isMulti={isMultiSelect}
+        value={selectedValue}
+        onChange={handleChange}
+        options={options}
+        placeholder={placeholder}
+        isClearable={true}
+        isSearchable={true}
+        styles={customSelectStyles}
+        classNamePrefix="react-select"
+      />
     </div>
   );
 }

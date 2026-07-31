@@ -83,11 +83,6 @@ export default function UserDetailPage({ user }) {
   const {
     user: currentUser,
     activeGroupId,
-    loginAs,
-    backToSession,
-    isImpersonating,
-    sessionStack,
-    canImpersonate,
     can,
   } = useAuth();
   const router = useRouter();
@@ -96,8 +91,6 @@ export default function UserDetailPage({ user }) {
   const [addedAdminRestricted, setAddedAdminRestricted] = useState(false);
   const [updatedAdminRestricted, setUpdatedAdminRestricted] = useState(false);
   const [activeTab, setActiveTab] = useState("summary");
-  const [loginAsLoading, setLoginAsLoading] = useState(false);
-  const [backToSessionLoading, setBackToSessionLoading] = useState(false);
 
   useEffect(() => {
     async function fetchAdmins() {

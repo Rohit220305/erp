@@ -17,7 +17,7 @@ export class ActivityLogService {
     private readonly activityMasterRepository: Repository<ActivityMasterEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-  ) {}
+  ) { }
 
   async log(createDto: CreateActivityLogDto): Promise<void> {
     try {

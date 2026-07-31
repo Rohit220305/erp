@@ -15,7 +15,6 @@ export async function createCurrency(data) {
 }
 
 export async function getCurrency({ id }) {
-  console.log("getCurrency id", id);
   const res = await apiClient(`/currency/get-currency?id=${id}`, {
     method: "GET",
   });

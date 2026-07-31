@@ -57,7 +57,6 @@ export async function updateUser(data, photoFile) {
   const cleanedData = Object.fromEntries(
     Object.entries(data).filter(([_, val]) => val !== undefined && val !== null && val !== "")
   );
-  console.log("Updating user with data:", cleanedData);
   return apiClient("/user/update-user", {
     method: "PUT",
     body: JSON.stringify(cleanedData),

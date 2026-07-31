@@ -6,14 +6,14 @@ import { getCurrentUserWithCapabilities } from "@/lib/api/auth/current-user";
 import { redirect } from "next/navigation";
 
 export default async function HomeLayout({ children }) {
-  const { user, capabilities } = await getCurrentUserWithCapabilities();
+  const { user, capabilities, isImpersonating } = await getCurrentUserWithCapabilities();
 
   if (!user) {
     redirect("/login");
   }
 
   return (
-    <AuthProvider initialUser={user} initialCapabilities={capabilities}>
+    <AuthProvider initialUser={user} initialCapabilities={capabilities} initialIsImpersonating={isImpersonating}>
       <ListingProvider>
         <AppLayout>{children}</AppLayout>
       </ListingProvider>

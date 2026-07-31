@@ -1,5 +1,6 @@
 {
   "moduleName": "User",
+  "modulePath": "/admin",
   "title": "User Management",
   "permissions": {
     "list": "USER_LIST",
@@ -56,8 +57,8 @@
   "sidebarFields": [
     { "label": "User", "value": "firstName", "type": "text" },
     { "label": "Email", "value": "email", "type": "text" },
-    { "label": "Company", "value": "companyId", "type": "select", "options": [] },
-    { "label": "Group", "value": "groupId", "type": "select", "options": [] },
+    { "label": "Company", "value": "companyId", "type": "select", "options": [] , "isMultiSelect": true},
+    { "label": "Group", "value": "groupId", "type": "select", "options": [] , "isMultiSelect": true},
     {
       "label": "Status",
       "value": "status",
@@ -65,7 +66,8 @@
       "options": [
         { "label": "Active", "value": "Active" },
         { "label": "Inactive", "value": "Inactive" }
-      ]
+      ], 
+      "isMultiSelect": true
     }
   ],
   "defaultFilters": {

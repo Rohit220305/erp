@@ -226,9 +226,7 @@ export class UserService {
         throw new ForbiddenException('Cannot move user outside your company');
       }
 
-      /**
-       * Company Validation
-       */
+  
       if (params.companyId) {
         const company = await this.companyRepo.findOne({
           where: {
@@ -241,9 +239,6 @@ export class UserService {
         }
       }
 
-      /**
-       * Group Validation
-       */
       const groupIds: number[] | undefined = params.groupIds || (params.groupId ? [Number(params.groupId)] : undefined);
       if (groupIds && groupIds.length > 0) {
         for (const gid of groupIds) {
@@ -258,9 +253,7 @@ export class UserService {
         }
       }
 
-      /**
-       * Email Validation
-       */
+     
       if (params.email && params.email !== user.email) {
         const emailExists = await this.userRepo.findOne({
           where: {

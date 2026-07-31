@@ -223,7 +223,6 @@ export default function UserForm({
         }
       });
       setErrors(fieldErrors);
-      // toast.error("Please fill required fields in the form");
       return false;
     }
 
@@ -478,7 +477,6 @@ export default function UserForm({
                     value="System (All Companies)"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed font-medium"
                   />
-                    
                 </div>
               </div>
 
@@ -494,7 +492,6 @@ export default function UserForm({
                     value="Super Admin"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed font-medium"
                   />
-                  
                 </div>
               </div>
             </div>
@@ -643,55 +640,56 @@ export default function UserForm({
             </div>
           </div>
         </div>
-{/* 
-        <div className="space-y-4">
-          <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
-            Contact
-          </h2>
+        {/* 
+          <div className="space-y-4">
+            <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
+              Contact
+            </h2>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Phone Number
-              </label>
-              <div className="flex gap-2">
-                <div className="w-[120px] shrink-0">
-                  <Select
-                    instanceId="select-dialCode"
-                    value={
-                      DIAL_CODE_OPTIONS.find(
-                        (d) => d.value === formData.dialCode,
-                      ) || null
-                    }
-                    onChange={(opt) =>
-                      handleChange("dialCode", opt ? opt.value : "")
-                    }
-                    options={DIAL_CODE_OPTIONS}
-                    isClearable={true}
-                    isSearchable={true}
-                    placeholder="Code"
-                    classNamePrefix="react-select"
-                    styles={customSelectStyles(errors.dialCode || errors.phone)}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <div className="flex gap-2">
+                  <div className="w-[120px] shrink-0">
+                    <Select
+                      instanceId="select-dialCode"
+                      value={
+                        DIAL_CODE_OPTIONS.find(
+                          (d) => d.value === formData.dialCode,
+                        ) || null
+                      }
+                      onChange={(opt) =>
+                        handleChange("dialCode", opt ? opt.value : "")
+                      }
+                      options={DIAL_CODE_OPTIONS}
+                      isClearable={true}
+                      isSearchable={true}
+                      placeholder="Code"
+                      classNamePrefix="react-select"
+                      styles={customSelectStyles(errors.dialCode || errors.phone)}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Phone number"
+                    value={formData.phone || ""}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                    className={`flex-1 px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                      ${errors.phone ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
+                    `}
                   />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Phone number"
-                  value={formData.phone || ""}
-                  onChange={(e) => handleChange("phone", e.target.value)}
-                  className={`flex-1 px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
-                    ${errors.phone ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
-                  `}
-                />
+                {(errors.phone || errors.dialCode) && (
+                  <p className="text-xs text-red-500 mt-1">
+                    ⚠ {errors.phone || errors.dialCode}
+                  </p>
+                )}
               </div>
-              {(errors.phone || errors.dialCode) && (
-                <p className="text-xs text-red-500 mt-1">
-                  ⚠ {errors.phone || errors.dialCode}
-                </p>
-              )}
             </div>
-          </div>
-        </div> */}
+          </div> 
+        */}
 
         <div className="flex gap-3 justify-center border-t pt-4">
           <button

@@ -15,7 +15,7 @@ export default function UserTableRow({
   const { can } = useAuth();
   const hasViewPerm = can("USER_VIEW");
   const isActive = item.status === "Active" || item.status === "active";
-
+  
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
       <td className="px-4 py-3 text-sm">
@@ -51,7 +51,9 @@ export default function UserTableRow({
       </td>
 
       <td className="px-4 py-3 text-sm">
-        {can("COMPANY_VIEW") ? (
+        {item.isSuperAdmin ? (
+          <span className="font-medium text-gray-400 italic">System</span>
+        ) : can("COMPANY_VIEW") ? (
           <span
             className="font-medium text-[#1565c0] hover:underline cursor-pointer"
             onClick={() => setSelectedCompanyForDetails(item)}
@@ -67,7 +69,7 @@ export default function UserTableRow({
         {item.groupName || "—"}
       </td>
 
-      <td className="px-4 py-3 text-sm">
+      {currentUser?.isSuperAdmin && (<td className="px-4 py-3 text-sm">
         {item.id !== currentUser?.id ? (
           <div className="flex items-center gap-2">
             <button
@@ -75,7 +77,7 @@ export default function UserTableRow({
                 e.stopPropagation();
                 handleLoginAs(item.id);
               }}
-              className="flex items-center gap-1 px-3 py-1 cursor-pointer rounded-full text-xs font-medium w-fit transition hover:bg-blue-100 text-blue-600"
+              className="flex items-center gap-1  p-1.5 cursor-pointer rounded-full text-xs font-medium w-fit transition hover:bg-blue-100 text-blue-600"
               title="Login As"
             >
               <LogIn size={16} />
@@ -94,7 +96,7 @@ export default function UserTableRow({
         ) : (
           <span className="text-gray-400 text-xs italic">Current User</span>
         )}
-      </td>
+      </td>)}
 
       <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
         {item.lastLoginDateFormatted || "—"}

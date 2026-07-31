@@ -106,14 +106,12 @@ export class AuthController {
     return this.authService.getProfileWithCapabilities(req);
   }
 
-  @Public()
-  @Post('restore-session')
-  async restoreSession(
+  @Post('back-to-session')
+  async backToSession(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-    @Body('token') token: string,
   ) {
-    return this.authService.restoreSession(req, res, token);
+    return this.authService.backToSession(req, res);
   }
 
   @Public()

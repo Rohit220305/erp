@@ -43,7 +43,6 @@ export class CommonFileService {
         message: 'File transferred successfully',
       };
     } catch (err) {
-      console.log('File transfer failed', err);
 
       return {
         success: 0,
@@ -64,7 +63,6 @@ export class CommonFileService {
 
       return true;
     } catch (err) {
-      console.log('Delete temp file error', err);
 
       return false;
     }
@@ -85,8 +83,6 @@ export class CommonFileService {
 
       return true;
     } catch (err) {
-      console.log('Delete folder error', err);
-
       return false;
     }
   }

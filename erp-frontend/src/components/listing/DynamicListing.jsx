@@ -31,7 +31,7 @@ export default function DynamicListing({
   const [tempLogicalOperator, setTempLogicalOperator] = useState("AND");
   const [tempFilters, setTempFilters] = useState([]);
   const [appliedFilters, setAppliedFilters] = useState([]);
-  const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
+  const [appxliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
 
   const handleOpenSearch = () => {
     if (tempFilters.length === 0 && config.searchFields?.length > 0) {

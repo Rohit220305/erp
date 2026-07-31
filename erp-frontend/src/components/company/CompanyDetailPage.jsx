@@ -112,7 +112,6 @@ export default function CompanyDetailsPage({ company }) {
   ) {
     return <AccessDenied missingPermission="COMPANY_VIEW" />;
   }
-  console.log(company);
   return (
     <div className="p-6">
       <div className="grid grid-cols-12 gap-6">

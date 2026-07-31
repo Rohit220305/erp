@@ -169,14 +169,24 @@ export class UserListService {
 
       const queryBuilder = this.userRepo.createQueryBuilder('user');
 
-      // Join for company filter and sort
       queryBuilder.leftJoin(
         CompanyEntity,
         'company',
         'company.id = user.companyId',
       );
 
-      // Scoping Check
+      queryBuilder.leftJoin(
+        UserGroupEntity,
+        'primaryUserGroup',
+        'primaryUserGroup.userId = user.id AND primaryUserGroup.isPrimary = 1 ',
+      );
+
+      queryBuilder.leftJoin(
+        GroupEntity,
+        'primaryGroup',
+        'primaryGroup.id = primaryUserGroup.groupId',
+      );
+
       const isSuperAdmin =
         req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin) {
@@ -185,15 +195,19 @@ export class UserListService {
         });
       }
 
-      let groupFilterId: number | null = null;
+      let groupFilterIds: number[] = [];
 
       if (params?.filters && Array.isArray(params.filters)) {
         const remainingFilters: any[] = [];
         for (const f of params.filters) {
           if (f.key === 'groupId' || f.key === 'groupName') {
-            const parsed = Number(f.value);
-            if (!isNaN(parsed) && parsed > 0) {
-              groupFilterId = parsed;
+            if (Array.isArray(f.value)) {
+               groupFilterIds = f.value.map(v => Number(v)).filter(v => !isNaN(v) && v > 0);
+            } else {
+               const parsed = Number(f.value);
+               if (!isNaN(parsed) && parsed > 0) {
+                 groupFilterIds.push(parsed);
+               }
             }
           } else {
             remainingFilters.push(f);
@@ -202,10 +216,10 @@ export class UserListService {
         params.filters = remainingFilters;
       }
 
-      if (groupFilterId) {
+      if (groupFilterIds.length > 0) {
         queryBuilder.andWhere(
-          `EXISTS (SELECT 1 FROM user_groups ug WHERE ug.userId = user.id AND ug.groupId = :filterGroupId AND ug.status = 'Active')`,
-          { filterGroupId: groupFilterId },
+          `EXISTS (SELECT 1 FROM user_groups ug WHERE ug.userId = user.id AND ug.groupId IN (:...filterGroupIds) AND ug.status = 'Active')`,
+          { filterGroupIds: groupFilterIds },
         );
       }
 
@@ -234,6 +248,7 @@ export class UserListService {
         companyName: 'company.companyName',
         companyId: 'user.companyId',
         id: 'user.id',
+        groupName: 'primaryGroup.groupName',
       };
 
       if (params?.filters && params.filters.length > 0) {
@@ -242,7 +257,6 @@ export class UserListService {
           columnMap,
           params.logicalOperator,
         );
-
         if (whereString) {
           queryBuilder.andWhere(whereString);
         }

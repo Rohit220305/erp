@@ -265,7 +265,6 @@ export class AuthService {
         accessMaxAge,
         refreshMaxAge,
       );
-
       const data = await this.buildSafeUser(user, selectedGroupId, profiles);
       const capabilities = await this.getGroupCapabilities(selectedGroupId);
 
@@ -423,12 +422,18 @@ export class AuthService {
 
     const data = await this.buildSafeUser(user, groupId);
     const capabilities = await this.getGroupCapabilities(groupId);
+    const targetGroup = await this.groupRepo.findOne({
+      where: { id: groupId },
+    });
 
     await this.activityLogService.log({
-      activityCode: 'AUTH_LOGIN',
+      activityCode: 'AUTH_PROFILE_SWITCH',
       companyId: user.companyId,
       actorUserId: userId,
       impersonatorId: req.user?.impersonatorId,
+      entityType: 'GROUP',
+      entityId: groupId,
+      entityName: targetGroup?.groupName || `Group #${groupId}`,
       actorName: `${user.firstName} ${user.lastName}`.trim(),
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
@@ -520,7 +525,7 @@ export class AuthService {
     res.clearCookie('refreshToken');
     return { success: 1, message: 'Logged out successfully' };
   }
-
+ 
   async loginAsUser(req: Request, res: Response, targetUserId: number) {
     const target = await this.userRepo.findOne({
       where: { id: targetUserId },
@@ -580,7 +585,7 @@ export class AuthService {
     return {
       success: 1,
       message: `Now acting as ${target.userName}`,
-      data: { ...data, token: accessToken, capabilities },
+      data: { ...data, token: accessToken, capabilities, isImpersonating: true },
     };
   }
 
@@ -656,66 +661,61 @@ export class AuthService {
     return { success: 1, message: 'Password reset successfully' };
   }
 
-  async restoreSession(req: Request, res: Response, token: string) {
-    if (!token) {
-      return { success: 0, message: 'Session token is required' };
+  async backToSession(req: Request, res: Response) {
+    const userPayload = req['user'] as JwtPayload | undefined;
+    if (!userPayload || !userPayload.impersonatorId) {
+      return { success: 0, message: 'No active impersonation session' };
     }
 
-    try {
-      const payload = this.jwtService.verify<JwtPayload>(token, {
-        secret: this.config.getOrThrow<string>('JWT_SECRET'),
-        ignoreExpiration: true,
-      });
-      const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-      if (!user || user.status !== 'Active') {
-        return { success: 0, message: 'User not found or inactive' };
-      }
-
-      const selectedGroupId = payload.groupId;
-      const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
-        this.generateTokens(user, selectedGroupId);
-
-      let activeImpersonatorId: number | undefined = undefined;
-      const activeToken = req.cookies?.accessToken;
-      if (activeToken) {
-        try {
-          const decoded = this.jwtService.verify<JwtPayload>(activeToken, {
-            secret: this.config.getOrThrow<string>('JWT_SECRET'),
-          });
-          activeImpersonatorId = decoded.impersonatorId;
-        } catch {}
-      }
-      await this.activityLogService.log({
-        activityCode: 'AUTH_RETURN_SESSION',
-        companyId: user.companyId,
-        actorUserId: activeImpersonatorId || user.id,
-        impersonatorId: activeImpersonatorId || user.id,
-        entityType: 'USER',
-        entityId: user.id,
-        entityName: user.userName,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-      });
-
-      this.setCookies(
-        res,
-        accessToken,
-        refreshToken,
-        accessMaxAge,
-        refreshMaxAge,
-      );
-
-      const data = await this.buildSafeUser(user, selectedGroupId);
-      const capabilities = await this.getGroupCapabilities(selectedGroupId);
-
-      return {
-        success: 1,
-        message: 'Session restored successfully',
-        data: { ...data, token: accessToken, capabilities },
-      };
-    } catch (error) {
-      return { success: 0, message: 'Invalid or expired session token' };
+    const adminId = userPayload.impersonatorId;
+    const adminUser = await this.userRepo.findOne({ where: { id: adminId } });
+    
+    if (!adminUser || adminUser.status !== 'Active') {
+      return { success: 0, message: 'Admin user not found or inactive' };
     }
+
+    const adminUserGroup = await this.userGroupRepo.findOne({
+      where: { userId: adminId, status: 'Active' },
+      order: { isPrimary: 'DESC' },
+    });
+
+    if (!adminUserGroup) {
+      return { success: 0, message: 'Admin user has no active profiles assigned' };
+    }
+
+    const selectedGroupId = adminUserGroup.groupId;
+    
+    const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
+      this.generateTokens(adminUser, selectedGroupId);
+
+    this.setCookies(
+      res,
+      accessToken,
+      refreshToken,
+      accessMaxAge,
+      refreshMaxAge,
+    );
+
+    const data = await this.buildSafeUser(adminUser, selectedGroupId);
+    const capabilities = await this.getGroupCapabilities(selectedGroupId);
+
+    await this.activityLogService.log({
+      activityCode: 'AUTH_RETURN_SESSION',
+      companyId: adminUser.companyId,
+      actorUserId: adminId,
+      impersonatorId: adminId,
+      entityType: 'USER',
+      entityId: userPayload.sub,
+      entityName: userPayload.email,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    return {
+      success: 1,
+      message: 'Session restored successfully',
+      data: { ...data, token: accessToken, capabilities, isImpersonating: false },
+    };
   }
 
   async forgotPassword(email: string) {
@@ -854,6 +854,7 @@ export class AuthService {
       data: {
         user: safeUser,
         capabilities,
+        isImpersonating: !!userPayload.impersonatorId,
       },
     };
   }

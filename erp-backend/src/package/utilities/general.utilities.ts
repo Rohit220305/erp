@@ -21,14 +21,12 @@ export class GeneralUtilities {
 
       return filterString;  
     } catch (err) {
-      console.log(err);
       throw err;
     }
   }
 
   async makeFilterCondition(filter, columnMapOrAlias: Record<string, string> | string) {
     try {
-      let symbol;
       let mappedField = '';
 
       if (typeof columnMapOrAlias === 'string') {
@@ -40,6 +38,15 @@ export class GeneralUtilities {
         mappedField = columnMapOrAlias[filter.key];
       }
 
+      if (Array.isArray(filter.value)) {
+        if (filter.value.length === 0) {
+          return '1=1'; 
+        }
+        const inValues = filter.value.map(v => `"${v}"`).join(',');
+        return `${mappedField} IN (${inValues})`;
+      }
+
+      let symbol;
       switch (filter.operator) {
         case 'equal':
           symbol = '=';
@@ -66,7 +73,6 @@ export class GeneralUtilities {
 
       return `${mappedField} ${symbol} "${filter.value}"`;
     } catch (err) {
-      console.log(err);
       throw err;
     }
   }
@@ -101,9 +107,6 @@ export class GeneralUtilities {
 
   async encryptPassword(password) {
     const encryptedpass = password;
-
-    // console.log('Future encryption implementation : ', encryptedpass);
-
     return encryptedpass;
   }
 

@@ -72,12 +72,7 @@ export class PermissionGuard implements CanActivate {
 
       userPermissions = mappings
         .map((m) => m.capability?.capabilityCode)
-        .filter(Boolean)
-        .map((code) => {
-          if (code.endsWith('_ADD')) return code.replace('_ADD', '_CREATE');
-          if (code.endsWith('_EDIT')) return code.replace('_EDIT', '_UPDATE');
-          return code;
-        });
+        .filter(Boolean);
 
       await this.permissionCacheService.setPermissions(
         user.groupId,
@@ -90,6 +85,6 @@ export class PermissionGuard implements CanActivate {
     }
 
     throw new ForbiddenException('Insufficient permissions');
-  }
+  } 
 }
 

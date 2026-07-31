@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -25,20 +25,28 @@ export default function UserListing() {
 
   const [companyOptions, setCompanyOptions] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
-  
-  const [selectedUserForPasswordReset, setSelectedUserForPasswordReset] = useState(null);
-  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
+
+  const [selectedUserForPasswordReset, setSelectedUserForPasswordReset] =
+    useState(null);
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] =
+    useState(null);
 
   useEffect(() => {
     const loadOptions = async () => {
       try {
         const compRes = await listCompanies({ page: 1, limit: 1000 });
-        const compData = compRes?.settings?.data?.list || compRes?.data?.list || [];
-        setCompanyOptions(compData.map((c) => ({ label: c.companyName, value: String(c.id) })));
+        const compData =
+          compRes?.settings?.data?.list || compRes?.data?.list || [];
+        setCompanyOptions(
+          compData.map((c) => ({ label: c.companyName, value: String(c.id) })),
+        );
 
         const grpRes = await listGroups({ page: 1, limit: 1000 });
-        const grpData = grpRes?.settings?.data?.list || grpRes?.data?.list || [];
-        setGroupOptions(grpData.map((g) => ({ label: g.groupName, value: String(g.id) })));
+        const grpData =
+          grpRes?.settings?.data?.list || grpRes?.data?.list || [];
+        setGroupOptions(
+          grpData.map((g) => ({ label: g.groupName, value: String(g.id) })),
+        );
       } catch (error) {
         console.error("Failed to load options", error);
       }
@@ -63,28 +71,23 @@ export default function UserListing() {
     }
   };
 
-  // Inject options into schema and filter columns based on permissions
-  const dynamicSchema = useMemo(() => {
-    const schema = JSON.parse(JSON.stringify(userSchema));
-    
-    // Inject companies/groups into sidebarFields and searchFields
-    schema.sidebarFields.forEach(field => {
-      if (field.value === "companyId") field.options = companyOptions;
-      if (field.value === "groupId") field.options = groupOptions;
-    });
-    
-    schema.searchFields.forEach(field => {
-      if (field.value === "companyId") field.options = companyOptions;
-      if (field.value === "groupId") field.options = groupOptions;
-    });
+  const schema = JSON.parse(JSON.stringify(userSchema));
 
-    // Remove "Login As" column if not super admin
-    if (!currentUser?.isSuperAdmin) {
-      schema.columns = schema.columns.filter(col => col.key !== "loginAs");
-    }
+  schema.sidebarFields.forEach((field) => {
+    if (field.value === "companyId") field.options = companyOptions;
+    if (field.value === "groupId") field.options = groupOptions;
+  });
 
-    return schema;
-  }, [companyOptions, groupOptions, currentUser]);
+  schema.searchFields.forEach((field) => {
+    if (field.value === "companyId") field.options = companyOptions;
+    if (field.value === "groupId") field.options = groupOptions;
+  });
+
+  if (!currentUser?.isSuperAdmin) {
+    schema.columns = schema.columns.filter((col) => col.key !== "loginAs");
+  }
+
+  const dynamicSchema = schema;
 
   return (
     <>
@@ -93,8 +96,8 @@ export default function UserListing() {
         fetchData={listUsers}
         deleteFn={(target) => deleteUser(target.id)}
         renderTableRow={(item, onRowAction, setSelectedItemForDetails) => (
-          <UserTableRow 
-            item={item} 
+          <UserTableRow
+            item={item}
             currentUser={currentUser}
             handleLoginAs={handleLoginAs}
             setSelectedUserForPasswordReset={setSelectedUserForPasswordReset}
@@ -103,9 +106,9 @@ export default function UserListing() {
           />
         )}
         renderListCard={(item, setSelectedItemForDetails) => (
-          <UserListCard 
-            key={item.id} 
-            user={item} 
+          <UserListCard
+            key={item.id}
+            user={item}
             handleLoginAs={handleLoginAs}
             currentUser={currentUser}
             can={can}
@@ -114,9 +117,9 @@ export default function UserListing() {
           />
         )}
         renderGridCard={(item, setSelectedItemForDetails) => (
-          <UserGridCard 
-            key={item.id} 
-            user={item} 
+          <UserGridCard
+            key={item.id}
+            user={item}
             handleLoginAs={handleLoginAs}
             currentUser={currentUser}
             can={can}
@@ -126,11 +129,7 @@ export default function UserListing() {
           />
         )}
         renderDrawer={(open, onClose, item) => (
-          <UserDetailsDrawer
-            open={open}
-            onClose={onClose}
-            user={item}
-          />
+          <UserDetailsDrawer open={open} onClose={onClose} user={item} />
         )}
       />
 

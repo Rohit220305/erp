@@ -66,9 +66,9 @@ export default function Pagination({
 
 
   const navBtnBase =
-    "h-9 w-9 flex items-center justify-center rounded-full text-sm font-medium transition-all duration-150 cursor-pointer";
+    "h-9 w-9 flex items-center justify-center rounded-full text-sm font-medium transition-all duration-150 ";
   const navBtnEnabled =
-    "text-gray-500 hover:bg-[#1565c0]/10 hover:text-[#1565c0]";
+    "text-gray-500 hover:bg-[#1565c0]/10 hover:text-[#1565c0] cursor-pointer";
   const navBtnDisabled = "text-gray-300 cursor-not-allowed";
 
   return (

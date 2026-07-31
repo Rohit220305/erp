@@ -9,6 +9,7 @@ export async function getCurrentUserWithCapabilities() {
       return {
         user: response.data.user || null,
         capabilities: response.data.capabilities || [],
+        isImpersonating: response.data.isImpersonating || false,
       };
     }
   } catch (error) {
