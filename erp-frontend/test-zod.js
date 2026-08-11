@@ -60,4 +60,3 @@ const testData = {
 };
 
 const res = userEditSchema.safeParse(testData);
-console.log(res.success ? "Success" : res.error.errors);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { createPortal } from "react-dom";
 
 export default function SharedImageZoom({
   id,
@@ -15,6 +16,11 @@ export default function SharedImageZoom({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -63,12 +69,13 @@ export default function SharedImageZoom({
         />
       </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <div
-            className="fixed inset-0 z-[999] flex items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            <div
+              className="fixed inset-0 z-[999] flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -113,8 +120,10 @@ export default function SharedImageZoom({
               )}
             </div>
           </div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }

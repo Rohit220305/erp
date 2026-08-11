@@ -1,4 +1,5 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -10,7 +11,7 @@ import { In } from 'typeorm';
 
 @Injectable()
 export class CompanyListService {
-  constructor(private readonly general: GeneralUtilities) {}
+  constructor(private readonly general: GeneralUtilities) { }
 
   @InjectRepository(CompanyEntity)
   private companyRepo: Repository<CompanyEntity>;
@@ -39,42 +40,66 @@ export class CompanyListService {
         throw new Error('Company ID is required');
       }
 
-      const company = await this.companyRepo.findOne({
-        where: {
-          id: params.id,
-        },
-      });
+      const queryBuilder = this.companyRepo.createQueryBuilder('company');
+
+      queryBuilder.select([
+        'company.id AS id',
+        'company.companyCode AS companyCode',
+        'company.companyName AS companyName',
+        'company.shortName AS shortName',
+        'company.email AS email',
+        'company.phone AS phone',
+        'company.contactPersonName AS contactPersonName',
+        'company.companyLogo AS companyLogo',
+        'company.status AS status',
+        'company.parentCompanyId AS parentCompanyId',
+        'company.addedDate AS addedDate',
+        'company.updatedDate AS updatedDate',
+        'company.addedBy AS addedBy',
+        'company.updatedBy AS updatedBy',
+        'company.legalName AS legalName',
+        'company.registrationNumber AS registrationNumber',
+        'company.taxNumber AS taxNumber',
+        'company.website AS website',
+        'company.dialCode AS dialCode',
+        'company.addressLine1 AS addressLine1',
+        'company.addressLine2 AS addressLine2',
+        'company.city AS city',
+        'company.state AS state',
+        'company.country AS country',
+        'company.zipCode AS zipCode',
+      ]);
+
+      queryBuilder.addSelect('parent.companyName', 'parentCompanyName');
+      queryBuilder.leftJoin('company', 'parent', 'parent.id = company.parentCompanyId');
+
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = company.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = company.updatedBy');
+
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
+
+      queryBuilder.where('company.id = :id', { id: params.id });
+      queryBuilder.andWhere('company.sysRecDeleted = 0');
+
+      const company = await queryBuilder.getRawOne();
 
       if (!company) {
         throw new Error('Company not found');
       }
 
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
+      if (!this.general.isSuperAdmin(req) && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
         throw new ForbiddenException('Cannot view company outside your company hierarchy');
       }
 
-      company['addedDateFormatted'] = await this.general.dateFormat(
+      company.addedDateFormatted = await this.general.dateFormat(
         company.addedDate,
       );
 
       if (company.updatedDate) {
-        company['updatedDateFormatted'] = await this.general.dateFormat(
+        company.updatedDateFormatted = await this.general.dateFormat(
           company.updatedDate,
         );
-      }
-
-
-      if (company.parentCompanyId && company.parentCompanyId > 0) {
-        const parentCompany = await this.companyRepo.findOne({
-          where: {
-            id: company.parentCompanyId,
-          },
-        });
-
-        if (parentCompany) {
-          company['parentCompanyName'] = parentCompany.companyName;
-        }
       }
 
 
@@ -86,15 +111,14 @@ export class CompanyListService {
         );
       }
 
-      const mappings = await this.companyCurrencyRepo.find({
-        where: { companyId: company.id }
-      });
-      
-      if (mappings.length > 0) {
-        const currencyIds = mappings.map(m => m.currencyId);
-        const currencies = await this.currencyRepo.find({ where: { id: In(currencyIds) } });
-        company['supportedCurrencies'] = currencyIds;
-        company['currencies'] = currencies;
+      const currenciesRaw = await this.currencyRepo.createQueryBuilder('currency')
+        .innerJoin(CompanyCurrencyEntity, 'cc', 'cc.currencyId = currency.id')
+        .where('cc.companyId = :companyId', { companyId: company.id })
+        .getMany();
+
+      if (currenciesRaw.length > 0) {
+        company['supportedCurrencies'] = currenciesRaw.map(c => c.id);
+        company['currencies'] = currenciesRaw;
       } else {
         company['supportedCurrencies'] = [];
         company['currencies'] = [];
@@ -132,140 +156,112 @@ export class CompanyListService {
     let return_data: any = {};
 
     try {
-      const page = params.page ? parseInt(params.page) : 1;
-
-      const limit = params.limit ? parseInt(params.limit) : 10;
-
-      const skip = (page - 1) * limit;
+      const { page, limit, skip } = this.general.parsePagination(params);
 
       const queryBuilder = this.companyRepo.createQueryBuilder('company');
 
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin) {
+      queryBuilder.select([
+        'company.id  AS id',
+        'company.companyCode  AS companyCode',
+        'company.companyName  AS companyName',
+        'company.shortName  AS shortName',
+        'company.email  AS email',
+        'company.phone  AS phone',
+        'company.contactPersonName AS contactPersonName',
+        'company.companyLogo  AS companyLogo',
+        'company.status AS status',
+        'company.parentCompanyId AS parentCompanyId',
+        'company.addedDate AS addedDate',
+        'company.updatedDate AS updatedDate',
+        'company.legalName AS legalName',
+        'company.registrationNumber AS registrationNumber',
+        'company.taxNumber AS taxNumber',
+        'company.website AS website',
+        'company.dialCode AS dialCode',
+        'company.addressLine1 AS addressLine1',
+        'company.addressLine2 AS addressLine2',
+        'company.city AS city',
+        'company.state AS state',
+        'company.country AS country',
+        'company.zipCode AS zipCode',
+      ]);
+
+      queryBuilder.addSelect('parent.companyName', 'parentCompanyName');
+      queryBuilder.leftJoin('company', 'parent', 'parent.id = company.parentCompanyId');
+
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = company.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = company.updatedBy');
+
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
+
+      queryBuilder.andWhere('company.sysRecDeleted = 0');
+
+      if (!this.general.isSuperAdmin(req)) {
         queryBuilder.andWhere(
           '(company.id = :scopedCompanyId OR company.parentCompanyId = :scopedCompanyId)',
           { scopedCompanyId: req.user.companyId }
         );
       }
 
-      if (params?.search) {
-        queryBuilder.andWhere(
-          `
-          (
-            company.companyCode LIKE :search
-            OR company.companyName LIKE :search
-            OR company.email LIKE :search
-          )
-          `,
-          {
-            search: `%${params.search}%`,
-          },
-        );
-      }
+      await this.general.applyListQuery(queryBuilder, params, 'company.companyName');
 
+      const total = await queryBuilder.getCount();
+      queryBuilder.offset(skip).limit(limit);
+      const data = await queryBuilder.getRawMany();
 
-      const columnMap: Record<string, string> = {
-        companyCode: 'company.companyCode',
-        companyName: 'company.companyName',
-        shortName: 'company.shortName',
-        email: 'company.email',
-        contactPersonName: 'company.contactPersonName',
-        phone: 'company.phone',
-        status: 'company.status',
-        id: 'company.id',
-        addedDateFormatted: 'company.addedDate',
-      };
+      await this.general.formatDate(data);
 
-      if (params?.filters) {
-        const whereString = await this.general.makeFilterString(
-          params.filters,
-          columnMap,
-          params.logicalOperator
-        );
+      const companyIds = data.map(c => c.id);
+      let allMappings: CompanyCurrencyEntity[] = [];
+      let allCurrencies: CurrencyEntity[] = [];
 
-        if (whereString) {
-          queryBuilder.andWhere(whereString);
+      if (companyIds.length > 0) {
+        allMappings = await this.companyCurrencyRepo.find({
+          where: { companyId: In(companyIds) }
+        });
+
+        const currencyIds = Array.from(new Set(allMappings.map(m => m.currencyId)));
+        if (currencyIds.length > 0) {
+          allCurrencies = await this.currencyRepo.find({
+            where: { id: In(currencyIds) }
+          });
         }
       }
-
-   
-      if (params?.sortField && params?.sortOrder && columnMap[params.sortField]) {
-        const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-        queryBuilder.orderBy(columnMap[params.sortField], order);
-      } else {
-        queryBuilder.orderBy('company.companyName', 'ASC');
-      }
-
-      queryBuilder.skip(skip);
-      queryBuilder.take(limit);
-
-      const [data, total] = await queryBuilder.getManyAndCount();
-
 
       for (const company of data) {
-        company['addedDateFormatted'] = await this.general.dateFormat(
-          company.addedDate,
-        );
-
-        if (company.updatedDate) {
-          company['updatedDateFormatted'] = await this.general.dateFormat(
-            company.updatedDate,
-          );
-        }
-
-
-        if (company.parentCompanyId && company.parentCompanyId > 0) {
-          const parentCompany = await this.companyRepo.findOne({
-            where: {
-              id: company.parentCompanyId,
-            },
-          });
-
-          company['parentCompanyName'] = parentCompany?.companyName || '';
-        }
-
-
         if (company.companyLogo) {
-          company['logoUrl'] = await this.general.generateUrl(
+          company.logoUrl = await this.general.generateUrl(
             'company',
             `${company.id}`,
             company.companyLogo,
           );
         }
 
-        const mappings = await this.companyCurrencyRepo.find({
-          where: { companyId: company.id }
-        });
-          
-        if (mappings.length > 0) {
-          const currencyIds = mappings.map(m => m.currencyId);
-          const currencies = await this.currencyRepo.find({ where: { id: In(currencyIds) } });
-          company['currencies'] = currencies;
+        const companyMappings = allMappings.filter(m => m.companyId === company.id);
+        if (companyMappings.length > 0) {
+          const cIds = companyMappings.map(m => m.currencyId);
+          company.currencies = allCurrencies.filter(c => cIds.includes(c.id));
         } else {
-          company['currencies'] = [];
+          company.currencies = [];
         }
       }
-      
+
+      const pagination = this.general.buildPaginationResponse(total, page, limit, skip);
+
       return_data = {
         success: 1,
         message: 'Company List fetched successfully',
         data: {
           list: data,
-          pagination: {
-            total,
-            page,
-            limit,
-            total_pages: Math.ceil(total / limit),
-            prevPage: page > 1,
-            nextPage: total > skip + limit,
-          },
+          pagination,
         },
       };
     } catch (err) {
-        return_data = {
-          success: 0,
-          message: err.message,
-        };
+      return_data = {
+        success: 0,
+        message: err.message,
+      };
     }
 
     return return_data;
@@ -284,7 +280,15 @@ export class CompanyListService {
   }
 
   async finishFailure(params) {
-    return params;
+    const output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message,
+        data: params?.data ? params?.data : [],
+      },
+    };
+
+    return output;
   }
 }
 

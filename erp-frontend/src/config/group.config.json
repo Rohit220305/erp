@@ -12,24 +12,29 @@
     {
       "label": "Group Name",
       "key": "groupName",
+      "type": "text",
       "searchable": true,
       "sortable": true
     },
     {
       "label": "Group Code",
       "key": "groupCode",
+      "type": "text",
       "searchable": true,
       "sortable": true
     },
     {
       "label": "Description",
       "key": "description",
+      "type": "text",
       "searchable": true,
       "sortable": true
     },
+
     {
       "label": "Added Date",
       "key": "addedDateFormatted",
+      "type": "text",
       "searchable": false,
       "sortable": true
     },

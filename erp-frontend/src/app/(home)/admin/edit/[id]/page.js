@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getUser } from "@/lib/api/user-api";
@@ -53,7 +53,7 @@ export default function AdminEditRoute() {
 
   if (loading) return <div className="p-6 text-sm text-gray-400">Loading...</div>;
 
-  if (!can("USER_UPDATE")) {
+  if (!can(CAPABILITIES.USER.UPDATE)) {
     return <AccessDenied missingPermission="USER_UPDATE" />;
   }
 

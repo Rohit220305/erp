@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { LogIn, RotateCw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
@@ -13,7 +13,7 @@ export default function UserTableRow({
   setSelectedCompanyForDetails,
 }) {
   const { can } = useAuth();
-  const hasViewPerm = can("USER_VIEW");
+  const hasViewPerm = can(CAPABILITIES.USER.VIEW);
   const isActive = item.status === "Active" || item.status === "active";
   
   return (
@@ -23,8 +23,8 @@ export default function UserTableRow({
           <SharedImageZoom
             id={`table-${item.id}`}
             src={item.photoUrl}
-            alt={`${item.firstName} ${item.lastName}`}
-            placeholderText={`${item.firstName?.[0] || ""}${item.lastName?.[0] || ""}`}
+            alt={item.fullName}
+            placeholderText={item.fullName ? item.fullName.substring(0, 2).toUpperCase() : ""}
             thumbnailClassName="w-12 h-12 rounded-full object-cover border border-gray-200"
             modalImageClassName="w-64 h-64 rounded-full"
           />
@@ -34,11 +34,11 @@ export default function UserTableRow({
                 className="font-medium text-[#1565c0] hover:underline cursor-pointer text-[15px]"
                 onClick={() => setSelectedItemForDetails(item)}
               >
-                {item.firstName} {item.lastName}
+                {item.fullName}
               </p>
             ) : (
               <p className="font-medium text-gray-800 text-[15px]">
-                {item.firstName} {item.lastName}
+                {item.fullName}
               </p>
             )}
             <p className="text-xs text-gray-400">{item.userName}</p>
@@ -53,7 +53,7 @@ export default function UserTableRow({
       <td className="px-4 py-3 text-sm">
         {item.isSuperAdmin ? (
           <span className="font-medium text-gray-400 italic">System</span>
-        ) : can("COMPANY_VIEW") ? (
+        ) : can(CAPABILITIES.COMPANY.VIEW) ? (
           <span
             className="font-medium text-[#1565c0] hover:underline cursor-pointer"
             onClick={() => setSelectedCompanyForDetails(item)}

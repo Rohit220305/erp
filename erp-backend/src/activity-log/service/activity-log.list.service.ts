@@ -1,4 +1,5 @@
 import { Injectable, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -95,6 +96,7 @@ export class ActivityLogListService {
       const skip = (page - 1) * limit;
 
       const queryBuilder = this.activityLogRepository.createQueryBuilder('log');
+      queryBuilder.andWhere('log.sysRecDeleted = 0');
       queryBuilder.leftJoin(ActivityMasterEntity, 'master', 'log.activityMasterId = master.id');
 
       const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
@@ -234,7 +236,8 @@ export class ActivityLogListService {
 
       const queryBuilder = this.activityLogRepository.createQueryBuilder('log')
         .leftJoinAndSelect('log.activityMaster', 'master')
-        .where('(log.actorUserId = :userId OR log.impersonatorId = :userId OR (log.entityType = :entityType AND log.entityId = :userId))', { userId, entityType: 'USER' });
+        .where('(log.actorUserId = :userId OR log.impersonatorId = :userId OR (log.entityType = :entityType AND log.entityId = :userId))', { userId, entityType: 'USER' })
+        .andWhere('log.sysRecDeleted = 0');
 
       if (params.startDate) {
         queryBuilder.andWhere('log.createdAt >= :startDate', { startDate: params.startDate });

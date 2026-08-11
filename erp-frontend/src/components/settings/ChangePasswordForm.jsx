@@ -7,6 +7,8 @@ import { changePassword } from "@/lib/api/auth-api";
 import { Eye, EyeOff, Lock, ShieldCheck, KeyRound } from "lucide-react";
 import toast from "react-hot-toast";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import Loader from "@/components/common/Loader";
 
 const changePasswordSchema = z
   .object({
@@ -33,7 +35,7 @@ const initialValues = {
 
 export default function ChangePasswordForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const { execute, isLoading: loading } = useAsyncAction();
   const [show, setShow] = useState({
     current: false,
     newPwd: false,
@@ -86,10 +88,9 @@ export default function ChangePasswordForm() {
     setConfirmOpen(true);
   };
 
-  const handleActualSubmit = 
-    async (data) => {
+  const handleActualSubmit = async (data) => {
+    await execute(async () => {
       try {
-        setLoading(true);
         const res = await changePassword({
           currentPassword: data.currentPassword,
           newPassword: data.newPassword,
@@ -106,10 +107,9 @@ export default function ChangePasswordForm() {
         }
       } catch (err) {
         toast.error(err?.message || "Something went wrong");
-      } finally {
-        setLoading(false);
       }
-    };
+    });
+  };
 
   const toggleShow = (field) =>
     setShow((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -245,10 +245,10 @@ export default function ChangePasswordForm() {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-[#1565c0] text-white rounded-lg text-sm font-medium hover:bg-[#0f57a6] disabled:opacity-60 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-2"
+            className="px-6 py-2 bg-[#1565c0] text-white rounded-lg text-sm font-medium hover:bg-[#0f57a6] disabled:opacity-60 disabled:cursor-not-allowed transition cursor-pointer flex items-center justify-center min-w-[100px] gap-2"
           >
             <Lock size={15} />
-            {loading ? "Updating..." : "Submit"}
+            {loading ? <Loader inline size="sm" /> : "Submit"}
           </button>
         </div>
       </form>

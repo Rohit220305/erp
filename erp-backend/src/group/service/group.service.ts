@@ -1,4 +1,7 @@
+import { SaveGroupWithCapabilitiesDto } from '../dto/save-group-with-capabilities.dto';
+import { GroupAddDto, GroupUpdateDto, GroupDeleteDto } from '../dto/group.dto';
 import { Injectable, ForbiddenException } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 
@@ -9,11 +12,9 @@ import { PermissionCacheService } from 'src/auth/permission.cache.service';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
-import {
-  GROUP_INSERT_FIELDS,
-  GROUP_UPDATE_FIELDS,
-} from 'src/package/constants/group-fields.constant';
+
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Injectable()
 export class GroupService {
@@ -24,7 +25,7 @@ export class GroupService {
     private readonly permissionCacheService: PermissionCacheService,
     private readonly dataSource: DataSource,
     private readonly activityLogService: ActivityLogService,
-  ) {}
+  ) { }
 
   async startSaveWithCapabilities(req, params) {
     const response = await this.saveWithCapabilities(req, params);
@@ -44,7 +45,8 @@ export class GroupService {
     await queryRunner.startTransaction();
 
     try {
-      const { id, groupName, groupCode,description, status, capabilityCodes } = params;
+      const { id, groupName, groupCode, description, status, capabilityCodes } =
+        params;
       const userId = req.user?.sub;
 
       let groupId = id;
@@ -54,7 +56,7 @@ export class GroupService {
 
       if (id) {
         const group = await queryRunner.manager.findOne(GroupEntity, {
-          where: { id },
+          where: { id, sysRecDeleted: false },
         });
 
         if (!group) {
@@ -62,15 +64,21 @@ export class GroupService {
         }
 
         oldValue = group;
-        newValue = { groupName, groupCode, description, status, capabilityCodes };
-        
+        newValue = {
+          groupName,
+          groupCode,
+          description,
+          status,
+          capabilityCodes,
+        };
+
         if (groupCode !== group.groupCode) {
           const codeExists = await queryRunner.manager.findOne(GroupEntity, {
-            where: { groupCode },
+            where: { groupCode, sysRecDeleted: false },
           });
           if (codeExists) {
             throw new Error('Group Code already exists');
-          } 
+          }
         }
 
         await queryRunner.manager.update(
@@ -87,7 +95,7 @@ export class GroupService {
         );
       } else {
         const codeExists = await queryRunner.manager.findOne(GroupEntity, {
-          where: { groupCode },
+          where: { groupCode, sysRecDeleted: false },
         });
         if (codeExists) {
           throw new Error('Group Code already exists');
@@ -107,11 +115,16 @@ export class GroupService {
       let capabilityIds: number[] = [];
       if (capabilityCodes && capabilityCodes.length > 0) {
         const capabilities = await queryRunner.manager.find(CapabilityEntity, {
-          where: capabilityCodes.map((code) => ({ capabilityCode: code, status: 'Active' })),
+          where: capabilityCodes.map((code) => ({
+            capabilityCode: code,
+            status: Status.Active,
+          })),
         });
 
         if (capabilities.length !== capabilityCodes.length) {
-          throw new Error('One or more invalid or inactive capability codes provided');
+          throw new Error(
+            'One or more invalid or inactive capability codes provided',
+          );
         }
         capabilityIds = capabilities.map((c) => c.id);
       }
@@ -122,7 +135,7 @@ export class GroupService {
         const mappings = capabilityIds.map((capId) => ({
           groupId,
           capabilityId: capId,
-          status: 'Active',
+          status: Status.Active,
           addedBy: userId,
           addedDate: () => 'NOW()',
         }));
@@ -147,7 +160,9 @@ export class GroupService {
 
       return_data = {
         success: 1,
-        message: id ? 'Group Updated Successfully.' : 'Group Added Successfully.',
+        message: id
+          ? 'Group Updated Successfully.'
+          : 'Group Added Successfully.',
         data: {
           id: groupId,
         },
@@ -179,7 +194,8 @@ export class GroupService {
     let return_data: any = {};
 
     try {
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      const isSuperAdmin =
+        req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin) {
         throw new ForbiddenException('Only super admins can modify groups');
       }
@@ -187,6 +203,7 @@ export class GroupService {
       const existingGroup = await this.groupRepo.findOne({
         where: {
           groupCode: params.groupCode,
+          sysRecDeleted: false,
         },
       });
 
@@ -194,15 +211,20 @@ export class GroupService {
         throw new Error('Group Code already exists');
       }
 
-      const queryColumns = await this.general.mapFields(
-        params,
-        GROUP_INSERT_FIELDS,
-      );
+      const {
+        ...dbInsertData
+      } = params as any;
 
-      queryColumns.addedDate = () => 'NOW()';
-      queryColumns.addedBy = req.user?.sub;
+      Object.keys(dbInsertData).forEach(key => {
+        if (dbInsertData[key] === undefined || dbInsertData[key] === null) {
+          delete dbInsertData[key];
+        }
+      });
 
-      const res = await this.groupRepo.insert(queryColumns);
+      dbInsertData.addedDate = () => 'NOW()';
+      dbInsertData.addedBy = req.user?.sub;
+
+      const res = await this.groupRepo.insert(dbInsertData);
 
       await this.activityLogService.log({
         activityCode: 'GROUP_CREATE',
@@ -250,7 +272,8 @@ export class GroupService {
     let return_data: any = {};
 
     try {
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      const isSuperAdmin =
+        req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin) {
         throw new ForbiddenException('Only super admins can modify groups');
       }
@@ -262,6 +285,7 @@ export class GroupService {
       const group = await this.groupRepo.findOne({
         where: {
           id: params.id,
+          sysRecDeleted: false,
         },
       });
 
@@ -273,6 +297,7 @@ export class GroupService {
         const codeExists = await this.groupRepo.findOne({
           where: {
             groupCode: params.groupCode,
+            sysRecDeleted: false,
           },
         });
 
@@ -281,15 +306,21 @@ export class GroupService {
         }
       }
 
-      const queryColumns = await this.general.mapFields(
-        params,
-        GROUP_UPDATE_FIELDS,
-      );
+      const {
+        id: _extractedId,
+        ...dbUpdateData
+      } = params as any;
 
-      queryColumns.updatedDate = () => 'NOW()';
-      queryColumns.updatedBy = req.user?.sub;
+      Object.keys(dbUpdateData).forEach(key => {
+        if (dbUpdateData[key] === undefined || dbUpdateData[key] === null) {
+          delete dbUpdateData[key];
+        }
+      });
 
-      const res = await this.groupRepo.update({ id: params.id }, queryColumns);
+      dbUpdateData.updatedDate = () => 'NOW()';
+      dbUpdateData.updatedBy = req.user?.sub;
+
+      const res = await this.groupRepo.update({ id: params.id }, dbUpdateData);
 
       await this.activityLogService.log({
         activityCode: 'GROUP_UPDATE',
@@ -337,7 +368,8 @@ export class GroupService {
     let return_data: any = {};
 
     try {
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
+      const isSuperAdmin =
+        req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
       if (!isSuperAdmin) {
         throw new ForbiddenException('Only super admins can modify groups');
       }
@@ -349,6 +381,7 @@ export class GroupService {
       const group = await this.groupRepo.findOne({
         where: {
           id: params.id,
+          sysRecDeleted: false,
         },
       });
 
@@ -356,9 +389,11 @@ export class GroupService {
         throw new Error('Group not found');
       }
 
-      const res = await this.groupRepo.delete({
-        id: params.id,
-      });
+      const payload = this.general.buildSoftDeletePayload(
+        { groupCode: group.groupCode },
+        req,
+      );
+      const res = await this.groupRepo.update({ id: params.id }, payload);
 
       await this.activityLogService.log({
         activityCode: 'GROUP_DELETE',
@@ -402,8 +437,20 @@ export class GroupService {
     };
   }
 
-  async finishFailure(params) {
-    return params;
+  async finishFailure(params: any, incomingData?: any) {
+    let output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message || 'Something went wrong',
+        data: params?.data ? params.data : [],
+      },
+    };
+
+    if (incomingData) {
+      output.settings.incoming_data = incomingData;
+    }
+
+    return output;
   }
 }
 

@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Post, Req, Res, Param, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Get, Post,  Res, Param, ParseIntPipe } from '@nestjs/common';
+import { AppRequest } from 'src/package/decorator/app-request.decorator';
+import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -8,12 +10,12 @@ import { JwtPayload } from 'src/package/types/jwt-payload.type';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Public()
   @Post('login')
   async login(
-    @Req() req: Request,
+    @AppRequest() req: IAppRequest,
     @Res({ passthrough: true }) res: Response,
     @Body() body: LoginDto,
   ) {
@@ -23,7 +25,7 @@ export class AuthController {
   @Public()
   @Post('select-profile')
   async selectProfile(
-    @Req() req: Request,
+    @AppRequest() req: IAppRequest,
     @Res({ passthrough: true }) res: Response,
     @Body() body: { selectionToken: string; groupId: number },
   ) {
@@ -32,7 +34,7 @@ export class AuthController {
 
   @Post('switch-profile')
   async switchProfile(
-    @Req() req: Request & { user: JwtPayload },
+    @AppRequest() req: IAppRequest,
     @Res({ passthrough: true }) res: Response,
     @Body() body: { groupId: number },
   ) {
@@ -42,16 +44,16 @@ export class AuthController {
   @Public()
   @Post('refresh')
   async refresh(
-    @Req() req: Request,
+    @AppRequest() req: IAppRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
-    
+
     return this.authService.refresh(req, res);
   }
 
   @Post('logout')
   async logout(
-    @Req() req: Request,
+    @AppRequest() req: IAppRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.logout(req, res);
@@ -60,7 +62,7 @@ export class AuthController {
 
   @Post('login-as-user/:targetUserId')
   async loginAsUser(
-    @Req() req: Request & { user: JwtPayload },
+    @AppRequest() req: IAppRequest,
     @Res({ passthrough: true }) res: Response,
     @Param('targetUserId', ParseIntPipe) targetUserId: number,
   ) {
@@ -73,11 +75,11 @@ export class AuthController {
 
   @Post('change-password')
   async changePassword(
-    @Req() req: Request & { user: JwtPayload },
+    @AppRequest() req: IAppRequest,
     @Body() dto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(
-      req.user.sub,
+      req.user!.sub,
       dto.currentPassword,
       dto.newPassword,
       dto.confirmPassword,
@@ -86,7 +88,7 @@ export class AuthController {
 
   @Post('reset-password/:targetUserId')
   async resetPassword(
-    @Req() req: Request & { user: JwtPayload },
+    @AppRequest() req: IAppRequest,
     @Param('targetUserId', ParseIntPipe) targetUserId: number,
     @Body() body: any,
   ) {
@@ -97,18 +99,18 @@ export class AuthController {
   }
 
   @Get('get-user-permissions')
-  async getUserPermissions(@Req() req: Request) {
+  async getUserPermissions(@AppRequest() req: IAppRequest,) {
     return this.authService.getUserPermissions(req);
   }
 
   @Get('profile-with-capabilities')
-  async getProfileWithCapabilities(@Req() req: Request) {
+  async getProfileWithCapabilities(@AppRequest() req: IAppRequest,) {
     return this.authService.getProfileWithCapabilities(req);
   }
 
   @Post('back-to-session')
   async backToSession(
-    @Req() req: Request,
+    @AppRequest() req: IAppRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.backToSession(req, res);

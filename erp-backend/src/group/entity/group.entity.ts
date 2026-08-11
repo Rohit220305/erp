@@ -1,7 +1,9 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { AbstractBaseEntity } from 'src/package/entities/base.entity';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Entity('group_master')
-export class GroupEntity {
+export class GroupEntity extends AbstractBaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -19,29 +21,8 @@ export class GroupEntity {
 
   @Column({
     type: 'enum',
-    enum: ['Active', 'Inactive'],
-    default: 'Active',
+    enum: Status,
+    default: Status.Active,
   })
-  status: string;
-
-  @Column({
-    nullable: true,
-  })
-  addedBy: number;
-
-  @Column({
-    type: 'timestamp',
-  })
-  addedDate: Date;
-
-  @Column({
-    nullable: true,
-  })
-  updatedBy: number;
-
-  @Column({
-    type: 'timestamp',
-    nullable: true,
-  })
-  updatedDate: Date;
+  status: Status;
 }

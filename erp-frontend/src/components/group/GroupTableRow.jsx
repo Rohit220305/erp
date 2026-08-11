@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -7,7 +7,7 @@ export default function GroupTableRow({ item, onRowAction, setSelectedItemForDet
   const { can } = useAuth();
   const router = useRouter();
   
-  const hasViewPerm = can("GROUP_VIEW");
+  const hasViewPerm = can(CAPABILITIES.GROUP.VIEW);
   const isActive = item.status === "Active" || item.status === "active";
 
   return (

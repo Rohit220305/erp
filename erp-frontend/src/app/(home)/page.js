@@ -7,10 +7,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
 
 import { sitemapData } from "@/lib/sitemap/sitemap-data";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import Loader from "@/components/common/Loader";
 
 export default function HomePage() {
-
   const { setConfig, resetConfig } = useHeader();
+  const { execute, isLoading } = useAsyncAction();
 
   useEffect(() => {
     setConfig({
@@ -33,7 +35,15 @@ export default function HomePage() {
     return () => {
       resetConfig();
     };
-  }, []);
+  }, [setConfig, resetConfig]);
+
+  useEffect(() => {
+    execute(async () => {});
+  }, [execute]);
+
+  if (isLoading) {
+    return <Loader fullPage />;
+  }
 
   return (
     <div className="p-4">

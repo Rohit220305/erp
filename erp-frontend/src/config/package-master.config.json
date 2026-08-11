@@ -1,0 +1,165 @@
+{
+  "moduleName": "PackageMaster",
+  "title": "Package Types",
+  "permissions": {
+    "list": "PACKAGE_LIST",
+    "create": "PACKAGE_CREATE",
+    "view": "PACKAGE_VIEW",
+    "update": "PACKAGE_UPDATE",
+    "delete": "PACKAGE_DELETE"
+  },
+  "actions": {
+    "header": [
+      {
+        "label": "Add Package Type",
+        "type": "addDrawer",
+        "path": "/package-master/add",
+        "permission": "PACKAGE_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editDrawer",
+        "path": "/package-master/edit/{id}",
+        "icon": "Edit",
+        "permission": "PACKAGE_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "PACKAGE_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "columns": [
+    {
+      "label": "Package Type Name",
+      "key": "packageName",
+      "type": "link",
+      "linkPath": "/package-master/{id}",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Package Type Code",
+      "key": "packageCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Abbreviation",
+      "key": "abbreviation",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Added By",
+      "key": "addedByName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "packageName": "",
+    "packageCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    {
+      "label": "Active",
+      "value": "Active"
+    },
+    {
+      "label": "Inactive",
+      "value": "Inactive"
+    }
+  ],
+  "sidebarFields": [
+    {
+      "label": "Package Type Name",
+      "value": "packageName",
+      "type": "text"
+    },
+    {
+      "label": "Package Type Code",
+      "value": "packageCode",
+      "type": "text"
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "searchFields": [
+    {
+      "label": "Package Type Code",
+      "value": "packageCode",
+      "type": "text"
+    },
+    {
+      "label": "Package Type Name",
+      "value": "packageName",
+      "type": "text"
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ]
+}

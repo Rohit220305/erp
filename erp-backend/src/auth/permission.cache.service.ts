@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 
 @Injectable()
 export class PermissionCacheService {

@@ -1,0 +1,204 @@
+{
+  "moduleName": "ItemUom",
+  "title": "Item UOM",
+  "permissions": {
+    "list": "ITEM_UOM_LIST",
+    "create": "ITEM_UOM_CREATE",
+    "view": "ITEM_UOM_VIEW",
+    "update": "ITEM_UOM_UPDATE",
+    "delete": "ITEM_UOM_DELETE"
+  },
+  "actions": {
+    "header": [
+      {
+        "label": "Add Item UOM",
+        "type": "addDrawer",
+        "path": "/item-uom/add",
+        "permission": "ITEM_UOM_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "redirect",
+        "path": "/item-uom/edit/{id}",
+        "icon": "Edit",
+        "permission": "ITEM_UOM_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "ITEM_UOM_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "columns": [
+    {
+      "label": "UOM Name",
+      "key": "uomName",
+      "type": "link",
+      "linkPath": "/item-uom/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "220px"
+    },
+    {
+      "label": "UOM Code",
+      "key": "itemUomCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "ISO Code",
+      "key": "isoCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Unit Type",
+      "key": "unitType",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "150px",
+      "options": [
+        { "label": "Length", "value": "length" },
+        { "label": "Temperature", "value": "temperature" },
+        { "label": "Density", "value": "density" },
+        { "label": "Volume", "value": "volume" },
+        { "label": "Weight", "value": "weight" },
+        { "label": "Time", "value": "time" },
+        { "label": "Pumping Rate", "value": "pumping_rate" }
+      ]
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "120px",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    },
+    {
+      "label": "Added By",
+      "key": "addedByName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "180px"
+    }
+  ],
+  "defaultFilters": {
+    "uomName": "",
+    "itemUomCode": "",
+    "isoCode": "",
+    "unitType": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ],
+  "sidebarFields": [
+    {
+      "label": "UOM Name",
+      "value": "uomName",
+      "type": "text"
+    },
+    {
+      "label": "UOM Code",
+      "value": "itemUomCode",
+      "type": "text"
+    },
+    {
+      "label": "ISO Code",
+      "value": "isoCode",
+      "type": "text"
+    },
+    {
+      "label": "Unit Type",
+      "value": "unitType",
+      "type": "select",
+      "options": [
+        { "label": "Length", "value": "length" },
+        { "label": "Temperature", "value": "temperature" },
+        { "label": "Density", "value": "density" },
+        { "label": "Volume", "value": "volume" },
+        { "label": "Weight", "value": "weight" },
+        { "label": "Time", "value": "time" },
+        { "label": "Pumping Rate", "value": "pumping_rate" }
+      ]
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "searchFields": [
+    {
+      "label": "UOM Name",
+      "value": "uomName",
+      "type": "text"
+    },
+    {
+      "label": "UOM Code",
+      "value": "itemUomCode",
+      "type": "text"
+    },
+    {
+      "label": "ISO Code",
+      "value": "isoCode",
+      "type": "text"
+    },
+    {
+      "label": "Unit Type",
+      "value": "unitType",
+      "type": "select",
+      "options": [
+        { "label": "Length", "value": "length" },
+        { "label": "Temperature", "value": "temperature" },
+        { "label": "Density", "value": "density" },
+        { "label": "Volume", "value": "volume" },
+        { "label": "Weight", "value": "weight" },
+        { "label": "Time", "value": "time" },
+        { "label": "Pumping Rate", "value": "pumping_rate" }
+      ]
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ]
+}

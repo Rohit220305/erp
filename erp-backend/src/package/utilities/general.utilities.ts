@@ -1,5 +1,7 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { Injectable, BadRequestException, ForbiddenException } from "@nestjs/common";
 import path from "path";
+import { SelectQueryBuilder } from 'typeorm';
+import { AppRequest } from '../types/app-request.type';
 
 @Injectable()
 export class GeneralUtilities {
@@ -120,5 +122,160 @@ export class GeneralUtilities {
     });
 
     return queryColumns;
+  }
+
+  isSuperAdmin(req: AppRequest): boolean {
+    return req.user?.isSuperAdmin === true || (req.user?.isSuperAdmin as any) === 1;
+  }
+
+  assertCompanyAccess(
+    req: AppRequest,
+    entityCompanyId: number,
+    action: string,
+    entityLabel: string,
+  ): void {
+    if (!this.isSuperAdmin(req) && entityCompanyId !== req.user?.companyId) {
+      throw new ForbiddenException(
+        `Cannot ${action} ${entityLabel} outside your company`,
+      );
+    }
+  }
+
+  async prepareInsertColumns(req: AppRequest, params: any, allowedFields: string[]) {
+    const cols = await this.mapFields(params, allowedFields);
+    cols.addedBy = req.user?.sub;
+    cols.addedDate = () => 'NOW()';
+    return cols;
+  }
+
+  async prepareUpdateColumns(req: AppRequest, params: any, allowedFields: string[]) {
+    const cols = await this.mapFields(params, allowedFields);
+    cols.updatedBy = req.user?.sub;
+    cols.updatedDate = () => 'NOW()';
+    return cols;
+  }
+
+  buildSoftDeletePayload(
+    uniqueFields: Record<string, string | null>,
+    req: AppRequest,
+  ): Record<string, any> {
+    const timestamp = Date.now();
+    const payload: any = { sysRecDeleted: true };
+    for (const [key, value] of Object.entries(uniqueFields)) {
+      payload[key] = value ? `${value}_del_${timestamp}` : value;
+    }
+    payload.updatedBy = req.user?.sub;
+    payload.updatedDate = () => 'NOW()';
+    return payload;
+  }
+
+  buildActivityLogPayload(
+    req: AppRequest,
+    code: string,
+    entityType: string,
+    entityId: number,
+    entityName: string,
+    companyId: number,
+  ) {
+    return {
+      activityCode: code,
+      companyId,
+      actorUserId: req.user?.sub as number,
+      impersonatorId: req.user?.impersonatorId as number | undefined,
+      entityType,
+      entityId,
+      entityName,
+      ipAddress: req.ip as string,
+      userAgent: req.headers?.['user-agent'] as string | undefined,
+    } as any;
+  }
+
+  parsePagination(params: any) {
+    const page = params.page ? parseInt(params.page) : 1;
+    const limit = params.limit ? parseInt(params.limit) : 10;
+    const skip = (page - 1) * limit;
+    return { page, limit, skip };
+  }
+
+  buildPaginationResponse(total: number, page: number, limit: number, skip: number) {
+    return {
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit),
+      prevPage: page > 1,
+      nextPage: total > skip + limit,
+    };
+  }
+
+  buildColumnMapFromSelects(qb: SelectQueryBuilder<any>): Record<string, string> {
+    const map: Record<string, string> = {};
+    const selects: Array<{ selection: string; aliasName?: string }> =
+      (qb as any).expressionMap.selects;
+
+    for (const sel of selects) {
+      if (sel.aliasName) {
+        map[sel.aliasName] = sel.selection;
+      } else {
+        const match = sel.selection.match(/^(.+?)\s+AS\s+(\w+)$/i);
+        if (match) {
+          map[match[2].trim()] = match[1].trim();
+        }
+      }
+    }
+
+    if (map['addedDate']) {
+      map['addedDateFormatted'] = map['addedDate'];
+    }
+    if (map['updatedDate']) {
+      map['updatedDateFormatted'] = map['updatedDate'];
+    }
+
+    return map;
+  }
+
+  async applyListQuery(
+    qb: SelectQueryBuilder<any>,
+    params: any,
+    defaultSort: string,
+  ) {
+    const columnMap = this.buildColumnMapFromSelects(qb);
+
+    if (params?.search) {
+      const searchColumns = Object.values(columnMap);
+      const clauses = searchColumns.map(col => `${col} LIKE :search`).join(' OR ');
+      qb.andWhere(`(${clauses})`, { search: `%${params.search}%` });
+    }
+
+    if (params?.filters && params.filters.length > 0) {
+      const whereString = await this.makeFilterString(
+        params.filters, columnMap, params.logicalOperator,
+      );
+      if (whereString) qb.andWhere(whereString);
+    }
+
+    if (params?.sortField && params?.sortOrder && columnMap[params.sortField]) {
+      const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+      qb.orderBy(columnMap[params.sortField], order);
+    } else {
+      qb.orderBy(defaultSort, 'ASC');
+    }
+  }
+
+  applyCompanyScope(qb: SelectQueryBuilder<any>, req: AppRequest, alias: string) {
+    if (!this.isSuperAdmin(req)) {
+      qb.andWhere(`${alias}.companyId = :scopedCompanyId`, {
+        scopedCompanyId: req.user?.companyId,
+      });
+    }
+  }
+
+  async formatDate(entities: any[]) {
+    for (const entity of entities) {
+      entity.addedDateFormatted = await this.dateFormat(entity.addedDate);
+      if (entity.updatedDate) {
+        entity.updatedDateFormatted = await this.dateFormat(entity.updatedDate);
+      }
+    }
   }
 }

@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getGroup } from "@/lib/api/group-api";
@@ -51,7 +51,7 @@ export default function GroupEditRoute() {
     fetch();
   }, [id]);
 
-  if (!can("GROUP_UPDATE")) {
+  if (!can(CAPABILITIES.GROUP.UPDATE)) {
     return <AccessDenied missingPermission="GROUP_UPDATE" />;
   }
 

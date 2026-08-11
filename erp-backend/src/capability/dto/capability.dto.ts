@@ -5,8 +5,10 @@ import {
   IsOptional,
   IsString,
   IsArray,
+  IsEnum,
   ValidateNested,
 } from 'class-validator';
+import { Status } from 'src/package/common/enums/status.enum';
 
 export class FilterDto {
   @IsString()
@@ -43,8 +45,8 @@ export class CreateCapabilityDto {
   description: string;
 
   @IsOptional()
-  @IsString()
-  status: string = 'Active';
+  @IsEnum(Status)
+  status?: Status;
 
   @IsOptional()
   addedBy: number;
@@ -76,8 +78,8 @@ export class UpdateCapabilityDto {
   description: string;
 
   @IsOptional()
-  @IsString()
-  status: string;
+  @IsEnum(Status)
+  status?: Status;
 
   @IsOptional()
   updatedBy: number;

@@ -4,7 +4,6 @@ import DynamicListing from "@/components/common/dynamic/DynamicListing";
 import CompanyListCard from "@/components/company/CompanyListCard";
 import CompanyGridCard from "@/components/company/CompanyGridCard";
 import CompanyTableRow from "@/components/company/CompanyTableRow";
-import CompanyDetailsDrawer from "@/components/company/CompanyDetailsDrawer";
 import companyConfig from "@/config/company.config.json";
 import { listCompanies, getCompany, deleteCompany } from "@/lib/api/company-api";
 
@@ -39,13 +38,6 @@ export default function CompanyListing() {
           item={item}
           config={companyConfig}
           setSelectedItemForDetails={setSelectedItemForDetails}
-        />
-      )}
-      renderDrawer={(open, onClose, item) => (
-        <CompanyDetailsDrawer
-          open={open}
-          onClose={onClose}
-          company={item}
         />
       )}
     />

@@ -46,7 +46,7 @@ export class CurrencyAddDto {
 
   @IsOptional()
   @IsNumber()
-  createdBy: number;
+  addedBy: number;
 }
 
 export class CurrencyUpdateDto {

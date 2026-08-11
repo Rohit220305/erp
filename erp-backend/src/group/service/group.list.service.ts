@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -30,22 +31,41 @@ export class GroupListService {
         throw new Error('Group ID is required');
       }
 
-      const group = await this.groupRepo.findOne({
-        where: {
-          id: params.id,
-        },
-      });
+      const queryBuilder = this.groupRepo.createQueryBuilder('group_master');
+
+      queryBuilder.select([
+        'group_master.id AS id',
+        'group_master.groupCode AS groupCode',
+        'group_master.groupName AS groupName',
+        'group_master.description AS description',
+        'group_master.status AS status',
+        'group_master.addedDate AS addedDate',
+        'group_master.updatedDate AS updatedDate',
+        'group_master.addedBy AS addedBy',
+        'group_master.updatedBy AS updatedBy',
+      ]);
+
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = group_master.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = group_master.updatedBy');
+
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
+
+      queryBuilder.where('group_master.id = :id', { id: params.id });
+      queryBuilder.andWhere('group_master.sysRecDeleted = 0');
+
+      const group = await queryBuilder.getRawOne();
 
       if (!group) {
         throw new Error('Group not found');
       }
 
-      group['addedDateFormatted'] = await this.general.dateFormat(
+      group.addedDateFormatted = await this.general.dateFormat(
         group.addedDate,
       );
 
       if (group.updatedDate) {
-        group['updatedDateFormatted'] = await this.general.dateFormat(
+        group.updatedDateFormatted = await this.general.dateFormat(
           group.updatedDate,
         );
       }
@@ -79,94 +99,48 @@ export class GroupListService {
     let return_data: any = {};
 
     try {
-      const page = params.page ? parseInt(params.page) : 1;
-
-      const limit = params.limit ? parseInt(params.limit) : 10;
-
-      const skip = (page - 1) * limit;
+      const { page, limit, skip } = this.general.parsePagination(params);
 
       const queryBuilder = this.groupRepo.createQueryBuilder('group_master');
+
+      queryBuilder.select([
+        'group_master.id AS id',
+        'group_master.groupCode AS groupCode',
+        'group_master.groupName AS groupName',
+        'group_master.description AS description',
+        'group_master.status AS status',
+        'group_master.addedDate AS addedDate',
+        'group_master.updatedDate AS updatedDate',
+      ]);
+
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = group_master.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = group_master.updatedBy');
+
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
+
+      queryBuilder.andWhere('group_master.sysRecDeleted = 0');
 
       if (!params?.includeSuperAdmin) {
         queryBuilder.andWhere("LOWER(group_master.groupCode) NOT IN ('superadmin', 'super_admin')");
       }
 
+      await this.general.applyListQuery(queryBuilder, params, 'group_master.groupName');
 
+      const total = await queryBuilder.getCount();
+      queryBuilder.offset(skip).limit(limit);
+      const data = await queryBuilder.getRawMany();
 
-      if (params?.search) {
-        queryBuilder.andWhere(
-          `
-          (
-            group_master.groupCode LIKE :search
-            OR group_master.groupName LIKE :search
-            OR group_master.description LIKE :search
-          )
-          `,
-          {
-            search: `%${params.search}%`,
-          },
-        );
-      }
+      await this.general.formatDate(data);
 
-
-      if (params?.filters) {
-        const whereString = await this.general.makeFilterString(
-          params.filters,
-          'group_master',
-          params.logicalOperator
-        );
-
-        if (whereString) {
-          queryBuilder.andWhere(whereString);
-        }
-      }
-
-      const allowedSortFields = {
-        groupCode: 'group_master.groupCode',
-        groupName: 'group_master.groupName',
-        description: 'group_master.description',
-        status: 'group_master.status',
-        addedDateFormatted: 'group_master.addedDate',
-        id: 'group_master.id',
-      };
-
-      if (params?.sortField && params?.sortOrder && allowedSortFields[params.sortField]) {
-        const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-        queryBuilder.orderBy(allowedSortFields[params.sortField], order);
-      } else {
-        queryBuilder.orderBy('group_master.groupName', 'ASC');
-      }
-
-      queryBuilder.skip(skip);
-      queryBuilder.take(limit);
-
-      const [data, total] = await queryBuilder.getManyAndCount();
-
-      for (const group of data) {
-        group['addedDateFormatted'] = await this.general.dateFormat(
-          group.addedDate,
-        );
-
-        if (group.updatedDate) {
-          group['updatedDateFormatted'] = await this.general.dateFormat(
-            group.updatedDate,
-          );
-        }
-      }
+      const pagination = this.general.buildPaginationResponse(total, page, limit, skip);
 
       return_data = {
         success: 1,
         message: 'Group List fetched successfully',
         data: {
           list: data,
-          pagination: {
-            total,
-            page,
-            limit,
-            total_pages: Math.ceil(total / limit),
-            prevPage: page > 1,
-            nextPage: total > skip + limit,
-          },
+          pagination,
         },
       };
     } catch (err) {
@@ -189,7 +163,19 @@ export class GroupListService {
     };
   }
 
-  async finishFailure(params) {
-    return params;
+  async finishFailure(params: any, incomingData?: any) {
+    let output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message || 'Something went wrong',
+        data: params?.data ? params.data : [],
+      },
+    };
+
+    if (incomingData) {
+      output.settings.incoming_data = incomingData;
+    }
+
+    return output;
   }
 }

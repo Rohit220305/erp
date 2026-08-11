@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { getActivityLogs } from "@/lib/api/activity-log-api";
 import dayjs from "dayjs";
+import Loader from "@/components/common/Loader";
 
 export default function ActivityLogTimeline({ userId }) {
   const [logs, setLogs] = useState([]);
@@ -437,8 +438,8 @@ export default function ActivityLogTimeline({ userId }) {
       <div className="overflow-y-scroll h-[90%] pb-1  px-6">
         <div className="bg-white p-6">
           {loading && page === 1 ? (
-            <div className="text-center py-8 text-gray-500">
-              Loading activity logs...
+            <div className="flex h-[40vh] items-center justify-center">
+              <Loader />
             </div>
           ) : error ? (
             <div className="bg-red-50 text-red-600 p-4 rounded-lg">

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -7,7 +8,7 @@ import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
 @Injectable()
 export class CapabilityListService {
-  constructor(private readonly general: GeneralUtilities) {}
+  constructor(private readonly general: GeneralUtilities) { }
 
   @InjectRepository(CapabilityEntity)
   private capabilityRepo: Repository<CapabilityEntity>;
@@ -27,20 +28,43 @@ export class CapabilityListService {
         throw new Error('Capability ID is required');
       }
 
-      const capability = await this.capabilityRepo.findOne({
-        where: { id: params.id },
-      });
+      const queryBuilder = this.capabilityRepo.createQueryBuilder('capabilities');
+
+      queryBuilder.select([
+        'capabilities.id AS id',
+        'capabilities.capabilityCode AS capabilityCode',
+        'capabilities.capabilityName AS capabilityName',
+        'capabilities.moduleName AS moduleName',
+        'capabilities.actionName AS actionName',
+        'capabilities.description AS description',
+        'capabilities.status AS status',
+        'capabilities.addedDate AS addedDate',
+        'capabilities.updatedDate AS updatedDate',
+        'capabilities.addedBy AS addedBy',
+        'capabilities.updatedBy AS updatedBy',
+      ]);
+
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = capabilities.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = capabilities.updatedBy');
+
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
+
+      queryBuilder.where('capabilities.id = :id', { id: params.id });
+      queryBuilder.andWhere('capabilities.sysRecDeleted = 0');
+
+      const capability = await queryBuilder.getRawOne();
 
       if (!capability) {
         throw new Error('Capability not found');
       }
 
-      capability['addedDateFormatted'] = await this.general.dateFormat(
+      capability.addedDateFormatted = await this.general.dateFormat(
         capability.addedDate,
       );
 
       if (capability.updatedDate) {
-        capability['updatedDateFormatted'] = await this.general.dateFormat(
+        capability.updatedDateFormatted = await this.general.dateFormat(
           capability.updatedDate,
         );
       }
@@ -70,69 +94,46 @@ export class CapabilityListService {
   async getCapabilityList(params) {
     let return_data: any = {};
     try {
-      const page = params.page ? parseInt(params.page) : 1;
-      const limit = params.limit ? parseInt(params.limit) : 10;
-      const skip = (page - 1) * limit;
+      const { page, limit, skip } = this.general.parsePagination(params);
 
       const queryBuilder = this.capabilityRepo.createQueryBuilder('capabilities');
 
-      if (params?.search) {
-        queryBuilder.andWhere(
-          `
-          (
-            capabilities.capabilityCode LIKE :search
-            OR capabilities.capabilityName LIKE :search
-            OR capabilities.moduleName LIKE :search
-            OR capabilities.actionName LIKE :search
-            OR capabilities.description LIKE :search  
-          )
-          `,
-          {
-            search: `%${params.search}%`,
-          },
-        );
-      }
+      queryBuilder.select([
+        'capabilities.id AS id',
+        'capabilities.capabilityCode AS capabilityCode',
+        'capabilities.capabilityName AS capabilityName',
+        'capabilities.moduleName AS moduleName',
+        'capabilities.actionName AS actionName',
+        'capabilities.description AS description',
+        'capabilities.status AS status',
+        'capabilities.addedDate AS addedDate',
+        'capabilities.updatedDate AS updatedDate',
+      ]);
 
-      if (params?.filters) {
-        const whereString = await this.general.makeFilterString(
-          params.filters,
-          'capabilities',
-        );
-        if (whereString) {
-          queryBuilder.andWhere(whereString);
-        }
-      }
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = capabilities.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = capabilities.updatedBy');
 
-      queryBuilder.orderBy('capabilities.id', 'ASC');
-      queryBuilder.skip(skip);
-      queryBuilder.take(limit);
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
 
-      const [data, total] = await queryBuilder.getManyAndCount();
+      queryBuilder.andWhere('capabilities.sysRecDeleted = 0');
 
-      for (const cap of data) {
-        cap['addedDateFormatted'] = await this.general.dateFormat(
-          cap.addedDate,
-        );
-        if (cap.updatedDate) {
-          cap['updatedDateFormatted'] = await this.general.dateFormat(
-            cap.updatedDate,
-          );
-        }
-      }
+      await this.general.applyListQuery(queryBuilder, params, 'capabilities.id');
+
+      const total = await queryBuilder.getCount();
+      queryBuilder.offset(skip).limit(limit);
+      const data = await queryBuilder.getRawMany();
+
+      await this.general.formatDate(data);
+
+      const pagination = this.general.buildPaginationResponse(total, page, limit, skip);
 
       return_data = {
         success: 1,
         message: 'Capability List fetched successfully',
         data: {
           list: data,
-          pagination: {
-            total,
-            page,
-            limit,
-            total_pages: Math.ceil(total / limit),
-            prevPage: page > 1,
-            nextPage: total > skip + limit,
-          },
+          pagination,
         },
       };
     } catch (err) {
@@ -154,7 +155,19 @@ export class CapabilityListService {
     };
   }
 
-  async finishFailure(params) {
-    return params;
+  async finishFailure(params: any, incomingData?: any) {
+    let output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message || 'Something went wrong',
+        data: params?.data ? params.data : [],
+      },
+    };
+
+    if (incomingData) {
+      output.settings.incoming_data = incomingData;
+    }
+
+    return output;
   }
 }

@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { GroupCapabilityEntity } from '../entity/group-capability.entity';
 import { CapabilityEntity } from '../entity/capability.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Injectable()
 export class GroupCapabilityListService {
@@ -14,7 +16,7 @@ export class GroupCapabilityListService {
     private readonly groupCapabilityRepo: Repository<GroupCapabilityEntity>,
     @InjectRepository(CapabilityEntity)
     private readonly capabilityRepo: Repository<CapabilityEntity>,
-  ) {}
+  ) { }
 
   async startGetByGroup(params) {
     const response = await this.getByGroup(params);
@@ -33,7 +35,7 @@ export class GroupCapabilityListService {
       }
 
       const list = await this.groupCapabilityRepo.find({
-        where: { groupId, status: 'Active' },
+        where: { groupId, status: Status.Active },
         relations: { capability: true },
       });
 
@@ -64,44 +66,39 @@ export class GroupCapabilityListService {
   async listGroupCapabilities(params) {
     let return_data: any = {};
     try {
-      const page = params.page ? parseInt(params.page) : 1;
-      const limit = params.limit ? parseInt(params.limit) : 10;
-      const skip = (page - 1) * limit;  
+      const { page, limit, skip } = this.general.parsePagination(params);
 
       const queryBuilder = this.groupCapabilityRepo.createQueryBuilder('group_capabilities')
-        .leftJoinAndSelect('group_capabilities.group', 'group')
-        .leftJoinAndSelect('group_capabilities.capability', 'capability');
+        .leftJoin('group_capabilities.group', 'group')
+        .leftJoin('group_capabilities.capability', 'capability');
 
-      if (params?.search) {
-        queryBuilder.andWhere(
-          `
-          (
-            group.groupName LIKE :search
-            OR capability.capabilityName LIKE :search
-            OR capability.capabilityCode LIKE :search
-          )
-          `,
-          {
-            search: `%${params.search}%`,
-          },
-        );
-      }
+      queryBuilder.select([
+        'group_capabilities.id AS id',
+        'group_capabilities.groupId AS groupId',
+        'group_capabilities.capabilityId AS capabilityId',
+        'group_capabilities.status AS status',
+        'group_capabilities.addedBy AS addedBy',
+        'group_capabilities.addedDate AS addedDate',
+        'group_capabilities.updatedBy AS updatedBy',
+        'group_capabilities.updatedDate AS updatedDate',
+        'group.groupName AS groupName',
+        'capability.capabilityName AS capabilityName',
+        'capability.capabilityCode AS capabilityCode'
+      ]);
 
-      if (params?.filters) {
-        const whereString = await this.general.makeFilterString(
-          params.filters,
-          'group_capabilities',
-        );
-        if (whereString) {
-          queryBuilder.andWhere(whereString);
-        }
-      }
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = group_capabilities.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = group_capabilities.updatedBy');
 
-      queryBuilder.orderBy('group_capabilities.id', 'ASC');
-      queryBuilder.skip(skip);
-      queryBuilder.take(limit);
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
 
-      const [data, total] = await queryBuilder.getManyAndCount();
+      queryBuilder.andWhere('group_capabilities.sysRecDeleted = 0');
+
+      await this.general.applyListQuery(queryBuilder, params, 'group_capabilities.id');
+
+      const total = await queryBuilder.getCount();
+      queryBuilder.offset(skip).limit(limit);
+      const data = await queryBuilder.getRawMany();
 
       for (const item of data) {
         item['addedDateFormatted'] = await this.general.dateFormat(
@@ -112,21 +109,26 @@ export class GroupCapabilityListService {
             item.updatedDate,
           );
         }
+
+        item.group = {
+          id: item.groupId,
+          groupName: item.groupName,
+        };
+        item.capability = {
+          id: item.capabilityId,
+          capabilityName: item.capabilityName,
+          capabilityCode: item.capabilityCode,
+        };
       }
+
+      const pagination = this.general.buildPaginationResponse(total, page, limit, skip);
 
       return_data = {
         success: 1,
         message: 'Group Capability Mappings fetched successfully',
         data: {
           list: data,
-          pagination: {
-            total,
-            page,
-            limit,
-            total_pages: Math.ceil(total / limit),
-            prevPage: page > 1,
-            nextPage: total > skip + limit,
-          },
+          pagination,
         },
       };
     } catch (err) {
@@ -150,14 +152,14 @@ export class GroupCapabilityListService {
     let return_data: any = {};
     try {
       const allCapabilities = await this.capabilityRepo.find({
-        where: { status: 'Active' },
+        where: { status: Status.Active },
         order: { moduleName: 'ASC', actionName: 'ASC' },
       });
 
       let assignedCapIds = new Set<number>();
       if (groupId) {
         const mappings = await this.groupCapabilityRepo.find({
-          where: { groupId, status: 'Active' },
+          where: { groupId, status: Status.Active },
         });
         assignedCapIds = new Set(mappings.map((m) => m.capabilityId));
       }
@@ -193,8 +195,20 @@ export class GroupCapabilityListService {
     };
   }
 
-  async finishFailure(params) {
-    return params;
+  async finishFailure(params: any, incomingData?: any) {
+    let output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message || 'Something went wrong',
+        data: params?.data ? params.data : [],
+      },
+    };
+
+    if (incomingData) {
+      output.settings.incoming_data = incomingData;
+    }
+
+    return output;
   }
 }
 

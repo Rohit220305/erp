@@ -10,6 +10,13 @@ import { ActivityMasterEntity } from "src/activity-log/entity/activity-master.en
 import { CurrencyEntity } from "src/currency/entity/currency.entity";
 import { CompanyCurrencyEntity } from "src/company/entity/company-currency.entity";
 import { UserGroupEntity } from "src/user/entity/user-group.entity";
+import { ManufacturerEntity } from "src/manufacturer/entity/manufacturer.entity";
+import { StorageEntity } from "src/storage/entity/storage.entity";
+import { ItemCategoryEntity } from "src/item-category/entity/item-category.entity";
+import { PackageEntity } from "src/package-master/entity/package.entity";
+import { ItemUomEntity } from "src/item-uom/entity/item-uom.entity";
+import { WorkCentreCategoryEntity } from "src/work-centre-category/entity/work-centre-category.entity";
+import { ProcessTemplateEntity } from "src/process-template/entity/process-template.entity";
 dotenv.config();
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -30,6 +37,13 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     CurrencyEntity,
     CompanyCurrencyEntity,
     UserGroupEntity,
+    ManufacturerEntity,
+    StorageEntity,
+    ItemCategoryEntity,
+    PackageEntity,
+    ItemUomEntity,
+    WorkCentreCategoryEntity,
+    ProcessTemplateEntity,
   ],
   synchronize: false,
   migrationsRun: false,

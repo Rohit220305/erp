@@ -41,12 +41,10 @@ export class AuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException('Access token missing');
     }
-
     try {
       const payload = this.jwtService.verify<JwtPayload>(token, {
         secret: this.config.getOrThrow<string>('JWT_SECRET'),
       });
-
       request['user'] = payload;
       return true;
     } catch (error: any) {

@@ -10,7 +10,7 @@
     "delete": "USER_DELETE"
   },
   "columns": [
-    { "label": "User", "key": "firstName", "searchable": true, "sortable": true },
+    { "label": "User", "key": "fullName", "searchable": true, "sortable": true },
     { "label": "Email", "key": "email", "searchable": true, "sortable": true },
     { "label": "Company", "key": "companyName", "searchable": true, "sortable": true },
     { "label": "Group", "key": "groupName", "searchable": true, "sortable": true },
@@ -40,7 +40,7 @@
     "row": []
   },
   "searchFields": [
-    { "label": "User", "value": "firstName", "type": "text" },
+    { "label": "User", "value": "fullName", "type": "text" },
     { "label": "Email", "value": "email", "type": "text" },
     { "label": "Company", "value": "companyId", "type": "select", "options": [] },
     { "label": "Group", "value": "groupId", "type": "select", "options": [] },
@@ -55,7 +55,7 @@
     }
   ],
   "sidebarFields": [
-    { "label": "User", "value": "firstName", "type": "text" },
+    { "label": "User", "value": "fullName", "type": "text" },
     { "label": "Email", "value": "email", "type": "text" },
     { "label": "Company", "value": "companyId", "type": "select", "options": [] , "isMultiSelect": true},
     { "label": "Group", "value": "groupId", "type": "select", "options": [] , "isMultiSelect": true},
@@ -71,7 +71,7 @@
     }
   ],
   "defaultFilters": {
-    "firstName": "",
+    "fullName": "",
     "email": "",
     "companyId": "",
     "groupId": "",

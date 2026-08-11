@@ -6,8 +6,10 @@ import {
   Post,
   Put,
   Query,
-  Req,
+  
 } from '@nestjs/common';
+import { AppRequest } from 'src/package/decorator/app-request.decorator';
+import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 
 import {
   CreateCapabilityDto,
@@ -25,20 +27,20 @@ export class CapabilityController {
   constructor(
     private readonly capabilityService: CapabilityService,
     private readonly capabilityListService: CapabilityListService,
-  ) {}
+  ) { }
 
   @Post('add-capability')
-  async addCapability(@Req() req, @Body() body: CreateCapabilityDto) {
+  async addCapability(@AppRequest() req: IAppRequest, @Body() body: CreateCapabilityDto) {
     return await this.capabilityService.startInsertCapability(req, body);
   }
 
   @Put('update-capability')
-  async updateCapability(@Req() req, @Body() body: UpdateCapabilityDto) {
+  async updateCapability(@AppRequest() req: IAppRequest, @Body() body: UpdateCapabilityDto) {
     return await this.capabilityService.startUpdateCapability(req, body);
   }
 
   @Delete('delete-capability')
-  async deleteCapability(@Req() req, @Query() query: DeleteCapabilityDto) {
+  async deleteCapability(@AppRequest() req: IAppRequest, @Query() query: DeleteCapabilityDto) {
     return await this.capabilityService.startDeleteCapability(req, query);
   }
 
@@ -48,7 +50,7 @@ export class CapabilityController {
   }
 
   @Post('list-capabilities')
-  async listCapabilities(@Req() req, @Body() body: ListCapabilitiesDto) {
+  async listCapabilities(@AppRequest() req: IAppRequest, @Body() body: ListCapabilitiesDto) {
     return await this.capabilityListService.startCapabilityList(req, body);
   }
 }

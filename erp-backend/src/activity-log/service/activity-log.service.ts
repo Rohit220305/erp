@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ActivityLogEntity } from '../entity/activity-log.entity';
 import { ActivityMasterEntity } from '../entity/activity-master.entity';
+import { Status } from 'src/package/common/enums/status.enum';
 import { UserEntity } from 'src/user/entity/user.entity';
 import { CreateActivityLogDto } from '../dto/create-activity-log.dto';
 
@@ -22,7 +24,7 @@ export class ActivityLogService {
   async log(createDto: CreateActivityLogDto): Promise<void> {
     try {
       const master = await this.activityMasterRepository.findOne({
-        where: { activityCode: createDto.activityCode, status: 'Active' },
+        where: { activityCode: createDto.activityCode, status: Status.Active },
       });
       if (!master) {
         this.logger.warn(`Failed to write activity log: Activity code '${createDto.activityCode}' not found or inactive.`);

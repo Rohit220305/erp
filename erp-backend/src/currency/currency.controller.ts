@@ -1,4 +1,7 @@
-import { Body, Controller, Delete, Get, Post, Put, Query, Req } from '@nestjs/common';
+import { CAPABILITIES } from 'src/package/config/capabilities.config';
+import { Body, Controller, Delete, Get, Post, Put, Query,  } from '@nestjs/common';
+import { AppRequest } from 'src/package/decorator/app-request.decorator';
+import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { CurrencyService } from './service/currency.service';
 import { CurrencyListService } from './service/currency.list.service';
 import {
@@ -15,35 +18,35 @@ export class CurrencyController {
   constructor(
     private readonly currencyService: CurrencyService,
     private readonly currencyListService: CurrencyListService,
-  ) {}
+  ) { }
 
-  @RequirePermission('CURRENCY_CREATE')
   @Post('add-currency')
-  async addCurrency(@Req() req, @Body() body: CurrencyAddDto) {
+  @RequirePermission(CAPABILITIES.CURRENCY.CREATE)
+  async addCurrency(@AppRequest() req: IAppRequest, @Body() body: CurrencyAddDto) {
     return await this.currencyService.startAddCurrency(req, body);
   }
 
-  @RequirePermission('CURRENCY_UPDATE')
   @Put('update-currency')
-  async updateCurrency(@Req() req, @Body() body: CurrencyUpdateDto) {
+  @RequirePermission(CAPABILITIES.CURRENCY.UPDATE)
+  async updateCurrency(@AppRequest() req: IAppRequest, @Body() body: CurrencyUpdateDto) {
     return await this.currencyService.startUpdateCurrency(req, body);
   }
 
-  @RequirePermission('CURRENCY_DELETE')
   @Delete('delete-currency')
-  async deleteCurrency(@Req() req, @Query() query: DeleteCurrencyDto) {
+  @RequirePermission(CAPABILITIES.CURRENCY.DELETE)
+  async deleteCurrency(@AppRequest() req: IAppRequest, @Query() query: DeleteCurrencyDto) {
     return await this.currencyService.startDeleteCurrency(req, query);
   }
 
-  @RequirePermission('CURRENCY_VIEW')
   @Get('get-currency')
-  async getCurrency(@Req() req, @Query() query: GetCurrencyDto) {
+  @RequirePermission(CAPABILITIES.CURRENCY.VIEW)
+  async getCurrency(@AppRequest() req: IAppRequest, @Query() query: GetCurrencyDto) {
     return await this.currencyListService.startCurrencyDetails(req, query);
   }
 
-  @RequirePermission('CURRENCY_LIST')
   @Post('list-currency')
-  async listCurrency(@Req() req, @Body() body: ListCurrencyDto) {
+  @RequirePermission(CAPABILITIES.CURRENCY.LIST)
+  async listCurrency(@AppRequest() req: IAppRequest, @Body() body: ListCurrencyDto) {
     return await this.currencyListService.startCurrencyList(req, body);
   }
 }

@@ -48,7 +48,37 @@ export const sitemapData = [
       // { label: "Add Currency", path: "/currency/add" },
     ],
     path: "/currency",
+  },
+  {
+    title: "Work Centre Category",
+    permission: "WORK_CENTRE_CATEGORY_LIST",
+    menus: [
+      { label: "Work Centre Categories", path: "/work-centre-category", permission: "WORK_CENTRE_CATEGORY_LIST" },
+    ],
+    path: "/work-centre-category",
+  },
+  {
+    title: "Package Types",
+    permission: "PACKAGE_LIST",
+    menus: [
+      { label: "Package Types", path: "/package-master", permission: "PACKAGE_LIST" },
+    ],
+    path: "/package-master",
+  },
+  {
+    title: "Manufacturer",
+    permission: "MANUFACTURER_LIST",
+    menus: [
+      { label: "Manufacturer", path: "/manufacturer", permission: "MANUFACTURER_LIST" },
+    ],
+    path: "/manufacturer",
+  },
+  {
+    title: "Item UOM",
+    permission: "ITEM_UOM_LIST",
+    menus: [
+      { label: "Item UOM", path: "/item-uom", permission: "ITEM_UOM_LIST" },
+    ],
+    path: "/item-uom",
   }
 ];
-
-

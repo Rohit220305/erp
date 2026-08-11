@@ -11,7 +11,7 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
   const { can } = useAuth();
 
   const hasViewPerm = can(companyConfig.permissions?.view);
-  const isActive    = item.status === "Active";
+  const isActive = item.status === "Active";
 
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
@@ -67,15 +67,14 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
       </td>
       <td className="px-4 py-3 text-sm">
         <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-            isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-          }`}
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+            }`}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
           {item.status || "—"}
         </span>
       </td>
-          
+
 
 
     </tr>

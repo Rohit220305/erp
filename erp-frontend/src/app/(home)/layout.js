@@ -4,6 +4,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { getCurrentUserWithCapabilities } from "@/lib/api/auth/current-user";
 
 import { redirect } from "next/navigation";
+import PermissionProvider from "@/components/common/PermissionProvider";
 
 export default async function HomeLayout({ children }) {
   const { user, capabilities, isImpersonating } = await getCurrentUserWithCapabilities();
@@ -15,7 +16,9 @@ export default async function HomeLayout({ children }) {
   return (
     <AuthProvider initialUser={user} initialCapabilities={capabilities} initialIsImpersonating={isImpersonating}>
       <ListingProvider>
-        <AppLayout>{children}</AppLayout>
+        <PermissionProvider>
+          <AppLayout>{children}</AppLayout>
+        </PermissionProvider>
       </ListingProvider>
     </AuthProvider>
   );

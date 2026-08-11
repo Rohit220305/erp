@@ -1,3 +1,4 @@
+import { CAPABILITIES } from 'src/package/config/capabilities.config';
 import {
   Body,
   Controller,
@@ -6,8 +7,10 @@ import {
   Post,
   Put,
   Query,
-  Req,
+  
 } from '@nestjs/common';
+import { AppRequest } from 'src/package/decorator/app-request.decorator';
+import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 
 import {
   GroupAddDto,
@@ -20,60 +23,58 @@ import { SaveGroupWithCapabilitiesDto } from './dto/save-group-with-capabilities
 
 import { GroupService } from './service/group.service';
 import { GroupListService } from './service/group.list.service';
-import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
 import { Public } from 'src/package/decorator/decorator.public';
+import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
 
 @Controller('group')
 export class GroupController {
   constructor(
     private readonly groupService: GroupService,
     private readonly groupListService: GroupListService,
-  ) {}
+  ) { }
 
   @Post('add-group')
-  @RequirePermission('GROUP_CREATE')
-  async addGroup(@Req() req, @Body() body: GroupAddDto) {
+  @RequirePermission(CAPABILITIES.GROUP.CREATE)
+  async addGroup(@AppRequest() req: IAppRequest, @Body() body: GroupAddDto) {
     return await this.groupService.startInsertGroup(req, body);
   }
 
   @Put('update-group')
-  @RequirePermission('GROUP_UPDATE')
-  async updateGroup(@Req() req, @Body() body: GroupUpdateDto) {
+  @RequirePermission(CAPABILITIES.GROUP.UPDATE)
+  async updateGroup(@AppRequest() req: IAppRequest, @Body() body: GroupUpdateDto) {
     return await this.groupService.startUpdateGroup(req, body);
   }
 
   @Delete('delete-group')
-  @RequirePermission('GROUP_DELETE')
-  async deleteGroup(@Req() req, @Query() query: GroupDeleteDto) {
+  @RequirePermission(CAPABILITIES.GROUP.DELETE)
+  async deleteGroup(@AppRequest() req: IAppRequest, @Query() query: GroupDeleteDto) {
     return await this.groupService.startDeleteGroup(req, query);
   }
 
   @Get('get-group')
-  @RequirePermission('GROUP_VIEW')
+  @RequirePermission(CAPABILITIES.GROUP.VIEW)
   async getGroup(@Query() query: GroupDetailsDto) {
     return await this.groupListService.startGroupDetails(query);
   }
 
   @Post('list-group')
-  @Public()
-  // @RequirePermission('GROUP_LIST')
-  async listGroup(@Req() req, @Body() body: GroupListDto) {
+  async listGroup(@AppRequest() req: IAppRequest, @Body() body: GroupListDto) {
     return await this.groupListService.startGroupList(req, body);
   }
 
   @Post('save-with-capabilities')
-  @RequirePermission('GROUP_CREATE')
+  @RequirePermission(CAPABILITIES.GROUP.CREATE)
   async saveWithCapabilities(
-    @Req() req,
+    @AppRequest() req: IAppRequest,
     @Body() body: SaveGroupWithCapabilitiesDto,
   ) {
     return await this.groupService.startSaveWithCapabilities(req, body);
   }
 
   @Put('update-with-capabilities')
-  @RequirePermission('GROUP_UPDATE')
+  @RequirePermission(CAPABILITIES.GROUP.UPDATE)
   async updateWithCapabilities(
-    @Req() req,
+    @AppRequest() req: IAppRequest,
     @Body() body: SaveGroupWithCapabilitiesDto,
   ) {
     return await this.groupService.startSaveWithCapabilities(req, body);

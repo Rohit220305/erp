@@ -100,7 +100,9 @@ export default function Pagination({
           entries
         </span>
       </div>
-      <nav className="flex items-center gap-1" aria-label="Pagination">        <button
+      <nav className="flex items-center gap-1" aria-label="Pagination">
+        {" "}
+        <button
           type="button"
           disabled={page === 1}
           onClick={() => onPageChange(1)}
@@ -109,7 +111,7 @@ export default function Pagination({
         >
           <ChevronsLeft size={15} />
         </button>
-      <button
+        <button
           type="button"
           disabled={page === 1}
           onClick={() => onPageChange(page - 1)}
@@ -117,8 +119,7 @@ export default function Pagination({
           aria-label="Previous page"
         >
           <ChevronLeft size={15} />
-     </button>
-
+        </button>
         {getPages(page, totalPages).map((p, idx) =>
           p === "..." ? (
             <span
@@ -132,7 +133,7 @@ export default function Pagination({
               key={`${p}-${idx}`}
               type="button"
               onClick={() => onPageChange(p)}
-              className={`${navBtnBase} text-sm font-semibold ${
+              className={`${navBtnBase} text-sm font-semibold cursor-pointer  ${
                 page === p
                   ? "bg-[#1565c0] text-white shadow-md shadow-[#1565c0]/30 ring-2 ring-[#1565c0]/20"
                   : "text-gray-600 hover:bg-[#1565c0]/10 hover:text-[#1565c0]"
@@ -142,7 +143,7 @@ export default function Pagination({
             </button>
           ),
         )}
-       <button
+        <button
           type="button"
           disabled={page === totalPages}
           onClick={() => onPageChange(page + 1)}
@@ -151,8 +152,7 @@ export default function Pagination({
         >
           <ChevronRight size={15} />
         </button>
-
-       <button
+        <button
           type="button"
           disabled={page === totalPages}
           onClick={() => onPageChange(totalPages)}

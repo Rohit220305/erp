@@ -1,9 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { AbstractBaseEntity } from 'src/package/entities/base.entity';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Entity({
   name: 'users',
 })
-export class UserEntity {
+export class UserEntity extends AbstractBaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -75,10 +77,10 @@ export class UserEntity {
 
   @Column({
     type: 'enum',
-    enum: ['Active', 'Inactive'],
-    default: 'Active',
+    enum: Status,
+    default: Status.Active,
   })
-  status: string;
+  status: Status;
 
   @Column({
     type: 'tinyint',
@@ -86,26 +88,4 @@ export class UserEntity {
     name: 'isSuperAdmin',
   })
   isSuperAdmin: boolean;
-
-  @Column({
-    nullable: true,
-  })
-  addedBy: number;
-
-  @Column({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  addedDate: Date;
-
-  @Column({
-    nullable: true,
-  })
-  updatedBy: number;
-
-  @Column({
-    type: 'timestamp',
-    nullable: true,
-  })
-  updatedDate: Date;
 }

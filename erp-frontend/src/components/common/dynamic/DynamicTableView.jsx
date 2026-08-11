@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import CellRenderer from "@/components/core/dynamic-ui/CellRenderer";
 import { useListing } from "@/context/ListingContext";
 import { FiChevronUp, FiChevronDown } from "react-icons/fi";
+import Loader from "@/components/common/Loader";
 
 export default function DynamicTableView({ data, config, onRowAction, loading = false, setSelectedItemForDetails, renderTableRow }) {
   const columns = config?.columns || [];
@@ -58,7 +59,8 @@ export default function DynamicTableView({ data, config, onRowAction, loading = 
   const tableColumns = [...(columns || [])];
   
   return (
-    <div className="bg-white rounded-lg overflow-hidden h-full">
+    <div className="bg-white rounded-lg overflow-hidden h-full relative">
+      {loading && <Loader overlay />}
       <div className="overflow-auto max-h-[calc(100vh-250px)]">
         <table className="w-full table-fixed">
           <thead className="sticky top-0 z-10 bg-white border-b border-gray-200">

@@ -13,6 +13,13 @@ import { AuthModule } from './auth/auth.module';
 import { CapabilityModule } from './capability/capability.module';
 import { CurrencyModule } from './currency/currency.module';
 import { ActivityLogModule } from './activity-log/activity-log.module';
+import { ManufacturerModule } from './manufacturer/manufacturer.module';
+import { StorageModule } from './storage/storage.module';
+import { ItemCategoryModule } from './item-category/item-category.module';
+import { PackageModule } from './package-master/package.module';
+import { ItemUomModule } from './item-uom/item-uom.module';
+import { WorkCentreCategoryModule } from './work-centre-category/work-centre-category.module';
+import { ProcessTemplateModule } from './process-template/process-template.module';
 
 @Module({
   imports: [
@@ -32,6 +39,13 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
     CapabilityModule,
     CurrencyModule,
     ActivityLogModule,
+    ManufacturerModule,
+    StorageModule,
+    ItemCategoryModule,
+    PackageModule,
+    ItemUomModule,
+    WorkCentreCategoryModule,
+    ProcessTemplateModule,
   ],
   controllers: [AppController],
   providers: [AppService],

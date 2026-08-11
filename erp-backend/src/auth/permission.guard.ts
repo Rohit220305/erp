@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
 import { REQUIRE_PERMISSION_KEY } from 'src/package/decorator/require-permission.decorator';
 import { PermissionCacheService } from './permission.cache.service';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -62,9 +63,9 @@ export class PermissionGuard implements CanActivate {
       const mappings = await this.groupCapabilityRepo.find({
         where: {
           groupId: user.groupId,
-          status: 'Active',
+          status: Status.Active,
           capability: {
-            status: 'Active',
+            status: Status.Active,
           },
         },
         relations: { capability: true },
@@ -84,7 +85,12 @@ export class PermissionGuard implements CanActivate {
       return true;
     }
 
-    throw new ForbiddenException('Insufficient permissions');
+    throw new ForbiddenException({
+      success: 0,
+      statusCode: 403,
+      errorCode: 'PERMISSION_DENIED',
+      requiredPermission,
+      message: `Missing required capability: ${requiredPermission}`,
+    });
   } 
 }
-

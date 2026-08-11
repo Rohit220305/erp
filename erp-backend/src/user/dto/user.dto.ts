@@ -6,12 +6,13 @@ import {
   IsString,
   MaxLength,
   MinLength,
-  IsIn,
+  IsEnum,
   IsArray,
   ArrayMinSize,
 } from 'class-validator';
 
 import { Transform } from 'class-transformer';
+import { Status } from 'src/package/common/enums/status.enum';
 
 export class UserAddDto {
   @IsOptional()
@@ -67,8 +68,8 @@ export class UserAddDto {
   profilePhoto?: string;
 
   @IsOptional()
-  @IsIn(['Active', 'Inactive'])
-  status?: string;
+  @IsEnum(Status)
+  status?: Status;
 
   @IsOptional()
   @IsInt()
@@ -143,8 +144,8 @@ export class UserUpdateDto {
   profilePhoto?: string;
 
   @IsOptional()
-  @IsIn(['Active', 'Inactive'])
-  status?: string;
+  @IsEnum(Status)
+  status?: Status;
 
   @IsOptional()
   @IsInt()

@@ -5,15 +5,17 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useListing } from "@/context/ListingContext";
 import { useHeader } from "@/context/HeaderContext";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import TableSkeleton from "@/components/common/TableSkeleton";
+import Loader from "@/components/common/Loader";
 import FilterDrawer from "@/components/common/FilterDrawer";
 import SearchDrawer from "@/components/common/SearchDrawer";
 import Pagination from "@/components/listing/Pagination";
 import toast from "react-hot-toast";
 import AccessDenied from "@/components/common/AccessDenied";
+import SideDrawer from "@/components/common/SideDrawer";
 import DynamicTableView from "./DynamicTableView";
-import DynamicViewDrawer from "./DynamicViewDrawer";
 import { DynamicListView, DynamicGridView } from "./DynamicViews";
 
 export default function DynamicListing({
@@ -24,7 +26,6 @@ export default function DynamicListing({
   renderTableRow,
   renderListCard,
   renderGridCard,
-  renderDrawer,
   extraApiParams,
 }) {
   const router = useRouter();
@@ -39,11 +40,23 @@ export default function DynamicListing({
 
   const activeView = schema.forceView || view;
 
+  const [actualView, setActualView] = useState(activeView);
+  const { execute: executeViewSwitch, isLoading: isSwitchingView } = useAsyncAction(1000);
+
+  useEffect(() => {
+    if (activeView !== actualView) {
+      executeViewSwitch(async () => {
+        setActualView(activeView);
+      });
+    }
+  }, [activeView, actualView, executeViewSwitch]);
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [selectedItemForDetails, setSelectedItemForDetails] = useState(null);
+  const [drawerState, setDrawerState] = useState({ mode: null, data: null });
+  const openDetails = (item) => setDrawerState({ mode: "details", data: item });
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sidebarFilters, setSidebarFilters] = useState(schema.defaultFilters || {});
@@ -123,16 +136,20 @@ export default function DynamicListing({
         });
       }
 
-      const response = await fetchData({
-        page,
-        limit,
-        search,
-        filters: backendFilters.length > 0 ? backendFilters : undefined,
-        logicalOperator: logicalOp,
-        sortField: sortField || undefined,
-        sortOrder: sortOrder || undefined,
-        ...extraApiParams,
-      });
+      const minDelay = new Promise(resolve => setTimeout(resolve, 1500));
+      const [response] = await Promise.all([
+        fetchData({
+          page,
+          limit,
+          search,
+          filters: backendFilters.length > 0 ? backendFilters : undefined,
+          logicalOperator: logicalOp,
+          sortField: sortField || undefined,
+          sortOrder: sortOrder || undefined,
+          ...extraApiParams,
+        }),
+        minDelay
+      ]);
       const data = response?.settings?.data || response?.data || {};
       setItems(data.items || data.list || []);
       setTotal(data?.pagination?.total || data.total || 0);
@@ -172,6 +189,8 @@ export default function DynamicListing({
             onClick: () => {
               if (headerAction.type === "redirect" && headerAction.path) {
                 router.push(headerAction.path);
+              } else if (headerAction.type === "addDrawer") {
+                setDrawerState({ mode: "add", data: null });
               }
             },
           }
@@ -197,11 +216,26 @@ export default function DynamicListing({
     fetchData, schema.title
   ]);
 
+  const handleRowClick = (row) => {
+    if (!schema.primaryAction) return;
+
+    if (schema.primaryAction.type === "drawer") {
+      setDrawerState({
+        mode: "details",
+        data: { id: row.id }
+      });
+    } else if (schema.primaryAction.type === "page") {
+      router.push(schema.primaryAction.path.replace("{id}", row.id));
+    }
+  };
+
   const handleRowAction = (action, item) => {
     if (action.type === "editRedirect" || action.type === "viewRedirect") {
       let path = action.path || "";
       if (path.includes("{id}")) path = path.replace("{id}", item.id);
       router.push(path);
+    } else if (action.type === "editDrawer") {
+      setDrawerState({ mode: "edit", data: item });
     } else if (action.type === "deleteModal") {
       if (deletePermission && !can(deletePermission)) {
         toast.error("You do not have permission to delete this record.");
@@ -209,7 +243,7 @@ export default function DynamicListing({
       }
       setDeleteTarget(item);
     } else if (action.type === "viewDrawer") {
-      setSelectedItemForDetails(item);
+      openDetails(item);
     }
   };
 
@@ -242,49 +276,65 @@ export default function DynamicListing({
   }
 
   if (initialLoad) {
-    return (
-      <div className="px-6">
-        <TableSkeleton rows={8} cols={schema.columns?.length || 5} />
-      </div>
-    );
+    return <Loader fullPage />;
   }
-
   return (
     <div className="relative px-6 h-full">
+      {isSwitchingView ? (
+        <div className="flex h-[calc(100vh-250px)] items-center justify-center">
+          <Loader size="xl" />
+        </div>
+      ) : (
+        <>
+          {(actualView === "table" || schema.forceView === "table") && (
+            <DynamicTableView
+              data={items}
+              config={schema}
+              onRowAction={handleRowAction}
+              loading={loading}
+              setSelectedItemForDetails={openDetails}
+              renderTableRow={renderTableRow}
+            />
+          )}
 
-      {(activeView === "table" || (schema.forceView === "table")) && (
-        <DynamicTableView
-          data={items}
-          config={schema}
-          onRowAction={handleRowAction}
-          loading={loading}
-          setSelectedItemForDetails={setSelectedItemForDetails}
-          renderTableRow={renderTableRow}
-        />
-      )}
+          {schema.forceView !== "table" &&
+            actualView === "list" &&
+            (loading ? (
+              <div className="flex h-[calc(100vh-250px)] items-center justify-center">
+                <Loader size="lg" />
+              </div>
+            ) : (
+              <DynamicListView
+                data={items}
+                config={schema}
+                setSelectedItemForDetails={openDetails}
+                renderCard={
+                  renderListCard
+                    ? (item) => renderListCard(item, openDetails)
+                    : undefined
+                }
+              />
+            ))}
 
-      {schema.forceView !== "table" && activeView === "list" && (
-        <DynamicListView
-          data={items}
-          config={schema}
-          setSelectedItemForDetails={setSelectedItemForDetails}
-          renderCard={renderListCard
-            ? (item) => renderListCard(item, setSelectedItemForDetails)
-            : undefined
-          }
-        />
-      )}
-
-      {schema.forceView !== "table" && activeView === "grid" && (
-        <DynamicGridView
-          data={items}
-          config={schema}
-          setSelectedItemForDetails={setSelectedItemForDetails}
-          renderCard={renderGridCard
-            ? (item) => renderGridCard(item, setSelectedItemForDetails)
-            : undefined
-          }
-        />
+          {schema.forceView !== "table" &&
+            actualView === "grid" &&
+            (loading ? (
+              <div className="flex h-[calc(100vh-250px)] items-center justify-center">
+                <Loader size="lg" />
+              </div>
+            ) : (
+              <DynamicGridView
+                data={items}
+                config={schema}
+                setSelectedItemForDetails={openDetails}
+                renderCard={
+                  renderGridCard
+                    ? (item) => renderGridCard(item, openDetails)
+                    : undefined
+                }
+              />
+            ))}
+        </>
       )}
 
       <div className="absolute bottom-0 left-0 right-0 mx-6 bg-white border-t border-gray-200">
@@ -356,22 +406,17 @@ export default function DynamicListing({
         />
       )}
 
-      {renderDrawer
-        ? renderDrawer(
-          !!selectedItemForDetails,
-          () => setSelectedItemForDetails(null),
-          selectedItemForDetails
-        )
-        : (
-          <DynamicViewDrawer
-            open={!!selectedItemForDetails}
-            onClose={() => setSelectedItemForDetails(null)}
-            item={selectedItemForDetails}
-            schema={schema}
-            fetchItem={fetchItem}
-          />
-        )
-      }
+      <SideDrawer
+        open={drawerState.mode !== null}
+        onClose={() => setDrawerState({ mode: null, data: null })}
+        moduleName={schema.moduleName}
+        mode={drawerState.mode}
+        data={drawerState.data}
+        onSuccess={() => {
+          setDrawerState({ mode: null, data: null });
+          loadData();
+        }}
+      />
     </div>
   );
 }

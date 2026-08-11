@@ -119,9 +119,9 @@ export default function CurrencyForm({
   const requiredPermission =
     mode === "create"
       ? currencyConfig.actions?.createPermission ||
-        currencyConfig.actions?.create
+      currencyConfig.actions?.create
       : currencyConfig.actions?.updatePermission ||
-        currencyConfig.actions?.update;
+      currencyConfig.actions?.update;
 
   if (!can(requiredPermission)) {
     return <AccessDenied missingPermission={requiredPermission} />;
@@ -182,7 +182,7 @@ export default function CurrencyForm({
     try {
       setLoading(true);
       const payload = mode === "edit" ? { ...data, id: Number(id) } : data;
-      
+
       const response =
         mode === "create"
           ? await createCurrency(payload)

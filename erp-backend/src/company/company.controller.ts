@@ -6,8 +6,10 @@ import {
   Post,
   Put,
   Query,
-  Req,
+  
 } from '@nestjs/common';
+import { AppRequest } from 'src/package/decorator/app-request.decorator';
+import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 
 import {
   CompanyAddDto,
@@ -31,32 +33,33 @@ import { CompanyService } from './service/company.service';
 import { CompanyListService } from './service/company.list.service';
 import { CommonFileService } from 'src/package/service/common-file.service';
 import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
+import { CAPABILITIES } from 'src/package/config/capabilities.config';
 
 @Controller('company')
 export class CompanyController {
-  constructor(    
+  constructor(
     private companyService: CompanyService,
     private companyListService: CompanyListService,
     private commonFileService: CommonFileService,
-  ) {}
+  ) { }
 
   @Post('list-company')
-  @RequirePermission('COMPANY_LIST')
-  getAllCompanies(@Req() req, @Body() body: CompanyListDto) {
+  @RequirePermission(CAPABILITIES.COMPANY.LIST)
+  getAllCompanies(@AppRequest() req: IAppRequest, @Body() body: CompanyListDto) {
     return this.companyListService.startCompanyList(req, body);
   }
 
   @Get('get-company')
-  @RequirePermission('COMPANY_VIEW')
-  getCompanyById(@Req() req, @Query() query: CompanyDetailsDto) {
+  @RequirePermission(CAPABILITIES.COMPANY.VIEW)
+  getCompanyById(@AppRequest() req: IAppRequest, @Query() query: CompanyDetailsDto) {
     return this.companyListService.startCompanyDetails(req, query);
   }
 
   @Post('add-company')
-  @RequirePermission('COMPANY_CREATE')
+  @RequirePermission(CAPABILITIES.COMPANY.CREATE)
   @UseInterceptors(FileInterceptor('companyLogo', multerConfig))
   async addCompany(
-    @Req() req,
+    @AppRequest() req: IAppRequest,
     @Body() body: CompanyAddDto,
     @UploadedFile() file: any,
   ) {
@@ -64,24 +67,8 @@ export class CompanyController {
       const params = body;
 
       if (file) {
-        const fileDto = new CommonFileDto();
-
-        fileDto.file = file.mimetype;
-
-        const errors = await validate(fileDto, {
-          whitelist: true,
-        });
-
-        if (errors.length > 0) {
-          await this.commonFileService.deleteTempFile(file.filename);
-
-          return {
-            success: 0,
-            message: 'Validation failed',
-            errors,
-          };
-        }
-
+        const fileCheck = await this.commonFileService.validateAndCleanUp(file);
+        if (!fileCheck.valid) return fileCheck.error;
         params.companyLogo = file.filename;
       }
 
@@ -95,10 +82,10 @@ export class CompanyController {
   }
 
   @Put('update-company')
-  @RequirePermission('COMPANY_UPDATE')
+  @RequirePermission(CAPABILITIES.COMPANY.UPDATE)
   @UseInterceptors(FileInterceptor('companyLogo', multerConfig))
   async updateCompany(
-    @Req() req,
+    @AppRequest() req: IAppRequest,
     @Body() body: CompanyUpdateDto,
     @UploadedFile() file: any,
   ) {
@@ -106,24 +93,8 @@ export class CompanyController {
       const params = body;
 
       if (file) {
-        const fileDto = new CommonFileDto();
-
-        fileDto.file = file.mimetype;
-
-        const errors = await validate(fileDto, {
-          whitelist: true,
-        });
-
-        if (errors.length > 0) {
-          await this.commonFileService.deleteTempFile(file.filename);
-
-          return {
-            success: 0,
-            message: 'Validation failed',
-            errors,
-          };
-        }
-
+        const fileCheck = await this.commonFileService.validateAndCleanUp(file);
+        if (!fileCheck.valid) return fileCheck.error;
         params.companyLogo = file.filename;
       }
 
@@ -135,10 +106,10 @@ export class CompanyController {
       };
     }
   }
-  
+
   @Delete('delete-company')
-  @RequirePermission('COMPANY_DELETE')
-  deleteCompany(@Req() req, @Query() query: CompanyDeleteDto) {
+  @RequirePermission(CAPABILITIES.COMPANY.DELETE)
+  deleteCompany(@AppRequest() req: IAppRequest, @Query() query: CompanyDeleteDto) {
     return this.companyService.startDeleteCompany(req, query);
   }
 }

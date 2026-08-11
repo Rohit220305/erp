@@ -1,0 +1,148 @@
+{
+  "moduleName": "WorkCentreCategory",
+  "title": "Work Centre Categories",
+  "permissions": {
+    "list": "WORK_CENTRE_CATEGORY_LIST",
+    "create": "WORK_CENTRE_CATEGORY_CREATE",
+    "view": "WORK_CENTRE_CATEGORY_VIEW",
+    "update": "WORK_CENTRE_CATEGORY_UPDATE",
+    "delete": "WORK_CENTRE_CATEGORY_DELETE"
+  },
+  "actions": {
+    "header": [
+      {
+        "label": "Add Category",
+        "type": "addDrawer",
+        "path": "/work-centre-category/add",
+        "permission": "WORK_CENTRE_CATEGORY_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editDrawer",
+        "path": "/work-centre-category/edit/{id}",
+        "icon": "Edit",
+        "permission": "WORK_CENTRE_CATEGORY_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "WORK_CENTRE_CATEGORY_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "columns": [
+    {
+      "label": "Category Name",
+      "key": "categoryName",
+      "type": "link",
+      "linkPath": "/work-centre-category/{id}",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Category Code",
+      "key": "categoryCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Added By",
+      "key": "addedByName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true
+    }
+  ],
+  "defaultFilters": {
+    "categoryName": "",
+    "categoryCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    {
+      "label": "Active",
+      "value": "Active"
+    },
+    {
+      "label": "Inactive",
+      "value": "Inactive"
+    }
+  ],
+  "sidebarFields": [
+    {
+      "label": "Category Code",
+      "value": "categoryCode",
+      "type": "text"
+    },
+    {
+      "label": "Category Name",
+      "value": "categoryName",
+      "type": "text"
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "searchFields": [
+    {
+      "label": "Category Code",
+      "value": "categoryCode",
+      "type": "text"
+    },
+    {
+      "label": "Category Name",
+      "value": "categoryName",
+      "type": "text"
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ]
+}

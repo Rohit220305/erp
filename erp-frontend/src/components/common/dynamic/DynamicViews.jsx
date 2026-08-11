@@ -235,8 +235,12 @@ export const DynamicListView = ({ data, config, setSelectedItemForDetails, rende
         <div className="flex flex-col">
           {data.map((item, idx) =>
             renderCard
-              ? <React.Fragment key={item.id || idx}>{renderCard(item)}</React.Fragment>
-              : <DynamicListCard key={item.id || idx} item={item} config={config} setSelectedItemForDetails={setSelectedItemForDetails} />
+              ? <div key={item.id || idx} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${idx * 0.05}s` }}>
+                  {renderCard(item)}
+                </div>
+              : <div key={item.id || idx} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${idx * 0.05}s` }}>
+                  <DynamicListCard item={item} config={config} setSelectedItemForDetails={setSelectedItemForDetails} />
+                </div>
           )}
         </div>
       </div>
@@ -258,8 +262,12 @@ export const DynamicGridView = ({ data, config, setSelectedItemForDetails, rende
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 p-6">
           {data.map((item, idx) =>
             renderCard
-              ? <React.Fragment key={item.id || idx}>{renderCard(item)}</React.Fragment>
-              : <DynamicGridCard key={item.id || idx} item={item} config={config} setSelectedItemForDetails={setSelectedItemForDetails} />
+              ? <div key={item.id || idx} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${idx * 0.05}s` }}>
+                  {renderCard(item)}
+                </div>
+              : <div key={item.id || idx} className="animate-fade-in-up opacity-0" style={{ animationDelay: `${idx * 0.05}s` }}>
+                  <DynamicGridCard item={item} config={config} setSelectedItemForDetails={setSelectedItemForDetails} />
+                </div>
           )}
         </div>
       </div>

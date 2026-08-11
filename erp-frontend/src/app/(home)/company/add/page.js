@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import CompanyAddForm from "@/components/company/CompanyAddForm";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect } from "react";
@@ -32,7 +32,7 @@ export default function CompanyAddPage() {
     return () => resetConfig();
   }, []);
 
-  if (!can("COMPANY_CREATE")) {
+  if (!can(CAPABILITIES.COMPANY.CREATE)) {
     return <AccessDenied missingPermission="COMPANY_CREATE" />;
   }
 

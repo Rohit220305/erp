@@ -5,8 +5,9 @@ import {
   IsOptional,
   IsString,
   IsArray,
-  IsIn,
+  IsEnum,
 } from 'class-validator';
+import { Status } from 'src/package/common/enums/status.enum';
 
 export class SaveGroupWithCapabilitiesDto {
   @IsOptional()
@@ -28,8 +29,8 @@ export class SaveGroupWithCapabilitiesDto {
 
   @IsString()
   @IsNotEmpty()
-  @IsIn(['Active', 'Inactive'])
-  status: string;
+  @IsEnum(Status)
+  status: Status;
 
   @IsArray()
   @IsString({ each: true })

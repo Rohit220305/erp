@@ -17,7 +17,6 @@ export default function AccessDenied({ missingPermission }) {
         
         <p className="text-sm text-gray-500 mb-6 leading-relaxed">
           You do not have sufficient permissions to access this page or perform this action.
-          
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">

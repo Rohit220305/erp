@@ -5,8 +5,10 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsEnum,
   ValidateNested,
 } from 'class-validator';
+import { Status } from 'src/package/common/enums/status.enum';
 
 export class GroupAddDto {
   @IsString()
@@ -22,8 +24,8 @@ export class GroupAddDto {
   description: string;
 
   @IsOptional()
-  @IsString()
-  status: string = 'active';
+  @IsEnum(Status)
+  status?: Status;
 
   @IsOptional()
   addedBy: number;
@@ -47,8 +49,8 @@ export class GroupUpdateDto {
   description: string;
 
   @IsOptional()
-  @IsString()
-  status: string;
+  @IsEnum(Status)
+  status?: Status;
 
   @IsOptional()
   updatedBy: number;

@@ -1,4 +1,6 @@
+import { GetCurrencyDto, ListCurrencyDto } from '../dto/currency.dto';
 import { Injectable } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -7,7 +9,7 @@ import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
 @Injectable()
 export class CurrencyListService {
-  constructor(private readonly general: GeneralUtilities) {}
+  constructor(private readonly general: GeneralUtilities) { }
 
   @InjectRepository(CurrencyEntity)
   private currencyRepo: Repository<CurrencyEntity>;
@@ -29,25 +31,44 @@ export class CurrencyListService {
         throw new Error('Currency ID is required');
       }
 
-      const currency = await this.currencyRepo.findOne({
-        where: {
-          id: params.id,
-        },
-      });
+      const queryBuilder = this.currencyRepo.createQueryBuilder('currency');
+
+      queryBuilder.select([
+        'currency.id AS id',
+        'currency.currencyCode AS currencyCode',
+        'currency.currencyName AS currencyName',
+        'currency.currencySymbol AS currencySymbol',
+        'currency.status AS status',
+        'currency.addedDate AS addedDate',
+        'currency.updatedDate AS updatedDate',
+        'currency.addedBy AS addedBy',
+        'currency.updatedBy AS updatedBy',
+      ]);
+
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = currency.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = currency.updatedBy');
+
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
+
+      queryBuilder.where('currency.id = :id', { id: params.id });
+      queryBuilder.andWhere('currency.sysRecDeleted = 0');
+
+      const currency = await queryBuilder.getRawOne();
       if (!currency) {
         throw new Error('Currency not found');
       }
 
-      currency['addedDateFormatted'] = await this.general.dateFormat(
-        currency.createdAt,
+      currency.addedDateFormatted = await this.general.dateFormat(
+        currency.addedDate,
       );
 
-      if (currency.updatedAt) {
-        currency['updatedDateFormatted'] = await this.general.dateFormat(
-          currency.updatedAt,
+      if (currency.updatedDate) {
+        currency.updatedDateFormatted = await this.general.dateFormat(
+          currency.updatedDate,
         );
       }
-        return_data = {
+      return_data = {
         success: 1,
         message: 'Data found Successfully.',
         data: currency,
@@ -76,87 +97,44 @@ export class CurrencyListService {
     let return_data: any = {};
 
     try {
-      const page = params?.page ? parseInt(params.page) : 1;
-
-      const limit = params?.limit ? parseInt(params.limit) : 10;
-
-      const skip = (page - 1) * limit;
+      const { page, limit, skip } = this.general.parsePagination(params);
 
       const queryBuilder = this.currencyRepo.createQueryBuilder('currency');
 
-      if (params?.search) {
-        queryBuilder.andWhere(
-          `
-          (
-            currency.currencyCode LIKE :search
-            OR currency.currencyName LIKE :search
-            OR currency.currencySymbol LIKE :search
-          )
-          `,
-          {
-            search: `%${params.search}%`,
-          },
-        );
-      }
+      queryBuilder.select([
+        'currency.id AS id',
+        'currency.currencyCode AS currencyCode',
+        'currency.currencyName AS currencyName',
+        'currency.currencySymbol AS currencySymbol',
+        'currency.status AS status',
+        'currency.addedDate AS addedDate',
+        'currency.updatedDate AS updatedDate',
+      ]);
 
-      const columnMap: Record<string, string> = {
-        currencyCode: 'currency.currencyCode',
-        currencyName: 'currency.currencyName',
-        currencySymbol: 'currency.currencySymbol',
-        status: 'currency.status',
-        id: 'currency.id',
-        addedDateFormatted: 'currency.createdAt',
-      };
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = currency.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = currency.updatedBy');
 
-      if (params?.filters) {
-        const whereString = await this.general.makeFilterString(
-          params.filters,
-          columnMap,
-          params.logicalOperator,
-        );
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
 
-        if (whereString) {
-          queryBuilder.andWhere(whereString);
-        }
-      }
+      queryBuilder.andWhere('currency.sysRecDeleted = 0');
 
-      if (params?.sortField && params?.sortOrder && columnMap[params.sortField]) {
-        const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-        queryBuilder.orderBy(columnMap[params.sortField], order);
-      } else {
-        queryBuilder.orderBy('currency.currencyName', 'ASC');
-      }
+      await this.general.applyListQuery(queryBuilder, params, 'currency.currencyName');
 
-      queryBuilder.skip(skip);
-      queryBuilder.take(limit);
+      const total = await queryBuilder.getCount();
+      queryBuilder.offset(skip).limit(limit);
+      const data = await queryBuilder.getRawMany();
 
-      const [data, total] = await queryBuilder.getManyAndCount();
+      await this.general.formatDate(data);
 
-      for (const currency of data) {
-        currency['addedDateFormatted'] = await this.general.dateFormat(
-          currency.createdAt,
-        );
-
-        if (currency.updatedAt) {
-          currency['updatedDateFormatted'] = await this.general.dateFormat(
-            currency.updatedAt,
-          );
-        }
-      }
+      const pagination = this.general.buildPaginationResponse(total, page, limit, skip);
 
       return_data = {
         success: 1,
         message: 'Currency List fetched successfully',
         data: {
           list: data,
-          pagination: {
-            total,
-            page,
-            limit,
-            total_pages: Math.ceil(total / limit),
-            prevPage: page > 1,
-            nextPage: total > skip + limit,
-          },
+          pagination,
         },
       };
     } catch (err) {
@@ -181,7 +159,19 @@ export class CurrencyListService {
     return output;
   }
 
-  async finishFailure(params) {
-    return params;
+  async finishFailure(params: any, incomingData?: any) {
+    let output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message || 'Something went wrong',
+        data: params?.data ? params.data : [],
+      },
+    };
+
+    if (incomingData) {
+      output.settings.incoming_data = incomingData;
+    }
+
+    return output;
   }
 }

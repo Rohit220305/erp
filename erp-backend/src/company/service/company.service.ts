@@ -1,11 +1,11 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CompanyEntity } from '../entity/company.entity';
 import { CompanyCurrencyEntity } from '../entity/company-currency.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
-import { COMPANY_INSERT_FIELDS, COMPANY_UPDATE_FIELDS } from 'src/package/constants/company-fields.constant';
 import { CommonFileService } from 'src/package/service/common-file.service';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 
@@ -15,7 +15,7 @@ export class CompanyService {
     private readonly general: GeneralUtilities,
     private readonly commonFileService: CommonFileService,
     private readonly activityLogService: ActivityLogService,
-  ) {}
+  ) { }
   @InjectRepository(CompanyEntity)
   private companyRepo: Repository<CompanyEntity>;
 
@@ -75,56 +75,53 @@ export class CompanyService {
     let return_data: any = {};
 
     try {
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin) {
-        if (params.parentCompanyId !== req.user.companyId) {
-          throw new ForbiddenException('Cannot create child company under a different parent company');
-        }
-      }
+      this.general.assertCompanyAccess(req, params.parentCompanyId, 'create', 'child company');
 
-      const companyCodeExists = await this.companyRepo.findOne({
-        where: {
-          companyCode: params.companyCode,
-        },
-      });
+      const [companyCodeExists, parentCompany] = await Promise.all([
+        this.companyRepo.findOne({
+          where: { companyCode: params.companyCode, sysRecDeleted: false },
+        }),
+        params.parentCompanyId && params.parentCompanyId > 0
+          ? this.companyRepo.findOne({
+              where: { id: params.parentCompanyId, sysRecDeleted: false },
+            })
+          : Promise.resolve(null),
+      ]);
 
       if (companyCodeExists) {
         throw new Error('Company Code already exists');
       }
 
-      if (params.parentCompanyId && params.parentCompanyId > 0) {
-        const parentCompany = await this.companyRepo.findOne({
-          where: {
-            id: params.parentCompanyId,
-          },
-        });
-
-        if (!parentCompany) {
-          throw new Error('Parent Company not found');
-        }
+      if (params.parentCompanyId && params.parentCompanyId > 0 && !parentCompany) {
+        throw new Error('Parent Company not found');
       }
 
-      const queryColumns = await this.general.mapFields(
-        params,
-        COMPANY_INSERT_FIELDS,
-      );
+      const {
+        supportedCurrencies: _extractedSupportedCurrencies,
+        companyLogo: _extractedCompanyLogo,
+        ...dbInsertData
+      } = params;
 
-      queryColumns.addedBy = req.user?.sub;
-      queryColumns.addedDate = () => 'NOW()';
-
-      const res = await this.companyRepo.insert(queryColumns);
-
-      await this.activityLogService.log({
-        activityCode: 'COMPANY_CREATE',
-        companyId: res?.raw?.insertId,
-        actorUserId: req.user?.sub,
-        impersonatorId: req.user?.impersonatorId,
-        entityType: 'COMPANY',
-        entityId: res?.raw?.insertId,
-        entityName: params.companyName,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
+      Object.keys(dbInsertData).forEach(key => {
+        if (dbInsertData[key] === undefined || dbInsertData[key] === null) {
+          delete dbInsertData[key];
+        }
       });
+
+      dbInsertData.addedBy = req.user?.sub;
+      dbInsertData.addedDate = () => 'NOW()';
+
+      const res = await this.companyRepo.insert(dbInsertData);
+
+      const logPayload = this.general.buildActivityLogPayload(
+        req,
+        'COMPANY_CREATE',
+        'COMPANY',
+        res?.raw?.insertId,
+        params.companyName,
+        res?.raw?.insertId,
+      );
+      await this.activityLogService.log(logPayload);
 
       return_data = {
         success: 1,
@@ -149,7 +146,7 @@ export class CompanyService {
 
 
   async startUpdateCompany(req, params) {
-    
+
     const response = await this.updateCompany(req, params);
 
     if (response.success == 1) {
@@ -200,6 +197,7 @@ export class CompanyService {
       const company = await this.companyRepo.findOne({
         where: {
           id: params.id,
+          sysRecDeleted: false,
         },
       });
 
@@ -207,8 +205,7 @@ export class CompanyService {
         throw new Error('Company not found');
       }
 
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
+      if (!this.general.isSuperAdmin(req) && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
         throw new ForbiddenException('Cannot update company outside your company hierarchy');
       }
 
@@ -216,6 +213,7 @@ export class CompanyService {
         const codeExists = await this.companyRepo.findOne({
           where: {
             companyCode: params.companyCode,
+            sysRecDeleted: false,
           },
         });
 
@@ -228,30 +226,36 @@ export class CompanyService {
         throw new Error('Parent Company cannot be same as Company');
       }
 
-      const queryColumns = await this.general.mapFields(
-        params,
-        COMPANY_UPDATE_FIELDS,
-      );
+      const {
+        id: _extractedId,
+        supportedCurrencies: _extractedSupportedCurrencies,
+        companyLogo: _extractedCompanyLogo,
+        ...dbUpdateData
+      } = params;
 
-      queryColumns.updatedBy = req.user?.sub;
-      queryColumns.updatedDate = () => 'NOW()';
+      Object.keys(dbUpdateData).forEach(key => {
+        if (dbUpdateData[key] === undefined || dbUpdateData[key] === null) {
+          delete dbUpdateData[key];
+        }
+      });
+
+      dbUpdateData.updatedBy = req.user?.sub;
+      dbUpdateData.updatedDate = () => 'NOW()';
 
       const res = await this.companyRepo.update(
         { id: params.id },
-        queryColumns,
+        dbUpdateData,
       );
 
-      await this.activityLogService.log({
-        activityCode: 'COMPANY_UPDATE',
-        companyId: params.id,
-        actorUserId: req.user?.sub,
-        impersonatorId: req.user?.impersonatorId || undefined,
-        entityType: 'COMPANY',
-        entityId: params.id,
-        entityName: params.companyName || company.companyName,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-      });
+      const logPayload = this.general.buildActivityLogPayload(
+        req,
+        'COMPANY_UPDATE',
+        'COMPANY',
+        params.id,
+        params.companyName || company.companyName,
+        params.id,
+      );
+      await this.activityLogService.log(logPayload);
 
       return_data = {
         success: 1,
@@ -294,6 +298,7 @@ export class CompanyService {
       const company = await this.companyRepo.findOne({
         where: {
           id: params.id,
+          sysRecDeleted: false,
         },
       });
 
@@ -301,14 +306,14 @@ export class CompanyService {
         throw new Error('Company not found');
       }
 
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
+      if (!this.general.isSuperAdmin(req) && company.id !== req.user.companyId && company.parentCompanyId !== req.user.companyId) {
         throw new ForbiddenException('Cannot delete company outside your company hierarchy');
       }
 
       const childCompanies = await this.companyRepo.count({
         where: {
           parentCompanyId: params.id,
+          sysRecDeleted: false,
         },
       });
 
@@ -316,27 +321,21 @@ export class CompanyService {
         throw new Error('Child companies exist. Cannot delete company.');
       }
 
-      await this.companyCurrencyRepo.delete({
-        companyId: params.id,
-      });
+      const payload = this.general.buildSoftDeletePayload(
+        { companyCode: company.companyCode, email: company.email || null },
+        req,
+      );
+      const res = await this.companyRepo.update({ id: params.id }, payload);
 
-      const res = await this.companyRepo.delete({
-        id: params.id,
-      });
-
-      await this.commonFileService.deleteFolder('company', `${params.id}`);
-
-      await this.activityLogService.log({
-        activityCode: 'COMPANY_DELETE',
-        companyId: params.id,
-        actorUserId: req.user?.sub,
-        impersonatorId: req.user?.impersonatorId,
-        entityType: 'COMPANY',
-        entityId: params.id,
-        entityName: company.companyName,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-      });
+      const logPayload = this.general.buildActivityLogPayload(
+        req,
+        'COMPANY_DELETE',
+        'COMPANY',
+        params.id,
+        company.companyName,
+        params.id,
+      );
+      await this.activityLogService.log(logPayload);
 
       return_data = {
         success: 1,
@@ -375,7 +374,19 @@ export class CompanyService {
     return output;
   }
 
-  async finishFailure(params) {
-    return params;
+  async finishFailure(params, incomingData?) {
+    let output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message,
+        data: params?.data ? params.data : [],
+      },
+    };
+
+    if (incomingData) {
+      output.settings.incoming_data = incomingData;
+    }
+
+    return output;
   }
 }

@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import UserForm from "@/components/user/UserForm";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect } from "react";
@@ -32,7 +32,7 @@ export default function AdminAddPage() {
     return () => resetConfig();
   }, []);
 
-  if (!can("USER_CREATE")) {
+  if (!can(CAPABILITIES.USER.CREATE)) {
     return <AccessDenied missingPermission="USER_CREATE" />;
   }
 

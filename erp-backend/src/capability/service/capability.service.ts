@@ -1,17 +1,16 @@
+import { CreateCapabilityDto, UpdateCapabilityDto, DeleteCapabilityDto } from '../dto/capability.dto';
 import { Injectable } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CapabilityEntity } from '../entity/capability.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
-import {
-  CAPABILITY_INSERT_FIELDS,
-  CAPABILITY_UPDATE_FIELDS,
-} from 'src/package/constants/capability-fields.constant';
+
 
 @Injectable()
 export class CapabilityService {
-  constructor(private readonly general: GeneralUtilities) {}
+  constructor(private readonly general: GeneralUtilities) { }
 
   @InjectRepository(CapabilityEntity)
   private capabilityRepo: Repository<CapabilityEntity>;
@@ -28,24 +27,29 @@ export class CapabilityService {
     let return_data: any = {};
     try {
       const existing = await this.capabilityRepo.findOne({
-        where: { capabilityCode: params.capabilityCode },
+        where: { capabilityCode: params.capabilityCode, sysRecDeleted: false },
       });
 
       if (existing) {
         throw new Error('Capability Code already exists');
       }
 
-      const queryColumns = await this.general.mapFields(
-        params,
-        CAPABILITY_INSERT_FIELDS,
-      );
+      const {
+        ...dbInsertData
+      } = params as any;
+
+      Object.keys(dbInsertData).forEach(key => {
+        if (dbInsertData[key] === undefined || dbInsertData[key] === null) {
+          delete dbInsertData[key];
+        }
+      });
 
       if (req.user) {
-        queryColumns.addedBy = req.user.sub;
+        dbInsertData.addedBy = req.user.sub;
       }
-      queryColumns.addedDate = () => 'NOW()';
+      dbInsertData.addedDate = () => 'NOW()';
 
-      const res = await this.capabilityRepo.insert(queryColumns);
+      const res = await this.capabilityRepo.insert(dbInsertData);
 
       return_data = {
         success: 1,
@@ -79,7 +83,7 @@ export class CapabilityService {
       }
 
       const capability = await this.capabilityRepo.findOne({
-        where: { id: params.id },
+        where: { id: params.id, sysRecDeleted: false },
       });
 
       if (!capability) {
@@ -88,24 +92,30 @@ export class CapabilityService {
 
       if (params.capabilityCode && params.capabilityCode !== capability.capabilityCode) {
         const codeExists = await this.capabilityRepo.findOne({
-          where: { capabilityCode: params.capabilityCode },
+          where: { capabilityCode: params.capabilityCode, sysRecDeleted: false },
         });
         if (codeExists) {
           throw new Error('Capability Code already exists');
         }
       }
 
-      const queryColumns = await this.general.mapFields(
-        params,
-        CAPABILITY_UPDATE_FIELDS,
-      );
+      const {
+        id: _extractedId,
+        ...dbUpdateData
+      } = params as any;
+
+      Object.keys(dbUpdateData).forEach(key => {
+        if (dbUpdateData[key] === undefined || dbUpdateData[key] === null) {
+          delete dbUpdateData[key];
+        }
+      });
 
       if (req.user) {
-        queryColumns.updatedBy = req.user.sub;
+        dbUpdateData.updatedBy = req.user.sub;
       }
-      queryColumns.updatedDate = () => 'NOW()';
+      dbUpdateData.updatedDate = () => 'NOW()';
 
-      const res = await this.capabilityRepo.update({ id: params.id }, queryColumns);
+      const res = await this.capabilityRepo.update({ id: params.id }, dbUpdateData);
 
       return_data = {
         success: 1,
@@ -139,14 +149,22 @@ export class CapabilityService {
       }
 
       const capability = await this.capabilityRepo.findOne({
-        where: { id: params.id },
+        where: { id: params.id, sysRecDeleted: false },
       });
 
       if (!capability) {
         throw new Error('Capability not found');
       }
 
-      const res = await this.capabilityRepo.delete({ id: params.id });
+      const payload = this.general.buildSoftDeletePayload(
+        { capabilityCode: capability.capabilityCode },
+        req,
+      );
+
+      const res = await this.capabilityRepo.update(
+        { id: params.id },
+        payload
+      );
 
       return_data = {
         success: 1,
@@ -174,7 +192,19 @@ export class CapabilityService {
     };
   }
 
-  async finishFailure(params) {
-    return params;
+  async finishFailure(params: any, incomingData?: any) {
+    let output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message || 'Something went wrong',
+        data: params?.data ? params.data : [],
+      },
+    };
+
+    if (incomingData) {
+      output.settings.incoming_data = incomingData;
+    }
+
+    return output;
   }
 }

@@ -1,10 +1,13 @@
+import { AssignGroupCapabilitiesDto, RemoveGroupCapabilityDto } from '../dto/capability.dto';
 import { Injectable } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { GroupCapabilityEntity } from '../entity/group-capability.entity';
 import { GroupEntity } from 'src/group/entity/group.entity';
 import { CapabilityEntity } from '../entity/capability.entity';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Injectable()
 export class GroupCapabilityService {
@@ -31,7 +34,7 @@ export class GroupCapabilityService {
       const { groupId, capabilityIds } = params;
 
       const groupExists = await this.groupRepo.findOne({
-        where: { id: groupId },
+        where: { id: groupId, sysRecDeleted: false },
       });
       if (!groupExists) {
         throw new Error('Group not found');
@@ -39,12 +42,12 @@ export class GroupCapabilityService {
 
       const insertedIds: number[] = [];
       for (const capId of capabilityIds) {
-        
+
         const capExists = await this.capabilityRepo.findOne({
-          where: { id: capId },
+          where: { id: capId, sysRecDeleted: false },
         });
         if (!capExists) {
-          continue; 
+          continue;
         }
 
         let mapping = await this.groupCapabilityRepo.findOne({
@@ -55,7 +58,7 @@ export class GroupCapabilityService {
           const newMap = new GroupCapabilityEntity();
           newMap.groupId = groupId;
           newMap.capabilityId = capId;
-          newMap.status = 'Active';
+          newMap.status = Status.Active;
           if (req.user) {
             newMap.addedBy = req.user.sub;
           }
@@ -130,7 +133,19 @@ export class GroupCapabilityService {
     };
   }
 
-  async finishFailure(params) {
-    return params;
+  async finishFailure(params: any, incomingData?: any) {
+    let output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message || 'Something went wrong',
+        data: params?.data ? params.data : [],
+      },
+    };
+
+    if (incomingData) {
+      output.settings.incoming_data = incomingData;
+    }
+
+    return output;
   }
 }

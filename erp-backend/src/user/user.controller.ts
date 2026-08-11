@@ -1,3 +1,4 @@
+import { CAPABILITIES } from 'src/package/config/capabilities.config';
 import {
   Body,
   Controller,
@@ -6,10 +7,12 @@ import {
   Post,
   Put,
   Query,
-  Req,
+  
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { AppRequest } from 'src/package/decorator/app-request.decorator';
+import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { validate } from 'class-validator';
@@ -35,31 +38,18 @@ export class UserController {
     private readonly userService: UserService,
     private readonly userListService: UserListService,
     private readonly commonFileService: CommonFileService,
-  ) {}
+  ) { }
 
   @Post('add-user')
-  @RequirePermission('USER_CREATE')
+  @RequirePermission(CAPABILITIES.USER.CREATE)
   @UseInterceptors(FileInterceptor('profilePhoto', multerConfig))
-  async addUser(@Req() req, @Body() body: UserAddDto, @UploadedFile() file) {
+  async addUser(@AppRequest() req: IAppRequest, @Body() body: UserAddDto, @UploadedFile() file) {
     try {
       const params = body;
 
       if (file) {
-        const fileDto = new CommonFileDto();
-
-        fileDto.file = file.mimetype;
-
-        const errors = await validate(fileDto);
-
-        if (errors.length > 0) {
-          await this.commonFileService.deleteTempFile(file.filename);
-
-          return {
-            success: 0,
-            message: 'Invalid File',
-          };
-        }
-
+        const fileCheck = await this.commonFileService.validateAndCleanUp(file);
+        if (!fileCheck.valid) return fileCheck.error;
         params.profilePhoto = file.filename;
       }
 
@@ -73,31 +63,18 @@ export class UserController {
   }
 
   @Put('update-user')
-  @RequirePermission('USER_UPDATE')
+  @RequirePermission(CAPABILITIES.USER.UPDATE)
   @UseInterceptors(FileInterceptor('profilePhoto', multerConfig))
   async updateUser(
-    @Req() req,
+    @AppRequest() req: IAppRequest,
     @Body() body: UserUpdateDto,
     @UploadedFile() file,
   ) {
     try {
       const params = body;
       if (file) {
-        const fileDto = new CommonFileDto();
-
-        fileDto.file = file.mimetype;
-
-        const errors = await validate(fileDto);
-
-        if (errors.length > 0) {
-          await this.commonFileService.deleteTempFile(file.filename);
-
-          return {
-            success: 0,
-            message: 'Invalid File',
-          };
-        }
-
+        const fileCheck = await this.commonFileService.validateAndCleanUp(file);
+        if (!fileCheck.valid) return fileCheck.error;
         params.profilePhoto = file.filename;
       }
 
@@ -111,21 +88,20 @@ export class UserController {
   }
 
   @Delete('delete-user')
-  @RequirePermission('USER_DELETE')
-  async deleteUser(@Req() req, @Query() query: UserDeleteDto) {
+  @RequirePermission(CAPABILITIES.USER.DELETE)
+  async deleteUser(@AppRequest() req: IAppRequest, @Query() query: UserDeleteDto) {
     return await this.userService.startDeleteUser(req, query);
   }
 
   @Get('get-user')
-  @RequirePermission('USER_VIEW')
-  async getUser(@Req() req, @Query() query: UserDetailsDto) {
+  @RequirePermission(CAPABILITIES.USER.VIEW)
+  async getUser(@AppRequest() req: IAppRequest, @Query() query: UserDetailsDto) {
     return await this.userListService.startUserDetails(req, query);
   }
 
   @Post('list-user')
-  @RequirePermission('USER_LIST')
-  async listUser(@Req() req, @Body() body: UserListDto) {
+  @RequirePermission(CAPABILITIES.USER.LIST)
+  async listUser(@AppRequest() req: IAppRequest, @Body() body: UserListDto) {
     return await this.userListService.startUserList(req, body);
   }
 }
-

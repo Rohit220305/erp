@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -22,7 +22,7 @@ export default function GroupListCard({ group, can }) {
                 Group Name
               </p>
               <div className="min-w-0">
-                {can("GROUP_VIEW") ? (
+                {can(CAPABILITIES.GROUP.VIEW) ? (
                   <p
                     className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer truncate w-fit"
                     onClick={() => router.push(`/group/${group.id}`)}

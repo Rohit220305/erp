@@ -1,7 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { AbstractBaseEntity } from 'src/package/entities/base.entity';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Entity('capabilities')
-export class CapabilityEntity {
+export class CapabilityEntity extends AbstractBaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -39,30 +41,8 @@ export class CapabilityEntity {
 
   @Column({
     type: 'enum',
-    enum: ['Active', 'Inactive'],
-    default: 'Active',
+    enum: Status,
+    default: Status.Active,
   })
-  status: string;
-
-  @Column({
-    nullable: true,
-  })
-  addedBy: number;
-
-  @Column({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  addedDate: Date;
-
-  @Column({
-    nullable: true,
-  })
-  updatedBy: number;
-
-  @Column({
-    type: 'timestamp',
-    nullable: true,
-  })
-  updatedDate: Date;
+  status: Status;
 }

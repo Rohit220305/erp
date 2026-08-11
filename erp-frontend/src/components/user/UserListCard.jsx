@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
@@ -26,28 +26,28 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                 User
               </p>
               <div className="flex items-center gap-3 min-w-0">
-                <SharedImageZoom
-                  id={`list-${user.id}`}
-                  src={user.photoUrl}
-                  alt={`${user.firstName} ${user.lastName}`}
-                  placeholderText={`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
-                  thumbnailClassName="w-10 h-10 rounded-full object-cover border border-gray-100 shrink-0"
-                  modalImageClassName="w-64 h-64 rounded-full shadow-2xl"
-                />
-                <div className="min-w-0">
-                  {can("USER_VIEW") ? (
-                    <p
-                      className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer truncate"
-                      onClick={() => setSelectedUserForDetails && setSelectedUserForDetails(user)}
-                    >
-                      {user.firstName} {user.lastName}
-                    </p>
-                  ) : (
-                    <p className="text-sm font-semibold text-gray-800 truncate">
-                      {user.firstName} {user.lastName}
-                    </p>
-                  )}
-                </div>
+                  <SharedImageZoom
+                    id={`list-${user.id}`}
+                    src={user.photoUrl}
+                    alt={user.fullName}
+                    placeholderText={user.fullName ? user.fullName.substring(0, 2).toUpperCase() : ""}
+                    thumbnailClassName="w-10 h-10 rounded-full object-cover border border-gray-100 shrink-0"
+                    modalImageClassName="w-64 h-64 rounded-full shadow-2xl"
+                  />
+                  <div className="min-w-0">
+                    {can(CAPABILITIES.USER.VIEW) ? (
+                      <p
+                        className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer truncate"
+                        onClick={() => setSelectedUserForDetails && setSelectedUserForDetails(user)}
+                      >
+                        {user.fullName}
+                      </p>
+                    ) : (
+                      <p className="text-sm font-semibold text-gray-800 truncate">
+                        {user.fullName}
+                      </p>
+                    )}
+                  </div>
               </div>
             </div>
 
@@ -64,7 +64,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                 Company Name
               </p>
-              {can("COMPANY_VIEW") && setSelectedCompanyForDetails ? (
+              {can(CAPABILITIES.COMPANY.VIEW) && setSelectedCompanyForDetails ? (
                 <p
                   className="text-[13px] font-medium text-[#1565c0] hover:underline cursor-pointer truncate"
                   onClick={() => setSelectedCompanyForDetails(user)}
@@ -123,7 +123,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
 
               <div className="min-w-0">
                 <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
-                  Contact
+                  Phone
                 </p>
                 <p className="text-[13px] text-gray-800 font-medium truncate">
                   {formattedPhone}

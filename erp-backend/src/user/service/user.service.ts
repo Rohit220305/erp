@@ -1,7 +1,9 @@
+import { UserAddDto, UserUpdateDto, UserDeleteDto } from '../dto/user.dto';
 import { Injectable, ForbiddenException } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { UserEntity } from '../entity/user.entity';
@@ -10,9 +12,9 @@ import { GroupEntity } from 'src/group/entity/group.entity';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CommonFileService } from 'src/package/service/common-file.service';
-import { USER_INSERT_FIELDS, USER_UPDATE_FIELDS } from 'src/package/constants/user-fields.constant';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 import { UserGroupEntity } from '../entity/user-group.entity';
+import { Status } from 'src/package/common/enums/status.enum';
 
 
 @Injectable()
@@ -61,10 +63,7 @@ export class UserService {
     let return_data: any = {};
 
     try {
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin && params.companyId !== req.user.companyId) {
-        throw new ForbiddenException('Cannot create user outside your company');
-      }
+      this.general.assertCompanyAccess(req, params.companyId, 'create', 'user');
 
 
       const groupIds: number[] = params.groupIds || (params.groupId ? [Number(params.groupId)] : []);
@@ -73,65 +72,55 @@ export class UserService {
         if (!params.companyId) {
           throw new Error('Please select a company');
         }
-        const company = await this.companyRepo.findOne({
-          where: {
-            id: params.companyId,
-          },
-        });
-
-        if (!company) {
-          throw new Error('Company not found');
-        }
 
         if (!groupIds || groupIds.length === 0) {
           throw new Error('Please select at least one group');
         }
 
-        for (const gid of groupIds) {
-          const group = await this.groupRepo.findOne({
-            where: {
-              id: gid,
-            },
-          });
-          if (!group) {
-            throw new Error(`Group not found (ID: ${gid})`);
-          }
+        const [company, emailExists, usernameExists, foundGroups] = await Promise.all([
+          this.companyRepo.findOne({ where: { id: params.companyId } }),
+          this.userRepo.findOne({ where: { email: params.email } }),
+          this.userRepo.findOne({ where: { userName: params.userName } }),
+          this.groupRepo.find({ where: { id: In(groupIds) } }),
+        ]);
+
+        if (!company) throw new Error('Company not found');
+        if (emailExists) throw new Error('Email already exists');
+        if (usernameExists) throw new Error('Username already exists');
+
+        if (foundGroups.length !== groupIds.length) {
+          const foundIds = foundGroups.map(g => g.id);
+          const missingId = groupIds.find(gid => !foundIds.includes(gid));
+          throw new Error(`Group not found (ID: ${missingId})`);
         }
-      }
+      } else {
+        const [emailExists, usernameExists] = await Promise.all([
+          this.userRepo.findOne({ where: { email: params.email } }),
+          this.userRepo.findOne({ where: { userName: params.userName } }),
+        ]);
 
-
-      const emailExists = await this.userRepo.findOne({
-        where: {
-          email: params.email,
-        },
-      });
-
-      if (emailExists) {
-        throw new Error('Email already exists');
-      }
-
-
-      const usernameExists = await this.userRepo.findOne({
-        where: {
-          userName: params.userName,
-        },
-      });
-
-      if (usernameExists) {
-        throw new Error('Username already exists');
+        if (emailExists) throw new Error('Email already exists');
+        if (usernameExists) throw new Error('Username already exists');
       }
 
       params.password = await bcrypt.hash(params.password, 10);
 
-      const queryColumns = await this.general.mapFields(
-        params,
-        USER_INSERT_FIELDS,
-      );
+      const {
+        groupIds: _extractedGroupIds,
+        groupId: _extractedGroupId,
+        ...dbInsertData
+      } = params;
 
-      queryColumns.addedBy = req.user?.sub;
-      queryColumns.addedDate = () => 'NOW()';
+      Object.keys(dbInsertData).forEach(key => {
+        if (dbInsertData[key] === undefined || dbInsertData[key] === null) {
+          delete dbInsertData[key];
+        }
+      });
 
-      const res = await this.userRepo.insert(queryColumns);
+      dbInsertData.addedBy = req.user?.sub;
+      dbInsertData.addedDate = () => 'NOW()';
+
+      const res = await this.userRepo.insert(dbInsertData);
       const insertId = res?.raw?.insertId;
 
       if (insertId && groupIds.length > 0) {
@@ -139,24 +128,22 @@ export class UserService {
           userId: insertId,
           groupId: gid,
           isPrimary: index === 0 ? true : false,
-          status: 'Active',
+          status: Status.Active,
           addedBy: req.user?.sub,
         }));
 
         await this.userGroupRepo.insert(userGroupsToInsert);
       }
 
-      await this.activityLogService.log({
-        activityCode: 'USER_CREATE',
-        companyId: params.companyId,
-        actorUserId: req.user?.sub,
-        impersonatorId: req.user?.impersonatorId,
-        entityType: 'USER',
-        entityId: res?.raw?.insertId,
-        entityName: params.userName,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-      });
+      const logPayload = this.general.buildActivityLogPayload(
+        req,
+        'USER_CREATE',
+        'USER',
+        res?.raw?.insertId,
+        params.userName,
+        params.companyId,
+      );
+      await this.activityLogService.log(logPayload);
 
       return_data = {
         success: 1,
@@ -218,89 +205,79 @@ export class UserService {
         throw new Error('User not found');
       }
 
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin && user.companyId !== req.user.companyId) {
-        throw new ForbiddenException('Cannot update user outside your company');
-      }
-      if (!isSuperAdmin && params.companyId && params.companyId !== req.user.companyId) {
-        throw new ForbiddenException('Cannot move user outside your company');
-      }
-
-  
+      this.general.assertCompanyAccess(req, user.companyId, 'update', 'user');
       if (params.companyId) {
-        const company = await this.companyRepo.findOne({
-          where: {
-            id: params.companyId,
-          },
-        });
-
-        if (!company) {
-          throw new Error('Company not found');
-        }
+        this.general.assertCompanyAccess(req, params.companyId, 'move', 'user');
       }
 
-      const groupIds: number[] | undefined = params.groupIds || (params.groupId ? [Number(params.groupId)] : undefined);
-      if (groupIds && groupIds.length > 0) {
-        for (const gid of groupIds) {
-          const group = await this.groupRepo.findOne({
-            where: {
-              id: gid,
-            },
-          });
-          if (!group) {
-            throw new Error(`Group not found (ID: ${gid})`);
-          }
+      const groupIds: number[] | undefined =
+        params.groupIds ||
+        (params.groupId ? [Number(params.groupId)] : undefined);
+
+      const parallelChecks: Promise<any>[] = [];
+
+      parallelChecks.push(
+        params.companyId
+          ? this.companyRepo.findOne({ where: { id: params.companyId } })
+          : Promise.resolve(null),
+      );
+
+      parallelChecks.push(
+        groupIds && groupIds.length > 0
+          ? this.groupRepo.find({ where: { id: In(groupIds) } })
+          : Promise.resolve(null),
+      );
+
+      parallelChecks.push(
+        params.email && params.email !== user.email
+          ? this.userRepo.findOne({ where: { email: params.email } })
+          : Promise.resolve(null),
+      );
+
+      parallelChecks.push(
+        params.userName && params.userName !== user.userName
+          ? this.userRepo.findOne({ where: { userName: params.userName } })
+          : Promise.resolve(null),
+      );
+
+      const [company, foundGroups, emailExists, usernameExists] = await Promise.all(parallelChecks);
+
+      if (params.companyId && !company) throw new Error('Company not found');
+      if (groupIds && groupIds.length > 0 && foundGroups) {
+        if (foundGroups.length !== groupIds.length) {
+          const foundIds = foundGroups.map(g => g.id);
+          const missingId = groupIds.find(gid => !foundIds.includes(gid));
+          throw new Error(`Group not found (ID: ${missingId})`);
         }
       }
+      if (emailExists) throw new Error('Email already exists');
+      if (usernameExists) throw new Error('Username already exists');
 
-     
-      if (params.email && params.email !== user.email) {
-        const emailExists = await this.userRepo.findOne({
-          where: {
-            email: params.email,
-          },
-        });
-
-        if (emailExists) {
-          throw new Error('Email already exists');
-        }
-      }
-
-      /**
-       * Username Validation
-       */
-      if (params.userName && params.userName !== user.userName) {
-        const usernameExists = await this.userRepo.findOne({
-          where: {
-            userName: params.userName,
-          },
-        });
-
-        if (usernameExists) {
-          throw new Error('Username already exists');
-        }
-      }
-
-      /**
-       * Password Hashing
-       */
       if (params.password) {
         params.password = await bcrypt.hash(params.password, 10);
       }
 
-      const queryColumns = await this.general.mapFields(
-        params,
-        USER_UPDATE_FIELDS,
-      );
+      const {
+        id: _extractedId,
+        groupIds: _extractedGroupIds,
+        groupId: _extractedGroupId,
+        ...dbUpdateData
+      } = params;
 
-      queryColumns.updatedBy = req.user?.sub;
-      queryColumns.updatedDate = () => 'NOW()';
+      Object.keys(dbUpdateData).forEach(key => {
+        if (dbUpdateData[key] === undefined || dbUpdateData[key] === null) {
+          delete dbUpdateData[key];
+        }
+      });
+
+      dbUpdateData.updatedBy = req.user?.sub;
+      dbUpdateData.updatedDate = () => 'NOW()';
 
       const res = await this.userRepo.update(
         {
           id: params.id,
         },
-        queryColumns,
+        dbUpdateData,
       );
 
       if (groupIds && groupIds.length > 0) {
@@ -309,24 +286,22 @@ export class UserService {
           userId: params.id,
           groupId: gid,
           isPrimary: index === 0 ? true : false,
-          status: 'Active',
+          status: Status.Active,
           addedBy: req.user?.sub,
         }));
 
         await this.userGroupRepo.insert(userGroupsToInsert);
       }
 
-      await this.activityLogService.log({
-        activityCode: 'USER_UPDATE',
-        companyId: user.companyId,
-        actorUserId: req.user?.sub,
-        impersonatorId: req.user?.impersonatorId || undefined,
-        entityType: 'USER',
-        entityId: params.id,
-        entityName: params.userName || user.userName,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-      });
+      const logPayload = this.general.buildActivityLogPayload(
+        req,
+        'USER_UPDATE',
+        'USER',
+        params.id,
+        params.userName || user.userName,
+        user.companyId,
+      );
+      await this.activityLogService.log(logPayload);
 
       return_data = {
         success: 1,
@@ -365,6 +340,7 @@ export class UserService {
       const user = await this.userRepo.findOne({
         where: {
           id: params.id,
+          sysRecDeleted: false,
         },
       });
 
@@ -372,28 +348,23 @@ export class UserService {
         throw new Error('User not found');
       }
 
-      const isSuperAdmin = req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin && user.companyId !== req.user.companyId) {
-        throw new ForbiddenException('Cannot delete user outside your company');
-      }
+      this.general.assertCompanyAccess(req, user.companyId, 'delete', 'user');
 
-      const res = await this.userRepo.delete({
-        id: params.id,
-      });
+      const payload = this.general.buildSoftDeletePayload(
+        { email: user.email, userName: user.userName },
+        req,
+      );
+      const res = await this.userRepo.update({ id: params.id }, payload);
 
-      await this.commonFileService.deleteFolder('users', `${params.id}`);
-
-      await this.activityLogService.log({
-        activityCode: 'USER_DELETE',
-        companyId: user.companyId,
-        actorUserId: req.user?.sub,
-        impersonatorId: req.user?.impersonatorId,
-        entityType: 'USER',
-        entityId: params.id,
-        entityName: user.userName,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-      });
+      const logPayload = this.general.buildActivityLogPayload(
+        req,
+        'USER_DELETE',
+        'USER',
+        params.id,
+        user.userName,
+        user.companyId,
+      );
+      await this.activityLogService.log(logPayload);
 
       return_data = {
         success: 1,
@@ -422,12 +393,19 @@ export class UserService {
         success: params?.success,
         message: params?.message,
         data: params?.data || [],
-        incoming_data: incomingData || {},
+        // incoming_data: incomingData || {},
       },
     };
   }
 
-  async finishFailure(params) {
-    return params;
+  async finishFailure(params, incomingData?) {
+    return {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message || 'something went wrong',
+        data: params?.data || [],
+        // incoming_data: incomingData || {},
+      },
+    };
   }
 }

@@ -1,11 +1,11 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { CAPABILITIES } from "@/config/capabilities.config";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useHeader } from "@/context/HeaderContext";
-import { getUser } from "@/lib/api/user-api";
 import { Tag } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import AccessDenied from "@/components/common/AccessDenied";
 
 function DetailRow({ label, value }) {
   return (
@@ -16,58 +16,10 @@ function DetailRow({ label, value }) {
   );
 }
 
-function AdminAvatar({ admin, companyId, onClick }) {
-  return (
-    <div
-      className="flex items-center gap-3 cursor-pointer group"
-      onClick={onClick}
-    >
-      {admin?.photoUrl ? (
-        <img
-          src={admin.photoUrl}
-          alt="User"
-          className="w-8 h-8 rounded-full object-cover border border-gray-200"
-        />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-medium text-xs border border-blue-200">
-          {admin?.firstName?.[0] || "?"}
-        </div>
-      )}
-      <div>
-        <span className="text-sm text-[#1565c0] group-hover:text-black group-hover:underline block font-medium">
-          {admin?.firstName && admin?.lastName
-            ? `${admin.firstName} ${admin.lastName}`
-            : "-"}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export default function GroupDetailPage({ group }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
   const { can } = useAuth();
-  const [addedAdmin, setAddedAdmin] = useState(null);
-  const [updatedAdmin, setUpdatedAdmin] = useState(null);
-
-  useEffect(() => {
-    async function fetchAdmins() {
-      try {
-        if (group?.addedBy) {
-          const res = await getUser(group.addedBy);
-          setAddedAdmin(res);
-        }
-        if (group?.updatedBy) {
-          const res = await getUser(group.updatedBy);
-          setUpdatedAdmin(res);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    fetchAdmins();
-  }, [group?.addedBy, group?.updatedBy]);
 
   useEffect(() => {
     setConfig({
@@ -85,7 +37,7 @@ export default function GroupDetailPage({ group }) {
           { label: "Master", href: "/" },
           { label: "Group Master", href: "/group" },
         ],
-        actionButton: can("GROUP_UPDATE") ? {
+        actionButton: can(CAPABILITIES.GROUP.UPDATE) ? {
           label: "Edit",
           onClick: () => router.push(`/group/edit/${group?.id}`),
         } : null,
@@ -94,6 +46,18 @@ export default function GroupDetailPage({ group }) {
 
     return () => resetConfig();
   }, [setConfig, router, group?.id, resetConfig, can]);
+
+  if (
+    !group ||
+    group.success === 0 ||
+    group.settings?.success === 0 ||
+    !group.groupName
+  ) {
+    if (group?.accessDenied) {
+      return <AccessDenied missingPermission={group.requiredPermission || CAPABILITIES.GROUP.VIEW} />;
+    }
+    return <div className="p-6 text-gray-500">Group data could not be loaded.</div>;
+  }
 
   return (
     <div className="p-6">
@@ -129,6 +93,22 @@ export default function GroupDetailPage({ group }) {
                   </span>
                 }
               />
+            </div>
+            
+            <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
+              <h3 className="font-semibold mb-5">Audit Info</h3>
+              {group?.addedByName && (
+                <DetailRow label="Added By" value={group.addedByName} />
+              )}
+              {group?.addedDateFormatted && (
+                <DetailRow label="Added Date" value={group.addedDateFormatted} />
+              )}
+              {group?.updatedByName && (
+                <DetailRow label="Updated By" value={group.updatedByName} />
+              )}
+              {group?.updatedDateFormatted && (
+                <DetailRow label="Updated Date" value={group.updatedDateFormatted} />
+              )}
             </div>
           </div>
         </div>

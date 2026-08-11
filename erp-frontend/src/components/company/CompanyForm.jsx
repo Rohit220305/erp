@@ -139,17 +139,17 @@ export default function CompanyForm({
     label: c.companyName,
     value: c.id,
   }));
-  
+
   const [formData, setFormData] = useState(initialData);
   const [errors, setErrors] = useState({});
   const [isDirty, setIsDirty] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const [parentCompanies, setParentCompanies] = useState(
     parentCompaniesProp ?? []
   );
   const [parentLoading, setParentLoading] = useState(false);
-  
+
   const [currencies, setCurrencies] = useState([]);
   const [currencyLoading, setCurrencyLoading] = useState(false);
 
@@ -196,7 +196,7 @@ export default function CompanyForm({
         const list = res?.settings?.data?.list || res?.data?.list || [];
         setCurrencies(list);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         if (!cancelled) setCurrencyLoading(false);
       });
@@ -399,7 +399,7 @@ export default function CompanyForm({
     }
 
     if (mode === "create") {
-      payload.createdBy = user?.user?.id;
+      payload.addedBy = user?.user?.id;
     } else {
       payload.updatedBy = user?.user?.id;
     }
@@ -411,7 +411,7 @@ export default function CompanyForm({
       if (res?.success === 0) {
         toast.error(
           res.message ||
-            `Failed to ${mode === "create" ? "create" : "update"} company`
+          `Failed to ${mode === "create" ? "create" : "update"} company`
         );
         return;
       }
@@ -425,8 +425,8 @@ export default function CompanyForm({
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-          error?.message ||
-          `Failed to ${mode === "create" ? "create" : "update"} company`
+        error?.message ||
+        `Failed to ${mode === "create" ? "create" : "update"} company`
       );
     } finally {
       setLoading(false);
@@ -1140,7 +1140,7 @@ export default function CompanyForm({
                     <p className="text-xs text-red-500 flex items-center gap-1">
                       ⚠ {errors.contactPersonPhone}
                     </p>
-                  )}    
+                  )}
                 </div>
               </div>
             </div>

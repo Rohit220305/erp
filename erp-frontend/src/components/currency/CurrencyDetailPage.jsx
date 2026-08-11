@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { useRouter } from "next/navigation";
 import { Coins } from "lucide-react";
 import { useHeader } from "@/context/HeaderContext";
@@ -36,7 +36,7 @@ export default function CurrencyDetailPage({ currency }) {
           { label: "Master", href: "/" },
           { label: "Currency Master", href: "/currency" },
         ],
-        actionButton: can("CURRENCY_UPDATE")
+        actionButton: can(CAPABILITIES.CURRENCY.UPDATE)
           ? {
               label: "Edit",
               onClick: () => router.push(`/currency/edit/${currency.id}`),
@@ -50,12 +50,16 @@ export default function CurrencyDetailPage({ currency }) {
     };
   }, [setConfig, router, currency.id, resetConfig, can]);
 
-  if (!can("CURRENCY_VIEW")) {
-    return <AccessDenied missingPermission="CURRENCY_VIEW" />;
-  }
-
-  if (!currency) {
-    return <div className="p-6">Currency not found.</div>;
+  if (
+    !currency ||
+    currency.success === 0 ||
+    currency.settings?.success === 0 ||
+    !currency.currencyName
+  ) {
+    if (currency?.accessDenied) {
+      return <AccessDenied missingPermission={currency.requiredPermission || CAPABILITIES.CURRENCY.VIEW} />;
+    }
+    return <div className="p-6 text-gray-500">Currency data could not be loaded.</div>;
   }
   return (
     <div className="p-6">
@@ -125,7 +129,7 @@ export default function CurrencyDetailPage({ currency }) {
                   Added info
                 </h3>
                 <div>
-                  <p className="text-gray-900 font-medium">System</p>
+                  <p className="text-gray-900 font-medium">{currency.addedByName || "-"}</p>
                   <p className="text-gray-400 text-xs mt-0.5">
                     {currency.addedDateFormatted}
                   </p>
@@ -139,7 +143,7 @@ export default function CurrencyDetailPage({ currency }) {
                   </h3>
                   <div>
                    
-                    <p className="text-gray-900 font-medium">System</p>
+                    <p className="text-gray-900 font-medium">{currency.updatedByName || "-"}</p>
                     <p className="text-gray-400 text-xs mt-0.5">
                       {currency.updatedDateFormatted}
                     </p>

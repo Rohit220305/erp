@@ -5,6 +5,7 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { Response, Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import type { JwtSignOptions } from '@nestjs/jwt';
@@ -25,6 +26,7 @@ import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.en
 import { PermissionCacheService } from './permission.cache.service';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 import { UserGroupEntity } from 'src/user/entity/user-group.entity';
+import { Status } from 'src/package/common/enums/status.enum';
 
 
 const accessCookieOptions = (maxAgeMs: number) => ({
@@ -60,7 +62,7 @@ export class AuthService {
     private readonly permissionCacheService: PermissionCacheService,
     @Inject(forwardRef(() => ActivityLogService))
     private readonly activityLogService: ActivityLogService,
-  ) {}
+  ) { }
 
   async getGroupCapabilities(groupId: number): Promise<string[]> {
     const cached = await this.permissionCacheService.getPermissions(groupId);
@@ -71,9 +73,9 @@ export class AuthService {
     const mappings = await this.groupCapabilityRepo.find({
       where: {
         groupId,
-        status: 'Active',
+        status: Status.Active,
         capability: {
-          status: 'Active',
+          status: Status.Active,
         },
       },
       relations: { capability: true },
@@ -159,7 +161,7 @@ export class AuthService {
     let groups = prebuiltProfiles;
     if (!groups) {
       const userGroupMappings = await this.userGroupRepo.find({
-        where: { userId: user.id, status: 'Active' },
+        where: { userId: user.id, status: Status.Active },
         relations: { group: true },
         order: { isPrimary: 'DESC' },
       });
@@ -208,18 +210,20 @@ export class AuthService {
     );
   }
 
-  async login(req: Request, res: Response, body: LoginDto) {
+  async login(req: IAppRequest, res: Response, body: LoginDto) {
     const { userName, password } = body;
     if (!userName || !password) {
       return { success: 0, message: 'Username and password are required' };
     }
 
-    const user = await this.userRepo.findOne({ where: { userName } });
+    const user = await this.userRepo.findOne({
+      where: { userName, sysRecDeleted: false },
+    });
     if (!user) {
       throw new NotFoundException({ success: 0, message: 'User not found' });
     }
 
-    if (user.status !== 'Active') {
+    if (user.status !== Status.Active) {
       return { success: 0, message: 'User account is inactive' };
     }
 
@@ -234,7 +238,7 @@ export class AuthService {
     );
 
     const userGroups = await this.userGroupRepo.find({
-      where: { userId: user.id, status: 'Active' },
+      where: { userId: user.id, status: Status.Active },
       relations: { group: true },
       order: { isPrimary: 'DESC' },
     });
@@ -274,7 +278,7 @@ export class AuthService {
         actorUserId: user.id,
         actorName: `${user.firstName} ${user.lastName}`.trim(),
         ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
+        userAgent: req.headers?.['user-agent'],
       });
 
       return {
@@ -297,7 +301,7 @@ export class AuthService {
       //   actorUserId: user.id,
       //   actorName: `${user.firstName} ${user.lastName}`.trim(),
       //   ipAddress: req.ip,
-      //   userAgent: req.headers['user-agent'],
+      //   userAgent: req.headers?.['user-agent'],
       // });
 
       return {
@@ -314,7 +318,7 @@ export class AuthService {
   }
 
   async selectProfile(
-    req: Request,
+    req: IAppRequest,
     res: Response,
     body: { selectionToken: string; groupId: number },
   ) {
@@ -343,7 +347,7 @@ export class AuthService {
     }
 
     const userGroup = await this.userGroupRepo.findOne({
-      where: { userId: payload.sub, groupId, status: 'Active' },
+      where: { userId: payload.sub, groupId, status: Status.Active },
     });
 
     if (!userGroup) {
@@ -351,7 +355,7 @@ export class AuthService {
     }
 
     const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-    if (!user || user.status !== 'Active') {
+    if (!user || user.status !== Status.Active) {
       return { success: 0, message: 'User account is inactive or not found' };
     }
 
@@ -375,7 +379,7 @@ export class AuthService {
       actorUserId: user.id,
       actorName: `${user.firstName} ${user.lastName}`.trim(),
       ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
+      userAgent: req.headers?.['user-agent'],
     });
 
     return {
@@ -386,7 +390,7 @@ export class AuthService {
   }
 
   async switchProfile(
-    req: Request & { user: JwtPayload },
+    req: IAppRequest,
     res: Response,
     body: { groupId: number },
   ) {
@@ -397,7 +401,7 @@ export class AuthService {
     }
 
     const userGroup = await this.userGroupRepo.findOne({
-      where: { userId, groupId, status: 'Active' },
+      where: { userId, groupId, status: Status.Active },
     });
 
     if (!userGroup) {
@@ -405,7 +409,7 @@ export class AuthService {
     }
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user || user.status !== 'Active') {
+    if (!user || user.status !== Status.Active) {
       return { success: 0, message: 'User account is inactive or not found' };
     }
 
@@ -436,7 +440,7 @@ export class AuthService {
       entityName: targetGroup?.groupName || `Group #${groupId}`,
       actorName: `${user.firstName} ${user.lastName}`.trim(),
       ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
+      userAgent: req.headers?.['user-agent'],
     });
 
     return {
@@ -446,7 +450,7 @@ export class AuthService {
     };
   }
 
-  async refresh(req: Request, res: Response) {
+  async refresh(req: IAppRequest, res: Response) {
     const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
@@ -470,7 +474,7 @@ export class AuthService {
     }
 
     const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-    if (!user || user.status !== 'Active') {
+    if (!user || user.status !== Status.Active) {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
       throw new UnauthorizedException('User not found or inactive');
@@ -480,7 +484,7 @@ export class AuthService {
       where: {
         userId: payload.sub,
         groupId: payload.groupId,
-        status: 'Active',
+        status: Status.Active,
       },
     });
 
@@ -509,7 +513,7 @@ export class AuthService {
     return { success: 1, message: 'Token refreshed' };
   }
 
-  async logout(req: Request, res: Response) {
+  async logout(req: IAppRequest, res: Response) {
     const userPayload = req['user'] as JwtPayload | undefined;
     if (userPayload) {
       await this.activityLogService.log({
@@ -518,15 +522,15 @@ export class AuthService {
         actorUserId: userPayload.sub,
         impersonatorId: userPayload.impersonatorId || undefined,
         ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
+        userAgent: req.headers?.['user-agent'],
       });
     }
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     return { success: 1, message: 'Logged out successfully' };
   }
- 
-  async loginAsUser(req: Request, res: Response, targetUserId: number) {
+
+  async loginAsUser(req: IAppRequest, res: Response, targetUserId: number) {
     const target = await this.userRepo.findOne({
       where: { id: targetUserId },
     });
@@ -534,12 +538,12 @@ export class AuthService {
       return { success: 0, message: 'Target user not found' };
     }
 
-    if (target.status !== 'Active') {
+    if (target.status !== Status.Active) {
       return { success: 0, message: 'User is inactive' };
     }
 
     const targetUserGroup = await this.userGroupRepo.findOne({
-      where: { userId: target.id, status: 'Active' },
+      where: { userId: target.id, status: Status.Active },
       order: { isPrimary: 'DESC' },
     });
 
@@ -579,13 +583,18 @@ export class AuthService {
       entityId: target.id,
       entityName: entityName || target.userName,
       ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
+      userAgent: req.headers?.['user-agent'],
     });
 
     return {
       success: 1,
       message: `Now acting as ${target.userName}`,
-      data: { ...data, token: accessToken, capabilities, isImpersonating: true },
+      data: {
+        ...data,
+        token: accessToken,
+        capabilities,
+        isImpersonating: true,
+      },
     };
   }
 
@@ -633,7 +642,7 @@ export class AuthService {
   }
 
   async resetPasswordBySuperAdmin(
-    req: Request & { user: JwtPayload },
+    req: IAppRequest,
     targetUserId: number,
     newPassword: string,
   ) {
@@ -650,18 +659,18 @@ export class AuthService {
     await this.activityLogService.log({
       activityCode: 'AUTH_ADMIN_RESET_PASSWORD',
       companyId: target.companyId,
-      actorUserId: req.user.sub,
+      actorUserId: req.user!.sub,
       entityType: 'USER',
       entityId: targetUserId,
       entityName: target.userName,
       ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
+      userAgent: req.headers?.['user-agent'],
     });
 
     return { success: 1, message: 'Password reset successfully' };
   }
 
-  async backToSession(req: Request, res: Response) {
+  async backToSession(req: IAppRequest, res: Response) {
     const userPayload = req['user'] as JwtPayload | undefined;
     if (!userPayload || !userPayload.impersonatorId) {
       return { success: 0, message: 'No active impersonation session' };
@@ -669,22 +678,25 @@ export class AuthService {
 
     const adminId = userPayload.impersonatorId;
     const adminUser = await this.userRepo.findOne({ where: { id: adminId } });
-    
-    if (!adminUser || adminUser.status !== 'Active') {
+
+    if (!adminUser || adminUser.status !== Status.Active) {
       return { success: 0, message: 'Admin user not found or inactive' };
     }
 
     const adminUserGroup = await this.userGroupRepo.findOne({
-      where: { userId: adminId, status: 'Active' },
+      where: { userId: adminId, status: Status.Active },
       order: { isPrimary: 'DESC' },
     });
 
     if (!adminUserGroup) {
-      return { success: 0, message: 'Admin user has no active profiles assigned' };
+      return {
+        success: 0,
+        message: 'Admin user has no active profiles assigned',
+      };
     }
 
     const selectedGroupId = adminUserGroup.groupId;
-    
+
     const { accessToken, refreshToken, accessMaxAge, refreshMaxAge } =
       this.generateTokens(adminUser, selectedGroupId);
 
@@ -708,13 +720,18 @@ export class AuthService {
       entityId: userPayload.sub,
       entityName: userPayload.email,
       ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
+      userAgent: req.headers?.['user-agent'],
     });
 
     return {
       success: 1,
       message: 'Session restored successfully',
-      data: { ...data, token: accessToken, capabilities, isImpersonating: false },
+      data: {
+        ...data,
+        token: accessToken,
+        capabilities,
+        isImpersonating: false,
+      },
     };
   }
 
@@ -722,7 +739,9 @@ export class AuthService {
     if (!email) {
       return { success: 0, message: 'Email is required' };
     }
-    const user = await this.userRepo.findOne({ where: { email } });
+    const user = await this.userRepo.findOne({
+      where: { email, sysRecDeleted: false },
+    });
     if (!user) {
       return { success: 0, message: 'User does not exist with email' };
     }
@@ -753,7 +772,9 @@ export class AuthService {
     if (!email || !otp) {
       return { success: 0, message: 'Email and OTP are required' };
     }
-    const user = await this.userRepo.findOne({ where: { email } });
+    const user = await this.userRepo.findOne({
+      where: { email, sysRecDeleted: false },
+    });
     if (!user || user.resetPasswordOtp !== otp) {
       return { success: 0, message: 'Invalid OTP' };
     }
@@ -773,7 +794,9 @@ export class AuthService {
         message: 'Email, OTP, and new password are required',
       };
     }
-    const user = await this.userRepo.findOne({ where: { email } });
+    const user = await this.userRepo.findOne({
+      where: { email, sysRecDeleted: false },
+    });
     if (!user || user.resetPasswordOtp !== otp) {
       return { success: 0, message: 'Invalid OTP' };
     }
@@ -826,7 +849,7 @@ export class AuthService {
     });
   }
 
-  async getUserPermissions(req: Request) {
+  async getUserPermissions(req: IAppRequest,) {
     const user = req['user'];
     if (!user) {
       throw new UnauthorizedException('User not authenticated');
@@ -835,7 +858,7 @@ export class AuthService {
     return { success: 1, capabilities };
   }
 
-  async getProfileWithCapabilities(req: Request) {
+  async getProfileWithCapabilities(req: IAppRequest,) {
     const userPayload = req['user'];
     if (!userPayload) {
       throw new UnauthorizedException('User not authenticated');
@@ -843,7 +866,7 @@ export class AuthService {
     const user = await this.userRepo.findOne({
       where: { id: userPayload.sub },
     });
-    if (!user || user.status !== 'Active') {
+    if (!user || user.status !== Status.Active) {
       throw new UnauthorizedException('User not found or inactive');
     }
     const activeGroupId = userPayload.groupId;

@@ -24,6 +24,7 @@ export async function apiClient(path, options = {}) {
 
     const finalHeaders = { ...serverCookieHeader, ...overrideHeaders, ...options.headers };
 
+    
     return fetch(url, {
       ...options,
       credentials: "include",
@@ -110,6 +111,20 @@ export async function apiClient(path, options = {}) {
       }
     }
     return null;
+  }
+
+  if (res.status === 403) {
+    try {
+      const errorData = await res.json();
+      return {
+        success: 0,
+        accessDenied: true,
+        message: errorData.message || "Access Denied",
+        requiredPermission: errorData.requiredPermission
+      };
+    } catch (e) {
+      return { success: 0, accessDenied: true, message: "Access Denied" };
+    }
   }
 
   const text = await res.text();

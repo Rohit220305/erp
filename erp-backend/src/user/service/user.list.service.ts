@@ -1,4 +1,5 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository, In } from 'typeorm';
@@ -9,6 +10,7 @@ import { GroupEntity } from 'src/group/entity/group.entity';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { UserGroupEntity } from '../entity/user-group.entity';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Injectable()
 export class UserListService {
@@ -43,59 +45,67 @@ export class UserListService {
         throw new Error('User ID is required');
       }
 
-      const user = await this.userRepo.findOne({
-        where: {
-          id: params.id,
-        },
-      });
+      const queryBuilder = this.userRepo.createQueryBuilder('user');
+
+      queryBuilder.select([
+        'user.id AS id',
+        'user.userName AS userName',
+        'user.firstName AS firstName',
+        'user.lastName AS lastName',
+        'user.email AS email',
+        'user.status AS status',
+        'user.companyId AS companyId',
+        'user.profilePhoto AS profilePhoto',
+        'user.addedDate AS addedDate',
+        'user.updatedDate AS updatedDate',
+        'user.lastLoginDate AS lastLoginDate',
+        'user.addedBy AS addedBy',
+        'user.updatedBy AS updatedBy',
+        'user.dialCode AS dialCode',
+        'user.phone AS phone',
+      ]);
+
+      queryBuilder.addSelect("CONCAT(user.firstName, ' ', user.lastName)", 'fullName');
+
+      queryBuilder.leftJoin(CompanyEntity, 'company', 'company.id = user.companyId');
+      queryBuilder.addSelect('company.companyName', 'companyName');
+
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = user.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = user.updatedBy');
+
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
+
+      queryBuilder.where('user.id = :id', { id: params.id });
+      queryBuilder.andWhere('user.sysRecDeleted = 0');
+
+      const user = await queryBuilder.getRawOne();
 
       if (!user) {
         throw new Error('User not found');
       }
 
-      const isSuperAdmin =
-        req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin && user.companyId !== req.user.companyId) {
-        throw new ForbiddenException('Cannot view user outside your company');
-      }
+      this.general.assertCompanyAccess(req, user.companyId, 'view', 'user');
 
-      const company = await this.companyRepo.findOne({
-        where: {
-          id: user.companyId,
-        },
-      });
+      const userGroupsRaw = await this.groupRepo.createQueryBuilder('group')
+        .select([
+          'group.id AS groupId',
+          'group.groupName AS groupName',
+          'group.groupCode AS groupCode',
+          'user_group.isPrimary AS isPrimary'
+        ])
+        .innerJoin(UserGroupEntity, 'user_group', 'user_group.groupId = group.id')
+        .where('user_group.userId = :userId', { userId: user.id })
+        .andWhere('user_group.status = :status', { status: Status.Active })
+        .orderBy('user_group.isPrimary', 'DESC')
+        .getRawMany();
 
-      const userGroups = await this.userGroupRepo.find({
-        where: {
-          userId: user.id,
-          status: 'Active',
-        },
-        order: {
-          isPrimary: 'DESC',
-        },
-      });
-
-      const groupIds = userGroups.map((ug) => ug.groupId);
-
-      let groups: GroupEntity[] = [];
-      if (groupIds.length > 0) {
-        groups = await this.groupRepo.find({
-          where: {
-            id: In(groupIds),
-          },
-        });
-      }
-      const mappedGroups = userGroups.map((ug) => {
-        const g = groups.find((grp) => grp.id === ug.groupId);
-        return {
-          groupId: ug.groupId,
-          groupName: g?.groupName || '',
-          groupCode: g?.groupCode || '',
-          isPrimary: ug.isPrimary === true || (ug.isPrimary as any) === 1,
-        };
-      });
-
-      user['companyName'] = company?.companyName || '';
+      const mappedGroups = userGroupsRaw.map((g) => ({
+        groupId: g.groupId,
+        groupName: g.groupName || '',
+        groupCode: g.groupCode || '',
+        isPrimary: g.isPrimary === 1 || g.isPrimary === true
+      }));
 
       user['groups'] = mappedGroups;
       user['groupName'] = mappedGroups[0]?.groupName || '';
@@ -129,11 +139,9 @@ export class UserListService {
         );
       }
 
-      const { password, ...safeUser } = user;
-
       return_data = {
         success: 1,
-        data: safeUser,
+        data: user,
       };
     } catch (err) {
       if (err instanceof ForbiddenException) {
@@ -161,13 +169,36 @@ export class UserListService {
   async getUserList(req, params) {
     let return_data: any = {};
     try {
-      const page = params.page ? parseInt(params.page) : 1;
-
-      const limit = params.limit ? parseInt(params.limit) : 10;
-
-      const skip = (page - 1) * limit;
+      const { page, limit, skip } = this.general.parsePagination(params);
 
       const queryBuilder = this.userRepo.createQueryBuilder('user');
+
+      queryBuilder.select([
+        'user.id AS id',
+        'user.userName AS userName',
+        'user.firstName AS firstName',
+        'user.lastName AS lastName',
+        'user.email AS email',
+        'user.status AS status',
+        'user.companyId AS companyId',
+        'user.profilePhoto AS profilePhoto',
+        'user.addedDate AS addedDate',
+        'user.updatedDate AS updatedDate',
+        'user.lastLoginDate AS lastLoginDate',
+      ]);
+
+      queryBuilder.addSelect("CONCAT(user.firstName, ' ', user.lastName)", 'fullName');
+
+      queryBuilder.addSelect('company.companyName', 'companyName');
+      queryBuilder.addSelect('primaryGroup.groupName', 'groupName');
+
+      queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = user.addedBy');
+      queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = user.updatedBy');
+
+      queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
+
+      queryBuilder.andWhere('user.sysRecDeleted = 0');
 
       queryBuilder.leftJoin(
         CompanyEntity,
@@ -187,27 +218,22 @@ export class UserListService {
         'primaryGroup.id = primaryUserGroup.groupId',
       );
 
-      const isSuperAdmin =
-        req.user?.isSuperAdmin === 1 || req.user?.isSuperAdmin === true;
-      if (!isSuperAdmin) {
-        queryBuilder.andWhere('user.companyId = :scopedCompanyId', {
-          scopedCompanyId: req.user.companyId,
-        });
-      }
+      this.general.applyCompanyScope(queryBuilder, req, 'user');
 
       let groupFilterIds: number[] = [];
-
       if (params?.filters && Array.isArray(params.filters)) {
         const remainingFilters: any[] = [];
         for (const f of params.filters) {
           if (f.key === 'groupId' || f.key === 'groupName') {
             if (Array.isArray(f.value)) {
-               groupFilterIds = f.value.map(v => Number(v)).filter(v => !isNaN(v) && v > 0);
+              groupFilterIds = f.value
+                .map((v) => Number(v))
+                .filter((v) => !isNaN(v) && v > 0);
             } else {
-               const parsed = Number(f.value);
-               if (!isNaN(parsed) && parsed > 0) {
-                 groupFilterIds.push(parsed);
-               }
+              const parsed = Number(f.value);
+              if (!isNaN(parsed) && parsed > 0) {
+                groupFilterIds.push(parsed);
+              }
             }
           } else {
             remainingFilters.push(f);
@@ -223,61 +249,13 @@ export class UserListService {
         );
       }
 
-      if (params?.search) {
-        queryBuilder.andWhere(
-          `
-          (
-            user.userName LIKE :search
-            OR user.firstName LIKE :search
-            OR user.lastName LIKE :search
-            OR user.email LIKE :search
-          )
-          `,
-          {
-            search: `%${params.search}%`,
-          },
-        );
-      }
+      await this.general.applyListQuery(queryBuilder, params, 'user.firstName');
 
-      const columnMap: Record<string, string> = {
-        firstName: 'user.firstName',
-        lastName: 'user.lastName',
-        email: 'user.email',
-        userName: 'user.userName',
-        status: 'user.status',
-        companyName: 'company.companyName',
-        companyId: 'user.companyId',
-        id: 'user.id',
-        groupName: 'primaryGroup.groupName',
-      };
+      const total = await queryBuilder.getCount();
+      queryBuilder.offset(skip).limit(limit);
 
-      if (params?.filters && params.filters.length > 0) {
-        const whereString = await this.general.makeFilterString(
-          params.filters,
-          columnMap,
-          params.logicalOperator,
-        );
-        if (whereString) {
-          queryBuilder.andWhere(whereString);
-        }
-      }
+      const data = await queryBuilder.getRawMany();
 
-      if (
-        params?.sortField &&
-        params?.sortOrder &&
-        columnMap[params.sortField]
-      ) {
-        const order =
-          params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-        queryBuilder.orderBy(columnMap[params.sortField], order);
-      } else {
-        queryBuilder.orderBy('user.firstName', 'ASC');
-      }
-
-      queryBuilder.offset(skip);
-      queryBuilder.limit(limit);
-
-      const [data, total] = await queryBuilder.getManyAndCount();
       const userList: any[] = [];
       const userIds = data.map((u) => u.id);
 
@@ -288,7 +266,7 @@ export class UserListService {
         allUserGroups = await this.userGroupRepo.find({
           where: {
             userId: In(userIds),
-            status: 'Active',
+            status: Status.Active,
           },
           order: {
             isPrimary: 'DESC',
@@ -307,14 +285,12 @@ export class UserListService {
         }
       }
 
-      for (const user of data) {
-        const company = await this.companyRepo.findOne({
-          where: {
-            id: user.companyId,
-          },
-        });
+      await this.general.formatDate(data);
 
-        const uUserGroups = allUserGroups.filter((ug) => ug.userId === user.id);
+      for (const safeUser of data) {
+        const uUserGroups = allUserGroups.filter(
+          (ug) => ug.userId === safeUser.id,
+        );
         const mappedGroups = uUserGroups.map((ug) => {
           const g = allGroups.find((grp) => grp.id === ug.groupId);
           return {
@@ -325,56 +301,42 @@ export class UserListService {
           };
         });
 
-        const { password, ...safeUser } = user;
-
-        safeUser['companyName'] = company?.companyName || '';
-        safeUser['groups'] = mappedGroups;
-        safeUser['groupName'] = mappedGroups[0]?.groupName || '';
-        safeUser['groupNames'] = mappedGroups
+        safeUser.groups = mappedGroups;
+        safeUser.groupNames = mappedGroups
           .map((g) => g.groupName)
           .filter(Boolean)
           .join(', ');
 
-        safeUser['addedDateFormatted'] = await this.general.dateFormat(
-          user.addedDate,
-        );
-
-        if (user.updatedDate) {
-          safeUser['updatedDateFormatted'] = await this.general.dateFormat(
-            user.updatedDate,
+        if (safeUser.lastLoginDate) {
+          safeUser.lastLoginDateFormatted = await this.general.dateFormat(
+            safeUser.lastLoginDate,
           );
         }
 
-        if (user.lastLoginDate) {
-          safeUser['lastLoginDateFormatted'] = await this.general.dateFormat(
-            user.lastLoginDate,
-          );
-        }
-
-        if (user.profilePhoto) {
-          safeUser['photoUrl'] = await this.general.generateUrl(
+        if (safeUser.profilePhoto) {
+          safeUser.photoUrl = await this.general.generateUrl(
             'users',
-            `${user.id}`,
-            user.profilePhoto,
+            `${safeUser.id}`,
+            safeUser.profilePhoto,
           );
         }
 
         userList.push(safeUser);
       }
 
+      const pagination = this.general.buildPaginationResponse(
+        total,
+        page,
+        limit,
+        skip,
+      );
+
       return_data = {
         success: 1,
         message: 'User List fetched successfully',
         data: {
           list: userList,
-          pagination: {
-            total,
-            page,
-            limit,
-            total_pages: Math.ceil(total / limit),
-            prevPage: page > 1,
-            nextPage: total > skip + limit,
-          },
+          pagination,
         },
       };
     } catch (err) {
@@ -398,6 +360,12 @@ export class UserListService {
   }
 
   async finishFailure(params) {
-    return params;
+    return {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message,
+        data: params?.data || [],
+      },
+    };
   }
 }

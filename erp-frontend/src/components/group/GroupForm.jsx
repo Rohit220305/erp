@@ -56,7 +56,7 @@ const customSelectStyles = (error, disabled) => ({
 
 export default function GroupForm({ mode = "create", defaultValues: initialValues }) {
   const router = useRouter();
-  
+
   const defaultValues = { ...BASE_DEFAULTS, ...initialValues };
 
   const [formData, setFormData] = useState(defaultValues);
@@ -67,7 +67,7 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
   const [capabilities, setCapabilities] = useState([]);
   const [selectedCodes, setSelectedCodes] = useState([]);
   const [matrixLoading, setMatrixLoading] = useState(true);
-  
+
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
     type: null,
@@ -206,7 +206,7 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
           </h2>
 
           <div className="grid md:grid-cols-2 gap-6">
-            
+
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Group Code <span className="text-red-500">*</span>
@@ -310,8 +310,8 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
                 ? "Creating..."
                 : "Updating..."
               : mode === "create"
-              ? "Create Group"
-              : "Update Group"}
+                ? "Create Group"
+                : "Update Group"}
           </button>
         </div>
       </form>

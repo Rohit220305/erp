@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import { Building2 } from "lucide-react";
 
 export default function CompanyGridCard({ item, config, setSelectedItemForDetails }) {
   const { can } = useAuth();
@@ -18,14 +19,19 @@ export default function CompanyGridCard({ item, config, setSelectedItemForDetail
       <div className="flex items-start justify-between">
         <div
           className={`flex items-center gap-3 ${hasViewPerm ? "cursor-pointer" : ""}`}
-          onClick={() => hasViewPerm && setSelectedItemForDetails && setSelectedItemForDetails(item)}
+          onClick={() =>
+            hasViewPerm &&
+            setSelectedItemForDetails &&
+            setSelectedItemForDetails(item)
+          }
         >
           <div className="relative shrink-0">
             <SharedImageZoom
               id={`company-grid-${item.id}`}
               src={item.logoUrl}
               alt={item.companyName}
-              placeholderText={item.companyName?.[0] || "C"}
+              // placeholderText={item.companyName?.[0] || "C"}
+              placeholderText={<Building2 size={18} />}
               thumbnailClassName="w-14 h-14 rounded-xl object-cover border border-gray-100"
               modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"
             />
@@ -38,7 +44,9 @@ export default function CompanyGridCard({ item, config, setSelectedItemForDetail
           <div>
             <p
               className={`font-medium leading-tight mb-0.5 ${
-                hasViewPerm ? "text-[#1565c0] hover:underline decoration-1 underline-offset-2" : "text-gray-900"
+                hasViewPerm
+                  ? "text-[#1565c0] hover:underline decoration-1 underline-offset-2"
+                  : "text-gray-900"
               }`}
             >
               {item.companyName || "—"}
@@ -72,7 +80,9 @@ export default function CompanyGridCard({ item, config, setSelectedItemForDetail
         {item.addedDateFormatted && (
           <div className="grid grid-cols-[110px_1fr] items-center gap-2">
             <span className="text-gray-400">Added date</span>
-            <span className="text-gray-900 truncate">{item.addedDateFormatted}</span>
+            <span className="text-gray-900 truncate">
+              {item.addedDateFormatted}
+            </span>
           </div>
         )}
       </div>

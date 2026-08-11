@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Injectable } from '@nestjs/common';
 import { pipeline } from 'stream/promises';
+import { validate } from 'class-validator';
+import { CommonFileDto } from '../dto/common-file.dto';
 
 @Injectable()
 export class CommonFileService {
@@ -85,5 +87,28 @@ export class CommonFileService {
     } catch (err) {
       return false;
     }
+  }
+
+  async validateAndCleanUp(file: any): Promise<{ valid: boolean; error?: any }> {
+    if (!file) {
+      return { valid: true };
+    }
+
+    const fileDto = new CommonFileDto();
+    fileDto.file = file.mimetype;
+    const errors = await validate(fileDto);
+
+    if (errors.length > 0) {
+      await this.deleteTempFile(file.filename);
+      return {
+        valid: false,
+        error: {
+          success: 0,
+          message: 'Invalid File',
+        },
+      };
+    }
+
+    return { valid: true };
   }
 }

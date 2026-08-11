@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -13,19 +13,19 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between">
         <div
-          className={`flex items-center gap-3 ${can("USER_VIEW") ? "cursor-pointer" : ""}`}
+          className={`flex items-center gap-3 ${can(CAPABILITIES.USER.VIEW) ? "cursor-pointer" : ""}`}
           onClick={() => {
-            if (can("USER_VIEW")) {
+            if (can(CAPABILITIES.USER.VIEW)) {
               setSelectedUserForDetails(user);
             }
           }}
         >
           <div className="relative shrink-0">
-            <SharedImageZoom
-              id={`grid-${user.id}`}
-              src={user.photoUrl}
-              alt={`${user.firstName} ${user.lastName}`}
-              placeholderText={`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
+              <SharedImageZoom
+                id={`grid-${user.id}`}
+                src={user.photoUrl}
+                alt={user.fullName}
+                placeholderText={user.fullName ? user.fullName.substring(0, 2).toUpperCase() : ""}
               thumbnailClassName="w-14 h-14 rounded-full object-cover border border-gray-100"
               modalImageClassName="w-64 h-64 rounded-full"
             />
@@ -35,7 +35,7 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
           </div>
           <div>
             <p className="text-[#1565c0] font-medium leading-tight mb-0.5 hover:underline decoration-1 underline-offset-2">
-              {user.firstName} {user.lastName}
+              {user.fullName}
             </p>
             <p className="text-gray-400 text-sm leading-tight">
               {user.email || "—"}
@@ -110,7 +110,7 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
         </div>
         <div className="grid grid-cols-[110px_1fr] items-center gap-2">
           <span className="text-gray-400">Company Name</span>
-          {can("COMPANY_VIEW") ? (
+          {can(CAPABILITIES.COMPANY.VIEW) ? (
             <span
               className="text-[#1565c0] font-medium truncate hover:underline cursor-pointer"
               onClick={() => setSelectedCompanyForDetails(user)}

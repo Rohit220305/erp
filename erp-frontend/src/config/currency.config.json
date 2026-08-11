@@ -1,15 +1,13 @@
 {
   "moduleName": "Currency",
   "title": "Currencies",
-
   "permissions": {
-    "list":   "CURRENCY_LIST",
+    "list": "CURRENCY_LIST",
     "create": "CURRENCY_CREATE",
-    "view":   "CURRENCY_VIEW",
+    "view": "CURRENCY_VIEW",
     "update": "CURRENCY_UPDATE",
     "delete": "CURRENCY_DELETE"
   },
-
   "actions": {
     "viewRedirectPath": "/currency/{id}",
     "header": [
@@ -41,53 +39,109 @@
       }
     ]
   },
-
   "defaultFilters": {
     "currencyName": "",
     "currencyCode": "",
     "currencySymbol": "",
     "status": ""
   },
-
   "sidebarStatuses": [
-    { "label": "Active", "value": "Active" },
-    { "label": "Inactive", "value": "Inactive" }
+    {
+      "label": "Active",
+      "value": "Active"
+    },
+    {
+      "label": "Inactive",
+      "value": "Inactive"
+    }
   ],
-
   "sidebarFields": [
-    { "label": "Currency Code",   "value": "currencyCode",   "type": "text" },
-    { "label": "Currency Name",   "value": "currencyName",   "type": "text" },
-    { "label": "Currency Symbol", "value": "currencySymbol", "type": "text" },
+    {
+      "label": "Currency Code",
+      "value": "currencyCode",
+      "type": "text"
+    },
+    {
+      "label": "Currency Name",
+      "value": "currencyName",
+      "type": "text"
+    },
+    {
+      "label": "Currency Symbol",
+      "value": "currencySymbol",
+      "type": "text"
+    },
     {
       "label": "Status",
       "value": "status",
       "type": "select",
       "options": [
-        { "label": "Active",   "value": "Active" },
-        { "label": "Inactive", "value": "Inactive" }
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
       ]
     }
   ],
-
   "searchFields": [
-    { "label": "Currency Code",   "value": "currencyCode",   "type": "text" },
-    { "label": "Currency Name",   "value": "currencyName",   "type": "text" },
-    { "label": "Currency Symbol", "value": "currencySymbol", "type": "text" },
+    {
+      "label": "Currency Code",
+      "value": "currencyCode",
+      "type": "text"
+    },
+    {
+      "label": "Currency Name",
+      "value": "currencyName",
+      "type": "text"
+    },
+    {
+      "label": "Currency Symbol",
+      "value": "currencySymbol",
+      "type": "text"
+    },
     {
       "label": "Status",
       "value": "status",
       "type": "select",
       "options": [
-        { "label": "Active",   "value": "Active" },
-        { "label": "Inactive", "value": "Inactive" }
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
       ]
     }
   ],
-
   "columns": [
-    { "label": "Name",   "key": "currencyName",   "type": "link",       "linkPath": "/currency/{id}", "searchable": true,  "sortable": true  },
-    { "label": "Code",   "key": "currencyCode",   "type": "text",       "searchable": true,  "sortable": true  },
-    { "label": "Symbol", "key": "currencySymbol", "type": "text",       "searchable": false, "sortable": false },
+    {
+      "label": "Name",
+      "key": "currencyName",
+      "type": "link",
+      "linkPath": "/currency/{id}",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Code",
+      "key": "currencyCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Symbol",
+      "key": "currencySymbol",
+      "type": "text",
+      "searchable": false,
+      "sortable": false
+    },
     {
       "label": "Status",
       "key": "status",
@@ -95,39 +149,48 @@
       "searchable": true,
       "sortable": true,
       "options": [
-        { "label": "Active",   "value": "Active" },
-        { "label": "Inactive", "value": "Inactive" }
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
       ]
     }
   ],
-
-  "viewFields": [
-    { "key": "currencyCode",   "label": "Currency Code",   "type": "text" },
-    { "key": "currencyName",   "label": "Currency Name",   "type": "text" },
-    { "key": "currencySymbol", "label": "Currency Symbol", "type": "text" },
-    { "key": "status",         "label": "Status",          "type": "statusBadge" }
-  ],
-
   "listCard": {
     "primary": {
-      "title":    "currencyName",
+      "title": "currencyName",
       "subtitle": "currencyCode"
     },
     "columns": [
-      { "label": "Symbol", "key": "currencySymbol", "type": "text"       },
-      { "label": "Status", "key": "status",         "type": "statusBadge" }
+      {
+        "label": "Symbol",
+        "key": "currencySymbol",
+        "type": "text"
+      },
+      {
+        "label": "Status",
+        "key": "status",
+        "type": "statusBadge"
+      }
     ],
     "expanded": []
   },
-
   "gridCard": {
     "header": {
-      "title":    "currencyName",
+      "title": "currencyName",
       "subtitle": "currencyCode",
-      "badge":    "status"
+      "badge": "status"
     },
     "details": [
-      { "label": "Symbol", "key": "currencySymbol", "type": "text" }
+      {
+        "label": "Symbol",
+        "key": "currencySymbol",
+        "type": "text"
+      }
     ],
     "footer": {}
   }

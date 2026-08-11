@@ -1,36 +1,31 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getUser } from "@/lib/api/user-api";
 import UserDetailPage from "@/components/user/UserDetailPage";
 import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
+import Loader from "@/components/common/Loader";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
 export default function AdminDetailRoute() {
   const { id } = useParams();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const { can, user: currentUser } = useAuth();
+  const { execute, isLoading: loading } = useAsyncAction();
 
   useEffect(() => {
-    async function fetch() {
-      try {
-        const res = await getUser(id);
-        setUser(res);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetch();
-  }, [id]);
+    execute(async () => {
+      const res = await getUser(id);
+      setUser(res);
+    });
+  }, [id, execute]);
 
-  if (loading) return <div className="p-6 text-sm text-gray-400">Loading...</div>;
+  if (loading) return <Loader fullPage />;
 
   const isSelf = currentUser && (String(currentUser.sub) === String(id) || String(currentUser.id) === String(id));
-  if (!can("USER_VIEW") && !isSelf) {
+  if (!can(CAPABILITIES.USER.VIEW) && !isSelf) {
     return <AccessDenied missingPermission="USER_VIEW" />;
   }
 

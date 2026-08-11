@@ -1,69 +1,20 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { useRouter } from "next/navigation";
 import { Building2, MapPin, Phone, Mail } from "lucide-react";
 import DetailRow from "./DetailsRow";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect, useState } from "react";
-import { getUser } from "@/lib/api/user-api";
 import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
-import UserDetailsDrawer from "../user/UserDetailsDrawer";
+import SideDrawer from "@/components/common/SideDrawer";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function CompanyDetailsPage({ company }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
   const { can, user: currentUser } = useAuth();
-  const [addedAdmin, setAddedAdmin] = useState(null);
-  const [updatedAdmin, setUpdatedAdmin] = useState(null);
-  const [addedAdminRestricted, setAddedAdminRestricted] = useState(false);
-  const [updatedAdminRestricted, setUpdatedAdminRestricted] = useState(false);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
-
-  const fetchAddedBy = async () => {
-    const canViewUsers = can("USER_VIEW") || currentUser?.isSuperAdmin;
-    if (company.addedBy) {
-      if (!canViewUsers && currentUser?.id !== company.addedBy) {
-        setAddedAdminRestricted(true);
-      } else {
-        try {
-          const response = await getUser(company.addedBy);
-          if (response && response.firstName) {
-            setAddedAdmin(response);
-            setAddedAdminRestricted(false);
-          } else {
-            setAddedAdminRestricted(true);
-          }
-        } catch (error) {
-          console.error(error);
-          setAddedAdminRestricted(true);
-        }
-      }
-    }
-  };
-
-  const fetchUpdatedBy = async () => {
-    const canViewUsers = can("USER_VIEW") || currentUser?.isSuperAdmin;
-    if (company.updatedBy) {
-      if (!canViewUsers && currentUser?.id !== company.updatedBy) {
-        setUpdatedAdminRestricted(true);
-      } else {
-        try {
-          const response = await getUser(company.updatedBy);
-          if (response && response.firstName) {
-            setUpdatedAdmin(response);
-            setUpdatedAdminRestricted(false);
-          } else {
-            setUpdatedAdminRestricted(true);
-          }
-        } catch (error) {
-          console.error(error);
-          setUpdatedAdminRestricted(true);
-        }
-      }
-    }
-  };
 
   useEffect(() => {
     setConfig({
@@ -82,7 +33,7 @@ export default function CompanyDetailsPage({ company }) {
           { label: "Master", href: "/" },
           { label: "Company Master", href: "/company" },
         ],
-        actionButton: can("COMPANY_UPDATE")
+        actionButton: can(CAPABILITIES.COMPANY.UPDATE)
           ? {
               label: "Edit",
               onClick: () => router.push(`/company/${company.id}/edit-company`),
@@ -90,19 +41,10 @@ export default function CompanyDetailsPage({ company }) {
           : null,
       },
     });
-
-    if (can("COMPANY_VIEW")) {
-      fetchAddedBy();
-      fetchUpdatedBy();
-    }
     return () => {
       resetConfig();
     };
   }, [setConfig, router, company.id, resetConfig, can]);
-
-  if (!can("COMPANY_VIEW")) {
-    return <AccessDenied missingPermission="COMPANY_VIEW" />;
-  }
 
   if (
     !company ||
@@ -110,8 +52,12 @@ export default function CompanyDetailsPage({ company }) {
     company.settings?.success === 0 ||
     !company.companyName
   ) {
-    return <AccessDenied missingPermission="COMPANY_VIEW" />;
+    if (company?.accessDenied) {
+      return <AccessDenied missingPermission={company.requiredPermission || CAPABILITIES.COMPANY.VIEW} />;
+    }
+    return <div className="p-6 text-gray-500">Company data could not be loaded.</div>;
   }
+  console.log("company", company);
   return (
     <div className="p-6">
       <div className="grid grid-cols-12 gap-6">
@@ -251,104 +197,32 @@ export default function CompanyDetailsPage({ company }) {
             </div>
 
             <div className="space-y-6">
-              {!addedAdminRestricted && (
-                <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                  <h3 className="font-semibold mb-5">Added Info</h3>
-
-                  <div
-                    className="flex items-center gap-3 cursor-pointer group"
-                    onClick={() => setSelectedUserForDetails(addedAdmin)}
-                  >
-                    {addedAdminRestricted ? (
-                      <div className="flex items-center gap-2 py-1.5 text-gray-400">
-                        <span className="text-xs">🔒</span>
-                        <span className="text-sm italic font-medium">
-                          Restricted Info
-                        </span>
-                      </div>
-                    ) : addedAdmin?.photoUrl ? (
-                      <img
-                        src={addedAdmin.photoUrl}
-                        alt="Added by"
-                        className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-medium text-xs border border-blue-200">
-                        {addedAdmin?.firstName?.[0] ||
-                          company?.addedBy?.[0] ||
-                          "?"}
-                      </div>
-                    )}
-
-                    {!addedAdminRestricted && (
-                      <div>
-                        <span className="text-sm text-blue-700 group-hover:text-black group-hover:underline block font-medium">
-                          {addedAdmin?.firstName && addedAdmin?.lastName
-                            ? `${addedAdmin.firstName} ${addedAdmin.lastName}`
-                            : company?.addedBy || "-"}
-                        </span>
-                        <p className="text-[12px] text-gray-400 mt-0.5">
-                          {company?.addedDateFormatted || "-"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {!updatedAdminRestricted && updatedAdmin && (
-                <div className="bg-white rounded-xl p-6 hover:shadow-lg transition">
-                  <h3 className="font-semibold mb-5">Updated Info</h3>
-
-                  <div
-                    className="flex items-center gap-3 cursor-pointer group"
-                    onClick={() => setSelectedUserForDetails(updatedAdmin)}
-                  >
-                    {updatedAdminRestricted ? (
-                      <div className="flex items-center gap-2 py-1.5 text-gray-400">
-                        <span className="text-xs">🔒</span>
-                        <span className="text-sm italic font-medium">
-                          Restricted Info
-                        </span>
-                      </div>
-                    ) : updatedAdmin?.photoUrl ? (
-                      <img
-                        src={updatedAdmin.photoUrl}
-                        alt="Updated by"
-                        className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-medium text-xs border border-gray-200">
-                        {updatedAdmin?.firstName?.[0] ||
-                          company?.updatedBy?.[0] ||
-                          "?"}
-                      </div>
-                    )}
-
-                    {!updatedAdminRestricted && (
-                      <div>
-                        <span className="text-sm text-blue-700 group-hover:text-black  block font-medium">
-                          {updatedAdmin?.firstName && updatedAdmin?.lastName
-                            ? `${updatedAdmin.firstName} ${updatedAdmin.lastName}`
-                            : company?.updatedBy || "-"}
-                        </span>
-                        <p className="text-[12px] text-gray-400 mt-0.5">
-                          {company?.updatedDateFormatted || "-"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+                <h3 className="font-semibold mb-5">Audit Info</h3>
+                {company.addedByName && (
+                  <DetailRow label="Added By" value={company.addedByName} />
+                )}
+                {company.addedDateFormatted && (
+                  <DetailRow label="Added Date" value={company.addedDateFormatted} />
+                )}
+                {company.updatedByName && (
+                  <DetailRow label="Updated By" value={company.updatedByName} />
+                )}
+                {company.updatedDateFormatted && (
+                  <DetailRow label="Updated Date" value={company.updatedDateFormatted} />
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <UserDetailsDrawer
+      <SideDrawer
         open={!!selectedUserForDetails}
         onClose={() => setSelectedUserForDetails(null)}
-        user={selectedUserForDetails}
+        moduleName="User"
+        mode="details"
+        data={selectedUserForDetails}
       />
     </div>
   );

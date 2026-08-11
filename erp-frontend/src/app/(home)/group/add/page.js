@@ -1,5 +1,5 @@
 "use client";
-
+import { CAPABILITIES } from "@/config/capabilities.config";
 import GroupForm from "@/components/group/GroupForm";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect } from "react";
@@ -32,7 +32,7 @@ export default function GroupAddPage() {
     return () => resetConfig();
   }, []);
 
-  if (!can("GROUP_CREATE")) {
+  if (!can(CAPABILITIES.GROUP.CREATE)) {
     return <AccessDenied missingPermission="GROUP_CREATE" />;
   }
 

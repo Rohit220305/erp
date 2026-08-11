@@ -15,9 +15,9 @@ import DynamicListing from "@/components/common/dynamic/DynamicListing";
 import UserTableRow from "./UserTableRow";
 import UserListCard from "./UserListCard";
 import UserGridCard from "./UserGridCard";
-import UserDetailsDrawer from "./UserDetailsDrawer";
+import SideDrawer from "@/components/common/SideDrawer";
+import { getCompany } from "@/lib/api/company-api";
 import ResetPasswordDrawer from "./ResetPasswordDrawer";
-import CompanyDetailsDrawer from "@/components/company/CompanyDetailsDrawer";
 
 export default function UserListing() {
   const { user: currentUser, can, loginAs } = useAuth();
@@ -128,15 +128,14 @@ export default function UserListing() {
             setSelectedCompanyForDetails={setSelectedCompanyForDetails}
           />
         )}
-        renderDrawer={(open, onClose, item) => (
-          <UserDetailsDrawer open={open} onClose={onClose} user={item} />
-        )}
       />
 
-      <CompanyDetailsDrawer
+      <SideDrawer
         open={!!selectedCompanyForDetails}
         onClose={() => setSelectedCompanyForDetails(null)}
-        company={selectedCompanyForDetails}
+        moduleName="Company"
+        mode="details"
+        data={selectedCompanyForDetails ? { id: selectedCompanyForDetails.companyId } : null}
       />
 
       <ResetPasswordDrawer

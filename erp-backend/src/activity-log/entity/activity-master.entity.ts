@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Entity({
   name: 'activity_master',
@@ -24,8 +25,15 @@ export class ActivityMasterEntity {
 
   @Column({
     type: 'enum',
-    enum: ['Active', 'Inactive'],
-    default: 'Active',
+    enum: Status,
+    default: Status.Active,
   })
-  status: string;
+  status: Status;
+
+  @Column({
+    type: 'tinyint',
+    default: 0,
+    name: 'sysRecDeleted',
+  })
+  sysRecDeleted: boolean;
 }

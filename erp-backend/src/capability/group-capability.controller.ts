@@ -1,3 +1,4 @@
+import { CAPABILITIES } from 'src/package/config/capabilities.config';
 import {
   Body,
   Controller,
@@ -5,8 +6,10 @@ import {
   Get,
   Post,
   Query,
-  Req,
+  
 } from '@nestjs/common';
+import { AppRequest } from 'src/package/decorator/app-request.decorator';
+import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 
 import {
   AssignGroupCapabilitiesDto,
@@ -24,30 +27,34 @@ export class GroupCapabilityController {
   constructor(
     private readonly groupCapabilityService: GroupCapabilityService,
     private readonly groupCapabilityListService: GroupCapabilityListService,
-  ) {}
+  ) { }
 
   @Post('assign')
-  async assign(@Req() req, @Body() body: AssignGroupCapabilitiesDto) {
+  @RequirePermission(CAPABILITIES.GROUP.UPDATE)
+  async assign(@AppRequest() req: IAppRequest, @Body() body: AssignGroupCapabilitiesDto) {
     return await this.groupCapabilityService.startAssignGroupCapabilities(req, body);
   }
 
   @Delete('remove')
-  async remove(@Req() req, @Body() body: RemoveGroupCapabilityDto) {
+  @RequirePermission(CAPABILITIES.GROUP.UPDATE)
+  async remove(@AppRequest() req: IAppRequest, @Body() body: RemoveGroupCapabilityDto) {
     return await this.groupCapabilityService.startRemoveGroupCapability(req, body);
   }
 
   @Get('get-by-group')
+  @RequirePermission(CAPABILITIES.GROUP.VIEW)
   async getByGroup(@Query() query: GetByGroupDto) {
     return await this.groupCapabilityListService.startGetByGroup(query);
   }
 
   @Post('list-group-capabilities')
-  async listGroupCapabilities(@Req() req, @Body() body: ListGroupCapabilitiesDto) {
+  @RequirePermission(CAPABILITIES.GROUP.VIEW)
+  async listGroupCapabilities(@AppRequest() req: IAppRequest, @Body() body: ListGroupCapabilitiesDto) {
     return await this.groupCapabilityListService.startListGroupCapabilities(req, body);
   }
 
   @Get('matrix')
-  @RequirePermission('GROUP_VIEW')
+  @RequirePermission(CAPABILITIES.GROUP.VIEW)
   async getMatrix(@Query('groupId') groupId?: string) {
     return await this.groupCapabilityListService.startGetMatrix(groupId ? Number(groupId) : undefined);
   }

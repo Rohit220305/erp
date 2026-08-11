@@ -279,7 +279,7 @@ export default function UserForm({
       } else {
         toast.error(
           message ||
-            `Failed to ${mode === "create" ? "create" : "update"} user`,
+          `Failed to ${mode === "create" ? "create" : "update"} user`,
         );
       }
     } catch (error) {

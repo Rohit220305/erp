@@ -1,9 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { AbstractBaseEntity } from 'src/package/entities/base.entity';
+import { Status } from 'src/package/common/enums/status.enum';
 
 @Entity({
   name: 'currency_master',
 })
-export class CurrencyEntity {
+export class CurrencyEntity extends AbstractBaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -25,30 +27,8 @@ export class CurrencyEntity {
 
   @Column({
     type: 'enum',
-    enum: ['Active', 'Inactive'],
-    default: 'Active',
+    enum: Status,
+    default: Status.Active,
   })
-  status: string;
-
-  @Column({
-    nullable: true,
-  })
-  createdBy: number;
-
-  @Column({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  createdAt: Date;
-
-  @Column({
-    nullable: true,
-  })
-  updatedBy: number;
-
-  @Column({
-    type: 'timestamp',
-    nullable: true,
-  })
-  updatedAt: Date;
+  status: Status;
 }

@@ -1,0 +1,167 @@
+{
+  "moduleName": "Manufacturer",
+  "title": "Manufacturer",
+  "permissions": {
+    "list": "MANUFACTURER_LIST",
+    "create": "MANUFACTURER_CREATE",
+    "view": "MANUFACTURER_VIEW",
+    "update": "MANUFACTURER_UPDATE",
+    "delete": "MANUFACTURER_DELETE"
+  },
+  "actions": {
+    "header": [
+      {
+        "label": "Add Manufacturer",
+        "type": "addDrawer",
+        "path": "/manufacturer/add",
+        "permission": "MANUFACTURER_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editDrawer",
+        "path": "/manufacturer/edit/{id}",
+        "icon": "Edit",
+        "permission": "MANUFACTURER_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "delete",
+        "icon": "Trash2",
+        "permission": "MANUFACTURER_DELETE",
+        "danger": true
+      },
+      {
+        "label": "More Details",
+        "type": "navigate",
+        "path": "/manufacturer/{id}",
+        "icon": "ArrowRight",
+        "permission": "MANUFACTURER_VIEW"
+      }
+    ]
+  },
+  "columns": [
+    {
+      "key": "manufacturerName",
+      "label": "Manufacturer Name",
+      "type": "link",
+      "linkPath": "/manufacturer/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "220px"
+    },
+    {
+      "key": "manufacturerCode",
+      "label": "Manufacturer Code",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "key": "referenceCode",
+      "label": "Reference Code",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+
+    {
+      "key": "addedDateFormatted",
+      "label": "Added Date",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "130px",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "manufacturerName": "",
+    "manufacturerCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    {
+      "label": "Active",
+      "value": "Active"
+    },
+    {
+      "label": "Inactive",
+      "value": "Inactive"
+    }
+  ],
+  "sidebarFields": [
+    {
+      "label": "Manufacturer Name",
+      "value": "manufacturerName",
+      "type": "text"
+    },
+    {
+      "label": "Manufacturer Code",
+      "value": "manufacturerCode",
+      "type": "text"
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "searchFields": [
+    {
+      "label": "Manufacturer Name",
+      "value": "manufacturerName",
+      "type": "text"
+    },
+    {
+      "label": "Manufacturer Code",
+      "value": "manufacturerCode",
+      "type": "text"
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ]
+}
