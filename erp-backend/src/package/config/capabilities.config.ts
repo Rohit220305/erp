@@ -79,4 +79,11 @@ export const CAPABILITIES = {
   ACTIVITY_LOG: {
     VIEW: 'ACTIVITY_LOG_VIEW',
   },
+  ITEM: {
+    CREATE: 'ITEM_CREATE',
+    UPDATE: 'ITEM_UPDATE',
+    DELETE: 'ITEM_DELETE',
+    VIEW: 'ITEM_VIEW',
+    LIST: 'ITEM_LIST',
+  },
 };

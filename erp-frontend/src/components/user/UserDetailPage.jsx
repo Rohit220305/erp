@@ -17,23 +17,13 @@ import {
   User as UserIcon,
   Star,
 } from "lucide-react";
-import toast from "react-hot-toast";
 import ActivityLogTimeline from "./ActivityLogTimeline";
 import Loader from "@/components/common/Loader";
 import AccessDenied from "@/components/common/AccessDenied";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 
-function DetailRow({ label, value, isRestricted }) {
-  if (isRestricted) {
-    return (
-      <div className="flex items-start justify-between py-2.5 border-b border-gray-100 last:border-0 opacity-70">
-        <span className="text-sm text-gray-500 min-w-[140px]">{label}</span>
-        <span className="text-sm font-medium text-gray-400 flex items-center gap-1.5">
-          <span className="text-xs">🔒</span> Restricted
-        </span>
-      </div>
-    );
-  }
+function DetailRow({ label, value }) {
+ 
   return (
     <div className="flex items-start justify-between py-2.5 border-b border-gray-100 last:border-0">
       <span className="text-sm text-gray-500 min-w-[140px]">{label}</span>
@@ -120,7 +110,6 @@ export default function UserDetailPage({ user }) {
     }
     return <div className="p-6 text-gray-500">User data could not be loaded.</div>;
   }
-
   return (
     <div className="p-6">
       <div className="grid grid-cols-12 gap-6">

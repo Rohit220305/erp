@@ -49,7 +49,7 @@ export class ItemUomListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('uom.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = uom.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = uom.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = uom.updatedBy');
@@ -128,7 +128,7 @@ export class ItemUomListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('uom.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = uom.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = uom.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = uom.updatedBy');

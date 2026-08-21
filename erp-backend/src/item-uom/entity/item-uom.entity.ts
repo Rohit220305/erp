@@ -1,15 +1,7 @@
 import { AbstractBaseEntity } from 'src/package/entities/base.entity';
-import { CompanyEntity } from 'src/company/entity/company.entity';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  Unique,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
 
 
 enum UomType {
@@ -58,8 +50,4 @@ export class ItemUomEntity extends AbstractBaseEntity {
     default: Status.Active,
   })
   status: Status;
-
-  @ManyToOne(() => CompanyEntity)
-  @JoinColumn({ name: 'companyId' })
-  company: CompanyEntity;
 }

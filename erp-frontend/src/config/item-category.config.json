@@ -1,0 +1,190 @@
+{
+  "moduleName": "ItemCategory",
+  "title": "Item Category",
+  "permissions": {
+    "list": "ITEM_CATEGORY_LIST",
+    "create": "ITEM_CATEGORY_CREATE",
+    "view": "ITEM_CATEGORY_VIEW",
+    "update": "ITEM_CATEGORY_UPDATE",
+    "delete": "ITEM_CATEGORY_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Category Name",
+      "key": "categoryName",
+      "type": "link",
+      "linkPath": "/item-category/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "220px"
+    },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px",
+      "showForSuperAdminOnly": true
+    },
+    {
+      "label": "Category Code",
+      "key": "categoryCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Parent Category",
+      "key": "parentCategoryName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "110px",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Category",
+        "type": "addDrawer",
+        "path": "/item-category/add",
+        "permission": "ITEM_CATEGORY_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editDrawer",
+        "path": "/item-category/edit/{id}",
+        "icon": "Edit",
+        "permission": "ITEM_CATEGORY_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "ITEM_CATEGORY_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    {
+      "label": "Category Name",
+      "value": "categoryName",
+      "type": "text"
+    },
+    {
+      "label": "Category Code",
+      "value": "categoryCode",
+      "type": "text"
+    },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "searchFields": [
+    {
+      "label": "Category Name",
+      "value": "categoryName",
+      "type": "text"
+    },
+    {
+      "label": "Category Code",
+      "value": "categoryCode",
+      "type": "text"
+    },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "categoryName": "",
+    "categoryCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    {
+      "label": "Active",
+      "value": "Active"
+    },
+    {
+      "label": "Inactive",
+      "value": "Inactive"
+    }
+  ]
+}

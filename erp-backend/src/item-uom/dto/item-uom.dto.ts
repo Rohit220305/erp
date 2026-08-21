@@ -1,5 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsEnum,
   IsIn,
   IsInt,
   IsNotEmpty,
@@ -7,6 +8,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { Status } from 'src/package/common/enums/enum';
 
 export class ItemUomAddDto {
   @IsOptional()
@@ -35,8 +37,8 @@ export class ItemUomAddDto {
   unitType: string;
 
   @IsOptional()
-  @IsString()
-  status: string;
+  @IsEnum(Status)
+  status: Status;
 }
 
 export class ItemUomUpdateDto extends ItemUomAddDto {

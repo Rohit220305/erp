@@ -10,7 +10,7 @@ import { GroupEntity } from 'src/group/entity/group.entity';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { UserGroupEntity } from '../entity/user-group.entity';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 @Injectable()
 export class UserListService {

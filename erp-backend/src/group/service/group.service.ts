@@ -14,7 +14,7 @@ import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
 
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 @Injectable()
 export class GroupService {

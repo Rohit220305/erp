@@ -46,7 +46,7 @@ export class WorkCentreCategoryListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('category.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = category.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = category.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = category.updatedBy');
@@ -122,7 +122,7 @@ export class WorkCentreCategoryListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('category.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = category.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = category.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = category.updatedBy');

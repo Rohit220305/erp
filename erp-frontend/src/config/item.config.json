@@ -1,0 +1,315 @@
+{
+  "moduleName": "Item",
+  "title": "Item Master",
+  "permissions": {
+    "list": "ITEM_LIST",
+    "create": "ITEM_CREATE",
+    "view": "ITEM_VIEW",
+    "update": "ITEM_UPDATE",
+    "delete": "ITEM_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Image",
+      "key": "primaryImageUrl",
+      "type": "image",
+      "searchable": false,
+      "sortable": false,
+      "width": "80px"
+    },
+    {
+      "label": "Item Name",
+      "key": "itemName",
+      "type": "link",
+      "linkPath": "/item/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "220px"
+    },
+    {
+      "label": "Item Code",
+      "key": "itemCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Short Name",
+      "key": "shortName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "140px"
+    },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "type": "link",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px",
+      "showForSuperAdminOnly": true
+    },
+    {
+      "label": "Category",
+      "key": "categoryName",
+      "type": "link",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+  
+
+    {
+      "label": "Usage Type",
+      "key": "usageType",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Inventory Type",
+      "key": "inventoryType",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "140px"
+    },
+    {
+      "label": "Barcode",
+      "key": "barcode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+   
+    {
+      "label": "Primitive Qty",
+      "key": "primitiveQuantityDisplay",
+      "type": "text",
+      "searchable": false,
+      "sortable": false,
+      "width": "140px"
+    },
+    {
+      "label": "Currency",
+      "key": "currencyCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "110px"
+    },
+    {
+      "label": "Purchase Price",
+      "key": "purchasePrice",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "130px"
+    },
+    {
+      "label": "Cost Price",
+      "key": "costPrice",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "120px"
+    },
+    {
+      "label": "Storage",
+      "key": "storageName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Shelf Life",
+      "key": "shelfLifeDisplay",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "130px"
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "110px",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Item",
+        "type": "redirect",
+        "path": "/item/add",
+        "permission": "ITEM_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editRedirect",
+        "path": "/item/edit/{id}",
+        "icon": "Edit",
+        "permission": "ITEM_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "ITEM_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    { "label": "Item Name", "value": "itemName", "type": "text" },
+    { "label": "Item Code", "value": "itemCode", "type": "text" },
+    { "label": "Barcode", "value": "barcode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Category",
+      "value": "categoryId",
+      "type": "select",
+      "isMultiSelect": true,
+      "dynamicOptions": "itemCategories",
+      "options": []
+    },
+    {
+      "label": "Manufacturer",
+      "value": "manufacturerId",
+      "type": "select",
+      "isMultiSelect": true,
+      "dynamicOptions": "manufacturers",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "isMultiSelect": true,
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "searchFields": [
+    { "label": "Item Name", "value": "itemName", "type": "text" },
+    { "label": "Item Code", "value": "itemCode", "type": "text" },
+    { "label": "Barcode", "value": "barcode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Category",
+      "value": "categoryId",
+      "type": "select",
+      "isMultiSelect": true,
+      "dynamicOptions": "itemCategories",
+      "options": []
+    },
+    {
+      "label": "Manufacturer",
+      "value": "manufacturerId",
+      "type": "select",
+      "isMultiSelect": true,
+      "dynamicOptions": "manufacturers",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "isMultiSelect": true,
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "itemName": "",
+    "itemCode": "",
+    "barcode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ],
+  "listCard": {
+    "primary": {
+      "image": "primaryImageUrl",
+      "title": "itemName",
+      "subtitle": "itemCode"
+    },
+    "columns": [
+      { "label": "Category", "key": "categoryName", "type": "text" },
+      { "label": "Brand", "key": "brandName", "type": "text" },
+      { "label": "Usage Type", "key": "usageType", "type": "text" },
+      { "label": "Status", "key": "status", "type": "statusBadge" }
+    ],
+    "expanded": [
+      { "label": "Manufacturer", "key": "manufacturerName", "type": "text" },
+      { "label": "Barcode", "key": "barcode", "type": "text" },
+      { "label": "Item UOM", "key": "itemUomName", "type": "text" },
+      { "label": "Purchase Price", "key": "purchasePrice", "type": "text" },
+      { "label": "Added Date", "key": "addedDateFormatted", "type": "text" }
+    ]
+  },
+  "gridCard": {
+    "header": {
+      "image": "primaryImageUrl",
+      "title": "itemName",
+      "subtitle": "itemCode",
+      "badge": "status"
+    },
+    "details": [
+      { "label": "Category", "key": "categoryName", "type": "text" },
+      { "label": "Brand", "key": "brandName", "type": "text" },
+      { "label": "Barcode", "key": "barcode", "type": "text" },
+      { "label": "Price", "key": "purchasePrice", "type": "text" }
+    ],
+    "footer": {
+      "date": "addedDateFormatted"
+    }
+  }
+}

@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 import { GroupCapabilityEntity } from '../entity/group-capability.entity';
 import { GroupEntity } from 'src/group/entity/group.entity';
 import { CapabilityEntity } from '../entity/capability.entity';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 @Injectable()
 export class GroupCapabilityService {

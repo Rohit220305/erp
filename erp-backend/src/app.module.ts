@@ -20,6 +20,10 @@ import { PackageModule } from './package-master/package.module';
 import { ItemUomModule } from './item-uom/item-uom.module';
 import { WorkCentreCategoryModule } from './work-centre-category/work-centre-category.module';
 import { ProcessTemplateModule } from './process-template/process-template.module';
+import { BrandModule } from './brand/brand.module';
+import { WorkCentreModule } from './work-centre/work-centre.module';
+import { ProcessModule } from './process/process.module';
+import { ItemModule } from './item/item.module';
 
 @Module({
   imports: [
@@ -46,6 +50,10 @@ import { ProcessTemplateModule } from './process-template/process-template.modul
     ItemUomModule,
     WorkCentreCategoryModule,
     ProcessTemplateModule,
+    BrandModule,
+    WorkCentreModule,
+    ProcessModule,
+    ItemModule,
   ],
   controllers: [AppController],
   providers: [AppService],

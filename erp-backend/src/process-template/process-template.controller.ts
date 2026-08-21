@@ -6,8 +6,9 @@ import {
   Post,
   Put,
   Query,
-  
 } from '@nestjs/common';
+import { CAPABILITIES } from 'src/package/config/capabilities.config';
+import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
 import { AppRequest } from 'src/package/decorator/app-request.decorator';
 import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 
@@ -30,16 +31,19 @@ export class ProcessTemplateController {
   ) { }
 
   @Post('list-process-template')
+  @RequirePermission(CAPABILITIES.PROCESS_TEMPLATE.LIST)
   getAllProcessTemplates(@AppRequest() req: IAppRequest, @Body() body: ProcessTemplateListDto) {
     return this.processTemplateListService.startProcessTemplateList(req, body);
   }
 
   @Get('get-process-template')
+  @RequirePermission(CAPABILITIES.PROCESS_TEMPLATE.VIEW)
   getProcessTemplateById(@AppRequest() req: IAppRequest, @Query() query: ProcessTemplateDetailsDto) {
     return this.processTemplateListService.startProcessTemplateDetails(req, query);
   }
 
   @Post('add-process-template')
+  @RequirePermission(CAPABILITIES.PROCESS_TEMPLATE.CREATE)
   async addProcessTemplate(@AppRequest() req: IAppRequest, @Body() body: ProcessTemplateAddDto) {
     try {
       return await this.processTemplateService.startInsertProcessTemplate(req, body);
@@ -52,6 +56,7 @@ export class ProcessTemplateController {
   }
 
   @Put('update-process-template')
+  @RequirePermission(CAPABILITIES.PROCESS_TEMPLATE.UPDATE)
   async updateProcessTemplate(@AppRequest() req: IAppRequest, @Body() body: ProcessTemplateUpdateDto) {
     try {
       return await this.processTemplateService.startUpdateProcessTemplate(req, body);
@@ -64,7 +69,9 @@ export class ProcessTemplateController {
   }
 
   @Delete('delete-process-template')
+  @RequirePermission(CAPABILITIES.PROCESS_TEMPLATE.DELETE)
   deleteProcessTemplate(@AppRequest() req: IAppRequest, @Query() query: ProcessTemplateDeleteDto) {
     return this.processTemplateService.startDeleteProcessTemplate(req, query);
   }
 }
+

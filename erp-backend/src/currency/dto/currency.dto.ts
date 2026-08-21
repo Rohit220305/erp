@@ -8,7 +8,9 @@ import {
   MaxLength,
   IsInt,
   ValidateNested,
+  IsEnum,
 } from 'class-validator';
+import { Status } from 'src/package/common/enums/enum';
 
 export class FilterDto {
   @IsString()
@@ -41,8 +43,8 @@ export class CurrencyAddDto {
 
 
   @IsOptional()
-  @IsString()
-  status: string;
+  @IsEnum(Status)
+  status: Status;
 
   @IsOptional()
   @IsNumber()
@@ -69,10 +71,9 @@ export class CurrencyUpdateDto {
   @MaxLength(10)
   currencySymbol: string;
 
-
   @IsOptional()
-  @IsString()
-  status: string;
+  @IsEnum(Status)
+  status: Status;
 
   @IsOptional()
   @IsNumber()

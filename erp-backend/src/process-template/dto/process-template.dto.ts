@@ -1,11 +1,31 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsArray,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { Status, ExecutionType } from 'src/package/common/enums/enum';
+
+export class ProcessMappingItemDto {
+  @IsInt()
+  @Type(() => Number)
+  @IsNotEmpty()
+  processId: number;
+
+  @IsInt()
+  @Type(() => Number)
+  @IsNotEmpty()
+  sequenceNo: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  dependencies?: number[];
+}
 
 export class ProcessTemplateAddDto {
   @IsOptional()
@@ -21,13 +41,24 @@ export class ProcessTemplateAddDto {
   templateCode: string;
 
   @IsOptional()
-  @IsString()
-  remark: string;
+  @IsEnum(ExecutionType)
+  executionType?: ExecutionType;
 
   @IsOptional()
   @IsString()
-  status: string;
+  remark?: string;
+
+  @IsOptional()
+  @IsEnum(Status)
+  status?: Status;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProcessMappingItemDto)
+  processes?: ProcessMappingItemDto[];
 }
+
 
 export class ProcessTemplateUpdateDto extends ProcessTemplateAddDto {
   @IsInt()

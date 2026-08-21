@@ -20,6 +20,7 @@ export const ManufacturerDrawerConfig = {
       title: null,
       fields: [
         { label: "Manufacturer Name", key: "manufacturerName", type: "text" },
+        { label: "Company", key: "companyName", type: "text", showForSuperAdminOnly: true },
         { label: "Manufacturer Code", key: "manufacturerCode", type: "text" },
         { label: "Reference Code", key: "referenceCode", type: "text" },
       ],

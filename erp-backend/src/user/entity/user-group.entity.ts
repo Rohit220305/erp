@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { GroupEntity } from 'src/group/entity/group.entity';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 @Entity('user_groups')
 export class UserGroupEntity {

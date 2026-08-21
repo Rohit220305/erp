@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ActivityLogEntity } from '../entity/activity-log.entity';
 import { ActivityMasterEntity } from '../entity/activity-master.entity';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 import { UserEntity } from 'src/user/entity/user.entity';
 import { CreateActivityLogDto } from '../dto/create-activity-log.dto';
 

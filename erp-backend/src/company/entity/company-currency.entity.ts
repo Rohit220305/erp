@@ -8,8 +8,8 @@ export class CompanyCurrencyEntity {
   @Column()
   companyId: number;
 
-  @Column()
-  currencyId: number;
+  @Column({ length: 10 })
+  currencyCode: string;
 
   @Column({ nullable: true })
   addedBy: number;

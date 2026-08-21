@@ -26,9 +26,12 @@ const getTitle = (titleConfig, data) => {
   return data[titleConfig.key] || "Details";
 };
 
-const getFieldValue = (field, data) => {
+const getFieldValue = (field, data, user) => {
   if (field.condition && data[field.condition.key] !== field.condition.value) {
     return null; 
+  }
+  if (field.showForSuperAdminOnly && !user?.isSuperAdmin) {
+    return null;
   }
   if (field.type === "compositeText") {
     return field.keys.map((k) => data[k]).filter(Boolean).join(field.separator || " ") || "-";
@@ -75,8 +78,8 @@ function HeaderImage({ imgConfig, data }) {
   return null;
 }
 
-function DetailField({ field, data }) {
-  const displayValue = getFieldValue(field, data);
+function DetailField({ field, data, user }) {
+  const displayValue = getFieldValue(field, data, user);
   if (displayValue === null) return null;
 
   return (
@@ -103,7 +106,7 @@ function StatusBadge({ badgeConfig, data }) {
 
 export default function DetailDrawerContent({ open, onClose, item, moduleName, fetchItem }) {
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   
   const [isVisible, setIsVisible] = useState(false);
   const [delayedItem, setDelayedItem] = useState(null);
@@ -197,7 +200,7 @@ export default function DetailDrawerContent({ open, onClose, item, moduleName, f
                 {section.title && <h3 className="text-sm font-semibold text-gray-800 mb-3">{section.title}</h3>}
                 <div className="grid grid-cols-2 gap-y-6 gap-x-4">
                   {section.fields.map((field, fIdx) => (
-                    <DetailField key={fIdx} field={field} data={delayedItem} />
+                    <DetailField key={fIdx} field={field} data={delayedItem} user={user} />
                   ))}
                 </div>
               </div>

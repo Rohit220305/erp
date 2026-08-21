@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 
 import { Transform } from 'class-transformer';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 export class UserAddDto {
   @IsOptional()

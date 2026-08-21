@@ -6,11 +6,11 @@ import { drawerRegistry } from "@/config/drawers/drawerRegistry";
 import { apiRegistry } from "@/config/apiRegistry";
 import DetailDrawerContent from "@/components/common/dynamic/DetailDrawerContent";
 
-export default function SideDrawer({ 
-  open, 
-  onClose, 
-  title: customTitle, 
-  width = "380px", 
+export default function SideDrawer({
+  open,
+  onClose,
+  title: customTitle,
+  width = "380px",
   children,
   moduleName,
   mode,
@@ -23,21 +23,23 @@ export default function SideDrawer({
     return () => window.removeEventListener("keydown", handleEsc);
   }, [open, onClose]);
 
+  const formattedModuleName = moduleName ? moduleName.replace(/([A-Z])/g, ' $1').trim() : "";
+
   const drawerTitle = customTitle || (
     mode === "details"
       ? drawerRegistry[moduleName]?.title || "Details"
       : mode === "add"
-      ? `Add ${moduleName}`
-      : mode === "edit"
-      ? `Edit ${moduleName}`
-      : ""
+        ? `Add ${formattedModuleName}`
+        : mode === "edit"
+          ? `Edit ${formattedModuleName}`
+          : ""
   );
 
   const FormComponent = moduleName && (mode === "add" || mode === "edit") ? formRegistry[moduleName] : null;
 
   const renderContent = () => {
     if (children) return children;
-    
+
     if (mode === "details" && moduleName) {
       const fetchFunction = apiRegistry[moduleName]?.fetchItem;
       return (
@@ -54,6 +56,8 @@ export default function SideDrawer({
     if ((mode === "add" || mode === "edit") && FormComponent) {
       return (
         <FormComponent
+          key={`${mode}-${data?.id || 'new'}-${open ? 'open' : 'closed'}`}
+          open={open}
           mode={mode === "add" ? "create" : "edit"}
           initialData={data}
           id={data?.id}
@@ -62,15 +66,15 @@ export default function SideDrawer({
         />
       );
     }
-    
+
     return null;
   };
 
   return (
     <div className={`fixed inset-0 z-50 transition-all duration-300 
       ${open ? "pointer-events-auto" : "pointer-events-none"}`}>
-      
-      <div onClick={onClose} 
+
+      <div onClick={onClose}
         className={`absolute inset-0 bg-black/30 transition-opacity duration-300 
         ${open ? "opacity-100" : "opacity-0"}`} />
 
@@ -78,10 +82,10 @@ export default function SideDrawer({
         className={`absolute right-0 top-0 h-full w-full bg-white shadow-2xl 
         transition-transform duration-300 ease-in-out 
         ${open ? "translate-x-0" : "translate-x-full"}`}>
-        
+
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5.5">
           <h2 className="text-xl font-semibold text-[#1565c0]">{drawerTitle}</h2>
-          <button type="button" onClick={onClose} 
+          <button type="button" onClick={onClose}
             className="rounded-full p-1 border border-gray-300 text-gray-500 hover:bg-gray-100 cursor-pointer transition">
             <X size={16} />
           </button>

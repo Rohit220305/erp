@@ -124,6 +124,10 @@ export class ItemUomService {
     let return_data: any = {};
 
     try {
+      if (!this.general.isSuperAdmin(req)) {
+        params.companyId = req.user.companyId;
+      }
+
       if (!params.id) {
         throw new Error('Item UOM ID is required');
       }

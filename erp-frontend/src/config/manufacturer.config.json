@@ -52,6 +52,15 @@
       "width": "220px"
     },
     {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "250px",
+      "showForSuperAdminOnly": true
+    },
+    {
       "key": "manufacturerCode",
       "label": "Manufacturer Code",
       "type": "text",
@@ -135,6 +144,15 @@
           "value": "Inactive"
         }
       ]
+    },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
     }
   ],
   "searchFields": [
@@ -162,6 +180,15 @@
           "value": "Inactive"
         }
       ]
+    },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
     }
   ]
 }

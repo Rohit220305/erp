@@ -1,0 +1,158 @@
+{
+  "moduleName": "Process",
+  "title": "Process Master",
+  "permissions": {
+    "list": "PROCESS_LIST",
+    "create": "PROCESS_CREATE",
+    "view": "PROCESS_VIEW",
+    "update": "PROCESS_UPDATE",
+    "delete": "PROCESS_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Image",
+      "key": "imageUrl",
+      "type": "image",
+      "searchable": false,
+      "sortable": false,
+      "width": "60px"
+    },
+    {
+      "label": "Process Name",
+      "key": "processName",
+      "type": "link",
+      "linkPath": "/process/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Code",
+      "key": "processCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Work Centre",
+      "key": "workCentreName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px",
+      "showForSuperAdminOnly": true
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "130px",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Process",
+        "type": "addDrawer",
+        "path": "/process/add",
+        "permission": "PROCESS_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editDrawer",
+        "path": "/process/edit/{id}",
+        "icon": "Edit",
+        "permission": "PROCESS_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "PROCESS_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    { "label": "Process Name", "value": "processName", "type": "text" },
+    { "label": "Code", "value": "processCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "searchFields": [
+    { "label": "Process Name", "value": "processName", "type": "text" },
+    { "label": "Code", "value": "processCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "processName": "",
+    "processCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ]
+}

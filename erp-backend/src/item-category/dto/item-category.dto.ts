@@ -1,11 +1,14 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsArray,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { Status } from 'src/package/common/enums/enum';
 
 export class ItemCategoryAddDto {
   @IsOptional()
@@ -29,8 +32,14 @@ export class ItemCategoryAddDto {
   parentId: number;
 
   @IsOptional()
-  @IsString()
-  status: string;
+  @IsArray()
+  @IsInt({ each: true })
+  @Type(() => Number)
+  storageIds?: number[];
+  
+  @IsOptional()
+  @IsEnum(Status)
+  status: Status;
 }
 
 export class ItemCategoryUpdateDto extends ItemCategoryAddDto {
@@ -65,6 +74,11 @@ export class ItemCategoryListDto {
   @IsOptional()
   @IsString()
   search: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  storageId?: number;
 
   @IsOptional()
   @ValidateNested({ each: true })

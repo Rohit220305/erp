@@ -20,6 +20,7 @@ export const itemUomDrawerConfig = {
       title: null,
       fields: [
         { label: "UOM Name", key: "uomName" },
+        { label: "Company", key: "companyName", showForSuperAdminOnly: true },
         { label: "UOM Code", key: "itemUomCode" },
         { label: "ISO Code", key: "isoCode" },
         { label: "Abbreviation", key: "abbreviation" },

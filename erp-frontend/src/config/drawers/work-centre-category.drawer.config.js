@@ -21,6 +21,7 @@ export const workCentreCategoryDrawerConfig = {
       fields: [
         { label: "Category Name", key: "categoryName", type: "text" },
         { label: "Category Code", key: "categoryCode", type: "text" },
+        { label: "Company", key: "companyName", type: "text", showForSuperAdminOnly: true },
       ],
     },
   ],

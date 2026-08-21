@@ -48,6 +48,15 @@
       "sortable": true
     },
     {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "250px",
+      "showForSuperAdminOnly": true
+    },
+    {
       "label": "Package Type Code",
       "key": "packageCode",
       "type": "text",
@@ -96,6 +105,7 @@
   "defaultFilters": {
     "packageName": "",
     "packageCode": "",
+    "companyId": "",
     "status": ""
   },
   "sidebarStatuses": [
@@ -118,6 +128,15 @@
       "label": "Package Type Code",
       "value": "packageCode",
       "type": "text"
+    },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
     },
     {
       "label": "Status",
@@ -145,6 +164,15 @@
       "label": "Package Type Name",
       "value": "packageName",
       "type": "text"
+    },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
     },
     {
       "label": "Status",

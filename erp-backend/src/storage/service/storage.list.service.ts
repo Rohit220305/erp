@@ -42,12 +42,13 @@ export class StorageListService {
         'storage.addedDate AS addedDate',
         'storage.updatedDate AS updatedDate',
         'storage.storageImage AS storageImage',
+        'storage.description AS description',
         'storage.addedBy AS addedBy',
         'storage.updatedBy AS updatedBy',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('storage.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = storage.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = storage.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = storage.updatedBy');
@@ -129,10 +130,11 @@ export class StorageListService {
         'storage.addedDate AS addedDate',
         'storage.updatedDate AS updatedDate',
         'storage.storageImage AS storageImage',
+        'storage.description AS description',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('storage.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = storage.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = storage.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = storage.updatedBy');
@@ -152,12 +154,12 @@ export class StorageListService {
 
       await this.general.formatDate(data);
 
-      for (const storage of data) {
-        if (storage.storageImage) {
-          storage.imageUrl = await this.general.generateUrl(
+      for (const item of data) {
+        if (item.storageImage) {
+          item.imageUrl = await this.general.generateUrl(
             'storage',
-            `${storage.id}`,
-            storage.storageImage,
+            `${item.id}`,
+            item.storageImage,
           );
         }
       }

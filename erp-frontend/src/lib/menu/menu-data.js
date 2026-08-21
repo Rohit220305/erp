@@ -71,6 +71,15 @@ export const menuCategories = [
         ],
       },
       {
+        title: "Work Centre Master",
+        icon: "Settings",
+        iconBg: "#4caf50",
+        permission: "WORK_CENTRE_LIST",
+        items: [
+          { label: "Work Centre", path: "/work-centre", permission: "WORK_CENTRE_LIST" },
+        ],
+      },
+      {
         title: "Package Types",
         icon: "Package",
         iconBg: "#9c27b0",
@@ -95,6 +104,51 @@ export const menuCategories = [
         permission: "ITEM_UOM_LIST",
         items: [
           { label: "Item UOM", path: "/item-uom", permission: "ITEM_UOM_LIST" },
+        ],
+      },
+      {
+        title: "Storage",
+        icon: "Archive",
+        iconBg: "#795548",
+        permission: "STORAGE_LIST",
+        items: [
+          { label: "Storage Type", path: "/storage", permission: "STORAGE_LIST" },
+        ],
+      },
+      {
+        title: "Item Category",
+        icon: "Tags",
+        iconBg: "#607d8b",
+        permission: "ITEM_CATEGORY_LIST",
+        items: [
+          { label: "Item Category", path: "/item-category", permission: "ITEM_CATEGORY_LIST" },
+        ],
+      },
+      {
+        title: "Item Master",
+        icon: "Package",
+        iconBg: "#607d8b",
+        permission: "ITEM_LIST",
+        items: [
+          { label: "Item Master", path: "/item", permission: "ITEM_LIST" },
+        ],
+      },
+      {
+        title: "Brand Master",
+        icon: "Tag",
+        iconBg: "#e91e63",
+        permission: "BRAND_LIST",
+        items: [
+          { label: "Brand", path: "/brand", permission: "BRAND_LIST" },
+        ],
+      },
+      {
+        title: "Process Master",
+        icon: "Activity",
+        iconBg: "#3f51b5",
+        permission: "PROCESS_LIST",
+        items: [
+          { label: "Process Master", path: "/process", permission: "PROCESS_LIST" },
         ],
       },
     ],

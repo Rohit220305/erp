@@ -122,6 +122,12 @@ const customSelectStyles = (error, disabled) => ({
     fontSize: "0.875rem",
     color: "#9ca3af",
   }),
+
+  dropdownIndicator: (base, state) => ({
+    ...base,
+    transition: "all .2s ease",
+    transform: state.selectProps.menuIsOpen ? "rotate(180deg)" : null,
+  })
 });
 
 export default function CompanyForm({
@@ -155,7 +161,7 @@ export default function CompanyForm({
 
   const currencyOptions = currencies.map((c) => ({
     label: `${c.currencyCode} - ${c.currencyName}`,
-    value: c.id,
+    value: c.currencyCode,
   }));
 
   const [stateOptions, setStateOptions] = useState([]);
@@ -403,7 +409,6 @@ export default function CompanyForm({
     } else {
       payload.updatedBy = user?.user?.id;
     }
-
     try {
       setLoading(true);
       const res = await submitFn(payload, logoFile || null);
@@ -802,7 +807,7 @@ export default function CompanyForm({
                         : [];
                     handleChange(
                       "supportedCurrencies",
-                      limited.map((s) => Number(s.value)),
+                      limited.map((s) => s.value),
                     );
                   }}
                   options={currencyOptions}

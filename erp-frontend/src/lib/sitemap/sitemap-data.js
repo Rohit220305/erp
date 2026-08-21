@@ -80,5 +80,53 @@ export const sitemapData = [
       { label: "Item UOM", path: "/item-uom", permission: "ITEM_UOM_LIST" },
     ],
     path: "/item-uom",
+  },
+  {
+    title: "Storage",
+    permission: "STORAGE_LIST",
+    menus: [
+      { label: "Storage Type", path: "/storage", permission: "STORAGE_LIST" },
+    ],
+    path: "/storage",
+  },
+  {
+    title: "Item Category",
+    permission: "ITEM_CATEGORY_LIST",
+    menus: [
+      { label: "Item Category", path: "/item-category", permission: "ITEM_CATEGORY_LIST" },
+    ],
+    path: "/item-category",
+  },
+  {
+    title: "Item Master",
+    permission: "ITEM_LIST",
+    menus: [
+      { label: "Item Master", path: "/item", permission: "ITEM_LIST" },
+    ],
+    path: "/item",
+  },
+  {
+    title: "Brand Master",
+    permission: "BRAND_LIST",
+    menus: [
+      { label: "Brand", path: "/brand", permission: "BRAND_LIST" },
+    ],
+    path: "/brand",
+  },
+  {
+    title: "Work Centre Master",
+    permission: "WORK_CENTRE_LIST",
+    menus: [
+      { label: "Work Centre", path: "/work-centre", permission: "WORK_CENTRE_LIST" },
+    ],
+    path: "/work-centre",
+  },
+  {
+    title: "Process Master",
+    permission: "PROCESS_LIST",
+    menus: [
+      { label: "Process Master", path: "/process", permission: "PROCESS_LIST" },
+    ],
+    path: "/process",
   }
 ];

@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 
 export default function ItemUomTableRow({ item, onRowAction, setSelectedItemForDetails }) {
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const isActive = item.status === "Active" || item.status === "active";
   const canView = can("ITEM_UOM_VIEW");
 
@@ -37,6 +37,13 @@ export default function ItemUomTableRow({ item, onRowAction, setSelectedItemForD
           </span>
         )}
       </td>
+      {user?.isSuperAdmin && (
+        <td className="px-6 py-4 whitespace-nowrap min-w-[250px] max-w-[250px] truncate">
+          <span className="text-sm text-gray-700" title={item.companyName}>
+            {item.companyName || "—"}
+          </span>
+        </td>
+      )}
       <td className="px-6 py-4 whitespace-nowrap">
         <span className="text-sm font-mono text-gray-900 px-2 py-1">
           {item.itemUomCode || "—"}
@@ -53,6 +60,16 @@ export default function ItemUomTableRow({ item, onRowAction, setSelectedItemForD
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
+        <span className="text-sm text-gray-700">
+          {item.addedByName || "—"}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="text-sm text-gray-500">
+          {item.addedDateFormatted || "—"}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
         <span
           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
             isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
@@ -62,16 +79,6 @@ export default function ItemUomTableRow({ item, onRowAction, setSelectedItemForD
             className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`}
           />
           {isActive ? "Active" : "Inactive"}
-        </span>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className="text-sm text-gray-700">
-          {item.addedByName || "—"}
-        </span>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className="text-sm text-gray-500">
-          {item.addedDateFormatted || "—"}
         </span>
       </td>
     </tr>

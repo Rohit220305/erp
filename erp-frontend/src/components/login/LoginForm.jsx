@@ -58,7 +58,7 @@ export default function LoginForm() {
         } else {
           toast.success(response.message || "Login successful");
           login(response.data, response.data.token);
-          router.push("/");
+          window.location.href = "/";
         }
       } else {
         toast.error(
@@ -89,7 +89,7 @@ export default function LoginForm() {
       if (res?.success === 1 && res?.data) {
         toast.success(res.message || "Login successful");
         login(res.data, res.data.token);
-        router.push("/");
+        window.location.href = "/";
       } else {
         toast.error(res?.message || "Failed to select profile");
       }

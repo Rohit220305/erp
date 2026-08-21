@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/context/AuthContext";
+
 import DynamicListing from "@/components/common/dynamic/DynamicListing";
 import PackageTableRow from "@/components/package-master/PackageTableRow";
 import packageMasterConfig from "@/config/package-master.config.json";

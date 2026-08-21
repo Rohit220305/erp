@@ -49,6 +49,15 @@
       "width": "220px"
     },
     {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "250px",
+      "showForSuperAdminOnly": true
+    },
+    {
       "label": "UOM Code",
       "key": "itemUomCode",
       "type": "text",
@@ -81,18 +90,7 @@
         { "label": "Pumping Rate", "value": "pumping_rate" }
       ]
     },
-    {
-      "label": "Status",
-      "key": "status",
-      "type": "statusBadge",
-      "searchable": true,
-      "sortable": true,
-      "width": "120px",
-      "options": [
-        { "label": "Active", "value": "Active" },
-        { "label": "Inactive", "value": "Inactive" }
-      ]
-    },
+
     {
       "label": "Added By",
       "key": "addedByName",
@@ -108,6 +106,18 @@
       "searchable": false,
       "sortable": true,
       "width": "180px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "120px",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
     }
   ],
   "defaultFilters": {
@@ -152,6 +162,15 @@
       ]
     },
     {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
       "label": "Status",
       "value": "status",
       "type": "select",
@@ -192,6 +211,15 @@
       ]
     },
     {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
       "label": "Status",
       "value": "status",
       "type": "select",
@@ -200,5 +228,6 @@
         { "label": "Inactive", "value": "Inactive" }
       ]
     }
+    
   ]
 }

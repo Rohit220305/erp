@@ -18,7 +18,7 @@ const DetailRow = ({ label, value }) => (
 export default function ItemUomDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
 
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
@@ -106,6 +106,9 @@ export default function ItemUomDetailPage({ data }) {
                 Core Information
               </h3>
               <DetailRow label="Item UOM Name" value={data.uomName} />
+              {user?.isSuperAdmin && (
+                <DetailRow label="Company" value={data.companyName || "-"} />
+              )}
               <DetailRow label="ISO Code" value={data.isoCode} />
               <DetailRow label="Item UOM Code" value={data.itemUomCode || "-"} />
               <DetailRow label="Abbreviation" value={data.abbreviation || "-"} />

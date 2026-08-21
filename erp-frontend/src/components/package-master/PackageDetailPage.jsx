@@ -18,7 +18,7 @@ const DetailRow = ({ label, value }) => (
 export default function PackageDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
@@ -106,6 +106,9 @@ export default function PackageDetailPage({ data }) {
                 Core Information
               </h3>
               <DetailRow label="Package Type Name" value={data.packageName} />
+              {user?.isSuperAdmin && (
+                <DetailRow label="Company" value={data.companyName || "-"} />
+              )}
               <DetailRow label="Package Type Code" value={data.packageCode} />
               <DetailRow label="Abbreviation" value={data.abbreviation || "-"} />
               <DetailRow label="Description" value={data.description || "-"} />

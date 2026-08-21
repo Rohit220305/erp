@@ -31,10 +31,10 @@ export class CompanyService {
       const insertId = response?.data?.insert_id;
 
       if (params.supportedCurrencies && Array.isArray(params.supportedCurrencies)) {
-        for (const currencyId of params.supportedCurrencies) {
+        for (const currencyCode of params.supportedCurrencies) {
           await this.companyCurrencyRepo.insert({
             companyId: insertId,
-            currencyId,
+            currencyCode,
             addedBy: req.user?.sub,
           });
         }
@@ -98,7 +98,6 @@ export class CompanyService {
 
       const {
         supportedCurrencies: _extractedSupportedCurrencies,
-        companyLogo: _extractedCompanyLogo,
         ...dbInsertData
       } = params;
 
@@ -152,10 +151,10 @@ export class CompanyService {
     if (response.success == 1) {
       if (params.supportedCurrencies && Array.isArray(params.supportedCurrencies)) {
         await this.companyCurrencyRepo.delete({ companyId: params.id });
-        for (const currencyId of params.supportedCurrencies) {
+        for (const currencyCode of params.supportedCurrencies) {
           await this.companyCurrencyRepo.insert({
             companyId: params.id,
-            currencyId,
+            currencyCode,
             addedBy: req.user?.sub,
           });
         }
@@ -229,7 +228,6 @@ export class CompanyService {
       const {
         id: _extractedId,
         supportedCurrencies: _extractedSupportedCurrencies,
-        companyLogo: _extractedCompanyLogo,
         ...dbUpdateData
       } = params;
 

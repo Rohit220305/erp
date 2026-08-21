@@ -112,12 +112,12 @@ export class CompanyListService {
       }
 
       const currenciesRaw = await this.currencyRepo.createQueryBuilder('currency')
-        .innerJoin(CompanyCurrencyEntity, 'cc', 'cc.currencyId = currency.id')
+        .innerJoin(CompanyCurrencyEntity, 'cc', 'cc.currencyCode = currency.currencyCode')
         .where('cc.companyId = :companyId', { companyId: company.id })
         .getMany();
 
       if (currenciesRaw.length > 0) {
-        company['supportedCurrencies'] = currenciesRaw.map(c => c.id);
+        company['supportedCurrencies'] = currenciesRaw.map(c => c.currencyCode);
         company['currencies'] = currenciesRaw;
       } else {
         company['supportedCurrencies'] = [];
@@ -221,10 +221,10 @@ export class CompanyListService {
           where: { companyId: In(companyIds) }
         });
 
-        const currencyIds = Array.from(new Set(allMappings.map(m => m.currencyId)));
-        if (currencyIds.length > 0) {
+        const currencyCodes = Array.from(new Set(allMappings.map(m => m.currencyCode)));
+        if (currencyCodes.length > 0) {
           allCurrencies = await this.currencyRepo.find({
-            where: { id: In(currencyIds) }
+            where: { currencyCode: In(currencyCodes) }
           });
         }
       }
@@ -240,8 +240,8 @@ export class CompanyListService {
 
         const companyMappings = allMappings.filter(m => m.companyId === company.id);
         if (companyMappings.length > 0) {
-          const cIds = companyMappings.map(m => m.currencyId);
-          company.currencies = allCurrencies.filter(c => cIds.includes(c.id));
+          const cCodes = companyMappings.map(m => m.currencyCode);
+          company.currencies = allCurrencies.filter(c => cCodes.includes(c.currencyCode));
         } else {
           company.currencies = [];
         }

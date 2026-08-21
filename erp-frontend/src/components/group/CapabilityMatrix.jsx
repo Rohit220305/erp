@@ -27,7 +27,22 @@ export default function CapabilityMatrix({ capabilities = [], selectedCodes = []
         custom: [],
       };
     }
-    const actionKey = cap.actionName?.toUpperCase();
+    let actionKey = cap.actionName?.toUpperCase() || "";
+    if (!ACTION_COLUMNS.some((c) => c.key === actionKey)) {
+      if (actionKey.includes("LIST")) actionKey = "LIST";
+      else if (actionKey.includes("VIEW")) actionKey = "VIEW";
+      else if (actionKey.includes("CREATE")) actionKey = "CREATE";
+      else if (actionKey.includes("UPDATE")) actionKey = "UPDATE";
+      else if (actionKey.includes("DELETE")) actionKey = "DELETE";
+      else if (actionKey.includes("EXPORT")) actionKey = "EXPORT";
+      else if (actionKey.includes("PRINT")) actionKey = "PRINT";
+      else {
+        const codeUpper = cap.capabilityCode?.toUpperCase() || "";
+        const matchedCol = ACTION_COLUMNS.find((col) => codeUpper.endsWith(`_${col.key}`));
+        if (matchedCol) actionKey = matchedCol.key;
+      }
+    }
+
     if (ACTION_COLUMNS.some((c) => c.key === actionKey)) {
       groups[mod][actionKey] = cap;
     } else {

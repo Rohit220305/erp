@@ -1,11 +1,13 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { Status } from 'src/package/common/enums/enum';
 
 export class StorageAddDto {
   @IsOptional()
@@ -29,9 +31,8 @@ export class StorageAddDto {
   storageImage: string;
 
   @IsOptional()
-  @IsString()
-  status: string;
-}
+  @IsEnum(Status)
+  status: Status;}
 
 export class StorageUpdateDto extends StorageAddDto {
   @IsInt()

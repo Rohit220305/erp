@@ -159,11 +159,11 @@ export class GeneralUtilities {
     uniqueFields: Record<string, string | null>,
     req: AppRequest,
   ): Record<string, any> {
-    const timestamp = Date.now();
+    // const timestamp = Date.now();
     const payload: any = { sysRecDeleted: true };
-    for (const [key, value] of Object.entries(uniqueFields)) {
-      payload[key] = value ? `${value}_del_${timestamp}` : value;
-    }
+    // for (const [key, value] of Object.entries(uniqueFields)) {
+    //   payload[key] = value ? `${value}_del_${timestamp}` : value;
+    // }
     payload.updatedBy = req.user?.sub;
     payload.updatedDate = () => 'NOW()';
     return payload;
@@ -277,5 +277,12 @@ export class GeneralUtilities {
         entity.updatedDateFormatted = await this.dateFormat(entity.updatedDate);
       }
     }
+  }
+
+  formatValueWithUnit(value: any, unit?: string | null): string | null {
+    if (value !== null && value !== undefined && value !== '') {
+      return unit ? `${value} ${unit}` : `${value}`;
+    }
+    return null;
   }
 }

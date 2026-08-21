@@ -48,7 +48,7 @@ export class ManufacturerListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('manufacturer.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = manufacturer.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = manufacturer.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = manufacturer.updatedBy');
@@ -124,7 +124,7 @@ export class ManufacturerListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('manufacturer.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = manufacturer.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = manufacturer.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = manufacturer.updatedBy');

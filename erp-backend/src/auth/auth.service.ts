@@ -26,20 +26,20 @@ import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.en
 import { PermissionCacheService } from './permission.cache.service';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 import { UserGroupEntity } from 'src/user/entity/user-group.entity';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 
 const accessCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
-  secure: true,
+  secure: false,
   maxAge: maxAgeMs,
 });
 
 const refreshCookieOptions = (maxAgeMs: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
-  secure: true,
+  secure: false,
   maxAge: maxAgeMs,
 });
 

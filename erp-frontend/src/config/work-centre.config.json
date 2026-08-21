@@ -1,0 +1,192 @@
+{
+  "moduleName": "WorkCentre",
+  "title": "Work Centre Master",
+  "permissions": {
+    "list": "WORK_CENTRE_LIST",
+    "create": "WORK_CENTRE_CREATE",
+    "view": "WORK_CENTRE_VIEW",
+    "update": "WORK_CENTRE_UPDATE",
+    "delete": "WORK_CENTRE_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Image",
+      "key": "imageUrl",
+      "type": "image",
+      "searchable": false,
+      "sortable": false,
+      "width": "80px"
+    },
+    {
+      "label": "Work Centre Name",
+      "key": "workCentreName",
+      "type": "link",
+      "linkPath": "/work-centre/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "220px"
+    },
+    {
+      "label": "Code",
+      "key": "workCentreCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "120px"
+    },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px",
+      "showForSuperAdminOnly": true
+    },
+    {
+      "label": "Category",
+      "key": "categoryName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Usage Status",
+      "key": "usageStatus",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "130px",
+      "options": [
+        { "label": "Available", "value": "Available" },
+        { "label": "Inuse", "value": "Inuse" },
+        { "label": "Maintenance", "value": "Maintenance" }
+      ]
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "110px",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Work Centre",
+        "type": "addDrawer",
+        "path": "/work-centre/add",
+        "permission": "WORK_CENTRE_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editDrawer",
+        "path": "/work-centre/edit/{id}",
+        "icon": "Edit",
+        "permission": "WORK_CENTRE_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "WORK_CENTRE_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    { "label": "Work Centre Name", "value": "workCentreName", "type": "text" },
+    { "label": "Code", "value": "workCentreCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Usage Status",
+      "value": "usageStatus",
+      "type": "select",
+      "options": [
+        { "label": "Available", "value": "Available" },
+        { "label": "Inuse", "value": "Inuse" },
+        { "label": "Maintenance", "value": "Maintenance" }
+      ]
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "searchFields": [
+    { "label": "Work Centre Name", "value": "workCentreName", "type": "text" },
+    { "label": "Code", "value": "workCentreCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Usage Status",
+      "value": "usageStatus",
+      "type": "select",
+      "options": [
+        { "label": "Available", "value": "Available" },
+        { "label": "Inuse", "value": "Inuse" },
+        { "label": "Maintenance", "value": "Maintenance" }
+      ]
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "workCentreName": "",
+    "workCentreCode": "",
+    "usageStatus": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ]
+}

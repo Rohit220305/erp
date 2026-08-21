@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 import { GroupCapabilityEntity } from 'src/capability/entity/group-capability.entity';
 import { REQUIRE_PERMISSION_KEY } from 'src/package/decorator/require-permission.decorator';
 import { PermissionCacheService } from './permission.cache.service';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {

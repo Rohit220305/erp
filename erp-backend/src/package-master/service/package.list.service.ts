@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 
 import { PackageEntity } from '../entity/package.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
+import { CompanyEntity } from 'src/company/entity/company.entity';
 
 @Injectable()
 export class PackageListService {
@@ -48,7 +49,7 @@ export class PackageListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('package.company', 'company');
+      queryBuilder.leftJoin(CompanyEntity, 'company', 'company.id = package.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = package.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = package.updatedBy');
@@ -126,7 +127,7 @@ export class PackageListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('package.company', 'company');
+      queryBuilder.leftJoin(CompanyEntity, 'company', 'company.id = package.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = package.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = package.updatedBy');

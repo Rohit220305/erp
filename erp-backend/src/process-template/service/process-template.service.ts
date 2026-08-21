@@ -3,7 +3,9 @@ import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ProcessTemplateEntity } from '../entity/process-template.entity';
+import { ProcessTemplateEntity } from '../entity/process.template.entity';
+import { ProcessTemplateMappingEntity } from '../entity/process.template.mapping.entity';
+import { ProcessEntity } from '../../process/entity/process.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 
@@ -16,6 +18,83 @@ export class ProcessTemplateService {
 
   @InjectRepository(ProcessTemplateEntity)
   private processTemplateRepo: Repository<ProcessTemplateEntity>;
+
+  @InjectRepository(ProcessTemplateMappingEntity)
+  private processTemplateMappingRepo: Repository<ProcessTemplateMappingEntity>;
+
+  @InjectRepository(ProcessEntity)
+  private processRepo: Repository<ProcessEntity>;
+
+  private async validateProcesses(processes: any[], companyId: number) {
+    if (!processes || !Array.isArray(processes) || processes.length === 0) {
+      return;
+    }
+
+    const processIds = processes.map((p) => Number(p.processId));
+
+    // 1. Duplicate process check
+    const uniqueIds = new Set(processIds);
+    if (uniqueIds.size !== processIds.length) {
+      throw new Error('Duplicate process found in template sequence');
+    }
+
+    // 2. Sequence contiguity check
+    const sortedSeqs = processes.map((p) => Number(p.sequenceNo)).sort((a, b) => a - b);
+    for (let i = 0; i < sortedSeqs.length; i++) {
+      if (sortedSeqs[i] !== i + 1) {
+        throw new Error('Process sequence numbers must be contiguous starting from 1');
+      }
+    }
+
+    // Build processId -> sequenceNo map
+    const processSeqMap = new Map<number, number>();
+    processes.forEach((p) => {
+      processSeqMap.set(Number(p.processId), Number(p.sequenceNo));
+    });
+
+    // 3 & 4. Top-down dependency check & Self-reference check
+    for (const proc of processes) {
+      const currentId = Number(proc.processId);
+      const currentSeq = Number(proc.sequenceNo);
+      const deps = proc.dependencies;
+
+      if (deps && Array.isArray(deps) && deps.length > 0) {
+        for (const depIdRaw of deps) {
+          const depId = Number(depIdRaw);
+          if (depId === currentId) {
+            throw new Error(`Process ID ${currentId} cannot depend on itself`);
+          }
+
+          if (!processSeqMap.has(depId)) {
+            throw new Error(`Dependency process ID ${depId} is not part of this template sequence`);
+          }
+
+          const depSeq = processSeqMap.get(depId)!;
+          if (depSeq >= currentSeq) {
+            throw new Error(
+              `Process ID ${currentId} (sequence ${currentSeq}) cannot depend on process ID ${depId} (sequence ${depSeq}). Dependencies must reference processes positioned above in the sequence.`
+            );
+          }
+        }
+      }
+    }
+
+    // 5. Cross-tenant process validation
+    const dbProcesses = await this.processRepo.createQueryBuilder('p')
+      .where('p.id IN (:...ids)', { ids: Array.from(uniqueIds) })
+      .andWhere('p.sysRecDeleted = 0')
+      .getMany();
+
+    if (dbProcesses.length !== uniqueIds.size) {
+      throw new Error('One or more selected processes are invalid or deleted');
+    }
+
+    for (const dbProc of dbProcesses) {
+      if (dbProc.companyId !== companyId) {
+        throw new Error(`Process ID ${dbProc.id} does not belong to company ID ${companyId}`);
+      }
+    }
+  }
 
   async startInsertProcessTemplate(req, params) {
     const response = await this.insertProcessTemplate(req, params);
@@ -65,7 +144,12 @@ export class ProcessTemplateService {
         }
       }
 
+      if (params.processes && Array.isArray(params.processes)) {
+        await this.validateProcesses(params.processes, params.companyId);
+      }
+
       const {
+        processes,
         ...dbInsertData
       } = params as any;
 
@@ -79,12 +163,25 @@ export class ProcessTemplateService {
       dbInsertData.addedDate = () => 'NOW()';
 
       const res = await this.processTemplateRepo.insert(dbInsertData);
+      const insertId = res?.raw?.insertId;
+
+      if (insertId && processes && Array.isArray(processes) && processes.length > 0) {
+        const mappingInserts = processes.map((proc: any) => ({
+          templateId: insertId,
+          processId: Number(proc.processId),
+          sequenceNo: Number(proc.sequenceNo),
+          dependencies: proc.dependencies && proc.dependencies.length > 0 ? proc.dependencies : null,
+          addedBy: req.user?.sub,
+          addedDate: () => 'NOW()',
+        }));
+        await this.processTemplateMappingRepo.insert(mappingInserts);
+      }
 
       const logPayload = this.general.buildActivityLogPayload(
         req,
         'PROCESS_TEMPLATE_CREATE',
         'PROCESS_TEMPLATE',
-        res?.raw?.insertId,
+        insertId,
         params.templateName,
         params.companyId,
       );
@@ -94,7 +191,7 @@ export class ProcessTemplateService {
         success: 1,
         message: 'Process Template Added Successfully.',
         data: {
-          insert_id: res?.raw?.insertId,
+          insert_id: insertId,
         },
       };
     } catch (err) {
@@ -126,6 +223,10 @@ export class ProcessTemplateService {
     try {
       if (!params.id) {
         throw new Error('Template ID is required');
+      }
+
+      if (!this.general.isSuperAdmin(req)) {
+        params.companyId = req.user.companyId;
       }
 
       const template = await this.processTemplateRepo.findOne({
@@ -169,8 +270,13 @@ export class ProcessTemplateService {
         }
       }
 
+      if (params.processes && Array.isArray(params.processes)) {
+        await this.validateProcesses(params.processes, template.companyId);
+      }
+
       const {
         id: _extractedId,
+        processes,
         ...dbUpdateData
       } = params as any;
 
@@ -187,6 +293,21 @@ export class ProcessTemplateService {
         { id: params.id },
         dbUpdateData,
       );
+
+      // Re-insert mapping rows
+      await this.processTemplateMappingRepo.delete({ templateId: params.id });
+
+      if (processes && Array.isArray(processes) && processes.length > 0) {
+        const mappingInserts = processes.map((proc: any) => ({
+          templateId: params.id,
+          processId: Number(proc.processId),
+          sequenceNo: Number(proc.sequenceNo),
+          dependencies: proc.dependencies && proc.dependencies.length > 0 ? proc.dependencies : null,
+          addedBy: req.user?.sub,
+          addedDate: () => 'NOW()',
+        }));
+        await this.processTemplateMappingRepo.insert(mappingInserts);
+      }
 
       const logPayload = this.general.buildActivityLogPayload(
         req,
@@ -255,6 +376,12 @@ export class ProcessTemplateService {
       );
       const res = await this.processTemplateRepo.update({ id: params.id }, payload);
 
+      const mappingPayload = this.general.buildSoftDeletePayload({}, req);
+      await this.processTemplateMappingRepo.update(
+        { templateId: params.id, sysRecDeleted: false },
+        mappingPayload,
+      );
+
       const logPayload = this.general.buildActivityLogPayload(
         req,
         'PROCESS_TEMPLATE_DELETE',
@@ -317,3 +444,4 @@ export class ProcessTemplateService {
     return output;
   }
 }
+

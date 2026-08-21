@@ -1,38 +1,80 @@
 import { CAPABILITIES } from "./capabilities.config";
 
-export const routePermissions = [
-  { pattern: /^\/company\/?$/, capability: CAPABILITIES.COMPANY.LIST },
-  { pattern: /^\/company\/add$/, capability: CAPABILITIES.COMPANY.CREATE },
-  { pattern: /^\/company\/edit\/\d+$/, capability: CAPABILITIES.COMPANY.UPDATE },
-  { pattern: /^\/company\/\d+$/, capability: CAPABILITIES.COMPANY.VIEW },
+const routes = [
+  { path: "/company", permission: CAPABILITIES.COMPANY.LIST },
+  { path: "/company/add", permission: CAPABILITIES.COMPANY.CREATE },
+  { path: "/company/edit/:id", permission: CAPABILITIES.COMPANY.UPDATE },
+  { path: "/company/:id", permission: CAPABILITIES.COMPANY.VIEW },
 
-  { pattern: /^\/admin\/?$/, capability: CAPABILITIES.USER.LIST },
-  { pattern: /^\/admin\/add$/, capability: CAPABILITIES.USER.CREATE },
-  { pattern: /^\/admin\/edit\/\d+$/, capability: CAPABILITIES.USER.UPDATE },
-  { pattern: /^\/admin\/\d+$/, capability: CAPABILITIES.USER.VIEW },
+  { path: "/user", permission: CAPABILITIES.USER.LIST },
+  { path: "/user/add", permission: CAPABILITIES.USER.CREATE },
+  { path: "/user/edit/:id", permission: CAPABILITIES.USER.UPDATE },
+  { path: "/user/:id", permission: CAPABILITIES.USER.VIEW },
 
-  { pattern: /^\/group\/?$/, capability: CAPABILITIES.GROUP.LIST },
-  { pattern: /^\/group\/add$/, capability: CAPABILITIES.GROUP.CREATE },
-  { pattern: /^\/group\/edit\/\d+$/, capability: CAPABILITIES.GROUP.UPDATE },
-  { pattern: /^\/group\/\d+$/, capability: CAPABILITIES.GROUP.VIEW },
+  { path: "/group", permission: CAPABILITIES.GROUP.LIST },
+  { path: "/group/add", permission: CAPABILITIES.GROUP.CREATE },
+  { path: "/group/edit/:id", permission: CAPABILITIES.GROUP.UPDATE },
+  { path: "/group/:id", permission: CAPABILITIES.GROUP.VIEW },
 
-  { pattern: /^\/currency\/?$/, capability: CAPABILITIES.CURRENCY.LIST },
-  { pattern: /^\/currency\/add$/, capability: CAPABILITIES.CURRENCY.CREATE },
-  { pattern: /^\/currency\/edit\/\d+$/, capability: CAPABILITIES.CURRENCY.UPDATE },
-  { pattern: /^\/currency\/\d+$/, capability: CAPABILITIES.CURRENCY.VIEW },
+  { path: "/currency", permission: CAPABILITIES.CURRENCY.LIST },
+  { path: "/currency/add", permission: CAPABILITIES.CURRENCY.CREATE },
+  { path: "/currency/edit/:id", permission: CAPABILITIES.CURRENCY.UPDATE },
+  { path: "/currency/:id", permission: CAPABILITIES.CURRENCY.VIEW },
 
-  { pattern: /^\/work-centre-category\/?$/, capability: CAPABILITIES.WORK_CENTRE_CATEGORY.LIST },
-  { pattern: /^\/work-centre-category\/add$/, capability: CAPABILITIES.WORK_CENTRE_CATEGORY.CREATE },
-  { pattern: /^\/work-centre-category\/edit\/[a-zA-Z0-9-]+$/, capability: CAPABILITIES.WORK_CENTRE_CATEGORY.UPDATE },
-  { pattern: /^\/work-centre-category\/[a-zA-Z0-9-]+$/, capability: CAPABILITIES.WORK_CENTRE_CATEGORY.VIEW },
+  { path: "/work-centre-category", permission: CAPABILITIES.WORK_CENTRE_CATEGORY.LIST },
+  { path: "/work-centre-category/add", permission: CAPABILITIES.WORK_CENTRE_CATEGORY.CREATE },
+  { path: "/work-centre-category/edit/:id", permission: CAPABILITIES.WORK_CENTRE_CATEGORY.UPDATE },
+  { path: "/work-centre-category/:id", permission: CAPABILITIES.WORK_CENTRE_CATEGORY.VIEW },
 
-  { pattern: /^\/package-master\/?$/, capability: CAPABILITIES.PACKAGE.LIST },
-  { pattern: /^\/package-master\/add$/, capability: CAPABILITIES.PACKAGE.CREATE },
-  { pattern: /^\/package-master\/edit\/[a-zA-Z0-9-]+$/, capability: CAPABILITIES.PACKAGE.UPDATE },
-  { pattern: /^\/package-master\/[a-zA-Z0-9-]+$/, capability: CAPABILITIES.PACKAGE.VIEW },
+  { path: "/manufacturer", permission: CAPABILITIES.MANUFACTURER.LIST },
+  { path: "/manufacturer/add", permission: CAPABILITIES.MANUFACTURER.CREATE },
+  { path: "/manufacturer/edit/:id", permission: CAPABILITIES.MANUFACTURER.UPDATE },
+  { path: "/manufacturer/:id", permission: CAPABILITIES.MANUFACTURER.VIEW },
 
-  { pattern: /^\/manufacturer\/?$/, capability: CAPABILITIES.MANUFACTURER.LIST },
-  { pattern: /^\/manufacturer\/add$/, capability: CAPABILITIES.MANUFACTURER.CREATE },
-  { pattern: /^\/manufacturer\/edit\/[a-zA-Z0-9-]+$/, capability: CAPABILITIES.MANUFACTURER.UPDATE },
-  { pattern: /^\/manufacturer\/[a-zA-Z0-9-]+$/, capability: CAPABILITIES.MANUFACTURER.VIEW },
+  { path: "/storage", permission: CAPABILITIES.STORAGE.LIST },
+  { path: "/storage/add", permission: CAPABILITIES.STORAGE.CREATE },
+  { path: "/storage/edit/:id", permission: CAPABILITIES.STORAGE.UPDATE },
+  { path: "/storage/:id", permission: CAPABILITIES.STORAGE.VIEW },
+
+  { path: "/item-category", permission: CAPABILITIES.ITEM_CATEGORY.LIST },
+  { path: "/item-category/add", permission: CAPABILITIES.ITEM_CATEGORY.CREATE },
+  { path: "/item-category/edit/:id", permission: CAPABILITIES.ITEM_CATEGORY.UPDATE },
+  { path: "/item-category/:id", permission: CAPABILITIES.ITEM_CATEGORY.VIEW },
+
+  { path: "/package", permission: CAPABILITIES.PACKAGE.LIST },
+  { path: "/package/add", permission: CAPABILITIES.PACKAGE.CREATE },
+  { path: "/package/edit/:id", permission: CAPABILITIES.PACKAGE.UPDATE },
+  { path: "/package/:id", permission: CAPABILITIES.PACKAGE.VIEW },
+
+  { path: "/item-uom", permission: CAPABILITIES.ITEM_UOM.LIST },
+  { path: "/item-uom/add", permission: CAPABILITIES.ITEM_UOM.CREATE },
+  { path: "/item-uom/edit/:id", permission: CAPABILITIES.ITEM_UOM.UPDATE },
+  { path: "/item-uom/:id", permission: CAPABILITIES.ITEM_UOM.VIEW },
+
+  { path: "/process", permission: CAPABILITIES.PROCESS_TEMPLATE.LIST },
+  { path: "/process/add", permission: CAPABILITIES.PROCESS_TEMPLATE.CREATE },
+  { path: "/process/edit/:id", permission: CAPABILITIES.PROCESS_TEMPLATE.UPDATE },
+  { path: "/process/:id", permission: CAPABILITIES.PROCESS_TEMPLATE.VIEW },
+
+  { path: "/brand", permission: CAPABILITIES.BRAND.LIST },
+  { path: "/brand/add", permission: CAPABILITIES.BRAND.CREATE },
+  { path: "/brand/edit/:id", permission: CAPABILITIES.BRAND.UPDATE },
+  { path: "/brand/:id", permission: CAPABILITIES.BRAND.VIEW },
+
+  { path: "/work-centre", permission: CAPABILITIES.WORK_CENTRE.LIST },
+  { path: "/work-centre/add", permission: CAPABILITIES.WORK_CENTRE.CREATE },
+  { path: "/work-centre/edit/:id", permission: CAPABILITIES.WORK_CENTRE.UPDATE },
+  { path: "/work-centre/:id", permission: CAPABILITIES.WORK_CENTRE.VIEW },
+
+  { path: "/item", permission: CAPABILITIES.ITEM.LIST },
+  { path: "/item/add", permission: CAPABILITIES.ITEM.CREATE },
+  { path: "/item/edit/:id", permission: CAPABILITIES.ITEM.UPDATE },
+  { path: "/item/:id", permission: CAPABILITIES.ITEM.VIEW },
+
+  { path: "/admin", permission: CAPABILITIES.USER.LIST },
 ];
+
+export const routePermissions = routes.map((route) => ({
+  pattern: new RegExp(`^${route.path.replace(":id", "[^/]+")}$`),
+  capability: route.permission,
+}));

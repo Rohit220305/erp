@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { createManufacturer, updateManufacturer } from "@/lib/api/manufacturer-api";
+import { listCompanies } from "@/lib/api/company-api";
 import toast from "react-hot-toast";
 import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import manufacturerConfig from "@/config/manufacturer.config.json";
-import { manufacturerAddUpdateSchema } from "@/lib/validation/manufacturer.schema";
+import { getManufacturerSchema } from "@/lib/validation/manufacturer.schema";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -25,15 +26,16 @@ const BASE_DEFAULTS = {
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
     ...base,
+    pointerEvents: "auto",
     borderColor: error ? "#f87171" : "#e5e7eb",
     borderRadius: "0.375rem",
     minHeight: "48px",
-    backgroundColor: disabled ? "#f9fafb" : "#f9fafb",
+    backgroundColor: disabled ? "#f3f4f6" : "#f9fafb",
     boxShadow: "none",
     cursor: disabled ? "not-allowed" : "pointer",
     fontSize: "0.875rem",
     "&:hover": {
-      borderColor: error ? "#f87171" : "#1565c0",
+      borderColor: disabled ? "#e5e7eb" : error ? "#f87171" : "#1565c0",
     },
   }),
   option: (base, state) => ({
@@ -50,13 +52,19 @@ const customSelectStyles = (error, disabled) => ({
   singleValue: (base) => ({
     ...base,
     fontSize: "0.875rem",
-    color: "#1f2937",
+    color: disabled ? "#9ca3af" : "#1f2937",
   }),
   placeholder: (base) => ({
     ...base,
     fontSize: "0.875rem",
     color: "#9ca3af",
   }),
+
+  dropdownIndicator: (base, state) => ({
+    ...base,
+    transition: "all .2s ease",
+    transform: state.selectProps.menuIsOpen ? "rotate(180deg)" : null,
+  })
 });
 
 export default function ManufacturerDrawerForm({
@@ -66,8 +74,9 @@ export default function ManufacturerDrawerForm({
   onSuccess = null,
   onClose = null,
 }) {
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [companyOptions, setCompanyOptions] = useState([]);
 
   const defaultValues = { ...BASE_DEFAULTS, ...initialData };
 
@@ -86,6 +95,24 @@ export default function ManufacturerDrawerForm({
       setFormData({ ...BASE_DEFAULTS, ...initialData });
     }
   }, [initialData]);
+
+  useEffect(() => {
+    if (user?.isSuperAdmin) {
+      const loadOptions = async () => {
+        try {
+          const compRes = await listCompanies({ page: 1, limit: 1000 });
+          const compData =
+            compRes?.settings?.data?.list || compRes?.data?.list || [];
+          setCompanyOptions(
+            compData.map((c) => ({ label: c.companyName, value: c.id }))
+          );
+        } catch (error) {
+          console.error("Failed to load company options", error);
+        }
+      };
+      loadOptions();
+    }
+  }, [user]);
 
   const requiredPermission =
     mode === "create"
@@ -140,7 +167,8 @@ export default function ManufacturerDrawerForm({
   };
 
   const validateForm = () => {
-    const result = manufacturerAddUpdateSchema.safeParse(formData);
+    const schema = getManufacturerSchema(user?.isSuperAdmin);
+    const result = schema.safeParse(formData);
 
     if (!result.success) {
       const fieldErrors = {};
@@ -223,6 +251,34 @@ export default function ManufacturerDrawerForm({
               <p className="mt-1 text-sm text-red-500">{errors.manufacturerName}</p>
             )}
           </div>
+
+          {user?.isSuperAdmin && (
+            <div className="mb-5">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Company <span className="text-red-500">*</span>
+              </label>
+              <Select
+                instanceId="select-company"
+                value={
+                  companyOptions.find((c) => c.value === formData.companyId) ||
+                  null
+                }
+                onChange={(opt) =>
+                  handleChange("companyId", opt ? opt.value : "")
+                }
+                options={companyOptions}
+                isDisabled={mode === "edit"}
+                isClearable={true}
+                isSearchable={true}
+                placeholder="Select Company"
+                classNamePrefix="react-select"
+                styles={customSelectStyles(errors.companyId, mode === "edit")}
+              />
+              {errors.companyId && (
+                <p className="mt-1 text-sm text-red-500">{errors.companyId}</p>
+              )}
+            </div>
+          )}
 
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">

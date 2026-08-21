@@ -6,12 +6,18 @@ import { ItemCategoryService } from './service/item-category.service';
 import { ItemCategoryListService } from './service/item-category.list.service';
 
 import { ItemCategoryEntity } from './entity/item-category.entity';
+import { ItemCategoryStorageMappingEntity } from './entity/item-category-storage.entity';
+import { StorageEntity } from 'src/storage/entity/storage.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { ActivityLogModule } from 'src/activity-log/activity-log.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ItemCategoryEntity]),
+    TypeOrmModule.forFeature([
+      ItemCategoryEntity,
+      ItemCategoryStorageMappingEntity,
+      StorageEntity,
+    ]),
     ActivityLogModule,
   ],
   controllers: [ItemCategoryController],

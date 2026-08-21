@@ -1,5 +1,4 @@
 import { AbstractBaseEntity } from 'src/package/entities/base.entity';
-import { CompanyEntity } from 'src/company/entity/company.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,7 +7,7 @@ import {
   JoinColumn,
   Unique,
 } from 'typeorm';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 @Entity('package_master')
 @Unique(['packageCode', 'companyId'])
@@ -38,8 +37,4 @@ export class PackageEntity extends AbstractBaseEntity {
     default: Status.Active,
   })
   status: Status;
-
-  @ManyToOne(() => CompanyEntity)
-  @JoinColumn({ name: 'companyId' })
-  company: CompanyEntity;
 }

@@ -18,7 +18,7 @@ const DetailRow = ({ label, value }) => (
 export default function WorkCentreCategoryDetailPage({ category }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
@@ -107,6 +107,9 @@ export default function WorkCentreCategoryDetailPage({ category }) {
               </h3>
               <DetailRow label="Category Name" value={category.categoryName} />
               <DetailRow label="Category Code" value={category.categoryCode} />
+              {user?.isSuperAdmin && (
+                <DetailRow label="Company" value={category.companyName} />
+              )}
               <DetailRow
                 label="Status"
                 value={

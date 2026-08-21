@@ -7,25 +7,15 @@ import { CommonFileDto } from '../dto/common-file.dto';
 
 @Injectable()
 export class CommonFileService {
-  async transferFile(fileName: string, recordId: number, folderName: string) {
+  async transferFile(fileNames: string | string[], recordId: number, folderName: string) {
     try {
       const uploadsDir = process.env.UPLOAD_DIR || './uploads';
-
       const tempDir = process.env.TEMP_DIR || './temp-uploads';
-
       const destinationFolder = path.join(
         uploadsDir,
         folderName,
         `${recordId}`,
       );
-
-      const sourceFile = path.join(tempDir, fileName);
-
-      const destinationFile = path.join(destinationFolder, fileName);
-
-      if (fs.existsSync(destinationFolder)) {
-        await this.deleteFolder(folderName, `${recordId}`);
-      }
 
       if (!fs.existsSync(destinationFolder)) {
         fs.mkdirSync(destinationFolder, {
@@ -33,22 +23,29 @@ export class CommonFileService {
         });
       }
 
-      await pipeline(
-        fs.createReadStream(sourceFile),
-        fs.createWriteStream(destinationFile),
-      );
+      const filesToTransfer = Array.isArray(fileNames) ? fileNames : [fileNames];
 
-      await this.deleteTempFile(fileName);
+      for (const fileName of filesToTransfer) {
+        const sourceFile = path.join(tempDir, fileName);
+        const destinationFile = path.join(destinationFolder, fileName);
+
+        if (fs.existsSync(sourceFile)) {
+          await pipeline(
+            fs.createReadStream(sourceFile),
+            fs.createWriteStream(destinationFile),
+          );
+          await this.deleteTempFile(fileName);
+        }
+      }
 
       return {
         success: 1,
-        message: 'File transferred successfully',
+        message: 'File(s) transferred successfully',
       };
     } catch (err) {
-
       return {
         success: 0,
-        message: 'File transfer failed',
+        message: 'File(s) transfer failed',
       };
     }
   }
@@ -83,6 +80,20 @@ export class CommonFileService {
         });
       }
 
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async deleteFile(folderName: string, subFolder: string, fileName: string) {
+    try {
+      const uploadsDir = process.env.UPLOAD_DIR || './uploads';
+      const filePath = path.join(uploadsDir, folderName, subFolder, fileName);
+
+      if (fs.existsSync(filePath)) {
+        await fs.promises.unlink(filePath);
+      }
       return true;
     } catch (err) {
       return false;

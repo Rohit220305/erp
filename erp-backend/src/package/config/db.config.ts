@@ -13,10 +13,17 @@ import { UserGroupEntity } from "src/user/entity/user-group.entity";
 import { ManufacturerEntity } from "src/manufacturer/entity/manufacturer.entity";
 import { StorageEntity } from "src/storage/entity/storage.entity";
 import { ItemCategoryEntity } from "src/item-category/entity/item-category.entity";
+import { ItemCategoryStorageMappingEntity } from "src/item-category/entity/item-category-storage.entity";
 import { PackageEntity } from "src/package-master/entity/package.entity";
 import { ItemUomEntity } from "src/item-uom/entity/item-uom.entity";
 import { WorkCentreCategoryEntity } from "src/work-centre-category/entity/work-centre-category.entity";
-import { ProcessTemplateEntity } from "src/process-template/entity/process-template.entity";
+import { ProcessTemplateEntity } from 'src/process-template/entity/process.template.entity';
+import { ProcessTemplateMappingEntity } from 'src/process-template/entity/process.template.mapping.entity';
+import { BrandEntity } from "src/brand/entity/brand.entity";
+import { WorkCentreEntity } from "src/work-centre/entity/work-centre.entity";
+import { ProcessEntity } from "src/process/entity/process.entity";
+import { ItemEntity } from 'src/item/entity/item.entity';
+import { ItemImageEntity } from 'src/item/entity/item-image.entity';
 dotenv.config();
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -40,10 +47,17 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     ManufacturerEntity,
     StorageEntity,
     ItemCategoryEntity,
+    ItemCategoryStorageMappingEntity,
     PackageEntity,
     ItemUomEntity,
     WorkCentreCategoryEntity,
     ProcessTemplateEntity,
+    ProcessTemplateMappingEntity,
+    BrandEntity,
+    WorkCentreEntity,
+    ProcessEntity,
+    ItemEntity,
+    ItemImageEntity,
   ],
   synchronize: false,
   migrationsRun: false,

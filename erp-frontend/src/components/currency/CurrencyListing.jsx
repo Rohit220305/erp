@@ -5,7 +5,6 @@ import CurrencyTableRow from "@/components/currency/CurrencyTableRow";
 import currencyConfig from "@/config/currency.config.json";
 import { listCurrencies, getCurrency, deleteCurrency } from "@/lib/api/currency-api";
 export default function CurrencyListing() {
-  // Strip 'view' icon from header icons if present so ViewSwitcher is hidden for Currency module
   const customConfig = {
     ...currencyConfig,
     forceView: "table",

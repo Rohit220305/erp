@@ -18,7 +18,7 @@ const DetailRow = ({ label, value }) => (
 export default function ManufacturerDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
@@ -106,6 +106,9 @@ export default function ManufacturerDetailPage({ data }) {
                 Core Information
               </h3>
               <DetailRow label="Manufacturer Name" value={data.manufacturerName} />
+              {user?.isSuperAdmin && (
+                <DetailRow label="Company" value={data.companyName || "-"} />
+              )}
               <DetailRow label="Manufacturer Code" value={data.manufacturerCode || "-"} />
               <DetailRow label="Reference Code" value={data.referenceCode || "-"} />
               <DetailRow

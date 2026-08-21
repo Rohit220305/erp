@@ -7,6 +7,7 @@ import {
   getManufacturer,
   deleteManufacturer,
 } from "@/lib/api/manufacturer-api";
+import { useAuth } from "@/context/AuthContext";
 import ManufacturerTableRow from "./ManufacturerTableRow";
 
 export default function ManufacturerListing() {

@@ -1,0 +1,174 @@
+{
+  "moduleName": "Brand",
+  "title": "Brand Master",
+  "permissions": {
+    "list": "BRAND_LIST",
+    "create": "BRAND_CREATE",
+    "view": "BRAND_VIEW",
+    "update": "BRAND_UPDATE",
+    "delete": "BRAND_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Image",
+      "key": "imageUrl",
+      "type": "image",
+      "searchable": false,
+      "sortable": false,
+      "width": "80px"
+    },
+    {
+      "label": "Brand Name",
+      "key": "brandName",
+      "type": "link",
+      "linkPath": "/brand/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "220px"
+    },
+    {
+      "label": "Brand Code",
+      "key": "brandCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px",
+      "showForSuperAdminOnly": true
+    },
+    {
+      "label": "Manufacturer",
+      "key": "manufacturerName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "110px",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Brand",
+        "type": "addDrawer",
+        "path": "/brand/add",
+        "permission": "BRAND_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editDrawer",
+        "path": "/brand/edit/{id}",
+        "icon": "Edit",
+        "permission": "BRAND_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "BRAND_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    { "label": "Brand Name", "value": "brandName", "type": "text" },
+    { "label": "Brand Code", "value": "brandCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Manufacturer",
+      "value": "manufacturerId",
+      "type": "select",
+      "isMultiSelect": true,
+      "dynamicOptions": "manufacturers",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "searchFields": [
+    { "label": "Brand Name", "value": "brandName", "type": "text" },
+    { "label": "Brand Code", "value": "brandCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Manufacturer",
+      "value": "manufacturerId",
+      "type": "select",
+      "isMultiSelect": true,
+      "dynamicOptions": "manufacturers",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "brandName": "",
+    "brandCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ]
+}

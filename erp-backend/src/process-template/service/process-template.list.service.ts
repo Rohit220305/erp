@@ -1,9 +1,9 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
-import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ProcessTemplateEntity } from '../entity/process-template.entity';
+import { ProcessTemplateEntity } from '../entity/process.template.entity';
+import { ProcessTemplateMappingEntity } from '../entity/process.template.mapping.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
 @Injectable()
@@ -12,6 +12,9 @@ export class ProcessTemplateListService {
 
   @InjectRepository(ProcessTemplateEntity)
   private processTemplateRepo: Repository<ProcessTemplateEntity>;
+
+  @InjectRepository(ProcessTemplateMappingEntity)
+  private processTemplateMappingRepo: Repository<ProcessTemplateMappingEntity>;
 
   async startProcessTemplateDetails(req, params) {
     const response = await this.getProcessTemplateDetails(req, params);
@@ -37,6 +40,8 @@ export class ProcessTemplateListService {
         'template.id AS id',
         'template.templateCode AS templateCode',
         'template.templateName AS templateName',
+        'template.executionType AS executionType',
+        'template.remark AS remark',
         'template.status AS status',
         'template.companyId AS companyId',
         'template.addedDate AS addedDate',
@@ -46,7 +51,7 @@ export class ProcessTemplateListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('template.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = template.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = template.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = template.updatedBy');
@@ -74,6 +79,34 @@ export class ProcessTemplateListService {
           template.updatedDate,
         );
       }
+
+      const mappingQb = this.processTemplateMappingRepo.createQueryBuilder('mapping');
+      mappingQb.select([
+        'mapping.id AS id',
+        'mapping.processId AS processId',
+        'mapping.sequenceNo AS sequenceNo',
+        'mapping.dependencies AS dependencies',
+        'process.processName AS processName',
+        'process.processCode AS processCode',
+      ]);
+      mappingQb.leftJoin('process_master', 'process', 'process.id = mapping.processId');
+      mappingQb.where('mapping.templateId = :templateId', { templateId: params.id });
+      mappingQb.andWhere('mapping.sysRecDeleted = 0');
+      mappingQb.orderBy('mapping.sequenceNo', 'ASC');
+
+      const processes = await mappingQb.getRawMany();
+
+      processes.forEach((proc) => {
+        if (typeof proc.dependencies === 'string') {
+          try {
+            proc.dependencies = JSON.parse(proc.dependencies);
+          } catch (e) {
+            proc.dependencies = [];
+          }
+        }
+      });
+
+      template.processes = processes;
 
       return_data = {
         success: 1,
@@ -115,6 +148,8 @@ export class ProcessTemplateListService {
         'template.id AS id',
         'template.templateCode AS templateCode',
         'template.templateName AS templateName',
+        'template.executionType AS executionType',
+        'template.remark AS remark',
         'template.status AS status',
         'template.companyId AS companyId',
         'template.addedDate AS addedDate',
@@ -122,7 +157,7 @@ export class ProcessTemplateListService {
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');
-      queryBuilder.leftJoin('template.company', 'company');
+      queryBuilder.leftJoin('company', 'company', 'company.id = template.companyId');
 
       queryBuilder.leftJoin('users', 'addedByUser', 'addedByUser.id = template.addedBy');
       queryBuilder.leftJoin('users', 'updatedByUser', 'updatedByUser.id = template.updatedBy');
@@ -190,3 +225,4 @@ export class ProcessTemplateListService {
     return output;
   }
 }
+

@@ -1,11 +1,14 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 
 import { ItemCategoryEntity } from '../entity/item-category.entity';
+import { ItemCategoryStorageMappingEntity } from '../entity/item-category-storage.entity';
+import { StorageEntity } from 'src/storage/entity/storage.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
+import { Status } from 'src/package/common/enums/enum';
 
 @Injectable()
 export class ItemCategoryService {
@@ -16,6 +19,82 @@ export class ItemCategoryService {
 
   @InjectRepository(ItemCategoryEntity)
   private itemCategoryRepo: Repository<ItemCategoryEntity>;
+
+  @InjectRepository(ItemCategoryStorageMappingEntity)
+  private itemCategoryStorageMappingRepo: Repository<ItemCategoryStorageMappingEntity>;
+
+  @InjectRepository(StorageEntity)
+  private storageRepo: Repository<StorageEntity>;
+
+  async validateParentCategory(
+    parentId: number,
+    currentId: number | null,
+    companyId: number,
+  ) {
+    if (currentId && parentId === Number(currentId)) {
+      throw new Error(
+        'Parent Category cannot be the same as the Category itself',
+      );
+    }
+
+    const parentCategory = await this.itemCategoryRepo.findOne({
+      where: {
+        id: parentId,
+        sysRecDeleted: false,
+      },
+    });
+
+    if (!parentCategory) {
+      throw new Error('Parent Category not found');
+    }
+
+    if (parentCategory.companyId !== companyId) {
+      throw new Error('Parent Category does not belong to the same company');
+    }
+
+    if (currentId) {
+      let currParentId: number | null = parentCategory.parentId;
+      const visited = new Set<number>([parentId]);
+
+      while (currParentId) {
+        if (currParentId === Number(currentId)) {
+          throw new Error(
+            'Invalid parent category: cyclic relationship detected',
+          );
+        }
+        if (visited.has(currParentId)) {
+          break;
+        }
+        visited.add(currParentId);
+
+        const nextParent = await this.itemCategoryRepo.findOne({
+          where: { id: currParentId, sysRecDeleted: false },
+        });
+        currParentId = nextParent ? nextParent.parentId : null;
+      }
+    }
+  }
+
+  async validateStorageIds(storageIds: number[], companyId: number) {
+    if (!storageIds || storageIds.length === 0) return;
+
+    const foundStorages = await this.storageRepo.find({
+      where: {
+        id: In(storageIds),
+        companyId: companyId,
+        status: Status.Active,
+        sysRecDeleted: false,
+      },
+    });
+
+    if (foundStorages.length !== storageIds.length) {
+      const foundIds = foundStorages.map((s) => s.id);
+      const missingId = storageIds.find((id) => !foundIds.includes(id));
+      throw new Error(
+        `One or more selected storages are invalid or belong to another company (ID: ${missingId})`,
+      );
+    }
+  }
 
   async startInsertItemCategory(req, params) {
     const response = await this.insertItemCategory(req, params);
@@ -36,6 +115,8 @@ export class ItemCategoryService {
       } else if (!params.companyId) {
         throw new Error('companyId is required');
       }
+
+      const storageIds: number[] = params.storageIds || [];
 
       if (params.categoryCode) {
         const codeExists = await this.itemCategoryRepo.findOne({
@@ -66,23 +147,21 @@ export class ItemCategoryService {
       }
 
       if (params.parentId && params.parentId > 0) {
-        const parentCategory = await this.itemCategoryRepo.findOne({
-          where: {
-            id: params.parentId,
-            sysRecDeleted: false,
-          },
-        });
-
-        if (!parentCategory) {
-          throw new Error('Parent Category not found');
-        }
+        await this.validateParentCategory(
+          params.parentId,
+          null,
+          params.companyId,
+        );
       }
 
-      const {
-        ...dbInsertData
-      } = params as any;
+      if (storageIds.length > 0) {
+        await this.validateStorageIds(storageIds, params.companyId);
+      }
 
-      Object.keys(dbInsertData).forEach(key => {
+      const { storageIds: _extractedStorageIds, ...dbInsertData } =
+        params as any;
+
+      Object.keys(dbInsertData).forEach((key) => {
         if (dbInsertData[key] === undefined || dbInsertData[key] === null) {
           delete dbInsertData[key];
         }
@@ -92,12 +171,21 @@ export class ItemCategoryService {
       dbInsertData.addedDate = () => 'NOW()';
 
       const res = await this.itemCategoryRepo.insert(dbInsertData);
+      const insertId = res?.raw?.insertId;
+
+      if (insertId && storageIds.length > 0) {
+        const mappingsToInsert = storageIds.map((storageId) => ({
+          categoryId: insertId,
+          storageId,
+        }));
+        await this.itemCategoryStorageMappingRepo.insert(mappingsToInsert);
+      }
 
       const logPayload = this.general.buildActivityLogPayload(
         req,
         'ITEM_CATEGORY_CREATE',
         'ITEM_CATEGORY',
-        res?.raw?.insertId,
+        insertId,
         params.categoryName,
         params.companyId,
       );
@@ -107,7 +195,7 @@ export class ItemCategoryService {
         success: 1,
         message: 'Item Category Added Successfully.',
         data: {
-          insert_id: res?.raw?.insertId,
+          insert_id: insertId,
         },
       };
     } catch (err) {
@@ -141,6 +229,10 @@ export class ItemCategoryService {
         throw new Error('Category ID is required');
       }
 
+      if (!this.general.isSuperAdmin(req)) {
+        params.companyId = req.user.companyId;
+      }
+
       const category = await this.itemCategoryRepo.findOne({
         where: {
           id: params.id,
@@ -152,9 +244,19 @@ export class ItemCategoryService {
         throw new Error('Item Category not found');
       }
 
-      this.general.assertCompanyAccess(req, category.companyId, 'update', 'category');
+      this.general.assertCompanyAccess(
+        req,
+        category.companyId,
+        'update',
+        'category',
+      );
 
-      if (params.categoryCode && params.categoryCode !== category.categoryCode) {
+      const storageIds: number[] | undefined = params.storageIds;
+
+      if (
+        params.categoryCode &&
+        params.categoryCode !== category.categoryCode
+      ) {
         const codeExists = await this.itemCategoryRepo.findOne({
           where: {
             categoryCode: params.categoryCode,
@@ -168,7 +270,10 @@ export class ItemCategoryService {
         }
       }
 
-      if (params.categoryName && params.categoryName !== category.categoryName) {
+      if (
+        params.categoryName &&
+        params.categoryName !== category.categoryName
+      ) {
         const nameExists = await this.itemCategoryRepo.findOne({
           where: {
             categoryName: params.categoryName,
@@ -182,29 +287,25 @@ export class ItemCategoryService {
         }
       }
 
-      if (params.parentId && params.parentId == params.id) {
-        throw new Error('Parent Category cannot be the same as the Category itself');
+      if (params.parentId && params.parentId > 0) {
+        await this.validateParentCategory(
+          params.parentId,
+          params.id,
+          category.companyId,
+        );
       }
 
-      if (params.parentId && params.parentId > 0) {
-        const parentCategory = await this.itemCategoryRepo.findOne({
-          where: {
-            id: params.parentId,
-            sysRecDeleted: false,
-          },
-        });
-
-        if (!parentCategory) {
-          throw new Error('Parent Category not found');
-        }
+      if (storageIds && storageIds.length > 0) {
+        await this.validateStorageIds(storageIds, category.companyId);
       }
 
       const {
         id: _extractedId,
+        storageIds: _extractedStorageIds,
         ...dbUpdateData
       } = params as any;
 
-      Object.keys(dbUpdateData).forEach(key => {
+      Object.keys(dbUpdateData).forEach((key) => {
         if (dbUpdateData[key] === undefined || dbUpdateData[key] === null) {
           delete dbUpdateData[key];
         }
@@ -217,6 +318,19 @@ export class ItemCategoryService {
         { id: params.id },
         dbUpdateData,
       );
+
+      if (storageIds !== undefined) {
+        await this.itemCategoryStorageMappingRepo.delete({
+          categoryId: params.id,
+        });
+        if (storageIds.length > 0) {
+          const mappingsToInsert = storageIds.map((storageId) => ({
+            categoryId: params.id,
+            storageId,
+          }));
+          await this.itemCategoryStorageMappingRepo.insert(mappingsToInsert);
+        }
+      }
 
       const logPayload = this.general.buildActivityLogPayload(
         req,
@@ -277,7 +391,12 @@ export class ItemCategoryService {
         throw new Error('Item Category not found');
       }
 
-      this.general.assertCompanyAccess(req, category.companyId, 'delete', 'category');
+      this.general.assertCompanyAccess(
+        req,
+        category.companyId,
+        'delete',
+        'category',
+      );
 
       const childCategories = await this.itemCategoryRepo.count({
         where: {
@@ -291,10 +410,20 @@ export class ItemCategoryService {
       }
 
       const payload = this.general.buildSoftDeletePayload(
-        { categoryCode: category.categoryCode, categoryName: category.categoryName },
+        {
+          categoryCode: category.categoryCode,
+          categoryName: category.categoryName,
+        },
         req,
       );
-      const res = await this.itemCategoryRepo.update({ id: params.id }, payload);
+      const res = await this.itemCategoryRepo.update(
+        { id: params.id },
+        payload,
+      );
+
+      await this.itemCategoryStorageMappingRepo.delete({
+        categoryId: params.id,
+      });
 
       const logPayload = this.general.buildActivityLogPayload(
         req,

@@ -81,6 +81,12 @@ const customSelectStyles = (error, disabled) => ({
     fontSize: "0.875rem",
     color: "#9ca3af",
   }),
+
+  dropdownIndicator: (base, state) => ({
+    ...base,
+    transition: "all .2s ease",
+    transform: state.selectProps.menuIsOpen ? "rotate(180deg)" : null,
+  })
 });
 
 export default function UserForm({

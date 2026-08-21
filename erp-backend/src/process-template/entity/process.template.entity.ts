@@ -1,14 +1,6 @@
 import { AbstractBaseEntity } from 'src/package/entities/base.entity';
-import { CompanyEntity } from 'src/company/entity/company.entity';
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  Unique,
-} from 'typeorm';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
+import { Status, ExecutionType } from 'src/package/common/enums/enum';
 
 @Entity('process_template')
 @Unique(['templateCode', 'companyId'])
@@ -23,6 +15,9 @@ export class ProcessTemplateEntity extends AbstractBaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   templateCode: string;
 
+  @Column({ type: 'enum', enum: ExecutionType, default: ExecutionType.Flexible })
+  executionType: ExecutionType;
+
   @Column({ type: 'text', nullable: true })
   remark: string | null;
 
@@ -35,8 +30,4 @@ export class ProcessTemplateEntity extends AbstractBaseEntity {
     default: Status.Active,
   })
   status: Status;
-
-  @ManyToOne(() => CompanyEntity)
-  @JoinColumn({ name: 'companyId' })
-  company: CompanyEntity;
 }

@@ -1,11 +1,13 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { Status } from 'src/package/common/enums/enum';
 
 export class ManufacturerAddDto {
   @IsOptional()
@@ -26,8 +28,8 @@ export class ManufacturerAddDto {
 
 
   @IsOptional()
-  @IsString()
-  status: string;
+  @IsEnum(Status)
+  status: Status;
 }
 
 export class ManufacturerUpdateDto extends ManufacturerAddDto {

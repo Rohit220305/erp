@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { GroupEntity } from 'src/group/entity/group.entity';
 import { CapabilityEntity } from './capability.entity';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 @Entity('group_capabilities')
 @Unique('uniq_group_capability', ['groupId', 'capabilityId'])

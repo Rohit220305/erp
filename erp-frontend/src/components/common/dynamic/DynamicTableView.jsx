@@ -61,14 +61,14 @@ export default function DynamicTableView({ data, config, onRowAction, loading = 
   return (
     <div className="bg-white rounded-lg overflow-hidden h-full relative">
       {loading && <Loader overlay />}
-      <div className="overflow-auto max-h-[calc(100vh-250px)]">
+      <div className="overflow-auto h-[calc(100vh-255px)] pb-14">
         <table className="w-full table-fixed">
           <thead className="sticky top-0 z-10 bg-white border-b border-gray-200">
             <tr>
               {tableColumns.map((header, index) => {
                 const isSortable = header.sortable !== false;
                 const isActiveSort = sortField === header.key;
-                const widthStyle = header.width ? { width: header.width } : {};
+                const widthStyle = header.width ? { width: header.width, minWidth: header.width, maxWidth: header.width } : {};
                 return (
                   <th
                     key={index}
@@ -90,7 +90,7 @@ export default function DynamicTableView({ data, config, onRowAction, loading = 
             </tr>
             <tr className="bg-gray-50/50">
               {tableColumns.map((header, index) => {
-                const widthStyle = header.width ? { width: header.width } : {};
+                const widthStyle = header.width ? { width: header.width, minWidth: header.width, maxWidth: header.width } : {};
                 return (
                   <th key={`filter-${index}`} style={widthStyle} className="p-0 border-b border-gray-200">
                     <div

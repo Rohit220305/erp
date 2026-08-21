@@ -7,15 +7,17 @@ import { useListing } from "@/context/ListingContext";
 import { useHeader } from "@/context/HeaderContext";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import AccessDenied from "@/components/common/AccessDenied";
 import TableSkeleton from "@/components/common/TableSkeleton";
 import Loader from "@/components/common/Loader";
 import FilterDrawer from "@/components/common/FilterDrawer";
 import SearchDrawer from "@/components/common/SearchDrawer";
 import Pagination from "@/components/listing/Pagination";
 import toast from "react-hot-toast";
-import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
 import DynamicTableView from "./DynamicTableView";
+import { listCompanies } from "@/lib/api/company-api";
+import { listWorkCentreCategories } from "@/lib/api/work-centre-category-api";
 import { DynamicListView, DynamicGridView } from "./DynamicViews";
 
 export default function DynamicListing({
@@ -29,7 +31,7 @@ export default function DynamicListing({
   extraApiParams,
 }) {
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const { setConfig, resetConfig } = useHeader();
   const {
     view, page, limit, total,
@@ -38,10 +40,83 @@ export default function DynamicListing({
     toggleColumnSearch, isFilterDrawerOpen, setIsFilterDrawerOpen,
   } = useListing();
 
-  const activeView = schema.forceView || view;
+  const [activeSchema, setActiveSchema] = useState(schema);
+  const activeView = activeSchema.forceView || view;
 
   const [actualView, setActualView] = useState(activeView);
   const { execute: executeViewSwitch, isLoading: isSwitchingView } = useAsyncAction(1000);
+
+  useEffect(() => {
+    const processSchema = async () => {
+      let clonedSchema = JSON.parse(JSON.stringify(schema));
+
+      if (!user?.isSuperAdmin) {
+        if (clonedSchema.columns) {
+          clonedSchema.columns = clonedSchema.columns.filter((c) => !c.showForSuperAdminOnly);
+        }
+        if (clonedSchema.sidebarFields) {
+          clonedSchema.sidebarFields = clonedSchema.sidebarFields.filter((f) => !f.showForSuperAdminOnly);
+        }
+        if (clonedSchema.searchFields) {
+          clonedSchema.searchFields = clonedSchema.searchFields.filter((f) => !f.showForSuperAdminOnly);
+        }
+      }
+
+      const needsCompanyOptions =
+        clonedSchema.sidebarFields?.some((f) => f.dynamicOptions === "companies") ||
+        clonedSchema.searchFields?.some((f) => f.dynamicOptions === "companies");
+
+      if (needsCompanyOptions) {
+        try {
+          const compRes = await listCompanies({ page: 1, limit: 1000 });
+          const compData = compRes?.settings?.data?.list || compRes?.data?.list || [];
+          const companyOptions = compData.map((c) => ({ label: c.companyName, value: String(c.id) }));
+
+          if (clonedSchema.sidebarFields) {
+            clonedSchema.sidebarFields.forEach((field) => {
+              if (field.dynamicOptions === "companies") field.options = companyOptions;
+            });
+          }
+          if (clonedSchema.searchFields) {
+            clonedSchema.searchFields.forEach((field) => {
+              if (field.dynamicOptions === "companies") field.options = companyOptions;
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch companies for dynamic options:", error);
+        }
+      }
+
+      const needsWorkCentreCatOptions =
+        clonedSchema.sidebarFields?.some((f) => f.dynamicOptions === "workCentreCategories") ||
+        clonedSchema.searchFields?.some((f) => f.dynamicOptions === "workCentreCategories");
+
+      if (needsWorkCentreCatOptions) {
+        try {
+          const catRes = await listWorkCentreCategories({ page: 1, limit: 1000 });
+          const catData = catRes?.settings?.data?.list || catRes?.data?.list || [];
+          const catOptions = catData.map((c) => ({ label: c.categoryName, value: String(c.id) }));
+
+          if (clonedSchema.sidebarFields) {
+            clonedSchema.sidebarFields.forEach((field) => {
+              if (field.dynamicOptions === "workCentreCategories") field.options = catOptions;
+            });
+          }
+          if (clonedSchema.searchFields) {
+            clonedSchema.searchFields.forEach((field) => {
+              if (field.dynamicOptions === "workCentreCategories") field.options = catOptions;
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch work centre categories for dynamic options:", error);
+        }
+      }
+
+      setActiveSchema(clonedSchema);
+    };
+
+    processSchema();
+  }, [schema, user]);
 
   useEffect(() => {
     if (activeView !== actualView) {
@@ -59,7 +134,7 @@ export default function DynamicListing({
   const openDetails = (item) => setDrawerState({ mode: "details", data: item });
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [sidebarFilters, setSidebarFilters] = useState(schema.defaultFilters || {});
+  const [sidebarFilters, setSidebarFilters] = useState(activeSchema.defaultFilters || {});
   const [appliedSidebarFilters, setAppliedSidebarFilters] = useState(null);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -68,8 +143,8 @@ export default function DynamicListing({
   const [appliedFilters, setAppliedFilters] = useState([]);
   const [appliedLogicalOperator, setAppliedLogicalOperator] = useState("AND");
 
-  const listPermission = schema.permissions?.list;
-  const deletePermission = schema.permissions?.delete;
+  const listPermission = activeSchema.permissions?.list;
+  const deletePermission = activeSchema.permissions?.delete;
 
   const handleOpenSearch = () => {
     setIsSearchOpen(true);
@@ -80,8 +155,8 @@ export default function DynamicListing({
       if (appliedFilters.length > 0) {
         setTempFilters(JSON.parse(JSON.stringify(appliedFilters)));
         setTempLogicalOperator(appliedLogicalOperator);
-      } else if (schema.searchFields?.length > 0) {
-        const defaultField = schema.searchFields[0];
+      } else if (activeSchema.searchFields?.length > 0) {
+        const defaultField = activeSchema.searchFields[0];
         setTempFilters([{
           field: defaultField.value,
           operator: "equal",
@@ -93,7 +168,7 @@ export default function DynamicListing({
         setTempLogicalOperator("AND");
       }
     }
-  }, [isSearchOpen, appliedFilters, appliedLogicalOperator, schema.searchFields]);
+  }, [isSearchOpen, appliedFilters, appliedLogicalOperator, activeSchema.searchFields]);
 
   const loadData = async () => {
     if (!fetchData) {
@@ -156,7 +231,7 @@ export default function DynamicListing({
       setLimit(data?.pagination?.limit || data.limit || 10);
     } catch (err) {
       console.error("DynamicListing fetchData error:", err);
-      toast.error(`Failed to load ${schema.title || "data"}`);
+      toast.error(`Failed to load ${activeSchema.title || "data"}`);
     } finally {
       setLoading(false);
       setInitialLoad(false);
@@ -164,16 +239,16 @@ export default function DynamicListing({
   };
 
   useEffect(() => {
-    const headerAction = schema.actions?.header?.[0];
+    const headerAction = activeSchema.actions?.header?.[0];
     const canDoAction = headerAction && (!headerAction.permission || can(headerAction.permission));
 
-    const defaultIcons = schema.defaultFilters
+    const defaultIcons = activeSchema.defaultFilters
       ? ["refresh", "search", "filter", "filterDrawer", "view"]
       : ["refresh", "search", "filter", "view"];
 
     setConfig({
       header: {
-        icons: schema.headerIcons || defaultIcons,
+        icons: activeSchema.headerIcons || defaultIcons,
         showBookmark: true,
         showLanguage: true,
         showProfile: true,
@@ -200,12 +275,12 @@ export default function DynamicListing({
         title: "Listing",
         breadcrumbs: [
           { label: "Master", href: "/" },
-          { label: schema.title, href: schema.modulePath || `/${schema.moduleName.toLowerCase()}` },
+          { label: activeSchema.title, href: activeSchema.modulePath || `/${activeSchema.moduleName.toLowerCase()}` },
         ],
       },
     });
     return () => resetConfig();
-  }, [setConfig, can, router, schema, toggleColumnSearch, setIsFilterDrawerOpen]);
+  }, [setConfig, can, router, activeSchema, toggleColumnSearch, setIsFilterDrawerOpen]);
 
   useEffect(() => {
     loadData();
@@ -213,19 +288,19 @@ export default function DynamicListing({
     page, limit, search,
     appliedFilters, appliedLogicalOperator, appliedSidebarFilters,
     columnFilters, sortField, sortOrder,
-    fetchData, schema.title
+    fetchData, activeSchema.title
   ]);
 
   const handleRowClick = (row) => {
-    if (!schema.primaryAction) return;
+    if (!activeSchema.primaryAction) return;
 
-    if (schema.primaryAction.type === "drawer") {
+    if (activeSchema.primaryAction.type === "drawer") {
       setDrawerState({
         mode: "details",
         data: { id: row.id }
       });
-    } else if (schema.primaryAction.type === "page") {
-      router.push(schema.primaryAction.path.replace("{id}", row.id));
+    } else if (activeSchema.primaryAction.type === "page") {
+      router.push(activeSchema.primaryAction.path.replace("{id}", row.id));
     }
   };
 
@@ -259,13 +334,13 @@ export default function DynamicListing({
       const isSuccess = res?.success === 1 || res?.settings?.success === 1;
       const message = res?.message || res?.settings?.message;
       if (isSuccess) {
-        toast.success(message || `${schema.title} deleted successfully.`);
+        toast.success(message || `${activeSchema.title} deleted successfully.`);
         loadData();
       } else {
-        toast.error(message || `Failed to delete ${schema.title}.`);
+        toast.error(message || `Failed to delete ${activeSchema.title}.`);
       }
     } catch {
-      toast.error(`Failed to delete ${schema.title}.`);
+      toast.error(`Failed to delete ${activeSchema.title}.`);
     } finally {
       setDeleteTarget(null);
     }
@@ -286,10 +361,10 @@ export default function DynamicListing({
         </div>
       ) : (
         <>
-          {(actualView === "table" || schema.forceView === "table") && (
+          {(actualView === "table" || activeSchema.forceView === "table") && (
             <DynamicTableView
               data={items}
-              config={schema}
+              config={activeSchema}
               onRowAction={handleRowAction}
               loading={loading}
               setSelectedItemForDetails={openDetails}
@@ -297,7 +372,7 @@ export default function DynamicListing({
             />
           )}
 
-          {schema.forceView !== "table" &&
+          {activeSchema.forceView !== "table" &&
             actualView === "list" &&
             (loading ? (
               <div className="flex h-[calc(100vh-250px)] items-center justify-center">
@@ -306,7 +381,7 @@ export default function DynamicListing({
             ) : (
               <DynamicListView
                 data={items}
-                config={schema}
+                config={activeSchema}
                 setSelectedItemForDetails={openDetails}
                 renderCard={
                   renderListCard
@@ -316,7 +391,7 @@ export default function DynamicListing({
               />
             ))}
 
-          {schema.forceView !== "table" &&
+          {activeSchema.forceView !== "table" &&
             actualView === "grid" &&
             (loading ? (
               <div className="flex h-[calc(100vh-250px)] items-center justify-center">
@@ -325,7 +400,7 @@ export default function DynamicListing({
             ) : (
               <DynamicGridView
                 data={items}
-                config={schema}
+                config={activeSchema}
                 setSelectedItemForDetails={openDetails}
                 renderCard={
                   renderGridCard
@@ -349,14 +424,14 @@ export default function DynamicListing({
 
       <ConfirmModal
         isOpen={!!deleteTarget}
-        title={`Delete ${schema.title}`}
+        title={`Delete ${activeSchema.title}`}
         message="Are you sure you want to delete this record? This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
 
-      {schema.defaultFilters && (
+      {activeSchema.defaultFilters && (
         <FilterDrawer
           open={isFilterDrawerOpen}
           onClose={() => setIsFilterDrawerOpen(false)}
@@ -367,19 +442,19 @@ export default function DynamicListing({
             setIsFilterDrawerOpen(false);
           }}
           onReset={() => {
-            setSidebarFilters(schema.defaultFilters);
+            setSidebarFilters(activeSchema.defaultFilters);
             setAppliedSidebarFilters(null);
             setPage(1);
             setIsFilterDrawerOpen(false);
           }}
           filters={sidebarFilters}
           setFilters={setSidebarFilters}
-          statuses={schema.sidebarStatuses || []}
-          fields={schema.sidebarFields}
+          statuses={activeSchema.sidebarStatuses || []}
+          fields={activeSchema.sidebarFields}
         />
       )}
 
-      {schema.searchFields && (
+      {activeSchema.searchFields && (
         <SearchDrawer
           open={isSearchOpen}
           onClose={() => setIsSearchOpen(false)}
@@ -402,14 +477,14 @@ export default function DynamicListing({
           setFilters={setTempFilters}
           logicalOperator={tempLogicalOperator}
           setLogicalOperator={setTempLogicalOperator}
-          fields={schema.searchFields}
+          fields={activeSchema.searchFields}
         />
       )}
 
       <SideDrawer
         open={drawerState.mode !== null}
         onClose={() => setDrawerState({ mode: null, data: null })}
-        moduleName={schema.moduleName}
+        moduleName={activeSchema.moduleName}
         mode={drawerState.mode}
         data={drawerState.data}
         onSuccess={() => {

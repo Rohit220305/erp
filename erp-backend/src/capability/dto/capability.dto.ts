@@ -8,7 +8,7 @@ import {
   IsEnum,
   ValidateNested,
 } from 'class-validator';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Status } from 'src/package/common/enums/enum';
 
 export class FilterDto {
   @IsString()

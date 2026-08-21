@@ -1,0 +1,190 @@
+{
+  "moduleName": "Storage",
+  "title": "Storage Type",
+  "permissions": {
+    "list": "STORAGE_LIST",
+    "create": "STORAGE_CREATE",
+    "view": "STORAGE_VIEW",
+    "update": "STORAGE_UPDATE",
+    "delete": "STORAGE_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Image",
+      "key": "imageUrl",
+      "type": "image",
+      "searchable": false,
+      "sortable": false,
+      "width": "80px"
+    },
+    {
+      "label": "Storage Name",
+      "key": "storageName",
+      "type": "link",
+      "linkPath": "/storage/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "220px"
+    },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "250px",
+      "showForSuperAdminOnly": true
+    },
+    {
+      "label": "Storage Code",
+      "key": "storageCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "110px",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Storage",
+        "type": "addDrawer",
+        "path": "/storage/add",
+        "permission": "STORAGE_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editDrawer",
+        "path": "/storage/edit/{id}",
+        "icon": "Edit",
+        "permission": "STORAGE_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "STORAGE_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    {
+      "label": "Storage Name",
+      "value": "storageName",
+      "type": "text"
+    },
+    {
+      "label": "Storage Code",
+      "value": "storageCode",
+      "type": "text"
+    },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "searchFields": [
+    {
+      "label": "Storage Name",
+      "value": "storageName",
+      "type": "text"
+    },
+    {
+      "label": "Storage Code",
+      "value": "storageCode",
+      "type": "text"
+    },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        },
+        {
+          "label": "Inactive",
+          "value": "Inactive"
+        }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "storageName": "",
+    "storageCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    {
+      "label": "Active",
+      "value": "Active"
+    },
+    {
+      "label": "Inactive",
+      "value": "Inactive"
+    }
+  ]
+}

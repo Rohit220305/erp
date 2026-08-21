@@ -64,7 +64,7 @@ export class CompanyController {
     @UploadedFile() file: any,
   ) {
     try {
-      const params = body;
+      const params = body; require("fs").appendFileSync("/tmp/company-params.log", "ADD COMPANY PARAMS: " + JSON.stringify(params) + "\n");
 
       if (file) {
         const fileCheck = await this.commonFileService.validateAndCleanUp(file);
@@ -90,14 +90,13 @@ export class CompanyController {
     @UploadedFile() file: any,
   ) {
     try {
-      const params = body;
+      const params = body; require("fs").appendFileSync("/tmp/company-params.log", "ADD COMPANY PARAMS: " + JSON.stringify(params) + "\n");
 
       if (file) {
         const fileCheck = await this.commonFileService.validateAndCleanUp(file);
         if (!fileCheck.valid) return fileCheck.error;
         params.companyLogo = file.filename;
       }
-
       return await this.companyService.startUpdateCompany(req, params);
     } catch (error) {
       return {

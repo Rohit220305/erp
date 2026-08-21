@@ -93,7 +93,6 @@ export class StorageService {
         }
       }
       const {
-        storageImage: _extractedStorageImage,
         ...dbInsertData
       } = params as any;
 
@@ -175,6 +174,10 @@ export class StorageService {
         throw new Error('Storage ID is required');
       }
 
+      if (!this.general.isSuperAdmin(req)) {
+        params.companyId = req.user.companyId;
+      }
+
       const storage = await this.storageRepo.findOne({
         where: {
           id: params.id,
@@ -218,7 +221,6 @@ export class StorageService {
 
       const {
         id: _extractedId,
-        storageImage: _extractedStorageImage,
         ...dbUpdateData
       } = params as any;
 

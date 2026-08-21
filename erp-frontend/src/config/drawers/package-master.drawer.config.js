@@ -20,6 +20,7 @@ export const PackageMasterDrawerConfig = {
       title: null,
       fields: [
         { label: "Package Type Name", key: "packageName", type: "text" },
+        { label: "Company", key: "companyName", type: "text", showForSuperAdminOnly: true },
         { label: "Package Type Code", key: "packageCode", type: "text" },
         { label: "Abbreviation", key: "abbreviation", type: "text" },
         { label: "Description", key: "description", type: "longText" },

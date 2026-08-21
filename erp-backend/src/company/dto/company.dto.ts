@@ -1,12 +1,16 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsArray,
   IsEmail,
+  IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { Status } from 'src/package/common/enums/enum';
 
 export class CompanyAddDto {
   @IsOptional()
@@ -78,7 +82,8 @@ export class CompanyAddDto {
   contactPersonPhone: string;
 
   @IsOptional()
-  status: string;
+  @IsEnum(Status)
+  status: Status;
 
   @IsOptional()
   addedBy: number;
@@ -86,17 +91,17 @@ export class CompanyAddDto {
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
-      return value.split(',').filter(Boolean).map(Number);
+      return value.split(',').filter(Boolean);
     }
     if (Array.isArray(value)) {
-      return value.map(Number);
+      return value;
     }
     return value;
   })
-  supportedCurrencies?: number[];
+  @IsArray()
+  @IsString({ each: true })
+  supportedCurrencies?: string[];
 }
-
-
 
 export class CompanyUpdateDto extends CompanyAddDto {
   @IsInt()
@@ -147,8 +152,6 @@ export class CompanyListDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'ASC' | 'DESC';
-
-
 }
 
 export class filtersDto {

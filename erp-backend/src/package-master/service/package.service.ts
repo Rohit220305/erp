@@ -124,6 +124,10 @@ export class PackageService {
     let return_data: any = {};
 
     try {
+      if (!this.general.isSuperAdmin(req)) {
+        params.companyId = req.user.companyId;
+      }
+
       if (!params.id) {
         throw new Error('Package ID is required');
       }

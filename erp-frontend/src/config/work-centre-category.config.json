@@ -43,9 +43,17 @@
       "label": "Category Name",
       "key": "categoryName",
       "type": "link",
-      "linkPath": "/work-centre-category/{id}",
       "searchable": true,
       "sortable": true
+    },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "250px",
+      "showForSuperAdminOnly": true
     },
     {
       "label": "Category Code",
@@ -103,6 +111,15 @@
       "type": "text"
     },
     {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
       "label": "Status",
       "value": "status",
       "type": "select",
@@ -130,6 +147,15 @@
       "type": "text"
     },
     {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
       "label": "Status",
       "value": "status",
       "type": "select",
@@ -144,5 +170,6 @@
         }
       ]
     }
+    
   ]
 }

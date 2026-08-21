@@ -1,14 +1,6 @@
 import { AbstractBaseEntity } from 'src/package/entities/base.entity';
-import { CompanyEntity } from 'src/company/entity/company.entity';
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  Unique,
-} from 'typeorm';
-import { Status } from 'src/package/common/enums/status.enum';
+import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
+import { Status } from 'src/package/common/enums/enum';
 
 @Entity('storage_master')
 @Unique(['storageCode', 'companyId'])
@@ -38,8 +30,4 @@ export class StorageEntity extends AbstractBaseEntity {
     default: Status.Active,
   })
   status: Status;
-
-  @ManyToOne(() => CompanyEntity)
-  @JoinColumn({ name: 'companyId' })
-  company: CompanyEntity;
 }

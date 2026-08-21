@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Check, X } from "lucide-react";
 
 export default function PackageTableRow({ item, onRowAction, setSelectedItemForDetails }) {
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const isActive = item.status === "Active" || item.status === "active";
   const canView = can("PACKAGE_VIEW");
 
@@ -24,6 +24,13 @@ export default function PackageTableRow({ item, onRowAction, setSelectedItemForD
           </span>
         )}
       </td>
+      {user?.isSuperAdmin && (
+        <td className="px-6 py-4 whitespace-nowrap min-w-[250px] max-w-[250px] truncate">
+          <span className="text-sm text-gray-700" title={item.companyName}>
+            {item.companyName || "—"}
+          </span>
+        </td>
+      )}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           <span className="text-sm font-mono text-gray-900 px-2 py-1 ">

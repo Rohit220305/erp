@@ -8,6 +8,7 @@ import {
   getWorkCentreCategory,
   deleteWorkCentreCategory,
 } from "@/lib/api/work-centre-category-api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function WorkCentreCategoryListing() {
   const customConfig = {
