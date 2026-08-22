@@ -12,6 +12,7 @@ import { getWorkCentre } from "@/lib/api/work-centre-api";
 import { getProcess } from "@/lib/api/process-api";
 import { getItem } from "@/lib/api/item-api";
 import { getManufacturer } from "@/lib/api/manufacturer-api";
+import { getProcessTemplate } from "@/lib/api/process-template-api";
 
 export const apiRegistry = {
   WorkCentreCategory: { fetchItem: getWorkCentreCategory }, 
@@ -27,5 +28,7 @@ export const apiRegistry = {
   "WorkCentre": { fetchItem: getWorkCentre },
   "Process": { fetchItem: getProcess },
   "Item": { fetchItem: getItem },
-  "Manufacturer": { fetchItem: getManufacturer }
+  "Manufacturer": { fetchItem: getManufacturer },
+  "ProcessTemplate": { fetchItem: getProcessTemplate },
 };
+

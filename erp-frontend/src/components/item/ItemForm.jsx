@@ -582,7 +582,6 @@ export default function ItemForm({
       );
       formDataToSend.append("primaryImageIndex", "0");
 
-      console.log("submit form", payload, existingImages, imageFiles);
       
       const response =
         mode === "create"

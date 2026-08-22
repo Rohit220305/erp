@@ -14,7 +14,7 @@ export class ItemService {
     private readonly general: GeneralUtilities,
     private readonly activityLogService: ActivityLogService,
     private readonly commonFileService: CommonFileService,
-  ) {}
+  ) { }
 
   @InjectRepository(ItemEntity)
   private itemRepo: Repository<ItemEntity>;
@@ -89,7 +89,7 @@ export class ItemService {
       if (insertId && newFiles && newFiles.length > 0) {
         const fileNames = newFiles.map((file) => file.filename);
         await this.commonFileService.transferFile(fileNames, insertId, 'item');
-        
+
         const primaryIdx = Number(primaryImageIndex) || 0;
 
         const imageInserts = newFiles.map((file, index) => {
@@ -138,6 +138,8 @@ export class ItemService {
   }
 
   async updateItem(req, params, newFiles: any[]) {
+    console.log('updateItem called with params:', params);
+    
     let return_data: any = {};
     try {
       if (!params.id) throw new Error('Item ID is required');
@@ -183,12 +185,12 @@ export class ItemService {
         }
       }
 
-      const {
-        id: _extractedId,
-        existingImages: _extractedExistingImages,
-        primaryImageIndex: _extractedPrimaryImageIndex,
-        ...dbUpdateData
-      } = params as any;
+      const dbUpdateData = { ...params };
+
+      delete dbUpdateData.id;
+      delete dbUpdateData.existingImages;
+      delete dbUpdateData.primaryImageIndex;
+
 
       Object.keys(dbUpdateData).forEach((key) => {
         if (dbUpdateData[key] === undefined || dbUpdateData[key] === null || dbUpdateData[key] === '') {
@@ -219,7 +221,7 @@ export class ItemService {
         if (isPrim) currentPrimaryIsSet = true;
         imageInserts.push({
           itemId: params.id,
-          fileName: exImg.fileName, 
+          fileName: exImg.fileName,
           url: exImg.fileName,
           mimeType: exImg.mimeType,
           size: exImg.size,
@@ -232,7 +234,7 @@ export class ItemService {
       if (newFiles && newFiles.length > 0) {
         const fileNames = newFiles.map((file) => file.filename);
         await this.commonFileService.transferFile(fileNames, params.id, 'item');
-        
+
         const primaryIdx = Number(params.primaryImageIndex) || -1;
 
         newFiles.forEach((file, index) => {
@@ -258,16 +260,16 @@ export class ItemService {
         if (!currentPrimaryIsSet) {
           imageInserts[0].isPrimary = YesNo.Yes;
         } else {
-            let foundPrimary = false;
-            imageInserts = imageInserts.map(img => {
-                if (img.isPrimary === YesNo.Yes) {
-                    if (foundPrimary) {
-                        return { ...img, isPrimary: YesNo.No };
-                    }
-                    foundPrimary = true;
-                }
-                return img;
-            });
+          let foundPrimary = false;
+          imageInserts = imageInserts.map(img => {
+            if (img.isPrimary === YesNo.Yes) {
+              if (foundPrimary) {
+                return { ...img, isPrimary: YesNo.No };
+              }
+              foundPrimary = true;
+            }
+            return img;
+          });
         }
         await this.itemImageRepo.insert(imageInserts);
       }
@@ -321,7 +323,7 @@ export class ItemService {
       );
 
       const res = await this.itemRepo.update({ id: params.id }, payload);
-      
+
       const imgPayload = this.general.buildSoftDeletePayload({}, req);
       await this.itemImageRepo.update({ itemId: params.id, sysRecDeleted: false }, imgPayload);
 

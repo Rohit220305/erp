@@ -32,13 +32,11 @@ export class ProcessTemplateService {
 
     const processIds = processes.map((p) => Number(p.processId));
 
-    // 1. Duplicate process check
     const uniqueIds = new Set(processIds);
     if (uniqueIds.size !== processIds.length) {
       throw new Error('Duplicate process found in template sequence');
     }
 
-    // 2. Sequence contiguity check
     const sortedSeqs = processes.map((p) => Number(p.sequenceNo)).sort((a, b) => a - b);
     for (let i = 0; i < sortedSeqs.length; i++) {
       if (sortedSeqs[i] !== i + 1) {
@@ -46,13 +44,11 @@ export class ProcessTemplateService {
       }
     }
 
-    // Build processId -> sequenceNo map
     const processSeqMap = new Map<number, number>();
     processes.forEach((p) => {
       processSeqMap.set(Number(p.processId), Number(p.sequenceNo));
     });
 
-    // 3 & 4. Top-down dependency check & Self-reference check
     for (const proc of processes) {
       const currentId = Number(proc.processId);
       const currentSeq = Number(proc.sequenceNo);
@@ -79,7 +75,6 @@ export class ProcessTemplateService {
       }
     }
 
-    // 5. Cross-tenant process validation
     const dbProcesses = await this.processRepo.createQueryBuilder('p')
       .where('p.id IN (:...ids)', { ids: Array.from(uniqueIds) })
       .andWhere('p.sysRecDeleted = 0')
@@ -294,7 +289,6 @@ export class ProcessTemplateService {
         dbUpdateData,
       );
 
-      // Re-insert mapping rows
       await this.processTemplateMappingRepo.delete({ templateId: params.id });
 
       if (processes && Array.isArray(processes) && processes.length > 0) {

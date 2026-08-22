@@ -11,6 +11,7 @@ import { brandDrawerConfig } from './brand.drawer.config';
 import { processDrawerConfig } from './process.drawer.config';
 import { workCentreDrawerConfig } from './work-centre.drawer.config';
 import { itemDrawerConfig } from './item.drawer.config';
+import { processTemplateDrawerConfig } from './process-template.drawer.config';
 
 export const drawerRegistry = {
   "User": userDrawerConfig,
@@ -26,4 +27,6 @@ export const drawerRegistry = {
   "WorkCentre": workCentreDrawerConfig,
   "Process": processDrawerConfig,
   "Item": itemDrawerConfig,
+  "ProcessTemplate": processTemplateDrawerConfig,
 };
+

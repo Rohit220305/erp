@@ -1,0 +1,150 @@
+{
+  "moduleName": "ProcessTemplate",
+  "title": "Process Template",
+  "permissions": {
+    "list": "PROCESS_TEMPLATE_LIST",
+    "create": "PROCESS_TEMPLATE_CREATE",
+    "view": "PROCESS_TEMPLATE_VIEW",
+    "update": "PROCESS_TEMPLATE_UPDATE",
+    "delete": "PROCESS_TEMPLATE_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Template Name",
+      "key": "templateName",
+      "type": "link",
+      "linkPath": "/process-template/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "220px"
+    },
+    {
+      "label": "Code",
+      "key": "templateCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Execution Type",
+      "key": "executionType",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px",
+      "showForSuperAdminOnly": true
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "130px",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Process Template",
+        "type": "redirect",
+        "path": "/process-template/add",
+        "permission": "PROCESS_TEMPLATE_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editRedirect",
+        "path": "/process-template/edit/{id}",
+        "icon": "Edit",
+        "permission": "PROCESS_TEMPLATE_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "PROCESS_TEMPLATE_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    { "label": "Template Name", "value": "templateName", "type": "text" },
+    { "label": "Code", "value": "templateCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "searchFields": [
+    { "label": "Template Name", "value": "templateName", "type": "text" },
+    { "label": "Code", "value": "templateCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "templateName": "",
+    "templateCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ]
+}

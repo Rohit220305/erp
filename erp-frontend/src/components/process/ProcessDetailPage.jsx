@@ -34,9 +34,7 @@ function UserInfoCard({ title, name, date }) {
           <span className="text-sm font-semibold text-[#1565c0]">
             {name || "System"}
           </span>
-          <span className="text-xs text-gray-400 mt-1">
-            {date || "-"}
-          </span>
+          <span className="text-xs text-gray-400 mt-1">{date || "-"}</span>
         </div>
       </div>
     </div>
@@ -111,7 +109,7 @@ export default function ProcessDetailPage({ data }) {
   const isActive = status === "Active" || status === "active";
 
   return (
-    <div className="p-6 bg-[#f8f9fa] min-h-full">
+    <div className="py-6  min-h-full px-10 ">
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-2">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
@@ -206,7 +204,7 @@ export default function ProcessDetailPage({ data }) {
               </div>
             </div>
 
-            <div className="xl:col-span-1 flex flex-col gap-6">
+            <div className="xl:col-span-1  flex flex-col gap-6">
               <UserInfoCard
                 title="Added Info"
                 name={addedByName}

@@ -329,7 +329,7 @@ export class ItemListService {
           item.primaryImageUrl = null;
         }
       }
-
+      
       const pagination = this.general.buildPaginationResponse(total, page, limit, skip);
 
       return_data = {

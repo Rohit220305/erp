@@ -57,7 +57,6 @@ export default function CompanyDetailsPage({ company }) {
     }
     return <div className="p-6 text-gray-500">Company data could not be loaded.</div>;
   }
-  console.log("company", company);
   return (
     <div className="p-6">
       <div className="grid grid-cols-12 gap-6">

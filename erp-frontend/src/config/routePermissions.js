@@ -56,6 +56,12 @@ const routes = [
   { path: "/process/edit/:id", permission: CAPABILITIES.PROCESS_TEMPLATE.UPDATE },
   { path: "/process/:id", permission: CAPABILITIES.PROCESS_TEMPLATE.VIEW },
 
+  { path: "/process-template", permission: CAPABILITIES.PROCESS_TEMPLATE.LIST },
+  { path: "/process-template/add", permission: CAPABILITIES.PROCESS_TEMPLATE.CREATE },
+  { path: "/process-template/edit/:id", permission: CAPABILITIES.PROCESS_TEMPLATE.UPDATE },
+  { path: "/process-template/:id", permission: CAPABILITIES.PROCESS_TEMPLATE.VIEW },
+
+
   { path: "/brand", permission: CAPABILITIES.BRAND.LIST },
   { path: "/brand/add", permission: CAPABILITIES.BRAND.CREATE },
   { path: "/brand/edit/:id", permission: CAPABILITIES.BRAND.UPDATE },

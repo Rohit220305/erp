@@ -7,7 +7,7 @@ import SharedImageZoom from "@/components/common/SharedImageZoom";
 export default function ProcessTableRow({ item, onRowAction, setSelectedItemForDetails }) {
   const { can, user } = useAuth();
   const isActive = item.status === "Active" || item.status === "active";
-  const canView = can("PROCESS_MASTER_VIEW");
+  const canView = can("PROCESS_VIEW");
 
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">

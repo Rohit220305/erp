@@ -28,7 +28,7 @@ const getTitle = (titleConfig, data) => {
 
 const getFieldValue = (field, data, user) => {
   if (field.condition && data[field.condition.key] !== field.condition.value) {
-    return null; 
+    return null;
   }
   if (field.showForSuperAdminOnly && !user?.isSuperAdmin) {
     return null;
@@ -46,7 +46,7 @@ function HeaderImage({ imgConfig, data }) {
   if (!imgConfig || !data) return null;
 
   const src = data[imgConfig.key];
-  
+
   if (src && !imgError) {
     return (
       <img
@@ -65,8 +65,8 @@ function HeaderImage({ imgConfig, data }) {
         {initials}
       </div>
     );
-  } 
-  
+  }
+
   if (imgConfig.fallbackType === "icon" && imgConfig.fallbackIcon) {
     const Icon = imgConfig.fallbackIcon;
     return (
@@ -92,7 +92,7 @@ function DetailField({ field, data, user }) {
 
 function StatusBadge({ badgeConfig, data }) {
   if (!badgeConfig || !data[badgeConfig.key]) return null;
-  
+
   const value = data[badgeConfig.key];
   const isActive = value === (badgeConfig.activeValue || "Active");
   const badgeColor = isActive ? "bg-[#2ecc71] text-white" : "bg-red-500 text-white";
@@ -107,10 +107,10 @@ function StatusBadge({ badgeConfig, data }) {
 export default function DetailDrawerContent({ open, onClose, item, moduleName, fetchItem }) {
   const router = useRouter();
   const { can, user } = useAuth();
-  
+
   const [isVisible, setIsVisible] = useState(false);
   const [delayedItem, setDelayedItem] = useState(null);
-  
+
   const { execute, isLoading } = useAsyncAction();
   const drawerConfig = drawerRegistry[moduleName];
   const itemId = getEntityId(item, moduleName);
@@ -131,8 +131,8 @@ export default function DetailDrawerContent({ open, onClose, item, moduleName, f
       }
       try {
         const res = await fetchItem({ id: itemId });
-        const data = (res && (res.success !== 0 || res.settings?.success !== 0)) 
-          ? (res.data || res.settings?.data || res) 
+        const data = (res && (res.success !== 0 || res.settings?.success !== 0))
+          ? (res.data || res.settings?.data || res)
           : item;
         setDelayedItem(data);
       } catch {
@@ -141,7 +141,7 @@ export default function DetailDrawerContent({ open, onClose, item, moduleName, f
     };
 
     execute(loadData);
-    
+
     const animationTimer = setTimeout(() => requestAnimationFrame(() => setIsVisible(true)), 20);
     return () => clearTimeout(animationTimer);
   }, [open, item, itemId, fetchItem, execute]);
@@ -158,8 +158,8 @@ export default function DetailDrawerContent({ open, onClose, item, moduleName, f
 
   if (!open && !delayedItem && !isLoading) return null;
 
-  const hasViewPerm = drawerConfig?.primaryAction?.permission 
-    ? can(drawerConfig.primaryAction.permission) 
+  const hasViewPerm = drawerConfig?.primaryAction?.permission
+    ? can(drawerConfig.primaryAction.permission)
     : true;
 
   const handleActionClick = () => {
@@ -170,8 +170,7 @@ export default function DetailDrawerContent({ open, onClose, item, moduleName, f
     }
     router.push(path);
   };
-  console.log("drawerConfig", drawerConfig);
-  console.log("delayedItem", delayedItem);
+
   return (
     <div className="flex h-full flex-col overflow-y-auto px-6 py-6">
       {(isLoading || (open && !delayedItem)) ? (

@@ -151,6 +151,16 @@ export const menuCategories = [
           { label: "Process Master", path: "/process", permission: "PROCESS_LIST" },
         ],
       },
+      {
+        title: "Process Template",
+        icon: "GitBranch",
+        iconBg: "#6366f1",
+        permission: "PROCESS_TEMPLATE_LIST",
+        items: [
+          { label: "Process Template", path: "/process-template", permission: "PROCESS_TEMPLATE_LIST" },
+        ],
+      },
     ],
   },
 ];
+

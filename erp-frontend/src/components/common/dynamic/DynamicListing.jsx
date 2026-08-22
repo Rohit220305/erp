@@ -262,7 +262,7 @@ export default function DynamicListing({
           ? {
             label: headerAction.label,
             onClick: () => {
-              if (headerAction.type === "redirect" && headerAction.path) {
+              if ((headerAction.type === "redirect" || headerAction.type === "addRedirect") && headerAction.path) {
                 router.push(headerAction.path);
               } else if (headerAction.type === "addDrawer") {
                 setDrawerState({ mode: "add", data: null });

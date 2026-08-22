@@ -128,5 +128,14 @@ export const sitemapData = [
       { label: "Process Master", path: "/process", permission: "PROCESS_LIST" },
     ],
     path: "/process",
+  },
+  {
+    title: "Process Template",
+    permission: "PROCESS_TEMPLATE_LIST",
+    menus: [
+      { label: "Process Template", path: "/process-template", permission: "PROCESS_TEMPLATE_LIST" },
+    ],
+    path: "/process-template",
   }
 ];
+

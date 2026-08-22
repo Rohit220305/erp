@@ -64,7 +64,6 @@ export default function ItemCategoryDetailPage({ data }) {
     }
     return <div className="p-6 text-gray-500">Item Category data could not be loaded.</div>;
   }
-  console.log("data", data);
   return (
     <div className="p-6">
       <div className="grid grid-cols-12 gap-6">

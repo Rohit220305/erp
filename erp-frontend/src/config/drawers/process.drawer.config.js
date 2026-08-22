@@ -3,23 +3,23 @@ import { Activity } from "lucide-react";
 export const processDrawerConfig = {
   title: "Process Details",
   header: {
-    image: { 
-      key: "imageUrl", 
-      fallbackType: "icon", 
+    image: {
+      key: "imageUrl",
+      fallbackType: "icon",
       fallbackIcon: Activity
     },
-    title: { 
-      type: "text", 
-      key: "processName" 
+    title: {
+      type: "text",
+      key: "processName"
     },
-    badge: { 
-      key: "status", 
-      type: "statusBadge" 
+    badge: {
+      key: "status",
+      type: "statusBadge"
     }
   },
   primaryAction: {
     label: "More Details",
-    permission: "PROCESS_MASTER_VIEW",
+    permission: "PROCESS_VIEW",
     path: "/process/{id}"
   },
   sections: [

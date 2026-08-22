@@ -13,8 +13,8 @@ export const getWorkCentreSchema = (isSuperAdmin = false) => {
         .optional(),
       workCentreName: z.string().min(1, "⚠ Please enter Work Centre Name."),
       workCentreCode: z.string().min(1, "⚠ Please enter Work Centre Code."),
-      usageStatus: z.enum(["Available", "Inuse", "Maintenance"], "⚠ Please select Usage Status.").default("Available"),
-      status: z.enum(["Active", "Inactive"], "⚠ Please select Status.").default("Active"),
+      usageStatus: z.enum(["Available", "Inuse", "Maintenance"], "⚠ Please select Usage Status."),
+      status: z.enum(["Active", "Inactive"], "⚠ Please select Status."),
     })
     .refine(
       (data) => {

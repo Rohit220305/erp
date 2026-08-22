@@ -21,7 +21,7 @@ export default function AppLayout({ children }) {
           overflow-y-hidden
           mt-[150px]
           mb-[45px]
-          px-4
+         
         "
       >
         <div className="h-full bg-[#ebe9e9e8]">{children}</div>

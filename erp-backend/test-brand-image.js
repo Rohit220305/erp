@@ -26,9 +26,7 @@ async function run() {
       'Cookie': 'auth_token=...' 
     };
 
-    console.log('Sending request...');
     const res = await axios.post('http://localhost:4000/brand/add-brand', form, { headers });
-    console.log('Response:', res.data);
   } catch (err) {
     console.error('Error:', err.response ? err.response.data : err.message);
   }
