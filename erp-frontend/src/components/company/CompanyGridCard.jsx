@@ -30,7 +30,6 @@ export default function CompanyGridCard({ item, config, setSelectedItemForDetail
               id={`company-grid-${item.id}`}
               src={item.logoUrl}
               alt={item.companyName}
-              // placeholderText={item.companyName?.[0] || "C"}
               placeholderText={<Building2 size={18} />}
               thumbnailClassName="w-14 h-14 rounded-xl object-cover border border-gray-100"
               modalImageClassName="w-64 h-64 rounded-xl shadow-2xl"

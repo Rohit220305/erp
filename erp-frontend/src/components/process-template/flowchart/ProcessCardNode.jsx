@@ -16,7 +16,6 @@ function ProcessCardNode({ data }) {
       onClick={handleClick}
       className="bg-white border-2 border-[#1565c0] hover:border-[#0f57a6] rounded-xl px-5 py-3 shadow-sm hover:shadow-md transition-all cursor-pointer select-none min-w-[200px] text-center group relative"
     >
-      {/* Top Handle (Primary Target) */}
       <Handle
         id="top"
         type="target"
@@ -24,7 +23,6 @@ function ProcessCardNode({ data }) {
         className="!bg-[#1565c0] !w-2.5 !h-2.5 border-2 border-white"
       />
 
-      {/* Bottom Handle (Primary Source) */}
       <Handle
         id="bottom"
         type="source"
@@ -32,7 +30,6 @@ function ProcessCardNode({ data }) {
         className="!bg-[#1565c0] !w-2.5 !h-2.5 border-2 border-white"
       />
 
-      {/* Left Handles (Source & Target) */}
       <Handle
         id="left"
         type="source"
@@ -46,7 +43,6 @@ function ProcessCardNode({ data }) {
         className="!bg-[#1565c0] !w-2.5 !h-2.5 border-2 border-white"
       />
 
-      {/* Right Handles (Source & Target) */}
       <Handle
         id="right"
         type="source"

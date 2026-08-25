@@ -18,5 +18,11 @@ export class ProcessTemplateMappingEntity extends AbstractBaseEntity {
 
   @Column({ type: 'json', nullable: true })
   dependencies: number[] | null;
+
+  @Column({ type: 'json', nullable: true })
+  nodePosition: { x: number; y: number } | null;
+
+  @Column({ type: 'json', nullable: true })
+  handleConfig: Record<string, { sourceHandle: string; targetHandle: string }> | null;
 }
 

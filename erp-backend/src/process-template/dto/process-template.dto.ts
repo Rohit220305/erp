@@ -25,6 +25,12 @@ export class ProcessMappingItemDto {
   @IsArray()
   @IsInt({ each: true })
   dependencies?: number[];
+
+  @IsOptional()
+  nodePosition?: { x: number; y: number };
+
+  @IsOptional()
+  handleConfig?: Record<string, { sourceHandle: string; targetHandle: string }>;
 }
 
 export class ProcessTemplateAddDto {

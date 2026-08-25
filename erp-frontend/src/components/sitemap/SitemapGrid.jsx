@@ -14,17 +14,13 @@ export default function SitemapGrid({ data }) {
     640: 1,
   };
 
-  const filteredData = data
+  const filteredData = (data || [])
     .map((section) => {
       if (section.superAdminOnly && !user?.isSuperAdmin) {
         return null;
       }
-      
-      if (section.permission && !can(section.permission)) {
-        return null;
-      }
 
-      const filteredMenus = section.menus.filter((menu) => {
+      const filteredMenus = (section.menus || []).filter((menu) => {
         if (menu.superAdminOnly && !user?.isSuperAdmin) {
           return false;
         }
@@ -33,6 +29,10 @@ export default function SitemapGrid({ data }) {
         }
         return true;
       });
+
+      if (section.permission && !can(section.permission) && filteredMenus.length === 0) {
+        return null;
+      }
 
       if (filteredMenus.length === 0) {
         return null;
@@ -48,7 +48,7 @@ export default function SitemapGrid({ data }) {
   return (
     <Masonry
       breakpointCols={breakpointColumnsObj}
-      className="flex gap-5"
+      className="flex gap-5 px-4"
       columnClassName="space-y-5"
     >
       {filteredData.map((section) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { createProcess, updateProcess } from "@/lib/api/process-api";
@@ -83,9 +83,6 @@ export default function ProcessDrawerForm({
   const [loading, setLoading] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
   const [workCentreOptions, setWorkCentreOptions] = useState([]);
-  
-  const imageInputRef = useRef(null);
-  const pdfInputRef = useRef(null);
 
   const defaultValues = { ...BASE_DEFAULTS, ...initialData };
 
@@ -105,7 +102,7 @@ export default function ProcessDrawerForm({
   const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
   const [isDeletePdfModalOpen, setIsDeletePdfModalOpen] = useState(false);
 
-  const prevCompanyId = useRef(formData.companyId);
+  const [prevCompanyId, setPrevCompanyId] = useState(formData.companyId);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -119,12 +116,12 @@ export default function ProcessDrawerForm({
         setFormData({ ...BASE_DEFAULTS, ...initialData });
         setImagePreview(initialData.imageUrl || null);
         setPdfPreview(initialData.instructionPdfUrl || null);
-        prevCompanyId.current = initialData.companyId;
+        setPrevCompanyId(initialData.companyId);
       } else {
         setFormData(BASE_DEFAULTS);
         setImagePreview(null);
         setPdfPreview(null);
-        prevCompanyId.current = null;
+        setPrevCompanyId(null);
       }
       setImageFile(null);
       setPdfFile(null);
@@ -174,15 +171,15 @@ export default function ProcessDrawerForm({
       };
       loadWorkCentres();
 
-      if (mode === "create" && prevCompanyId.current && prevCompanyId.current !== effectiveCompanyId) {
+      if (mode === "create" && prevCompanyId && prevCompanyId !== effectiveCompanyId) {
         setFormData(prev => ({ ...prev, workCentreId: "" }));
       }
-      prevCompanyId.current = effectiveCompanyId;
+      setPrevCompanyId(effectiveCompanyId);
     } else {
       setWorkCentreOptions([]);
-      prevCompanyId.current = null;
+      setPrevCompanyId(null);
     }
-  }, [formData.companyId, user, mode]);
+  }, [formData.companyId, user, mode, prevCompanyId]);
 
   const requiredPermission =
     mode === "create"
@@ -310,14 +307,16 @@ export default function ProcessDrawerForm({
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    if (imageInputRef.current) imageInputRef.current.value = "";
+    const imageInput = document.getElementById("process-drawer-image-input");
+    if (imageInput) imageInput.value = "";
     setIsDirty(true);
   };
 
   const removePdf = () => {
     setPdfFile(null);
     setPdfPreview(null);
-    if (pdfInputRef.current) pdfInputRef.current.value = "";
+    const pdfInput = document.getElementById("process-drawer-pdf-input");
+    if (pdfInput) pdfInput.value = "";
     setIsDirty(true);
   };
 
@@ -493,7 +492,7 @@ export default function ProcessDrawerForm({
             
             <div 
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition"
-              onClick={() => !isImageUploading && imageInputRef.current?.click()}
+              onClick={() => !isImageUploading && document.getElementById("process-drawer-image-input")?.click()}
             >
               <span className="text-gray-500 text-sm">Choose File</span>
               <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
@@ -533,7 +532,7 @@ export default function ProcessDrawerForm({
             )}
 
             <input
-              ref={imageInputRef}
+              id="process-drawer-image-input"
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/x-icon"
               className="hidden"
@@ -548,7 +547,7 @@ export default function ProcessDrawerForm({
             
             <div 
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition"
-              onClick={() => !isPdfUploading && pdfInputRef.current?.click()}
+              onClick={() => !isPdfUploading && document.getElementById("process-drawer-pdf-input")?.click()}
             >
               <span className="text-gray-500 text-sm">Choose File</span>
               <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
@@ -593,7 +592,7 @@ export default function ProcessDrawerForm({
             )}
 
             <input
-              ref={pdfInputRef}
+              id="process-drawer-pdf-input"
               type="file"
               accept="application/pdf"
               className="hidden"

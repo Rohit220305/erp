@@ -6,16 +6,25 @@ export const getProcessTemplateSchema = (isSuperAdmin = false) => {
       companyId: z
         .number()
         .or(z.string().transform((val) => (val ? Number(val) : undefined)))
+        .nullable()
         .optional(),
-      templateName: z.string().min(1, "⚠ Please enter Template Name."),
-      templateCode: z.string().min(1, "⚠ Please enter Template Code."),
-      executionType: z.enum(["Sequential", "Flexible"], {
-        errorMap: () => ({ message: "⚠ Please select Execution Type." }),
-      }).default("Sequential"),
-      remark: z.string().optional(),
-      status: z.enum(["Active", "Inactive"], {
-        errorMap: () => ({ message: "⚠ Please select Status." }),
-      }).default("Active"),
+      templateName: z.string({ required_error: "⚠ Please enter Template Name." }).min(1, "⚠ Please enter Template Name."),
+      templateCode: z.string({ required_error: "⚠ Please enter Template Code." }).min(1, "⚠ Please enter Template Code."),
+      executionType: z
+        .enum(["Sequential", "Flexible"], {
+          errorMap: () => ({ message: "⚠ Please select Execution Type." }),
+        })
+        .nullable()
+        .optional()
+        .default("Sequential"),
+      remark: z.string().nullable().optional(),
+      status: z
+        .enum(["Active", "Inactive"], {
+          errorMap: () => ({ message: "⚠ Please select Status." }),
+        })
+        .nullable()
+        .optional()
+        .default("Active"),
       processes: z
         .array(
           z.object({
@@ -25,7 +34,10 @@ export const getProcessTemplateSchema = (isSuperAdmin = false) => {
             sequenceNo: z
               .number()
               .or(z.string().transform((val) => Number(val))),
-            dependencies: z.array(z.number()).optional(),
+            dependencies: z
+              .array(z.number().or(z.string().transform((val) => Number(val))))
+              .nullable()
+              .optional(),
           })
         )
         .min(1, "⚠ Please add at least one process in the sequence grid."),

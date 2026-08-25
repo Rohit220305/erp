@@ -27,7 +27,7 @@ export default function ListingPage({
       <div className="bg-white rounded-lg overflow-hidden h-full">
         <DynamicTable headers={headers} data={data} renderCell={renderCell} loading={loading} />
 
-        <div className="absolute bottom-0 left-0 right-0 mx-6">
+        <div className="absolute bottom-0 left-0 right-0 mx-10">
           <Pagination {...paginationProps} />
         </div>
       </div>
@@ -38,7 +38,7 @@ export default function ListingPage({
     return (
       <div className=" rounded-lg overflow-hidden h-full">
         <DynamicList data={data} renderCard={renderListCard} />
-        <div className="absolute bottom-0 left-0 right-0 mx-6">
+        <div className="absolute bottom-0 left-0 right-0 mx-10">
           <Pagination {...paginationProps} />
         </div>
       </div>
@@ -48,7 +48,7 @@ export default function ListingPage({
   return (
     <div className="rounded-lg overflow-hidden h-full">
       <DynamicGrid data={data} renderCard={renderGridCard} />
-      <div className="absolute bottom-0 left-0 right-0 mx-6">
+      <div className="absolute bottom-0 left-0 right-0 mx-10">
         <Pagination {...paginationProps} />
       </div>
     </div>

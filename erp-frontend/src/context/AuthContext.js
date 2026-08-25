@@ -67,7 +67,11 @@ export function AuthProvider({ children, initialUser = null, initialCapabilities
   const switchProfile = async (groupId) => {
     const res = await switchProfileApi(groupId);
     if (res?.success === 1 && res?.data) {
-      setAuthData(res.data, res.data.capabilities || []);
+      const stillImpersonating =
+        typeof res.data.isImpersonating !== "undefined"
+          ? Boolean(res.data.isImpersonating)
+          : isImpersonating;
+      setAuthData(res.data, res.data.capabilities || [], stillImpersonating);
       return res;
     }
     throw new Error(res?.message || "Failed to switch profile");

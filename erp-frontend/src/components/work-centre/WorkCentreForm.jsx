@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
@@ -83,7 +83,6 @@ export default function WorkCentreForm({
   const [loading, setLoading] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
-  const fileInputRef = useRef(null);
 
   const defaultValues = { ...BASE_DEFAULTS, ...initialData };
 
@@ -96,7 +95,7 @@ export default function WorkCentreForm({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDeleteImageModalOpen, setIsDeleteImageModalOpen] = useState(false);
-  const prevCompanyId = useRef(formData.companyId);
+  const [prevCompanyId, setPrevCompanyId] = useState(formData.companyId);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -108,7 +107,7 @@ export default function WorkCentreForm({
     if (initialData) {
       setFormData({ ...BASE_DEFAULTS, ...initialData });
       setImagePreview(initialData.imageUrl || null);
-      prevCompanyId.current = initialData.companyId;
+      setPrevCompanyId(initialData.companyId);
     }
   }, [initialData]);
 
@@ -147,15 +146,15 @@ export default function WorkCentreForm({
       };
       loadCategories();
 
-      if (mode === "create" && prevCompanyId.current && prevCompanyId.current !== effectiveCompanyId) {
+      if (mode === "create" && prevCompanyId && prevCompanyId !== effectiveCompanyId) {
         setFormData(prev => ({ ...prev, categoryId: "" }));
       }
-      prevCompanyId.current = effectiveCompanyId;
+      setPrevCompanyId(effectiveCompanyId);
     } else {
       setCategoryOptions([]);
-      prevCompanyId.current = null;
+      setPrevCompanyId(null);
     }
-  }, [formData.companyId, user, mode]);
+  }, [formData.companyId, user, mode, prevCompanyId]);
 
   useEffect(() => {
     setConfig({
@@ -270,7 +269,8 @@ export default function WorkCentreForm({
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    const fileInput = document.getElementById("work-centre-form-file-input");
+    if (fileInput) fileInput.value = "";
     setIsDirty(true);
   };
 
@@ -380,7 +380,7 @@ export default function WorkCentreForm({
             
             <div 
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition w-full md:w-1/2"
-              onClick={() => !isUploading && fileInputRef.current?.click()}
+              onClick={() => !isUploading && document.getElementById("work-centre-form-file-input")?.click()}
             >
               <span className="text-gray-500 text-sm">Choose File</span>
               <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
@@ -420,7 +420,7 @@ export default function WorkCentreForm({
             )}
 
             <input
-              ref={fileInputRef}
+              id="work-centre-form-file-input"
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/x-icon"
               className="hidden"

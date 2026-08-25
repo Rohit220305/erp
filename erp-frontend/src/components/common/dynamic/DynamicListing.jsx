@@ -354,7 +354,7 @@ export default function DynamicListing({
     return <Loader fullPage />;
   }
   return (
-    <div className="relative px-6 h-full">
+    <div className="relative px-10 h-full">
       {isSwitchingView ? (
         <div className="flex h-[calc(100vh-250px)] items-center justify-center">
           <Loader size="xl" />

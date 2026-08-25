@@ -1,7 +1,7 @@
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/context/AuthContext";
 import { HeaderProvider } from "@/context/HeaderContext";
+import ToastProvider from "@/components/common/ToastProvider";
 
 export const metadata = {
   title: {
@@ -21,20 +21,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <HeaderProvider>
             {children}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 2000,
-                style: {
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontFamily: "inherit",
-                },
-                success: {
-                  iconTheme: { primary: "#1565c0", secondary: "#fff" },
-                },
-              }}
-            />
+            <ToastProvider />
           </HeaderProvider>
         </AuthProvider>
       </body>

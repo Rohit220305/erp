@@ -15,9 +15,12 @@ export function buildFlowchartGraph(processes = []) {
     processName: p.processName || `Process #${p.processId}`,
     sequenceNo: p.sequenceNo || idx + 1,
     dependencies: (p.dependencies || []).map(Number),
+    nodePosition: p.nodePosition || null,
+    handleConfig: p.handleConfig || null,
   }));
 
   const allProcessIds = new Set(normalizedProcesses.map((p) => p.processId));
+  const processMap = new Map(normalizedProcesses.map((p) => [String(p.processId), p]));
   const referencedDependencies = new Set();
 
   normalizedProcesses.forEach((p) => {
@@ -28,13 +31,11 @@ export function buildFlowchartGraph(processes = []) {
     });
   });
 
-  // Root processes: dependencies array is empty or contains no valid process ID in dataset
   const rootProcesses = normalizedProcesses.filter((p) => {
     const validDeps = p.dependencies.filter((d) => allProcessIds.has(d));
     return validDeps.length === 0;
   });
 
-  // Leaf processes: processId is not referenced as a dependency by any other process
   const leafProcesses = normalizedProcesses.filter(
     (p) => !referencedDependencies.has(p.processId)
   );
@@ -42,7 +43,6 @@ export function buildFlowchartGraph(processes = []) {
   const rawNodes = [];
   const rawEdges = [];
 
-  // 1. Start Node
   rawNodes.push({
     id: "start",
     type: "startNode",
@@ -51,7 +51,6 @@ export function buildFlowchartGraph(processes = []) {
     height: CIRCLE_NODE_SIZE,
   });
 
-  // 2. Process Nodes
   normalizedProcesses.forEach((p) => {
     rawNodes.push({
       id: String(p.processId),
@@ -63,10 +62,10 @@ export function buildFlowchartGraph(processes = []) {
       },
       width: NODE_WIDTH,
       height: NODE_HEIGHT,
+      savedPosition: p.nodePosition,
     });
   });
 
-  // 3. Finish Node
   rawNodes.push({
     id: "finish",
     type: "finishNode",
@@ -87,7 +86,6 @@ export function buildFlowchartGraph(processes = []) {
     },
   };
 
-  // 4. Edges from Start -> Root Processes
   rootProcesses.forEach((p) => {
     rawEdges.push({
       id: `start->${p.processId}`,
@@ -97,7 +95,6 @@ export function buildFlowchartGraph(processes = []) {
     });
   });
 
-  // 5. Intermediate Edges (Dependencies -> Current Process)
   normalizedProcesses.forEach((p) => {
     p.dependencies.forEach((depId) => {
       if (allProcessIds.has(depId)) {
@@ -111,7 +108,6 @@ export function buildFlowchartGraph(processes = []) {
     });
   });
 
-  // 6. Edges from Leaf Processes -> Finish
   leafProcesses.forEach((p) => {
     rawEdges.push({
       id: `${p.processId}->finish`,
@@ -121,11 +117,10 @@ export function buildFlowchartGraph(processes = []) {
     });
   });
 
-  // 7. Dagre Layout Calculation
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({
-    rankdir: "TB", // Top to Bottom
+    rankdir: "TB",  
     nodesep: 60,
     ranksep: 70,
     marginx: 50,
@@ -146,38 +141,59 @@ export function buildFlowchartGraph(processes = []) {
 
   const nodes = rawNodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-    const pos = {
+    const dagrePos = {
       x: nodeWithPosition.x - node.width / 2,
       y: nodeWithPosition.y - node.height / 2,
     };
-    nodePosMap.set(node.id, nodeWithPosition);
+
+    const finalPos =
+      node.savedPosition &&
+      typeof node.savedPosition.x === "number" &&
+      typeof node.savedPosition.y === "number"
+        ? node.savedPosition
+        : dagrePos;
+
+    nodePosMap.set(node.id, {
+      x: finalPos.x + node.width / 2,
+      y: finalPos.y + node.height / 2,
+    });
+
+    const { savedPosition, ...cleanNode } = node;
+
     return {
-      ...node,
-      position: pos,
+      ...cleanNode,
+      position: finalPos,
     };
   });
 
-  // Assign smart directional handles (top, bottom, left, right) based on computed X/Y coordinates
   const formattedEdges = rawEdges.map((edge) => {
-    const sPos = nodePosMap.get(edge.source);
-    const tPos = nodePosMap.get(edge.target);
+    const targetProc = processMap.get(edge.target);
+    const savedHandleConfig = targetProc?.handleConfig?.[edge.source];
 
     let sourceHandle = "bottom";
     let targetHandle = "top";
 
-    if (edge.source !== "start" && edge.target !== "finish" && sPos && tPos) {
-      const dx = tPos.x - sPos.x;
-      const dy = tPos.y - sPos.y;
+    if (savedHandleConfig?.sourceHandle && savedHandleConfig?.targetHandle) {
+      sourceHandle = savedHandleConfig.sourceHandle;
+      targetHandle = savedHandleConfig.targetHandle;
+    } else if (edge.source !== "start" && edge.target !== "finish") {
+      const sPos = nodePosMap.get(edge.source);
+      const tPos = nodePosMap.get(edge.target);
 
-      if (dx > 70) {
-        sourceHandle = "right";
-        targetHandle = Math.abs(dy) < 40 ? "target-left" : "top";
-      } else if (dx < -70) {
-        sourceHandle = "left";
-        targetHandle = Math.abs(dy) < 40 ? "target-right" : "top";
-      } else {
-        sourceHandle = "bottom";
-        targetHandle = "top";
+      if (sPos && tPos) {
+        const dx = tPos.x - sPos.x;
+        const dy = tPos.y - sPos.y;
+
+        if (dx > 70) {
+          sourceHandle = "right";
+          targetHandle = Math.abs(dy) < 40 ? "target-left" : "top";
+        } else if (dx < -70) {
+          sourceHandle = "left";
+          targetHandle = Math.abs(dy) < 40 ? "target-right" : "top";
+        } else {
+          sourceHandle = "bottom";
+          targetHandle = "top";
+        }
       }
     }
 

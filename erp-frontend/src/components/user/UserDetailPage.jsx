@@ -111,7 +111,7 @@ export default function UserDetailPage({ user }) {
     return <div className="p-6 text-gray-500">User data could not be loaded.</div>;
   }
   return (
-    <div className="p-6">
+    <div className="py-6 px-10">
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-2">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
@@ -273,9 +273,7 @@ export default function UserDetailPage({ user }) {
                             <th className="py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                               Group Code
                             </th>
-                            {/* <th className="py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider text-right">
-                                  Type
-                                </th> */}
+                      
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -293,17 +291,7 @@ export default function UserDetailPage({ user }) {
                               <td className="py-4 px-4 text-sm text-gray-600">
                                 {grp.groupCode || "-"}
                               </td>
-                              {/* <td className="py-3.5 px-4 text-sm text-right">
-                                    {grp.isPrimary ? (
-                                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-blue-50 text-[#1565c0] px-2.5 py-1 rounded-full border border-blue-100">
-                                        <Star size={12} className="fill-[#1565c0]" /> Primary
-                                      </span>
-                                    ) : (
-                                      <span className="inline-flex items-center text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full border border-gray-200">
-                                        Secondary
-                                      </span>
-                                    )}
-                                  </td> */}
+        
                             </tr>
                           ))}
                         </tbody>

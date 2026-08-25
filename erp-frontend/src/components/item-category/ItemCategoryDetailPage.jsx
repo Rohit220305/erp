@@ -111,7 +111,7 @@ export default function ItemCategoryDetailPage({ data }) {
               <DetailRow label="Category Code" value={data.categoryCode || "-"} />
               <DetailRow label="Reference Code" value={data.referenceCode || "-"} />
               <DetailRow label="Parent Category" value={data.parentCategoryName || "-"} />
-              <DetailRow label="Mapped Storages" value={data.mappedStorageNames || data.storageNames || "-"} />
+              <DetailRow label="Storage types" value={data.mappedStorageNames || data.storageNames || "-"} />
               <DetailRow
                 label="Status"
                 value={

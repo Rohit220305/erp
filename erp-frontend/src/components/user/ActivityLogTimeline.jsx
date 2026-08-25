@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   CheckCircle2,
@@ -32,7 +32,6 @@ export default function ActivityLogTimeline({ userId }) {
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [activeShortcut, setActiveShortcut] = useState(null);
 
-  const triggerRef = useRef(null);
   const [triggerRect, setTriggerRect] = useState({
     top: 0,
     left: 0,
@@ -119,9 +118,11 @@ export default function ActivityLogTimeline({ userId }) {
   };
 
   const togglePicker = () => {
-    if (!isPickerOpen && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setTriggerRect(rect);
+    if (!isPickerOpen) {
+      const triggerEl = document.getElementById("activity-log-picker-trigger");
+      if (triggerEl) {
+        setTriggerRect(triggerEl.getBoundingClientRect());
+      }
     }
     setIsPickerOpen((prev) => !prev);
   };
@@ -129,8 +130,9 @@ export default function ActivityLogTimeline({ userId }) {
   useEffect(() => {
     if (!isPickerOpen) return;
     const updatePosition = () => {
-      if (triggerRef.current) {
-        setTriggerRect(triggerRef.current.getBoundingClientRect());
+      const triggerEl = document.getElementById("activity-log-picker-trigger");
+      if (triggerEl) {
+        setTriggerRect(triggerEl.getBoundingClientRect());
       }
     };
     window.addEventListener("scroll", updatePosition, { passive: true });
@@ -309,7 +311,7 @@ export default function ActivityLogTimeline({ userId }) {
         <h3 className="font-semibold text-lg">Activity Logs</h3>
         <div className="relative inline-block">
           <button
-            ref={triggerRef}
+            id="activity-log-picker-trigger"
             type="button"
             onClick={togglePicker}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer"

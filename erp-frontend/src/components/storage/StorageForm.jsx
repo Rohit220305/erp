@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
@@ -80,7 +80,6 @@ export default function StorageForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
-  const fileInputRef = useRef(null);
 
   const defaultValues = { ...BASE_DEFAULTS, ...initialData };
 
@@ -236,7 +235,8 @@ export default function StorageForm({
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    const fileInput = document.getElementById("storage-form-file-input");
+    if (fileInput) fileInput.value = "";
     setIsDirty(true);
   };
 
@@ -346,7 +346,7 @@ export default function StorageForm({
             
             <div 
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition w-full md:w-1/2"
-              onClick={() => !isUploading && fileInputRef.current?.click()}
+              onClick={() => !isUploading && document.getElementById("storage-form-file-input")?.click()}
             >
               <span className="text-gray-500 text-sm">Choose File</span>
               <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
@@ -386,7 +386,7 @@ export default function StorageForm({
             )}
 
             <input
-              ref={fileInputRef}
+              id="storage-form-file-input"
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/x-icon"
               className="hidden"

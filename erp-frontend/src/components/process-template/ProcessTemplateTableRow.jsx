@@ -10,7 +10,6 @@ export default function ProcessTemplateTableRow({ item, onRowAction, setSelected
 
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
-      {/* Template Name */}
       <td className="px-6 py-4 whitespace-nowrap">
         {canView ? (
           <button
@@ -27,21 +26,18 @@ export default function ProcessTemplateTableRow({ item, onRowAction, setSelected
         )}
       </td>
 
-      {/* Code */}
       <td className="px-6 py-4 whitespace-nowrap">
         <span className="text-sm font-mono text-gray-900 px-2 py-1 bg-gray-50 rounded border border-gray-200">
           {item.templateCode || "—"}
         </span>
       </td>
 
-      {/* Execution Type */}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
           {item.executionType || "Sequential"}
         </span>
       </td>
 
-      {/* Company (Super Admin Only) */}
       {user?.isSuperAdmin && (
         <td className="px-6 py-4 whitespace-nowrap min-w-[180px] max-w-[220px] truncate">
           <span className="text-sm font-medium text-gray-900" title={item.companyName}>
@@ -50,12 +46,10 @@ export default function ProcessTemplateTableRow({ item, onRowAction, setSelected
         </td>
       )}
 
-      {/* Added Date */}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         {item.addedDateFormatted || "-"}
       </td>
 
-      {/* Status */}
       <td className="px-6 py-4 whitespace-nowrap">
         <span
           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${

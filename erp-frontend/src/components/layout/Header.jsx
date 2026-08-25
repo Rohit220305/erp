@@ -78,7 +78,7 @@ export default function Header() {
         toast.success(
           `Back to ${prevSession.firstName} ${prevSession.lastName}'s session`,
         );
-        window.location.href = "/";
+        router.push("/");
       } else {
         toast.error("No previous session found");
         await handleLogout();

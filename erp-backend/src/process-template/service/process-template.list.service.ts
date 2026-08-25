@@ -86,6 +86,8 @@ export class ProcessTemplateListService {
         'mapping.processId AS processId',
         'mapping.sequenceNo AS sequenceNo',
         'mapping.dependencies AS dependencies',
+        'mapping.nodePosition AS nodePosition',
+        'mapping.handleConfig AS handleConfig',
         'process.processName AS processName',
         'process.processCode AS processCode',
       ]);
@@ -102,6 +104,20 @@ export class ProcessTemplateListService {
             proc.dependencies = JSON.parse(proc.dependencies);
           } catch (e) {
             proc.dependencies = [];
+          }
+        }
+        if (typeof proc.nodePosition === 'string') {
+          try {
+            proc.nodePosition = JSON.parse(proc.nodePosition);
+          } catch (e) {
+            proc.nodePosition = null;
+          }
+        }
+        if (typeof proc.handleConfig === 'string') {
+          try {
+            proc.handleConfig = JSON.parse(proc.handleConfig);
+          } catch (e) {
+            proc.handleConfig = null;
           }
         }
       });

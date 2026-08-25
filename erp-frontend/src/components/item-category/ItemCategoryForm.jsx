@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
@@ -94,7 +94,7 @@ export default function ItemCategoryForm({
   const [errors, setErrors] = useState({});
   const [isDirty, setIsDirty] = useState(false);
   
-  const prevCompanyId = useRef(formData.companyId);
+  const [prevCompanyId, setPrevCompanyId] = useState(formData.companyId);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -105,7 +105,7 @@ export default function ItemCategoryForm({
   useEffect(() => {
     if (initialData) {
       setFormData({ ...BASE_DEFAULTS, ...initialData });
-      prevCompanyId.current = initialData.companyId;
+      setPrevCompanyId(initialData.companyId);
     }
   }, [initialData]);
 
@@ -156,17 +156,17 @@ export default function ItemCategoryForm({
       };
       fetchDependent();
       
-      if (mode === "create" && prevCompanyId.current && prevCompanyId.current !== effectiveCompanyId) {
+      if (mode === "create" && prevCompanyId && prevCompanyId !== effectiveCompanyId) {
         setFormData(prev => ({ ...prev, storageIds: [], parentId: null }));
       }
-      prevCompanyId.current = effectiveCompanyId;
+      setPrevCompanyId(effectiveCompanyId);
       
     } else {
       setStorageOptions([]);
       setParentOptions([]);
-      prevCompanyId.current = null;
+      setPrevCompanyId(null);
     }
-  }, [formData.companyId, user, mode, id]);
+  }, [formData.companyId, user, mode, id, prevCompanyId]);
 
   useEffect(() => {
     setConfig({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { createWorkCentre, updateWorkCentre } from "@/lib/api/work-centre-api";
@@ -83,7 +83,6 @@ export default function WorkCentreDrawerForm({
   const [loading, setLoading] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
-  const fileInputRef = useRef(null);
 
   const defaultValues = { ...BASE_DEFAULTS, ...initialData };
 
@@ -96,7 +95,7 @@ export default function WorkCentreDrawerForm({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDeleteImageModalOpen, setIsDeleteImageModalOpen] = useState(false);
-  const prevCompanyId = useRef(formData.companyId);
+  const [prevCompanyId, setPrevCompanyId] = useState(formData.companyId);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -109,11 +108,11 @@ export default function WorkCentreDrawerForm({
       if (initialData) {
         setFormData({ ...BASE_DEFAULTS, ...initialData });
         setImagePreview(initialData.imageUrl || null);
-        prevCompanyId.current = initialData.companyId;
+        setPrevCompanyId(initialData.companyId);
       } else {
         setFormData(BASE_DEFAULTS);
         setImagePreview(null);
-        prevCompanyId.current = null;
+        setPrevCompanyId(null);
       }
       setImageFile(null);
       setErrors({});
@@ -159,15 +158,15 @@ export default function WorkCentreDrawerForm({
       };
       loadCategories();
 
-      if (mode === "create" && prevCompanyId.current && prevCompanyId.current !== effectiveCompanyId) {
+      if (mode === "create" && prevCompanyId && prevCompanyId !== effectiveCompanyId) {
         setFormData(prev => ({ ...prev, categoryId: "" }));
       }
-      prevCompanyId.current = effectiveCompanyId;
+      setPrevCompanyId(effectiveCompanyId);
     } else {
       setCategoryOptions([]);
-      prevCompanyId.current = null;
+      setPrevCompanyId(null);
     }
-  }, [formData.companyId, user, mode]);
+  }, [formData.companyId, user, mode, prevCompanyId]);
 
   const requiredPermission =
     mode === "create"
@@ -260,7 +259,8 @@ export default function WorkCentreDrawerForm({
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    const fileInput = document.getElementById("work-centre-drawer-file-input");
+    if (fileInput) fileInput.value = "";
     setIsDirty(true);
   };
 
@@ -427,7 +427,7 @@ export default function WorkCentreDrawerForm({
 
             <div
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition"
-              onClick={() => !isUploading && fileInputRef.current?.click()}
+              onClick={() => !isUploading && document.getElementById("work-centre-drawer-file-input")?.click()}
             >
               <span className="text-gray-500 text-sm">Choose File</span>
               <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
@@ -467,7 +467,7 @@ export default function WorkCentreDrawerForm({
             )}
 
             <input
-              ref={fileInputRef}
+              id="work-centre-drawer-file-input"
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/x-icon"
               className="hidden"

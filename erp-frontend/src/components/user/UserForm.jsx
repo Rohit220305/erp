@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
 import { userAddSchema, userEditSchema } from "@/lib/validation/user.schema";
@@ -95,7 +95,6 @@ export default function UserForm({
 }) {
   const router = useRouter();
   const { user: currentUser } = useAuth();
-  const fileInputRef = useRef(null);
 
   const initialGroupIds = initialValues?.groups
     ? initialValues.groups.map((g) => Number(g.groupId))
@@ -304,7 +303,7 @@ export default function UserForm({
   };
 
   return (
-    <div className="h-full overflow-y-auto mx-6">
+    <div className="h-full overflow-y-auto mx-10">
       <form
         onSubmit={handleFormSubmit}
         className="bg-white rounded-xl p-6 shadow-sm space-y-6 text-black"
@@ -324,14 +323,14 @@ export default function UserForm({
             )}
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => document.getElementById("user-form-photo-input")?.click()}
               className="absolute bottom-0 right-0 w-7 h-7 bg-[#1565c0] text-white rounded-full flex items-center justify-center shadow-md hover:bg-[#0f57a6] transition cursor-pointer"
               title="Upload Photo"
             >
               <Camera size={13} />
             </button>
             <input
-              ref={fileInputRef}
+              id="user-form-photo-input"
               type="file"
               accept="image/*"
               className="hidden"
@@ -646,56 +645,7 @@ export default function UserForm({
             </div>
           </div>
         </div>
-        {/* 
-          <div className="space-y-4">
-            <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
-              Contact
-            </h2>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">
-                  Phone Number
-                </label>
-                <div className="flex gap-2">
-                  <div className="w-[120px] shrink-0">
-                    <Select
-                      instanceId="select-dialCode"
-                      value={
-                        DIAL_CODE_OPTIONS.find(
-                          (d) => d.value === formData.dialCode,
-                        ) || null
-                      }
-                      onChange={(opt) =>
-                        handleChange("dialCode", opt ? opt.value : "")
-                      }
-                      options={DIAL_CODE_OPTIONS}
-                      isClearable={true}
-                      isSearchable={true}
-                      placeholder="Code"
-                      classNamePrefix="react-select"
-                      styles={customSelectStyles(errors.dialCode || errors.phone)}
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Phone number"
-                    value={formData.phone || ""}
-                    onChange={(e) => handleChange("phone", e.target.value)}
-                    className={`flex-1 px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
-                      ${errors.phone ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
-                    `}
-                  />
-                </div>
-                {(errors.phone || errors.dialCode) && (
-                  <p className="text-xs text-red-500 mt-1">
-                    ⚠ {errors.phone || errors.dialCode}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div> 
-        */}
 
         <div className="flex gap-3 justify-center border-t pt-4">
           <button

@@ -1,9 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { Upload, X, Star, Image as ImageIcon, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 
 export default function MultiImageUploader({ images = [], onChange, maxImages = 10, maxSizeMB = 5 }) {
-  const fileInputRef = useRef(null);
   const [error, setError] = useState(null);
 
   const handleFileSelect = (e) => {
@@ -12,6 +11,7 @@ export default function MultiImageUploader({ images = [], onChange, maxImages = 
     
     if (images.length + files.length > maxImages) {
       setError(`You can only upload a maximum of ${maxImages} images.`);
+      e.target.value = "";
       return;
     }
 
@@ -35,22 +35,16 @@ export default function MultiImageUploader({ images = [], onChange, maxImages = 
       isExisting: false,
     }));
 
-    // If there are no images yet, make the first one primary automatically
     if (images.length === 0 && newImageObjects.length > 0) {
       newImageObjects[0].isPrimary = true;
     }
 
     onChange([...images, ...newImageObjects]);
-    
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    e.target.value = "";
   };
 
   const handleRemove = (idToRemove) => {
     const updatedImages = images.filter((img) => img.id !== idToRemove);
-    // If we removed the primary image, assign primary to the first available
     const hadPrimary = updatedImages.some((img) => img.isPrimary);
     if (!hadPrimary && updatedImages.length > 0) {
       updatedImages[0].isPrimary = true;
@@ -78,15 +72,15 @@ export default function MultiImageUploader({ images = [], onChange, maxImages = 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {images.length < maxImages && (
           <div 
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => document.getElementById("multi-image-file-input")?.click()}
             className="border-2 border-dashed border-gray-300 rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-[#1565c0] hover:bg-blue-50 transition-colors group"
           >
             <Upload size={24} className="text-gray-400 group-hover:text-[#1565c0] mb-2" />
             <span className="text-xs text-gray-500 group-hover:text-[#1565c0] font-medium">Add Image</span>
             <span className="text-[10px] text-gray-400 mt-1">Up to {maxSizeMB}MB</span>
             <input 
+              id="multi-image-file-input"
               type="file" 
-              ref={fileInputRef} 
               className="hidden" 
               multiple 
               accept="image/*"

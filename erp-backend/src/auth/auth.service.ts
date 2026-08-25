@@ -446,7 +446,12 @@ export class AuthService {
     return {
       success: 1,
       message: 'Profile switched successfully',
-      data: { ...data, token: accessToken, capabilities },
+      data: {
+        ...data,
+        token: accessToken,
+        capabilities,
+        isImpersonating: !!req.user?.impersonatorId,
+      },
     };
   }
 

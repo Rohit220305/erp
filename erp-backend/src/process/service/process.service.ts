@@ -245,7 +245,7 @@ export class ProcessService {
       }
 
       dbUpdateData.updatedBy = req.user?.sub;
-      dbUpdateData.updatedDate = () => 'NOW()';
+      dbUpdateData.updatedDate = new Date();
 
       const res = await this.processRepo.update({ id: params.id }, dbUpdateData);
 

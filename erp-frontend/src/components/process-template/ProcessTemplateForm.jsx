@@ -38,29 +38,31 @@ export default function ProcessTemplateForm({
   const [loading, setLoading] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
 
+  const formatInitialProcesses = (procs = []) =>
+    procs.map((p) => ({
+      ...p,
+      processId: p.processId ? Number(p.processId) : "",
+      sequenceNo: p.sequenceNo ? Number(p.sequenceNo) : 1,
+      dependencies: Array.isArray(p.dependencies)
+        ? p.dependencies.map(Number)
+        : typeof p.dependencies === "string"
+        ? JSON.parse(p.dependencies || "[]").map(Number)
+        : [],
+    }));
+
   const defaultValues = { ...BASE_DEFAULTS, ...initialData };
   const [formData, setFormData] = useState(defaultValues);
   
-  // Ensure processes array items have safe dependency arrays
-  const initialProcesses = (initialData?.processes || []).map((p) => ({
-    ...p,
-    dependencies: Array.isArray(p.dependencies)
-      ? p.dependencies
-      : typeof p.dependencies === "string"
-      ? JSON.parse(p.dependencies || "[]")
-      : [],
-  }));
-  const [processes, setProcesses] = useState(initialProcesses);
+  const [processes, setProcesses] = useState(formatInitialProcesses(initialData?.processes || []));
   const [errors, setErrors] = useState({});
   const [isDirty, setIsDirty] = useState(false);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
-    type: null, // "submit" | "discard"
+    type: null,
     data: null,
   });
 
-  // Dynamic header setup matching reference image: Master > Process Template | Add New
   useEffect(() => {
     setConfig({
       header: {
@@ -83,23 +85,16 @@ export default function ProcessTemplateForm({
     return () => resetConfig();
   }, [setConfig, resetConfig, mode]);
 
-  // Sync initialData if updated
-  useEffect(() => {
+  const [prevInitialData, setPrevInitialData] = useState(initialData);
+
+  if (initialData !== prevInitialData) {
+    setPrevInitialData(initialData);
     if (initialData) {
       setFormData({ ...BASE_DEFAULTS, ...initialData });
-      const safeProcesses = (initialData.processes || []).map((p) => ({
-        ...p,
-        dependencies: Array.isArray(p.dependencies)
-          ? p.dependencies
-          : typeof p.dependencies === "string"
-          ? JSON.parse(p.dependencies || "[]")
-          : [],
-      }));
-      setProcesses(safeProcesses);
+      setProcesses(formatInitialProcesses(initialData.processes || []));
     }
-  }, [initialData]);
+  }
 
-  // Load company dropdown for Super Admin
   useEffect(() => {
     if (user?.isSuperAdmin) {
       async function loadCompanies() {
@@ -117,7 +112,6 @@ export default function ProcessTemplateForm({
     }
   }, [user]);
 
-  // Permission Check
   const requiredPermission =
     mode === "create"
       ? CAPABILITIES.PROCESS_TEMPLATE?.CREATE || "PROCESS_TEMPLATE_CREATE"
@@ -127,12 +121,10 @@ export default function ProcessTemplateForm({
     return <AccessDenied missingPermission={requiredPermission} />;
   }
 
-  // Effective companyId
   const effectiveCompanyId = user?.isSuperAdmin
     ? formData.companyId
     : user?.companyId || initialData?.companyId;
 
-  // Validate Step 1 before moving to Step 2
   const handleNextStep = () => {
     const fieldErrors = {};
 
@@ -186,11 +178,17 @@ export default function ProcessTemplateForm({
         fieldErrors.templateCode ||
         fieldErrors.companyId ||
         fieldErrors.executionType ||
-        fieldErrors.status
+        fieldErrors.status ||
+        fieldErrors.remark
       ) {
         setCurrentStep(1);
+        toast.error("Please check the form errors in Step 1.");
       } else if (fieldErrors.processes) {
         setCurrentStep(2);
+        toast.error("Please check the process sequence in Step 2.");
+      } else {
+        const firstMsg = Object.values(fieldErrors)[0];
+        toast.error(firstMsg || "Please fix validation errors.");
       }
       return false;
     }
@@ -215,7 +213,6 @@ export default function ProcessTemplateForm({
     return true;
   };
 
-  // Trigger Save / Submission Modal
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     if (validateFullForm()) {
@@ -223,7 +220,6 @@ export default function ProcessTemplateForm({
     }
   };
 
-  // Handle Discard Click
   const handleDiscard = () => {
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
@@ -232,15 +228,19 @@ export default function ProcessTemplateForm({
     }
   };
 
-  // Actual Save API Call
   const handleActualSubmit = async () => {
     try {
       setLoading(true);
-      const cleanProcesses = processes.map((p, idx) => ({
-        processId: Number(p.processId),
-        sequenceNo: idx + 1,
-        dependencies: Array.isArray(p.dependencies) && p.dependencies.length > 0 ? p.dependencies.map(Number) : [],
-      }));
+      const cleanProcesses = processes.map((p, idx) => {
+        const item = {
+          processId: Number(p.processId),
+          sequenceNo: idx + 1,
+          dependencies: Array.isArray(p.dependencies) && p.dependencies.length > 0 ? p.dependencies.map(Number) : [],
+        };
+        if (p.nodePosition) item.nodePosition = p.nodePosition;
+        if (p.handleConfig) item.handleConfig = p.handleConfig;
+        return item;
+      });
 
       const payload = {
         templateName: formData.templateName.trim(),
@@ -250,7 +250,7 @@ export default function ProcessTemplateForm({
         remark: formData.remark ? formData.remark.trim() : "",
         companyId: Number(effectiveCompanyId),
         processes: cleanProcesses,
-        ...(mode === "edit" ? { id: Number(id) } : {}),
+        ...(mode === "edit" ? { id: Number(id || initialData?.id) } : {}),
       };
 
       const res = mode === "create"
@@ -267,6 +267,7 @@ export default function ProcessTemplateForm({
             ? "Process Template created successfully!"
             : "Process Template updated successfully!"
         );
+        router.refresh();
         router.push("/process-template");
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} template`);
@@ -356,7 +357,6 @@ export default function ProcessTemplateForm({
             />
           )}
 
-          {/* Action Footer Buttons (Matching Reference Images 1 & 2) */}
           <div className="mt-8 pt-6 flex items-center justify-center gap-3">
             {currentStep === 1 ? (
               <>
@@ -413,20 +413,29 @@ export default function ProcessTemplateForm({
 
       
 
-      {/* Submission / Discard Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
         title={
           confirmState.type === "submit"
-            ? "Confirm Submission"
+            ? mode === "create"
+              ? "Confirm Submission"
+              : "Confirm Update"
             : "Discard Changes"
         }
         message={
           confirmState.type === "submit"
-            ? "Are you sure you want to save this process template?"
+            ? mode === "create"
+              ? "Are you sure you want to save this process template?"
+              : "Are you sure you want to update this process template?"
             : "Are you sure you want to discard your changes? Any unsaved data will be lost."
         }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
+        confirmLabel={
+          confirmState.type === "submit"
+            ? mode === "create"
+              ? "Save"
+              : "Update"
+            : "Discard"
+        }
         danger={confirmState.type === "discard"}
         onConfirm={() => {
           if (confirmState.type === "submit") {

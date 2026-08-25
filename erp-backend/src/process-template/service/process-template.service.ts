@@ -155,7 +155,7 @@ export class ProcessTemplateService {
       });
 
       dbInsertData.addedBy = req.user?.sub;
-      dbInsertData.addedDate = () => 'NOW()';
+      dbInsertData.addedDate = new Date();
 
       const res = await this.processTemplateRepo.insert(dbInsertData);
       const insertId = res?.raw?.insertId;
@@ -166,8 +166,10 @@ export class ProcessTemplateService {
           processId: Number(proc.processId),
           sequenceNo: Number(proc.sequenceNo),
           dependencies: proc.dependencies && proc.dependencies.length > 0 ? proc.dependencies : null,
+          nodePosition: proc.nodePosition || null,
+          handleConfig: proc.handleConfig || null,
           addedBy: req.user?.sub,
-          addedDate: () => 'NOW()',
+          addedDate: new Date(),
         }));
         await this.processTemplateMappingRepo.insert(mappingInserts);
       }
@@ -275,32 +277,43 @@ export class ProcessTemplateService {
         ...dbUpdateData
       } = params as any;
 
-      Object.keys(dbUpdateData).forEach(key => {
-        if (dbUpdateData[key] === undefined || dbUpdateData[key] === null) {
-          delete dbUpdateData[key];
+      const allowedUpdateKeys = ['templateName', 'templateCode', 'executionType', 'remark', 'status', 'companyId'];
+      const cleanUpdateData: any = {};
+      allowedUpdateKeys.forEach((key) => {
+        if (dbUpdateData[key] !== undefined && dbUpdateData[key] !== null) {
+          cleanUpdateData[key] = dbUpdateData[key];
         }
       });
+      cleanUpdateData.updatedBy = req.user?.sub;
+      cleanUpdateData.updatedDate = new Date();
 
-      dbUpdateData.updatedBy = req.user?.sub;
-      dbUpdateData.updatedDate = () => 'NOW()';
-
-      const res = await this.processTemplateRepo.update(
-        { id: params.id },
-        dbUpdateData,
-      );
+      if (Object.keys(cleanUpdateData).length > 2) {
+        await this.processTemplateRepo.update({ id: params.id }, cleanUpdateData);
+      }
 
       await this.processTemplateMappingRepo.delete({ templateId: params.id });
 
       if (processes && Array.isArray(processes) && processes.length > 0) {
-        const mappingInserts = processes.map((proc: any) => ({
-          templateId: params.id,
-          processId: Number(proc.processId),
-          sequenceNo: Number(proc.sequenceNo),
-          dependencies: proc.dependencies && proc.dependencies.length > 0 ? proc.dependencies : null,
-          addedBy: req.user?.sub,
-          addedDate: () => 'NOW()',
-        }));
-        await this.processTemplateMappingRepo.insert(mappingInserts);
+        const mappingInserts = processes.map((proc: any) => {
+          const item: any = {
+            templateId: params.id,
+            processId: Number(proc.processId),
+            sequenceNo: Number(proc.sequenceNo),
+            dependencies: proc.dependencies && proc.dependencies.length > 0 ? proc.dependencies : null,
+            addedBy: req.user?.sub,
+            addedDate: new Date(),
+          };
+          if (proc.nodePosition) item.nodePosition = proc.nodePosition;
+          if (proc.handleConfig) item.handleConfig = proc.handleConfig;
+          return item;
+        });
+
+        try {
+          await this.processTemplateMappingRepo.insert(mappingInserts);
+        } catch (dbErr) {
+          const fallbackInserts = mappingInserts.map(({ nodePosition, handleConfig, ...rest }) => rest);
+          await this.processTemplateMappingRepo.insert(fallbackInserts);
+        }
       }
 
       const logPayload = this.general.buildActivityLogPayload(
@@ -317,7 +330,7 @@ export class ProcessTemplateService {
         success: 1,
         message: 'Process Template Updated Successfully.',
         data: {
-          affected: res.affected,
+          id: params.id,
         },
       };
     } catch (err) {

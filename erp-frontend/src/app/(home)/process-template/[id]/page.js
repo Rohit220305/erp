@@ -11,7 +11,7 @@ export async function generateMetadata({ params }) {
       return { title: `${templateName} | Process Template` };
     }
   } catch (error) {
-    // ignore
+    // 
   }
   return { title: "Process Template Details" };
 }

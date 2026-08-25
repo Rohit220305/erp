@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
 import { CAPABILITIES } from "@/config/capabilities.config";
+import { updateProcessTemplate } from "@/lib/api/process-template-api";
 import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
 import { GitBranch, Workflow, FileText, CheckCircle2, ArrowRight } from "lucide-react";
@@ -64,9 +66,59 @@ export default function ProcessTemplateDetailPage({ data }) {
   const [activeTab, setActiveTab] = useState("summary"); // "summary" | "flowchart"
   const [drawerState, setDrawerState] = useState({ isOpen: false, processId: null });
 
+  const initialProcesses = data?.processes || [];
+  const [currentProcesses, setCurrentProcesses] = useState(initialProcesses);
+  const [isSavingFlowchart, setIsSavingFlowchart] = useState(false);
+
+  useEffect(() => {
+    if (data?.processes) {
+      setCurrentProcesses(data.processes);
+    }
+  }, [data?.processes]);
+
   const handleOpenProcessDrawer = (processId) => {
     if (!processId) return;
     setDrawerState({ isOpen: true, processId: Number(processId) });
+  };
+
+  const handleSaveFlowchart = async (updatedProcesses) => {
+    if (!data?.id) return;
+    setIsSavingFlowchart(true);
+    try {
+      const targetProcesses = updatedProcesses || currentProcesses;
+      const payload = {
+        id: Number(data.id),
+        templateName: data.templateName,
+        templateCode: data.templateCode,
+        executionType: data.executionType || "Flexible",
+        remark: data.remark || "",
+        status: data.status || "Active",
+        processes: targetProcesses.map((p) => {
+          const item = {
+            processId: Number(p.processId),
+            sequenceNo: Number(p.sequenceNo),
+            dependencies: (p.dependencies || []).map(Number),
+          };
+          if (p.nodePosition) item.nodePosition = p.nodePosition;
+          if (p.handleConfig) item.handleConfig = p.handleConfig;
+          return item;
+        }),
+      };
+
+      const res = await updateProcessTemplate(payload);
+      const isSuccess = res?.success === 1 || res?.settings?.success === 1;
+      if (isSuccess) {
+        toast.success("Process flowchart layout and dependencies saved successfully!");
+        setCurrentProcesses(targetProcesses);
+      } else {
+        const errorMsg = res?.settings?.message || res?.message || "Failed to save flowchart changes.";
+        toast.error(Array.isArray(errorMsg) ? errorMsg.join(", ") : errorMsg);
+      }
+    } catch (err) {
+      toast.error(err?.message || "Failed to save flowchart changes.");
+    } finally {
+      setIsSavingFlowchart(false);
+    }
   };
 
   useEffect(() => {
@@ -128,16 +180,14 @@ export default function ProcessTemplateDetailPage({ data }) {
 
   const isActive = status === "Active" || status === "active";
 
-  // Build process ID -> Process Name lookup map for displaying dependency names
   const processIdMap = new Map();
-  processes.forEach((p) => {
+  currentProcesses.forEach((p) => {
     processIdMap.set(Number(p.processId), p.processName || `Process #${p.processId}`);
   });
 
   return (
     <div className="h-full p-6 px-10 overflow-hidden">
       <div className="grid grid-cols-12 gap-6 h-full items-start">
-        {/* Left Sidebar Navigation */}
         <div className="col-span-2 h-full">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5 border border-gray-100 space-y-4 h-full">
             <div>
@@ -158,10 +208,11 @@ export default function ProcessTemplateDetailPage({ data }) {
               <button
                 type="button"
                 onClick={() => setActiveTab("summary")}
-                className={`w-full text-left py-2.5 px-4 rounded-lg text-sm font-medium transition flex items-center justify-between cursor-pointer ${activeTab === "summary"
-                  ? "bg-[#1565c0] text-white shadow-sm"
-                  : "text-gray-600 hover:bg-gray-50"
-                  }`}
+                className={`w-full text-left py-2.5 px-4 rounded-lg text-sm font-medium transition flex items-center justify-between cursor-pointer ${
+                  activeTab === "summary"
+                    ? "bg-[#1565c0] text-white shadow-sm"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
               >
                 <div className="flex items-center gap-2.5">
                   <FileText size={18} />
@@ -173,10 +224,11 @@ export default function ProcessTemplateDetailPage({ data }) {
               <button
                 type="button"
                 onClick={() => setActiveTab("flowchart")}
-                className={`w-full text-left py-2.5 px-4 rounded-lg text-sm font-medium transition flex items-center justify-between cursor-pointer ${activeTab === "flowchart"
-                  ? "bg-[#1565c0] text-white shadow-sm"
-                  : "text-gray-600 hover:bg-gray-50"
-                  }`}
+                className={`w-full text-left py-2.5 px-4 rounded-lg text-sm font-medium transition flex items-center justify-between cursor-pointer ${
+                  activeTab === "flowchart"
+                    ? "bg-[#1565c0] text-white shadow-sm"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
               >
                 <div className="flex items-center gap-2.5">
                   <Workflow size={18} />
@@ -188,13 +240,10 @@ export default function ProcessTemplateDetailPage({ data }) {
           </div>
         </div>
 
-        {/* Right Main Content Area */}
         <div className="col-span-10 h-full overflow-y-auto pr-2 pb-6">
           {activeTab === "summary" ? (
             <div className="space-y-6">
-              {/* Header Info & Details Row */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* Details Card */}
                 <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6 border border-gray-100">
                   <h3 className="text-sm font-semibold text-gray-600 mb-4">
                     Template Overview
@@ -207,7 +256,6 @@ export default function ProcessTemplateDetailPage({ data }) {
                       label="Execution Type"
                       value={executionType || "Sequential"}
                     />
-                    {/* <DetailRow label="Company" value={companyName} /> */}
                     <DetailRow
                       label="Status"
                       value={status}
@@ -220,7 +268,6 @@ export default function ProcessTemplateDetailPage({ data }) {
                   </div>
                 </div>
 
-                {/* Remark Card */}
                 <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6 border border-gray-100 flex flex-col">
                   <h3 className="text-sm font-semibold text-gray-600 mb-4">
                     Remark / Description
@@ -234,7 +281,6 @@ export default function ProcessTemplateDetailPage({ data }) {
                   </div>
                 </div>
 
-                {/* Audit Information */}
                 <div className="xl:col-span-1 flex flex-col gap-4">
                   <UserInfoCard
                     title="Added Info"
@@ -251,11 +297,10 @@ export default function ProcessTemplateDetailPage({ data }) {
                 </div>
               </div>
 
-              {/* Process Sequence Grid Table */}
               <div className="bg-white rounded-xl hover:shadow-lg transition p-6 border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-gray-700">
-                    Process Sequence Grid ({processes.length} Processes)
+                    Process Sequence Grid ({currentProcesses.length} Processes)
                   </h3>
                   <span className="text-xs text-gray-400 font-mono">
                     Execution Mode: {executionType || "Sequential"}
@@ -274,7 +319,7 @@ export default function ProcessTemplateDetailPage({ data }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm">
-                      {processes.length === 0 ? (
+                      {currentProcesses.length === 0 ? (
                         <tr>
                           <td
                             colSpan={3}
@@ -284,7 +329,7 @@ export default function ProcessTemplateDetailPage({ data }) {
                           </td>
                         </tr>
                       ) : (
-                        processes.map((proc, idx) => {
+                        currentProcesses.map((proc, idx) => {
                           const depItems = (proc.dependencies || [])
                             .map((depId) => ({
                               id: Number(depId),
@@ -355,26 +400,28 @@ export default function ProcessTemplateDetailPage({ data }) {
             <div className="space-y-4">
               <div className="flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 text-[#1565c0] flex items-center justify-center">
-                    <Workflow size={20} />
-                  </div>
+                  
                   <div>
-                    <h3 className="text-sm font-bold text-gray-900">Process Flowchart Diagram</h3>
-                    <p className="text-xs text-gray-500">Visual topology graph generated automatically from sequence dependencies</p>
+                    <h3 className="text-sm font-bold text-gray-900">
+                      Process Flow Chart
+                    </h3>
+                    
                   </div>
                 </div>
               </div>
 
               <ProcessFlowchartContainer
-                processes={processes}
+                processes={currentProcesses}
                 onOpenProcessDrawer={handleOpenProcessDrawer}
+                onProcessesChange={setCurrentProcesses}
+                onSaveFlowchart={handleSaveFlowchart}
+                isSaving={isSavingFlowchart}
               />
             </div>
           )}
         </div>
       </div>
 
-      {/* Read-Only Process Details SideDrawer */}
       <SideDrawer
         open={drawerState.isOpen}
         onClose={() => setDrawerState({ isOpen: false, processId: null })}

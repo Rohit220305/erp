@@ -205,7 +205,6 @@ export class WorkCentreService {
         }
       });
       
-      // if imageUrl is explicit empty string, we set it to null
       if (params.imageUrl === "") {
          dbUpdateData.imageUrl = null;
       }

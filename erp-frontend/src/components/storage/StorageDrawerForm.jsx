@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { createStorage, updateStorage } from "@/lib/api/storage-api";
@@ -80,7 +80,6 @@ export default function StorageDrawerForm({
   const { can, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
-  const fileInputRef = useRef(null);
 
   const defaultValues = { ...BASE_DEFAULTS, ...initialData };
 
@@ -223,7 +222,8 @@ export default function StorageDrawerForm({
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    const fileInput = document.getElementById("storage-drawer-file-input");
+    if (fileInput) fileInput.value = "";
     setIsDirty(true);
   };
 
@@ -394,7 +394,7 @@ export default function StorageDrawerForm({
 
             <div
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition"
-              onClick={() => !isUploading && fileInputRef.current?.click()}
+              onClick={() => !isUploading && document.getElementById("storage-drawer-file-input")?.click()}
             >
               <span className="text-gray-500 text-sm">Choose File</span>
               <div
@@ -459,7 +459,7 @@ export default function StorageDrawerForm({
             )}
 
             <input
-              ref={fileInputRef}
+              id="storage-drawer-file-input"
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/x-icon"
               className="hidden"

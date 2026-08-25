@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
 import { Country, State, City } from "country-state-city";
@@ -137,7 +137,6 @@ export default function CompanyForm({
   defaultValues: externalDefaults = {},
 }) {
   const router = useRouter();
-  const fileInputRef = useRef(null);
   const user = useAuth();
 
   const initialData = { ...BASE_DEFAULTS, ...externalDefaults };
@@ -178,7 +177,7 @@ export default function CompanyForm({
     data: null,
   });
 
-  const isInitialMount = useRef(true);
+  const [isInitialMount, setIsInitialMount] = useState(true);
 
   const serializedDefaults = externalDefaults ? JSON.stringify(externalDefaults) : null;
   useEffect(() => {
@@ -264,14 +263,14 @@ export default function CompanyForm({
     //   }));
     // }
 
-    if (!isInitialMount.current) {
+    if (!isInitialMount) {
       setFormData((prev) => ({
         ...prev,
         state: "",
         city: "",
       }));
     }
-  }, [formData.country]);
+  }, [formData.country, isInitialMount]);
 
   useEffect(() => {
     if (!formData.state || !formData.country) {
@@ -291,17 +290,17 @@ export default function CompanyForm({
     }));
     setCityOptions(cities);
 
-    if (!isInitialMount.current) {
+    if (!isInitialMount) {
       setFormData((prev) => ({
         ...prev,
         city: "",
       }));
     }
-  }, [formData.state, formData.country, stateOptions]);
+  }, [formData.state, formData.country, stateOptions, isInitialMount]);
 
   useEffect(() => {
     const t = setTimeout(() => {
-      isInitialMount.current = false;
+      setIsInitialMount(false);
     }, 300);
     return () => clearTimeout(t);
   }, []);
@@ -345,7 +344,8 @@ export default function CompanyForm({
   const removeLogo = () => {
     setLogoFile(null);
     setLogoPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    const fileInput = document.getElementById("company-form-logo-input");
+    if (fileInput) fileInput.value = "";
     setIsDirty(true);
   };
 
@@ -472,7 +472,7 @@ export default function CompanyForm({
                     border-2 border-dashed border-blue-200 flex flex-col items-center
                     justify-center text-blue-300 gap-1.5 cursor-pointer hover:border-blue-400
                     transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => document.getElementById("company-form-logo-input")?.click()}
                   >
                     <Building2 size={32} />
                     <span className="text-[10px] font-medium text-blue-400">
@@ -483,7 +483,7 @@ export default function CompanyForm({
 
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => document.getElementById("company-form-logo-input")?.click()}
                   className="absolute -bottom-2.5 -right-2.5 w-8 h-8 rounded-full
                   bg-[#1565c0] text-white flex items-center justify-center
                   shadow-lg hover:bg-[#0f57a6] transition cursor-pointer"
@@ -513,7 +513,7 @@ export default function CompanyForm({
 
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => document.getElementById("company-form-logo-input")?.click()}
                   className="mt-1 px-4 py-1.5 border border-gray-200 rounded-lg text-xs font-medium
                   text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition cursor-pointer"
                 >
@@ -522,7 +522,7 @@ export default function CompanyForm({
               </div>
 
               <input
-                ref={fileInputRef}
+                id="company-form-logo-input"
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
                 className="hidden"

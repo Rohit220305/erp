@@ -114,7 +114,6 @@ export default function ProcessTemplateStep1({
   return (
     <div className="space-y-6 bg-white rounded-xl border border-gray-100 p-6 md:p-8 shadow-sm">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Template Name */}
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">
             Template Name<span className="text-red-500">*</span>
@@ -133,7 +132,6 @@ export default function ProcessTemplateStep1({
           )}
         </div>
 
-        {/* Template Code */}
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">
             Template Code<span className="text-red-500">*</span>
@@ -154,7 +152,6 @@ export default function ProcessTemplateStep1({
           )}
         </div>
 
-        {/* Process Execution Type */}
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">
             Process Execution Type<span className="text-red-500">*</span>
@@ -175,7 +172,6 @@ export default function ProcessTemplateStep1({
           )}
         </div>
 
-        {/* Status */}
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">
             Status<span className="text-red-500">*</span>
@@ -196,7 +192,6 @@ export default function ProcessTemplateStep1({
           )}
         </div>
 
-        {/* Company (Super Admin Only) */}
         {user?.isSuperAdmin && (
           <div className="md:col-span-2">
             <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -204,7 +199,11 @@ export default function ProcessTemplateStep1({
             </label>
             <Select
               instanceId="select-company"
-              value={companyOptions.find((c) => c.value === formData.companyId) || null}
+              value={
+                companyOptions.find(
+                  (c) => Number(c.value) === Number(formData.companyId)
+                ) || null
+              }
               onChange={(opt) => handleChange("companyId", opt ? opt.value : "")}
               options={companyOptions}
               isDisabled={mode === "edit"}
@@ -219,7 +218,6 @@ export default function ProcessTemplateStep1({
             )}
           </div>
         )}
-        {/* Remarks Field */}
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">
             Remarks

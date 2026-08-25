@@ -17,6 +17,10 @@ import {
   Building2,
   Shield,
   CircleDollarSign,
+  Settings,
+  Scale,
+  Boxes,
+  Building,
   Bell,
   Heart,
 } from "lucide-react";
@@ -37,6 +41,10 @@ const iconComponents = {
   Building2,
   Shield,
   CircleDollarSign,
+  Settings,
+  Scale,
+  Boxes,
+  Building,
 };
 
 export default function MenuDrawer({ open, onClose }) {
@@ -128,17 +136,18 @@ export default function MenuDrawer({ open, onClose }) {
                 <button
                   key={cat.category}
                   type="button"
+                  onMouseEnter={() => setActiveCategory(idx)}
                   onClick={() => setActiveCategory(idx)}
-                  className={`flex w-full items-center gap-3 px-5 py-3 text-[13px] font-medium transition-colors cursor-pointer ${
+                  className={`flex w-full items-center gap-3 px-5 py-3 text-[15px] font-medium transition-colors cursor-pointer ${
                     isActive
                       ? "text-[#1565c0] bg-blue-50/60"
-                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                      : "text-black hover:bg-gray-50 hover:text-gray-900"
                   }`}
                 >
                   {Icon && (
                     <Icon
                       size={18}
-                      className={isActive ? "text-[#1565c0]" : "text-gray-500"}
+                      className={isActive ? "text-[#1565c0]" : "text-black"}
                     />
                   )}
                   <span>{cat.category}</span>
@@ -163,10 +172,10 @@ export default function MenuDrawer({ open, onClose }) {
                     <div className="flex items-center gap-3 mb-4 border-b border-gray-200 pb-3">
                       {GroupIcon && (
                         <div
-                          className="flex h-8 w-8 items-center justify-center rounded-full"
-                          style={{ backgroundColor: group.iconBg || "#1565c0" }}
+                          className="flex h-8 w-8 items-center justify-center rounded-full shrink-0 "
+                          style={{ backgroundColor: "white" }}
                         >
-                          <GroupIcon size={16} className="text-white" />
+                          <GroupIcon size={22} className={`text-[#1565c0]`} />
                         </div>
                       )}
                       <h3 className="text-[15px] font-semibold text-gray-900">
@@ -178,10 +187,10 @@ export default function MenuDrawer({ open, onClose }) {
                       {group.items.map((item) => (
                         <li
                           key={item.label}
-                          className="py-2 text-[13px] text-gray-600 hover:text-[#1565c0] cursor-pointer transition-colors"
+                          className="py-2 text-[15px] text-black hover:text-[#1565c0] cursor-pointer transition-colors"
                           onClick={() => handleItemClick(item.path)}
                         >
-                          <span className="mr-2 text-gray-400">-</span>
+                          <span className="mr-2 text-black">-</span>
                           {item.label}
                         </li>
                       ))}
@@ -209,7 +218,7 @@ export default function MenuDrawer({ open, onClose }) {
                 </button>
               </div>
 
-              <p className="text-[13px] text-gray-500 text-center py-4">
+              <p className="text-[15px] text-gray-500 text-center py-4">
                 {user
                   ? `Hello ${user.firstName} ${user.lastName}, Welcome To Production Planning.`
                   : "Your Recent Alerts will be displayed here."}
@@ -237,7 +246,7 @@ export default function MenuDrawer({ open, onClose }) {
                 </button>
               </div>
 
-              <p className="text-[13px] text-gray-500 text-center py-4">
+              <p className="text-[15px] text-gray-500 text-center py-4">
                 No Bookmark found.
               </p>
             </div>

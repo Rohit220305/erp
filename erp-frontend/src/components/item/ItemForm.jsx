@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
@@ -162,7 +162,6 @@ export default function ItemForm({
   const [errors, setErrors] = useState({});
   const [isDirty, setIsDirty] = useState(false);
 
-  const imageInputRef = useRef(null);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState(
@@ -171,7 +170,7 @@ export default function ItemForm({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const prevCompanyId = useRef(formData.companyId);
+  const [prevCompanyId, setPrevCompanyId] = useState(formData.companyId);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -183,7 +182,7 @@ export default function ItemForm({
   useEffect(() => {
     if (initialData) {
       setFormData({ ...BASE_DEFAULTS, ...initialData });
-      prevCompanyId.current = initialData.companyId;
+      setPrevCompanyId(initialData.companyId);
       setExistingImages(initialData.images || initialData.itemImages || []);
     }
   }, [initialData]);
@@ -280,8 +279,8 @@ export default function ItemForm({
 
       if (
         mode === "create" &&
-        prevCompanyId.current &&
-        prevCompanyId.current !== effectiveCompanyId
+        prevCompanyId &&
+        prevCompanyId !== effectiveCompanyId
       ) {
         setFormData((prev) => ({
           ...prev,
@@ -297,7 +296,7 @@ export default function ItemForm({
           storageId: "",
         }));
       }
-      prevCompanyId.current = effectiveCompanyId;
+      setPrevCompanyId(effectiveCompanyId);
     } else {
       setCategoryOptions([]);
       setManufacturerOptions([]);
@@ -306,9 +305,9 @@ export default function ItemForm({
       setUomOptions([]);
       setCurrencyOptions([]);
       setStorageOptions([]);
-      prevCompanyId.current = null;
+      setPrevCompanyId(null);
     }
-  }, [formData.companyId, user, mode]);
+  }, [formData.companyId, user, mode, prevCompanyId]);
 
   useEffect(() => {
     const effectiveCompanyId = user?.isSuperAdmin
@@ -447,8 +446,9 @@ export default function ItemForm({
       }, 200);
     }
 
-    if (imageInputRef.current) {
-      imageInputRef.current.value = "";
+    const imageInput = document.getElementById("item-form-image-input");
+    if (imageInput) {
+      imageInput.value = "";
     }
   };
 
@@ -501,7 +501,6 @@ export default function ItemForm({
     if (validateForm()) {
       setConfirmState({ isOpen: true, type: "submit", data: formData });
     } else {
-      // toast.error("Please fix the validation errors before submitting.");
     }
   };
 
@@ -935,7 +934,7 @@ export default function ItemForm({
 
               <div
                 className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition w-full"
-                onClick={() => !isUploading && imageInputRef.current?.click()}
+                onClick={() => !isUploading && document.getElementById("item-form-image-input")?.click()}
               >
                 <span className="text-gray-500 text-sm">Choose Files</span>
                 <div
@@ -1004,7 +1003,6 @@ export default function ItemForm({
                     </div>
                   ))}
                   {imagePreviews.map((preview, idx) => {
-                    const combinedIdx = existingImages.length + idx;
                     return (
                       <div
                         key={`new_${idx}`}
@@ -1033,7 +1031,7 @@ export default function ItemForm({
               )}
 
               <input
-                ref={imageInputRef}
+                id="item-form-image-input"
                 type="file"
                 multiple
                 accept="image/jpeg,image/jpg,image/png,image/webp"

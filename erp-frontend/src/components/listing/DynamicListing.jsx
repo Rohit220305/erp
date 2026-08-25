@@ -139,54 +139,6 @@ export default function DynamicListing({
         renderGridCard={renderGridCard}
       />
 
-      {/* {config.defaultFilters && (
-        <FilterDrawer
-          open={isFilterOpen}
-          onClose={() => setIsFilterOpen(false)}
-          onSearch={() => {
-            setAppliedSidebarFilters(sidebarFilters);
-            setAppliedFilters([]);
-            setPage(1);
-            setIsFilterOpen(false);
-          }}
-          onReset={() => {
-            setSidebarFilters(config.defaultFilters);
-            setAppliedSidebarFilters(null);
-            setPage(1);
-            setIsFilterOpen(false);
-          }}
-          filters={sidebarFilters}
-          setFilters={setSidebarFilters}
-          statuses={config.sidebarStatuses || []}
-        />
-      )} */}
-
-      {/* {config.searchFields && (
-        <SearchDrawer
-          open={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-          onSearch={() => {
-            setAppliedFilters(tempFilters);
-            setAppliedLogicalOperator(tempLogicalOperator);
-            setAppliedSidebarFilters(null);
-            setPage(1);
-            setIsSearchOpen(false);
-          }}
-          onReset={() => {
-            setTempFilters([]);
-            setAppliedFilters([]);
-            setTempLogicalOperator("AND");
-            setAppliedLogicalOperator("AND");
-            setPage(1);
-            setIsSearchOpen(false);
-          }}
-          filters={tempFilters}
-          setFilters={setTempFilters}
-          logicalOperator={tempLogicalOperator}
-          setLogicalOperator={setTempLogicalOperator}
-          fields={config.searchFields}
-        />
-      )} */}
     </div>
   );
 }

@@ -91,7 +91,6 @@ export default function ProcessTemplateStep2({
   const [availableProcesses, setAvailableProcesses] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Load process master list based on companyId
   useEffect(() => {
     let isMounted = true;
     async function loadMasterProcesses() {
@@ -122,7 +121,6 @@ export default function ProcessTemplateStep2({
     };
   }, [companyId]);
 
-  // Recalculate contiguous sequence numbers (1, 2, 3...)
   const updateSequenceNumbers = (list) => {
     return list.map((item, idx) => ({
       ...item,
@@ -131,7 +129,6 @@ export default function ProcessTemplateStep2({
     }));
   };
 
-  // Add new process row
   const handleAddRow = () => {
     const newRow = {
       processId: "",
@@ -152,7 +149,6 @@ export default function ProcessTemplateStep2({
     }
   };
 
-  // Select Process in Row `index`
   const handleProcessSelect = (index, selectedOption) => {
     const oldProcessId = processes[index]?.processId;
     const newProcessId = selectedOption ? Number(selectedOption.value) : "";
@@ -169,7 +165,6 @@ export default function ProcessTemplateStep2({
           dependencies: [],
         };
       }
-      // Clean up old processId from downstream dependencies
       if (oldProcessId && currentDeps.includes(oldProcessId)) {
         return {
           ...row,
@@ -183,7 +178,6 @@ export default function ProcessTemplateStep2({
     if (setIsDirty) setIsDirty(true);
   };
 
-  // Update dependencies for Row `index`
   const handleDependenciesSelect = (index, selectedOptions) => {
     const depIds = selectedOptions ? selectedOptions.map((opt) => Number(opt.value)) : [];
     const updated = processes.map((row, idx) => {
@@ -196,7 +190,6 @@ export default function ProcessTemplateStep2({
     if (setIsDirty) setIsDirty(true);
   };
 
-  // Move Row Up
   const handleMoveUp = (index) => {
     if (index === 0) return;
     const list = [...processes];
@@ -208,9 +201,12 @@ export default function ProcessTemplateStep2({
 
     const cleaned = resequenced.map((row, idx) => {
       const allowedPrecedingIds = new Set(
-        resequenced.slice(0, idx).map((r) => r.processId).filter(Boolean)
+        resequenced
+          .slice(0, idx)
+          .map((r) => (r.processId ? Number(r.processId) : null))
+          .filter(Boolean)
       );
-      const rowDeps = Array.isArray(row.dependencies) ? row.dependencies : [];
+      const rowDeps = Array.isArray(row.dependencies) ? row.dependencies.map(Number) : [];
       const validDeps = rowDeps.filter((depId) => allowedPrecedingIds.has(depId));
       return { ...row, dependencies: validDeps };
     });
@@ -219,7 +215,6 @@ export default function ProcessTemplateStep2({
     if (setIsDirty) setIsDirty(true);
   };
 
-  // Move Row Down
   const handleMoveDown = (index) => {
     if (index === processes.length - 1) return;
     const list = [...processes];
@@ -231,9 +226,12 @@ export default function ProcessTemplateStep2({
 
     const cleaned = resequenced.map((row, idx) => {
       const allowedPrecedingIds = new Set(
-        resequenced.slice(0, idx).map((r) => r.processId).filter(Boolean)
+        resequenced
+          .slice(0, idx)
+          .map((r) => (r.processId ? Number(r.processId) : null))
+          .filter(Boolean)
       );
-      const rowDeps = Array.isArray(row.dependencies) ? row.dependencies : [];
+      const rowDeps = Array.isArray(row.dependencies) ? row.dependencies.map(Number) : [];
       const validDeps = rowDeps.filter((depId) => allowedPrecedingIds.has(depId));
       return { ...row, dependencies: validDeps };
     });
@@ -242,14 +240,13 @@ export default function ProcessTemplateStep2({
     if (setIsDirty) setIsDirty(true);
   };
 
-  // Delete Row
   const handleDeleteRow = (index) => {
-    const deletedId = processes[index]?.processId;
+    const deletedId = processes[index]?.processId ? Number(processes[index].processId) : null;
     const filtered = processes.filter((_, idx) => idx !== index);
     const resequenced = updateSequenceNumbers(filtered);
 
     const cleaned = resequenced.map((row) => {
-      const rowDeps = Array.isArray(row.dependencies) ? row.dependencies : [];
+      const rowDeps = Array.isArray(row.dependencies) ? row.dependencies.map(Number) : [];
       if (deletedId && rowDeps.includes(deletedId)) {
         return {
           ...row,
@@ -268,7 +265,6 @@ export default function ProcessTemplateStep2({
 
   return (
     <div className="space-y-6 ">
-      {/* Top Details Summary Card */}
       <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
         <h3 className="text-base font-semibold text-gray-800 mb-4">Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
@@ -293,7 +289,6 @@ export default function ProcessTemplateStep2({
         </div>
       </div>
 
-      {/* Bottom Process Details Card */}
       <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6 border-b border-gray-200 pb-4">
           <h3 className="text-base font-semibold text-gray-800">Process Details</h3>
@@ -315,7 +310,6 @@ export default function ProcessTemplateStep2({
           </div>
         )}
 
-        {/* Process Sequence Table */}
         <div className="rounded-md border border-gray-100">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -342,7 +336,6 @@ export default function ProcessTemplateStep2({
                 processes.map((row, idx) => {
                   const rowDeps = Array.isArray(row.dependencies) ? row.dependencies : [];
 
-                  // Options for Process dropdown
                   const processSelectOptions = availableProcesses
                     .filter(
                       (p) =>
@@ -354,7 +347,6 @@ export default function ProcessTemplateStep2({
                       value: p.id,
                     }));
 
-                  // Options for Dependency dropdown (strictly preceding rows)
                   const dependencyOptions = processes
                     .slice(0, idx)
                     .filter((r) => r.processId && r.processName)
@@ -368,12 +360,11 @@ export default function ProcessTemplateStep2({
                   ) || (row.processId ? { label: row.processName, value: row.processId } : null);
 
                   const selectedDepValues = dependencyOptions.filter((opt) =>
-                    rowDeps.includes(Number(opt.value))
+                    rowDeps.map(Number).includes(Number(opt.value))
                   );
 
                   return (
                     <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                      {/* Process Name Select */}
                       <td className="py-3 px-4">
                         <Select
                           instanceId={`select-process-${idx}`}
@@ -393,7 +384,6 @@ export default function ProcessTemplateStep2({
                         />
                       </td>
 
-                      {/* Dependency MultiSelect */}
                       <td className="py-3 px-4">
                         <Select
                           instanceId={`select-deps-${idx}`}
@@ -408,7 +398,6 @@ export default function ProcessTemplateStep2({
                         />
                       </td>
 
-                      {/* Move Controls */}
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1">
                           {idx > 0 && (
@@ -434,7 +423,6 @@ export default function ProcessTemplateStep2({
                         </div>
                       </td>
 
-                      {/* Action Button (Delete) */}
                       <td className="py-3 px-4 text-center">
                         <button
                           type="button"

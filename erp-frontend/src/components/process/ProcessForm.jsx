@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
@@ -84,9 +84,6 @@ export default function ProcessForm({
   const [loading, setLoading] = useState(false);
   const [companyOptions, setCompanyOptions] = useState([]);
   const [workCentreOptions, setWorkCentreOptions] = useState([]);
-  
-  const imageInputRef = useRef(null);
-  const pdfInputRef = useRef(null);
 
   const defaultValues = { ...BASE_DEFAULTS, ...initialData };
 
@@ -106,7 +103,7 @@ export default function ProcessForm({
   const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
   const [isDeletePdfModalOpen, setIsDeletePdfModalOpen] = useState(false);
 
-  const prevCompanyId = useRef(formData.companyId);
+  const [prevCompanyId, setPrevCompanyId] = useState(formData.companyId);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -119,7 +116,7 @@ export default function ProcessForm({
       setFormData({ ...BASE_DEFAULTS, ...initialData });
       setImagePreview(initialData.imageUrl || null);
       setPdfPreview(initialData.instructionPdfUrl || null);
-      prevCompanyId.current = initialData.companyId;
+      setPrevCompanyId(initialData.companyId);
     }
   }, [initialData]);
 
@@ -158,15 +155,15 @@ export default function ProcessForm({
       };
       loadWorkCentres();
 
-      if (mode === "create" && prevCompanyId.current && prevCompanyId.current !== effectiveCompanyId) {
+      if (mode === "create" && prevCompanyId && prevCompanyId !== effectiveCompanyId) {
         setFormData(prev => ({ ...prev, workCentreId: "" }));
       }
-      prevCompanyId.current = effectiveCompanyId;
+      setPrevCompanyId(effectiveCompanyId);
     } else {
       setWorkCentreOptions([]);
-      prevCompanyId.current = null;
+      setPrevCompanyId(null);
     }
-  }, [formData.companyId, user, mode]);
+  }, [formData.companyId, user, mode, prevCompanyId]);
 
   useEffect(() => {
     setConfig({
@@ -315,14 +312,16 @@ export default function ProcessForm({
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    if (imageInputRef.current) imageInputRef.current.value = "";
+    const imageInput = document.getElementById("process-form-image-input");
+    if (imageInput) imageInput.value = "";
     setIsDirty(true);
   };
 
   const removePdf = () => {
     setPdfFile(null);
     setPdfPreview(null);
-    if (pdfInputRef.current) pdfInputRef.current.value = "";
+    const pdfInput = document.getElementById("process-form-pdf-input");
+    if (pdfInput) pdfInput.value = "";
     setIsDirty(true);
   };
 
@@ -445,7 +444,7 @@ export default function ProcessForm({
               
               <div 
                 className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition w-full"
-                onClick={() => !isImageUploading && imageInputRef.current?.click()}
+                onClick={() => !isImageUploading && document.getElementById("process-form-image-input")?.click()}
               >
                 <span className="text-gray-500 text-sm">Choose File</span>
                 <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
@@ -485,7 +484,7 @@ export default function ProcessForm({
               )}
 
               <input
-                ref={imageInputRef}
+                id="process-form-image-input"
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
                 className="hidden"
@@ -500,7 +499,7 @@ export default function ProcessForm({
               
               <div 
                 className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition w-full"
-                onClick={() => !isPdfUploading && pdfInputRef.current?.click()}
+                onClick={() => !isPdfUploading && document.getElementById("process-form-pdf-input")?.click()}
               >
                 <span className="text-gray-500 text-sm">Choose File</span>
                 <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
@@ -545,7 +544,7 @@ export default function ProcessForm({
               )}
 
               <input
-                ref={pdfInputRef}
+                id="process-form-pdf-input"
                 type="file"
                 accept="application/pdf"
                 className="hidden"

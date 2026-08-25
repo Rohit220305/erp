@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { createItem, updateItem } from "@/lib/api/item-api";
@@ -124,7 +124,7 @@ export default function ItemDrawerForm({
   const [errors, setErrors] = useState({});
   const [isDirty, setIsDirty] = useState(false);
   
-  const prevCompanyId = useRef(formData.companyId);
+  const [prevCompanyId, setPrevCompanyId] = useState(formData.companyId);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -135,7 +135,7 @@ export default function ItemDrawerForm({
   useEffect(() => {
     if (initialData) {
       setFormData({ ...BASE_DEFAULTS, ...initialData });
-      prevCompanyId.current = initialData.companyId;
+      setPrevCompanyId(initialData.companyId);
     }
   }, [initialData]);
 
@@ -203,7 +203,7 @@ export default function ItemDrawerForm({
       };
       fetchDependent();
       
-      if (mode === "create" && prevCompanyId.current && prevCompanyId.current !== effectiveCompanyId) {
+      if (mode === "create" && prevCompanyId && prevCompanyId !== effectiveCompanyId) {
         setFormData(prev => ({ 
           ...prev, 
           categoryId: "", 
@@ -217,7 +217,7 @@ export default function ItemDrawerForm({
           currencyCode: ""
         }));
       }
-      prevCompanyId.current = effectiveCompanyId;
+      setPrevCompanyId(effectiveCompanyId);
       
     } else {
       setCategoryOptions([]);
@@ -226,9 +226,9 @@ export default function ItemDrawerForm({
       setPackageOptions([]);
       setUomOptions([]);
       setCurrencyOptions([]);
-      prevCompanyId.current = null;
+      setPrevCompanyId(null);
     }
-  }, [formData.companyId, user, mode]);
+  }, [formData.companyId, user, mode, prevCompanyId]);
 
   const requiredPermission = mode === "create"
     ? itemConfig.actions?.createPermission || itemConfig.actions?.header?.[0]?.permission

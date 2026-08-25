@@ -14,12 +14,7 @@ export default function GroupGridCard({ group, onDelete }) {
           className="flex items-center gap-3 cursor-pointer"
           onClick={() => router.push(`/group/${group.id}`)}
         >
-          {/* <div className="relative shrink-0">
-            <div className="w-14 h-14 rounded-full bg-[#1565c0] text-white flex items-center justify-center font-bold text-xl">
-              {group.groupName?.[0] || "G"}
-            </div>
-            <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${isActive ? "bg-green-500" : "bg-gray-300"}`}></div>
-          </div> */}
+
           <div>
             <p className="text-[#1565c0] font-medium leading-tight mb-0.5 hover:underline decoration-1 underline-offset-2">
               {group.groupName || "—"}
