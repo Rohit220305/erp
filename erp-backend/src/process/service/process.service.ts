@@ -6,6 +6,8 @@ import { ProcessEntity } from '../entity/process.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CommonFileService } from 'src/package/service/common-file.service';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
+import { AttachmentMasterService } from 'src/attachment-master/service/attachment-master.service';
+import { AttachmentModule } from 'src/attachment-master/enums/attachment-module.enum';
 
 @Injectable()
 export class ProcessService {
@@ -13,6 +15,7 @@ export class ProcessService {
     private readonly general: GeneralUtilities,
     private readonly commonFileService: CommonFileService,
     private readonly activityLogService: ActivityLogService,
+    private readonly attachmentMasterService: AttachmentMasterService,
   ) {}
 
   @InjectRepository(ProcessEntity)
@@ -37,12 +40,14 @@ export class ProcessService {
         }
 
         if (params.instructionPdfUrl && !hasError) {
-          const pdfResponse = await this.commonFileService.transferFile(
+          const companyId = params.companyId || req.user?.companyId;
+          const pdfResponse = await this.attachmentMasterService.saveAttachment(
             params.instructionPdfUrl,
+            companyId,
+            AttachmentModule.PROCESS,
             insertId,
-            'process_master_pdf',
           );
-          if (pdfResponse.success == 0) hasError = true;
+          if (pdfResponse && pdfResponse.success === 0) hasError = true;
         }
 
         if (hasError) {
@@ -105,7 +110,7 @@ export class ProcessService {
         }
       }
 
-      const { ...dbInsertData } = params as any;
+      const { instructionPdfUrl: _pdf, ...dbInsertData } = params as any;
 
       Object.keys(dbInsertData).forEach(key => {
         if (dbInsertData[key] === undefined || dbInsertData[key] === null || dbInsertData[key] === 'null' || dbInsertData[key] === 'undefined') {
@@ -164,12 +169,14 @@ export class ProcessService {
       }
 
       if (params.instructionPdfUrl && params.id && !hasError) {
-        const pdfResponse = await this.commonFileService.transferFile(
+        const companyId = params.companyId || req.user?.companyId;
+        const pdfResponse = await this.attachmentMasterService.saveAttachment(
           params.instructionPdfUrl,
+          companyId,
+          AttachmentModule.PROCESS,
           params.id,
-          'process_master_pdf',
         );
-        if (pdfResponse.success == 0) hasError = true;
+        if (pdfResponse && pdfResponse.success === 0) hasError = true;
       }
 
       if (hasError) {
@@ -228,7 +235,7 @@ export class ProcessService {
         if (nameExists) throw new Error('Process Name already exists');
       }
 
-      const { id: _extractedId, ...dbUpdateData } = params as any;
+      const { id: _extractedId, instructionPdfUrl: _pdf, ...dbUpdateData } = params as any;
 
       Object.keys(dbUpdateData).forEach(key => {
         if (dbUpdateData[key] === undefined || dbUpdateData[key] === null || dbUpdateData[key] === 'null' || dbUpdateData[key] === 'undefined') {
@@ -241,7 +248,11 @@ export class ProcessService {
       }
       
       if (params.instructionPdfUrl === "") {
-         dbUpdateData.instructionPdfUrl = null;
+         await this.attachmentMasterService.deleteAttachmentByEntity(
+           processData.companyId,
+           AttachmentModule.PROCESS,
+           params.id,
+         );
       }
 
       dbUpdateData.updatedBy = req.user?.sub;
@@ -305,6 +316,11 @@ export class ProcessService {
         req,
       );
       const res = await this.processRepo.update({ id: params.id }, payload);
+      await this.attachmentMasterService.deleteAttachmentByEntity(
+        processData.companyId,
+        AttachmentModule.PROCESS,
+        params.id,
+      );
 
       const logPayload = this.general.buildActivityLogPayload(
         req,

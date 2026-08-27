@@ -24,6 +24,8 @@ import { BrandModule } from './brand/brand.module';
 import { WorkCentreModule } from './work-centre/work-centre.module';
 import { ProcessModule } from './process/process.module';
 import { ItemModule } from './item/item.module';
+import { AttachmentMasterModule } from './attachment-master/attachment-master.module';
+import { BomModule } from './bom/bom.module';
 
 @Module({
   imports: [
@@ -54,7 +56,10 @@ import { ItemModule } from './item/item.module';
     WorkCentreModule,
     ProcessModule,
     ItemModule,
+    AttachmentMasterModule,
+    BomModule,
   ],
+
   controllers: [AppController],
   providers: [AppService],
 })

@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import Loader from "@/components/common/Loader";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
@@ -194,16 +195,58 @@ export default function DetailDrawerContent({ open, onClose, item, moduleName, f
           )}
 
           <div className="flex flex-col gap-6">
-            {drawerConfig.sections?.map((section, idx) => (
-              <div key={idx}>
-                {section.title && <h3 className="text-sm font-semibold text-gray-800 mb-3">{section.title}</h3>}
-                <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                  {section.fields.map((field, fIdx) => (
-                    <DetailField key={fIdx} field={field} data={delayedItem} user={user} />
-                  ))}
+            {drawerConfig.sections?.map((section, idx) => {
+              if (section.type === "listArray") {
+                const listData = delayedItem[section.arrayKey] || [];
+                return (
+                  <div key={idx}>
+                    {section.title && (
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold text-gray-800">{section.title}</h3>
+                        <span className="text-sm font-semibold text-gray-600">Total : {listData.length}</span>
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-3">
+                      {listData.map((listItem, lIdx) => {
+                        const titleVal = listItem[section.listConfig?.titleKey] || "-";
+                        const subtitleVal = listItem[section.listConfig?.subtitleKey] || "";
+                        let titleNode = <span className="text-sm font-medium text-gray-800 block mb-1">{titleVal}</span>;
+                        
+                        if (section.listConfig?.linkPath) {
+                          let path = section.listConfig.linkPath;
+                          Object.keys(listItem).forEach(k => {
+                            path = path.replace(`{${k}}`, listItem[k]);
+                          });
+                          titleNode = <Link href={path} className="text-sm font-medium text-[#1565c0] hover:underline block mb-1 cursor-pointer">{titleVal}</Link>;
+                        }
+
+                        return (
+                          <div key={lIdx} className="bg-gray-50 rounded-md p-4">
+                            {titleNode}
+                            {subtitleVal && (
+                              <span className="text-sm font-semibold text-gray-900">
+                                ({subtitleVal})
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div key={idx}>
+                  {section.title && <h3 className="text-sm font-semibold text-gray-800 mb-3">{section.title}</h3>}
+                  <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                    {section.fields?.map((field, fIdx) => (
+                      <DetailField key={fIdx} field={field} data={delayedItem} user={user} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       ) : (

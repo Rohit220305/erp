@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { ProcessTemplateEntity } from '../entity/process.template.entity';
 import { ProcessTemplateMappingEntity } from '../entity/process.template.mapping.entity';
 import { ProcessEntity } from '../../process/entity/process.entity';
+import { BomEntity } from '../../bom/entity/bom.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 
@@ -24,6 +25,9 @@ export class ProcessTemplateService {
 
   @InjectRepository(ProcessEntity)
   private processRepo: Repository<ProcessEntity>;
+
+  @InjectRepository(BomEntity)
+  private bomRepo: Repository<BomEntity>;
 
   private async validateProcesses(processes: any[], companyId: number) {
     if (!processes || !Array.isArray(processes) || processes.length === 0) {
@@ -168,8 +172,6 @@ export class ProcessTemplateService {
           dependencies: proc.dependencies && proc.dependencies.length > 0 ? proc.dependencies : null,
           nodePosition: proc.nodePosition || null,
           handleConfig: proc.handleConfig || null,
-          addedBy: req.user?.sub,
-          addedDate: new Date(),
         }));
         await this.processTemplateMappingRepo.insert(mappingInserts);
       }
@@ -239,6 +241,17 @@ export class ProcessTemplateService {
 
       this.general.assertCompanyAccess(req, template.companyId, 'update', 'template');
 
+      const bomUsageCount = await this.bomRepo.count({
+        where: {
+          processTemplateId: params.id,
+          sysRecDeleted: false,
+        },
+      });
+
+      if (bomUsageCount > 0) {
+        throw new Error('This Process Template is currently in use by a Bill of Materials (BOM) and cannot be updated.');
+      }
+
       if (params.templateCode && params.templateCode !== template.templateCode) {
         const codeExists = await this.processTemplateRepo.findOne({
           where: {
@@ -300,8 +313,6 @@ export class ProcessTemplateService {
             processId: Number(proc.processId),
             sequenceNo: Number(proc.sequenceNo),
             dependencies: proc.dependencies && proc.dependencies.length > 0 ? proc.dependencies : null,
-            addedBy: req.user?.sub,
-            addedDate: new Date(),
           };
           if (proc.nodePosition) item.nodePosition = proc.nodePosition;
           if (proc.handleConfig) item.handleConfig = proc.handleConfig;
@@ -377,17 +388,24 @@ export class ProcessTemplateService {
 
       this.general.assertCompanyAccess(req, template.companyId, 'delete', 'template');
 
+      const bomUsageCount = await this.bomRepo.count({
+        where: {
+          processTemplateId: params.id,
+          sysRecDeleted: false,
+        },
+      });
+
+      if (bomUsageCount > 0) {
+        throw new Error('This Process Template is currently in use by a Bill of Materials (BOM) and cannot be deleted.');
+      }
+
       const payload = this.general.buildSoftDeletePayload(
         { templateCode: template.templateCode, templateName: template.templateName },
         req,
       );
       const res = await this.processTemplateRepo.update({ id: params.id }, payload);
 
-      const mappingPayload = this.general.buildSoftDeletePayload({}, req);
-      await this.processTemplateMappingRepo.update(
-        { templateId: params.id, sysRecDeleted: false },
-        mappingPayload,
-      );
+      await this.processTemplateMappingRepo.delete({ templateId: params.id });
 
       const logPayload = this.general.buildActivityLogPayload(
         req,

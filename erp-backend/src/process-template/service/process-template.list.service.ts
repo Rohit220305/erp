@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 
 import { ProcessTemplateEntity } from '../entity/process.template.entity';
 import { ProcessTemplateMappingEntity } from '../entity/process.template.mapping.entity';
+import { BomEntity } from '../../bom/entity/bom.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 
 @Injectable()
@@ -15,6 +16,9 @@ export class ProcessTemplateListService {
 
   @InjectRepository(ProcessTemplateMappingEntity)
   private processTemplateMappingRepo: Repository<ProcessTemplateMappingEntity>;
+
+  @InjectRepository(BomEntity)
+  private bomRepo: Repository<BomEntity>;
 
   async startProcessTemplateDetails(req, params) {
     const response = await this.getProcessTemplateDetails(req, params);
@@ -93,7 +97,6 @@ export class ProcessTemplateListService {
       ]);
       mappingQb.leftJoin('process_master', 'process', 'process.id = mapping.processId');
       mappingQb.where('mapping.templateId = :templateId', { templateId: params.id });
-      mappingQb.andWhere('mapping.sysRecDeleted = 0');
       mappingQb.orderBy('mapping.sequenceNo', 'ASC');
 
       const processes = await mappingQb.getRawMany();
@@ -123,6 +126,15 @@ export class ProcessTemplateListService {
       });
 
       template.processes = processes;
+
+      const bomCount = await this.bomRepo.count({
+        where: {
+          processTemplateId: params.id,
+          sysRecDeleted: false,
+        },
+      });
+      template.isTemplateInUse = bomCount > 0;
+      template.isEditable = bomCount === 0;
 
       return_data = {
         success: 1,
@@ -192,6 +204,24 @@ export class ProcessTemplateListService {
       const data = await queryBuilder.getRawMany();
 
       await this.general.formatDate(data);
+
+      if (data && data.length > 0) {
+        const templateIds = data.map((item) => Number(item.id)).filter(Boolean);
+        if (templateIds.length > 0) {
+          const activeBoms = await this.bomRepo.createQueryBuilder('bom')
+            .select('bom.processTemplateId', 'processTemplateId')
+            .where('bom.processTemplateId IN (:...ids)', { ids: templateIds })
+            .andWhere('bom.sysRecDeleted = 0')
+            .getRawMany();
+
+          const usedSet = new Set(activeBoms.map((b) => Number(b.processTemplateId)));
+          data.forEach((item) => {
+            const isUsed = usedSet.has(Number(item.id));
+            item.isTemplateInUse = isUsed;
+            item.isEditable = !isUsed;
+          });
+        }
+      }
 
       const pagination = this.general.buildPaginationResponse(total, page, limit, skip);
 

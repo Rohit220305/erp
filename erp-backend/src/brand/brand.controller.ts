@@ -21,7 +21,7 @@ import {
   BrandUpdateDto,
 } from './dto/brand.dto';
 
-import { multerConfig } from 'src/package/config/multer.config';
+import { imageMulterConfig } from 'src/package/config/multer.config';
 import { CommonFileService } from 'src/package/service/common-file.service';
 
 import { BrandService } from './service/brand.service';
@@ -46,7 +46,7 @@ export class BrandController {
   }
 
   @Post('add-brand')
-  @UseInterceptors(FileInterceptor('brandImage', multerConfig))
+  @UseInterceptors(FileInterceptor('brandImage', imageMulterConfig))
   async addBrand(
     @AppRequest() req: IAppRequest,
     @Body() body: BrandAddDto,
@@ -68,7 +68,7 @@ export class BrandController {
   }
 
   @Put('update-brand')
-  @UseInterceptors(FileInterceptor('brandImage', multerConfig))
+  @UseInterceptors(FileInterceptor('brandImage', imageMulterConfig))
   async updateBrand(
     @AppRequest() req: IAppRequest,
     @Body() body: BrandUpdateDto,

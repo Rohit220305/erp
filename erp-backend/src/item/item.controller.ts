@@ -14,7 +14,7 @@ import { CAPABILITIES } from 'src/package/config/capabilities.config';
 import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
 import { AppRequest } from 'src/package/decorator/app-request.decorator';
 import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
-import { multerConfig } from 'src/package/config/multer.config';
+import { imageMulterConfig } from 'src/package/config/multer.config';
 import { CommonFileService } from 'src/package/service/common-file.service';
 
 import {
@@ -50,7 +50,7 @@ export class ItemController {
 
   @Post('add-item')
   @RequirePermission(CAPABILITIES.ITEM.CREATE)
-  @UseInterceptors(FilesInterceptor('itemImages', 10, multerConfig))
+  @UseInterceptors(FilesInterceptor('itemImages', 10, imageMulterConfig))
   async addItem(
     @AppRequest() req: IAppRequest,
     @Body() body: ItemAddDto,
@@ -73,7 +73,7 @@ export class ItemController {
 
   @Put('update-item')
   @RequirePermission(CAPABILITIES.ITEM.UPDATE)
-  @UseInterceptors(FilesInterceptor('itemImages', 5, multerConfig))
+  @UseInterceptors(FilesInterceptor('itemImages', 5, imageMulterConfig))
   async updateItem(
     @AppRequest() req: IAppRequest,
     @Body() body: ItemUpdateDto,

@@ -12,8 +12,7 @@ import {
 import { AppRequest } from 'src/package/decorator/app-request.decorator';
 import type { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { documentMulterConfig } from 'src/package/config/multer.config';
 
 import {
   ProcessAddDto,
@@ -27,37 +26,7 @@ import { CommonFileService } from 'src/package/service/common-file.service';
 import { ProcessService } from './service/process.service';
 import { ProcessListService } from './service/process.list.service';
 
-const processMulterConfig = {
-  storage: diskStorage({
-    destination: process.env.TEMP_DIR || './temp-uploads',
-    filename: (req, file, callback) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const extension = extname(file.originalname);
-      callback(null, `${file.fieldname}-${uniqueSuffix}${extension}`);
-    },
-  }),
-  fileFilter: (req, file, callback) => {
-    if (file.fieldname === 'imageUrl') {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-      if (allowedTypes.includes(file.mimetype)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Only jpg, jpeg, png and webp files are allowed'), false);
-      }
-    } else if (file.fieldname === 'instructionPdfUrl') {
-      if (file.mimetype === 'application/pdf') {
-        callback(null, true);
-      } else {
-        callback(new Error('Only PDF files are allowed'), false);
-      }
-    } else {
-      callback(null, true);
-    }
-  },
-  limits: {
-    fileSize: 100 * 1024 * 1024,
-  },
-};
+
 
 @Controller('process')
 export class ProcessController {
@@ -82,7 +51,7 @@ export class ProcessController {
     FileFieldsInterceptor([
       { name: 'imageUrl', maxCount: 1 },
       { name: 'instructionPdfUrl', maxCount: 1 },
-    ], processMulterConfig)
+    ], documentMulterConfig)
   )
   async addProcess(
     @AppRequest() req: IAppRequest,
@@ -110,7 +79,7 @@ export class ProcessController {
     FileFieldsInterceptor([
       { name: 'imageUrl', maxCount: 1 },
       { name: 'instructionPdfUrl', maxCount: 1 },
-    ], processMulterConfig)
+    ], documentMulterConfig)
   )
   async updateProcess(
     @AppRequest() req: IAppRequest,

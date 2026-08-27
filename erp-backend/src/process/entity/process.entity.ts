@@ -29,9 +29,6 @@ export class ProcessEntity extends AbstractBaseEntity {
   @Column({ name: 'description', type: 'text', nullable: true })
   description: string;
 
-  @Column({ name: 'instructionPdfUrl', length: 255, nullable: true })
-  instructionPdfUrl: string;
-
   @Column({ name: 'companyId' })
   companyId: number;
 

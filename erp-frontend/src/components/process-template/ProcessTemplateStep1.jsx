@@ -19,7 +19,8 @@ const customSelectStyles = (error, disabled) => ({
     pointerEvents: "auto",
     borderColor: error ? "#f87171" : "#e5e7eb",
     borderRadius: "0.375rem",
-    minHeight: "48px",
+    minHeight: "44px",
+    maxHeight: "100px",
     backgroundColor: disabled ? "#f9fafb" : "#ffffff",
     boxShadow: "none",
     cursor: disabled ? "not-allowed" : "pointer",
@@ -28,9 +29,53 @@ const customSelectStyles = (error, disabled) => ({
       borderColor: disabled ? "#e5e7eb" : error ? "#f87171" : "#9ca3af",
     },
   }),
+  valueContainer: (base) => ({
+    ...base,
+    maxHeight: "90px",
+    overflowY: "auto",
+    padding: "2px 6px",
+    "&::-webkit-scrollbar": {
+      width: "4px",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      background: "#cbd5e1",
+      borderRadius: "2px",
+    },
+  }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,
+    borderRadius: "0.375rem",
+    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+  }),
+  menuList: (base) => ({
+    ...base,
+    maxHeight: "220px",
+    overflowY: "auto",
+    padding: "4px",
+    "&::-webkit-scrollbar": {
+      width: "6px",
+    },
+    "&::-webkit-scrollbar-track": {
+      background: "#f1f5f9",
+      borderRadius: "4px",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      background: "#cbd5e1",
+      borderRadius: "4px",
+    },
+    "&::-webkit-scrollbar-thumb:hover": {
+      background: "#94a3b8",
+    },
+  }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
   option: (base, state) => ({
     ...base,
     fontSize: "0.875rem",
+    borderRadius: "0.25rem",
     cursor: "pointer",
     backgroundColor: state.isSelected
       ? "#1565c0"

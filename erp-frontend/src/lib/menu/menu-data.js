@@ -125,6 +125,11 @@ export const menuCategories = [
             path: "/process-template",
             permission: "PROCESS_TEMPLATE_LIST",
           },
+          {
+            label: "BOM Master",
+            path: "/bom",
+            permission: "BOM_LIST",
+          },
         ],
       },
      

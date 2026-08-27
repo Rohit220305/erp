@@ -9,6 +9,7 @@ import { listWorkCentres } from "@/lib/api/work-centre-api";
 import toast from "react-hot-toast";
 import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 import processConfig from "@/config/process.config.json";
 import { getProcessSchema } from "@/lib/validation/process.schema";
 import { X, Info, FileText } from "lucide-react";
@@ -714,43 +715,21 @@ export default function ProcessDrawerForm({
         onCancel={() => setConfirmState({ isOpen: false, type: null, data: null })}
       />
 
-      {isDeleteImageModalOpen && (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={() => setIsDeleteImageModalOpen(false)}></div>
-          <div className="relative bg-[#f0f0f0] w-72 shadow-2xl z-10 flex flex-col border border-gray-200">
-            <div className="bg-[#1565c0] flex justify-between items-center px-4 py-2.5 text-white">
-              <span className="text-sm font-semibold tracking-wide">Delete</span>
-              <X size={16} className="cursor-pointer hover:text-gray-200" onClick={() => setIsDeleteImageModalOpen(false)} />
-            </div>
-            <div className="p-5 text-sm text-gray-700">
-              Are you sure want to delete this?
-            </div>
-            <div className="p-4 pt-1 flex justify-center gap-3">
-              <button type="button" onClick={confirmRemoveImage} className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer">Delete</button>
-              <button type="button" onClick={() => setIsDeleteImageModalOpen(false)} className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={isDeleteImageModalOpen}
+        title="Delete"
+        message="Are you sure want to delete this?"
+        onConfirm={confirmRemoveImage}
+        onCancel={() => setIsDeleteImageModalOpen(false)}
+      />
 
-      {isDeletePdfModalOpen && (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={() => setIsDeletePdfModalOpen(false)}></div>
-          <div className="relative bg-[#f0f0f0] w-72 shadow-2xl z-10 flex flex-col border border-gray-200">
-            <div className="bg-[#1565c0] flex justify-between items-center px-4 py-2.5 text-white">
-              <span className="text-sm font-semibold tracking-wide">Delete</span>
-              <X size={16} className="cursor-pointer hover:text-gray-200" onClick={() => setIsDeletePdfModalOpen(false)} />
-            </div>
-            <div className="p-5 text-sm text-gray-700">
-              Are you sure want to delete this PDF?
-            </div>
-            <div className="p-4 pt-1 flex justify-center gap-3">
-              <button type="button" onClick={confirmRemovePdf} className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer">Delete</button>
-              <button type="button" onClick={() => setIsDeletePdfModalOpen(false)} className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={isDeletePdfModalOpen}
+        title="Delete"
+        message="Are you sure want to delete this PDF?"
+        onConfirm={confirmRemovePdf}
+        onCancel={() => setIsDeletePdfModalOpen(false)}
+      />
     </div>
   );
 }

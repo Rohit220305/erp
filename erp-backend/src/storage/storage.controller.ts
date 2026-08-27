@@ -23,7 +23,7 @@ import {
   StorageUpdateDto,
 } from './dto/storage.dto';
 
-import { multerConfig } from 'src/package/config/multer.config';
+import { imageMulterConfig } from 'src/package/config/multer.config';
 import { CommonFileDto } from 'src/package/dto/common-file.dto';
 import { CommonFileService } from 'src/package/service/common-file.service';
 
@@ -49,7 +49,7 @@ export class StorageController {
   }
 
   @Post('add-storage')
-  @UseInterceptors(FileInterceptor('storageImage', multerConfig))
+  @UseInterceptors(FileInterceptor('storageImage', imageMulterConfig))
   async addStorage(
     @AppRequest() req: IAppRequest,
     @Body() body: StorageAddDto,
@@ -76,7 +76,7 @@ export class StorageController {
   }
 
   @Put('update-storage')
-  @UseInterceptors(FileInterceptor('storageImage', multerConfig))
+  @UseInterceptors(FileInterceptor('storageImage', imageMulterConfig))
   async updateStorage(
     @AppRequest() req: IAppRequest,
     @Body() body: StorageUpdateDto,

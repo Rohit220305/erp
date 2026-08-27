@@ -24,7 +24,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 import { validate } from 'class-validator';
 
-import { multerConfig } from 'src/package/config/multer.config';
+import { imageMulterConfig } from 'src/package/config/multer.config';
 
 import { CommonFileDto } from 'src/package/dto/common-file.dto';
 
@@ -57,7 +57,7 @@ export class CompanyController {
 
   @Post('add-company')
   @RequirePermission(CAPABILITIES.COMPANY.CREATE)
-  @UseInterceptors(FileInterceptor('companyLogo', multerConfig))
+  @UseInterceptors(FileInterceptor('companyLogo', imageMulterConfig))
   async addCompany(
     @AppRequest() req: IAppRequest,
     @Body() body: CompanyAddDto,
@@ -83,7 +83,7 @@ export class CompanyController {
 
   @Put('update-company')
   @RequirePermission(CAPABILITIES.COMPANY.UPDATE)
-  @UseInterceptors(FileInterceptor('companyLogo', multerConfig))
+  @UseInterceptors(FileInterceptor('companyLogo', imageMulterConfig))
   async updateCompany(
     @AppRequest() req: IAppRequest,
     @Body() body: CompanyUpdateDto,

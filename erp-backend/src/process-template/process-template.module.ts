@@ -8,6 +8,7 @@ import { ProcessTemplateListService } from './service/process-template.list.serv
 import { ProcessTemplateEntity } from './entity/process.template.entity';
 import { ProcessTemplateMappingEntity } from './entity/process.template.mapping.entity';
 import { ProcessEntity } from '../process/entity/process.entity';
+import { BomEntity } from '../bom/entity/bom.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { ActivityLogModule } from 'src/activity-log/activity-log.module';
 
@@ -17,6 +18,7 @@ import { ActivityLogModule } from 'src/activity-log/activity-log.module';
       ProcessTemplateEntity,
       ProcessTemplateMappingEntity,
       ProcessEntity,
+      BomEntity,
     ]),
     ActivityLogModule,
   ],

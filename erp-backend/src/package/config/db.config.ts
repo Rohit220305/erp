@@ -24,6 +24,9 @@ import { WorkCentreEntity } from "src/work-centre/entity/work-centre.entity";
 import { ProcessEntity } from "src/process/entity/process.entity";
 import { ItemEntity } from 'src/item/entity/item.entity';
 import { ItemImageEntity } from 'src/item/entity/item-image.entity';
+import { AttachmentMasterEntity } from 'src/attachment-master/entity/attachment-master.entity';
+import { BomEntity } from 'src/bom/entity/bom.entity';
+import { BomProcessItemEntity } from 'src/bom/entity/bom-process-item.entity';
 dotenv.config();
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -58,6 +61,9 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     ProcessEntity,
     ItemEntity,
     ItemImageEntity,
+    AttachmentMasterEntity,
+    BomEntity,
+    BomProcessItemEntity,
   ],
   synchronize: false,
   migrationsRun: false,

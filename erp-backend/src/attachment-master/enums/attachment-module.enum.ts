@@ -1,0 +1,9 @@
+export enum AttachmentModule {
+  PROCESS = 'PROCESS',
+  ITEM = 'ITEM',
+  WORK_CENTRE = 'WORK_CENTRE',
+  USER = 'USER',
+  COMPANY = 'COMPANY',
+  BOM = 'BOM',
+}
+

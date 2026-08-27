@@ -77,6 +77,11 @@ const routes = [
   { path: "/item/edit/:id", permission: CAPABILITIES.ITEM.UPDATE },
   { path: "/item/:id", permission: CAPABILITIES.ITEM.VIEW },
 
+  { path: "/bom", permission: CAPABILITIES.BOM.LIST },
+  { path: "/bom/add", permission: CAPABILITIES.BOM.CREATE },
+  { path: "/bom/edit/:id", permission: CAPABILITIES.BOM.UPDATE },
+  { path: "/bom/:id", permission: CAPABILITIES.BOM.VIEW },
+
   { path: "/admin", permission: CAPABILITIES.USER.LIST },
 ];
 

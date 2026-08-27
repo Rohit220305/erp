@@ -367,6 +367,16 @@ export default function ProcessTemplateForm({
                 >
                   Next
                 </button>
+                {mode === "edit" && (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="bg-[#1565c0] text-white px-8 py-2.5 rounded-md text-sm font-medium hover:bg-[#0f57a6] transition cursor-pointer shadow-sm disabled:opacity-50 min-w-[100px]"
+                  >
+                    {loading ? "Updating..." : "Update"}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleDiscard}

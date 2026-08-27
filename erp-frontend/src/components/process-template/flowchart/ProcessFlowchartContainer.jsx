@@ -329,10 +329,16 @@ export default function ProcessFlowchartContainer({
         nodesConnectable={isEditMode}
         edgesReconnectable={isEditMode}
         elementsSelectable={isEditMode}
+        panOnScroll={true}
+        panOnDrag={true}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        preventScrolling={false}
         fitView
         fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.3}
-        maxZoom={1.8}
+        minZoom={0.2}
+        maxZoom={2}
+        proOptions={{ hideAttribution: true }}
       >
         <Background variant="dots" gap={18} size={1.5} color="#94a3b8" />
         <Controls showInteractive={false} position="bottom-right" />

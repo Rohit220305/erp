@@ -86,4 +86,12 @@ export const CAPABILITIES = {
     VIEW: 'ITEM_VIEW',
     LIST: 'ITEM_LIST',
   },
+  BOM: {
+    CREATE: 'BOM_CREATE',
+    UPDATE: 'BOM_UPDATE',
+    DELETE: 'BOM_DELETE',
+    VIEW: 'BOM_VIEW',
+    LIST: 'BOM_LIST',
+  },
 };
+

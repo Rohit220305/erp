@@ -97,6 +97,13 @@ export const CAPABILITIES = {
     VIEW: 'WORK_CENTRE_VIEW',
     LIST: 'WORK_CENTRE_LIST',
   },
+  BOM: {
+    CREATE: 'BOM_CREATE',
+    UPDATE: 'BOM_UPDATE',
+    DELETE: 'BOM_DELETE',
+    VIEW: 'BOM_VIEW',
+    LIST: 'BOM_LIST',
+  },
   ACTIVITY_LOG: {
     VIEW: 'ACTIVITY_LOG_VIEW',
   },

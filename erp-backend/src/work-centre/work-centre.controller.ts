@@ -21,7 +21,7 @@ import {
   WorkCentreUpdateDto,
 } from './dto/work-centre.dto';
 
-import { multerConfig } from 'src/package/config/multer.config';
+import { imageMulterConfig } from 'src/package/config/multer.config';
 import { CommonFileService } from 'src/package/service/common-file.service';
 
 import { WorkCentreService } from './service/work-centre.service';
@@ -46,7 +46,7 @@ export class WorkCentreController {
   }
 
   @Post('add-work-centre')
-  @UseInterceptors(FileInterceptor('imageUrl', multerConfig))
+  @UseInterceptors(FileInterceptor('imageUrl', imageMulterConfig))
   async addWorkCentre(
     @AppRequest() req: IAppRequest,
     @Body() body: WorkCentreAddDto,
@@ -68,7 +68,7 @@ export class WorkCentreController {
   }
 
   @Put('update-work-centre')
-  @UseInterceptors(FileInterceptor('imageUrl', multerConfig))
+  @UseInterceptors(FileInterceptor('imageUrl', imageMulterConfig))
   async updateWorkCentre(
     @AppRequest() req: IAppRequest,
     @Body() body: WorkCentreUpdateDto,

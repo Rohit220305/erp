@@ -77,10 +77,23 @@ export const sitemapData = [
         path: "/process-template",
         permission: "PROCESS_TEMPLATE_LIST",
       },
+      {
+        label: "Bill of Materials (BOM)",
+        path: "/bom",
+        permission: "BOM_LIST",
+      },
     ],
   },
 
 
 
 ];
+
+
+
+
+
+
+
+
 

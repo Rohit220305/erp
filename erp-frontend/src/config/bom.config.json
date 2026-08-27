@@ -1,0 +1,173 @@
+{
+  "moduleName": "Bom",
+  "title": "Bill of Materials (BOM)",
+  "permissions": {
+    "list": "BOM_LIST",
+    "create": "BOM_CREATE",
+    "view": "BOM_VIEW",
+    "update": "BOM_UPDATE",
+    "delete": "BOM_DELETE"
+  },
+  "columns": [
+    {
+      "label": "BoM Name",
+      "key": "bomName",
+      "type": "link",
+      "linkPath": "/bom/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "BoM Code",
+      "key": "bomCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Item Name",
+      "key": "itemName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Item Code",
+      "key": "itemCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Production Method",
+      "key": "productionMethod",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Item Barcode",
+      "key": "itemBarcode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Added By",
+      "key": "addedByName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "120px",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add BOM",
+        "type": "redirect",
+        "path": "/bom/add",
+        "permission": "BOM_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editRedirect",
+        "path": "/bom/edit/{id}",
+        "icon": "Edit",
+        "permission": "BOM_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "BOM_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    { "label": "BOM Name", "value": "bomName", "type": "text" },
+    { "label": "BOM Code", "value": "bomCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "searchFields": [
+    { "label": "BOM Name", "value": "bomName", "type": "text" },
+    { "label": "BOM Code", "value": "bomCode", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "bomName": "",
+    "bomCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ]
+}

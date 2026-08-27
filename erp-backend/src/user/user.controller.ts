@@ -27,7 +27,7 @@ import {
 
 import { UserService } from './service/user.service';
 import { UserListService } from './service/user.list.service';
-import { multerConfig } from 'src/package/config/multer.config';
+import { imageMulterConfig } from 'src/package/config/multer.config';
 import { CommonFileDto } from 'src/package/dto/common-file.dto';
 import { CommonFileService } from 'src/package/service/common-file.service';
 import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
@@ -42,7 +42,7 @@ export class UserController {
 
   @Post('add-user')
   @RequirePermission(CAPABILITIES.USER.CREATE)
-  @UseInterceptors(FileInterceptor('profilePhoto', multerConfig))
+  @UseInterceptors(FileInterceptor('profilePhoto', imageMulterConfig))
   async addUser(@AppRequest() req: IAppRequest, @Body() body: UserAddDto, @UploadedFile() file) {
     try {
       const params = body;
@@ -64,7 +64,7 @@ export class UserController {
 
   @Put('update-user')
   @RequirePermission(CAPABILITIES.USER.UPDATE)
-  @UseInterceptors(FileInterceptor('profilePhoto', multerConfig))
+  @UseInterceptors(FileInterceptor('profilePhoto', imageMulterConfig))
   async updateUser(
     @AppRequest() req: IAppRequest,
     @Body() body: UserUpdateDto,

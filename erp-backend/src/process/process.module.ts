@@ -7,6 +7,7 @@ import { ProcessListService } from './service/process.list.service';
 
 
 import { ActivityLogModule } from 'src/activity-log/activity-log.module';
+import { AttachmentMasterModule } from 'src/attachment-master/attachment-master.module';
 
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CommonFileService } from 'src/package/service/common-file.service';
@@ -15,6 +16,7 @@ import { CommonFileService } from 'src/package/service/common-file.service';
   imports: [
     TypeOrmModule.forFeature([ProcessEntity]),
     ActivityLogModule,
+    AttachmentMasterModule,
   ],
   controllers: [ProcessController],
   providers: [

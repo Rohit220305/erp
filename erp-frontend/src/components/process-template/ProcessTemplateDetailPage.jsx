@@ -70,11 +70,11 @@ export default function ProcessTemplateDetailPage({ data }) {
   const [currentProcesses, setCurrentProcesses] = useState(initialProcesses);
   const [isSavingFlowchart, setIsSavingFlowchart] = useState(false);
 
-  useEffect(() => {
-    if (data?.processes) {
-      setCurrentProcesses(data.processes);
-    }
-  }, [data?.processes]);
+  const [prevProcesses, setPrevProcesses] = useState(data?.processes);
+  if (data?.processes !== prevProcesses) {
+    setPrevProcesses(data?.processes);
+    setCurrentProcesses(data?.processes || []);
+  }
 
   const handleOpenProcessDrawer = (processId) => {
     if (!processId) return;
@@ -137,16 +137,17 @@ export default function ProcessTemplateDetailPage({ data }) {
           { label: "Master", href: "/" },
           { label: "Process Template", href: "/process-template" },
         ],
-        actionButton: can(CAPABILITIES.PROCESS_TEMPLATE?.UPDATE || "PROCESS_TEMPLATE_UPDATE")
-          ? {
-            label: "Edit",
-            onClick: () => router.push(`/process-template/edit/${data?.id}`),
-          }
-          : null,
+        actionButton:
+          can(CAPABILITIES.PROCESS_TEMPLATE?.UPDATE || "PROCESS_TEMPLATE_UPDATE") && !data?.isTemplateInUse
+            ? {
+              label: "Edit",
+              onClick: () => router.push(`/process-template/edit/${data?.id}`),
+            }
+            : null,
       },
     });
     return () => resetConfig();
-  }, [setConfig, resetConfig, router, data?.id, can]);
+  }, [setConfig, resetConfig, router, data?.id, data?.isTemplateInUse, can]);
 
   if (!data || data.success === 0 || data.settings?.success === 0) {
     if (data?.accessDenied) {
@@ -175,6 +176,7 @@ export default function ProcessTemplateDetailPage({ data }) {
     addedDateFormatted,
     updatedByName,
     updatedDateFormatted,
+    isTemplateInUse = false,
     processes = [],
   } = data;
 

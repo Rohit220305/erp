@@ -5,10 +5,15 @@ import { Repository } from 'typeorm';
 
 import { ProcessEntity } from '../entity/process.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
+import { AttachmentMasterService } from 'src/attachment-master/service/attachment-master.service';
+import { AttachmentModule } from 'src/attachment-master/enums/attachment-module.enum';
 
 @Injectable()
 export class ProcessListService {
-  constructor(private readonly general: GeneralUtilities) {}
+  constructor(
+    private readonly general: GeneralUtilities,
+    private readonly attachmentMasterService: AttachmentMasterService,
+  ) {}
 
   @InjectRepository(ProcessEntity)
   private processRepo: Repository<ProcessEntity>;
@@ -38,7 +43,6 @@ export class ProcessListService {
         'process_master.processName AS processName',
         'process_master.imageUrl AS imageUrl',
         'process_master.description AS description',
-        'process_master.instructionPdfUrl AS instructionPdfUrl',
         'process_master.status AS status',
         'process_master.companyId AS companyId',
         'process_master.workCentreId AS workCentreId',
@@ -83,13 +87,14 @@ export class ProcessListService {
           processData.imageUrl,
         );
       }
-      if (processData.instructionPdfUrl) {
-        processData.instructionPdfUrl = await this.general.generateUrl(
-          'process_master_pdf',
-          `${processData.id}`,
-          processData.instructionPdfUrl,
-        );
-      }
+
+      const attachmentDetails = await this.attachmentMasterService.getAttachmentByEntity(
+        processData.companyId,
+        AttachmentModule.PROCESS,
+        processData.id,
+      );
+      processData.instructionPdfUrl = attachmentDetails ? attachmentDetails.url : null;
+      processData.attachmentDetails = attachmentDetails || null;
 
       return_data = {
         success: 1,
@@ -127,7 +132,6 @@ export class ProcessListService {
         'process_master.processName AS processName',
         'process_master.imageUrl AS imageUrl',
         'process_master.description AS description',
-        'process_master.instructionPdfUrl AS instructionPdfUrl',
         'process_master.status AS status',
         'process_master.companyId AS companyId',
         'process_master.workCentreId AS workCentreId',
@@ -167,13 +171,13 @@ export class ProcessListService {
             item.imageUrl,
           );
         }
-        if (item.instructionPdfUrl) {
-          item.instructionPdfUrl = await this.general.generateUrl(
-            'process_master_pdf',
-            `${item.id}`,
-            item.instructionPdfUrl,
-          );
-        }
+        const attachment = await this.attachmentMasterService.getAttachmentByEntity(
+          item.companyId,
+          AttachmentModule.PROCESS,
+          item.id,
+        );
+        item.instructionPdfUrl = attachment ? attachment.url : null;
+        item.attachmentDetails = attachment || null;
       }
 
       const pagination = this.general.buildPaginationResponse(total, page, limit, skip);

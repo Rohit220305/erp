@@ -48,7 +48,7 @@
       "type": "link",
       "searchable": true,
       "sortable": true,
-      "width": "200px",
+      "width": "250px",
       "showForSuperAdminOnly": true
     },
     {
@@ -67,7 +67,7 @@
       "type": "text",
       "searchable": true,
       "sortable": true,
-      "width": "180px"
+      "width": "220px"
     },
     {
       "label": "Inventory Type",
@@ -124,7 +124,7 @@
       "type": "text",
       "searchable": true,
       "sortable": true,
-      "width": "150px"
+      "width": "200px"
     },
     {
       "label": "Shelf Life",
