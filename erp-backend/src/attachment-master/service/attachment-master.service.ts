@@ -15,16 +15,12 @@ export class AttachmentMasterService {
     private readonly general: GeneralUtilities,
   ) {}
 
-  /**
-   * Helper to resolve the target subfolder for file uploads
-   */
+ 
   private getFolderName(companyId: number, moduleName: AttachmentModule): string {
-    return `company_${companyId}/${moduleName.toLowerCase()}/attachments`;
+    return `${moduleName.toLowerCase()}/attachments`;
   }
 
-  /**
-   * Save or replace attachment for a company and module record
-   */
+
   async saveAttachment(
     fileOrFileName: any,
     companyId: number,
@@ -56,12 +52,10 @@ export class AttachmentMasterService {
 
       const folderName = this.getFolderName(companyId, moduleName);
 
-      // Check if an attachment record already exists
       const existing = await this.attachmentRepo.findOne({
         where: { companyId, moduleName, entityId },
       });
 
-      // Transfer file from temp upload directory to permanent storage
       const fileResponse = await this.commonFileService.transferFile(
         storedFileName,
         entityId,
@@ -73,7 +67,6 @@ export class AttachmentMasterService {
       }
 
       if (existing) {
-        // Clean up previous stored file if file name changed
         if (existing.storedFileName !== storedFileName) {
           await this.commonFileService.deleteFile(
             folderName,
@@ -108,9 +101,7 @@ export class AttachmentMasterService {
     }
   }
 
-  /**
-   * Sync multiple attachments for an entity (like Item module's multi-image flow)
-   */
+
   async syncMultipleAttachments(
     companyId: number,
     moduleName: AttachmentModule,
@@ -123,32 +114,44 @@ export class AttachmentMasterService {
 
       const folderName = this.getFolderName(companyId, moduleName);
 
-      // Fetch all existing DB attachments for this entity
       const dbAttachments = await this.attachmentRepo.find({
         where: { companyId, moduleName, entityId },
       });
 
-      // Bulk delete all from DB
-      await this.attachmentRepo.delete({ companyId, moduleName, entityId });
+      const retainedIds = new Set<number>();
+      const retainedStoredNames = new Set<string>();
 
-      // Build Set of retained storedFileNames
-      const retainedStoredNames = new Set(retainedAttachments.map(att => att.storedFileName));
+      for (const item of (retainedAttachments || [])) {
+        if (typeof item === 'number' || typeof item === 'string') {
+          const numId = Number(item);
+          if (!isNaN(numId)) retainedIds.add(numId);
+        } else if (item && typeof item === 'object') {
+          if (item.id) retainedIds.add(Number(item.id));
+          if (item.storedFileName) retainedStoredNames.add(String(item.storedFileName));
+        }
+      }
 
-      // Physically delete files that are not retained
+      const retainedDbAttachments = dbAttachments.filter(
+        (att) => retainedIds.has(Number(att.id)) || retainedStoredNames.has(att.storedFileName)
+      );
+
+      const retainedStoredNamesFinal = new Set(retainedDbAttachments.map((a) => a.storedFileName));
+
       for (const dbAtt of dbAttachments) {
-        if (!retainedStoredNames.has(dbAtt.storedFileName)) {
+        if (!retainedStoredNamesFinal.has(dbAtt.storedFileName)) {
           await this.commonFileService.deleteFile(
             folderName,
             `${entityId}`,
             dbAtt.storedFileName
-          );
+          ).catch(() => null);
         }
       }
 
+      await this.attachmentRepo.delete({ companyId, moduleName, entityId });
+
       const attachmentInserts: any[] = [];
 
-      // Add retained ones to inserts array
-      for (const retAtt of retainedAttachments) {
+      for (const retAtt of retainedDbAttachments) {
         attachmentInserts.push({
           companyId,
           moduleName,
@@ -160,13 +163,16 @@ export class AttachmentMasterService {
         });
       }
 
-      // Transfer new files with compensating rollback
       if (newFiles && newFiles.length > 0) {
         const successfullyTransferredStoredNames: string[] = [];
 
         try {
           for (const file of newFiles) {
-            const storedFileName = file.filename;
+            const storedFileName = file.filename || file.storedFileName;
+            if (!storedFileName) {
+              throw new Error(`File name missing for uploaded file ${file.originalname || 'unknown'}`);
+            }
+
             const fileResponse = await this.commonFileService.transferFile(
               storedFileName,
               entityId,
@@ -174,7 +180,7 @@ export class AttachmentMasterService {
             );
 
             if (fileResponse.success === 0) {
-              throw new Error(`File transfer failed for ${file.originalname}`);
+              throw new Error(`File transfer failed for ${file.originalname || storedFileName}: ${fileResponse.message}`);
             }
 
             successfullyTransferredStoredNames.push(storedFileName);
@@ -183,39 +189,34 @@ export class AttachmentMasterService {
               companyId,
               moduleName,
               entityId,
-              fileName: file.originalname || file.filename,
+              fileName: file.originalname || file.filename || storedFileName,
               storedFileName: storedFileName,
               mimeType: file.mimetype || 'application/pdf',
               fileSize: file.size || 0,
             });
           }
-        } catch (error) {
-          // Compensating rollback: Delete newly transferred files
+        } catch (error: any) {
           for (const storedName of successfullyTransferredStoredNames) {
             await this.commonFileService.deleteFile(
               folderName,
               `${entityId}`,
               storedName
-            ).catch(() => null); // ignore if already deleted
+            ).catch(() => null); 
           }
           throw error;
         }
       }
 
-      // Bulk insert
       if (attachmentInserts.length > 0) {
         await this.attachmentRepo.insert(attachmentInserts);
       }
 
       return { success: 1, message: 'Attachments synced successfully' };
-    } catch (err) {
+    } catch (err: any) {
       return { success: 0, message: err.message };
     }
   }
 
-  /**
-   * Retrieve active attachment record with dynamic viewable URL
-   */
   async getAttachmentByEntity(
     companyId: number,
     moduleName: AttachmentModule,
@@ -239,6 +240,7 @@ export class AttachmentMasterService {
 
       return {
         ...attachment,
+        originalFileName: attachment.fileName,
         url,
       };
     } catch (err) {
@@ -246,9 +248,6 @@ export class AttachmentMasterService {
     }
   }
 
-  /**
-   * Retrieve active attachment records with dynamic viewable URLs for an entity
-   */
   async getAttachmentsByEntity(
     companyId: number,
     moduleName: AttachmentModule,
@@ -274,6 +273,7 @@ export class AttachmentMasterService {
           );
           return {
             ...att,
+            originalFileName: att.fileName,
             url,
           };
         }),
@@ -285,9 +285,6 @@ export class AttachmentMasterService {
     }
   }
 
-  /**
-   * Delete attachment file and DB record for an entity
-   */
   async deleteAttachmentByEntity(
     companyId: number,
     moduleName: AttachmentModule,

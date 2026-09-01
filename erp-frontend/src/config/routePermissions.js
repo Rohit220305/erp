@@ -82,6 +82,11 @@ const routes = [
   { path: "/bom/edit/:id", permission: CAPABILITIES.BOM.UPDATE },
   { path: "/bom/:id", permission: CAPABILITIES.BOM.VIEW },
 
+  { path: "/production-order", permission: CAPABILITIES.PRODUCTION_ORDER.LIST },
+  { path: "/production-order/add", permission: CAPABILITIES.PRODUCTION_ORDER.CREATE },
+  { path: "/production-order/edit/:id", permission: CAPABILITIES.PRODUCTION_ORDER.UPDATE },
+  { path: "/production-order/:id", permission: CAPABILITIES.PRODUCTION_ORDER.VIEW },
+
   { path: "/admin", permission: CAPABILITIES.USER.LIST },
 ];
 

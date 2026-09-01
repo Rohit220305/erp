@@ -10,6 +10,7 @@ import { ItemEntity } from '../../item/entity/item.entity';
 import { ItemImageEntity } from '../../item/entity/item-image.entity';
 import { BomDetailsDto, BomListDto } from '../dto/bom.dto';
 import { BomCostUtility, ItemPriceLookup } from '../utility/bom-cost.utility';
+import { BomItemCategorizerUtility } from '../utility/bom-item-categorizer.utility';
 import { AttachmentMasterService } from 'src/attachment-master/service/attachment-master.service';
 import { AttachmentModule } from 'src/attachment-master/enums/attachment-module.enum';
 
@@ -447,6 +448,66 @@ export class BomListService {
       });
 
       bomDetails.processStages = Array.from(processStagesMap.values());
+
+      // --- Deduplication-first material categorisation for BOM details ---
+      const entryItemIds = new Set(
+        rawItems.filter((r) => r.materialType === 'Entry').map((r) => Number(r.itemId)),
+      );
+
+      const uniqueItemMap = new Map<number, any>();
+      for (const r of rawItems) {
+        const id = Number(r.itemId);
+        if (!uniqueItemMap.has(id)) {
+          uniqueItemMap.set(id, {
+            ...r,
+            quantity: Number(r.quantity),
+            itemImageUrl: itemImageMap.get(id) || null,
+          });
+        }
+      }
+
+      const mainItemId = Number(bomDetails.itemId);
+      const rawMaterials: any[] = [];
+      const semiFinished: any[] = [];
+      const finishedProducts: any[] = [];
+
+      for (const [itemId, row] of uniqueItemMap) {
+        const inEntry = entryItemIds.has(itemId);
+        const inExit = exitItemIds.has(itemId);
+
+        if (itemId === mainItemId) {
+          finishedProducts.unshift({ ...row, isInternalTransfer: false });
+        } else if (inEntry && inExit) {
+          semiFinished.push({ ...row, isInternalTransfer: true });
+        } else if (inEntry && !inExit) {
+          rawMaterials.push({ ...row, isInternalTransfer: false });
+        } else if (!inEntry && inExit) {
+          finishedProducts.push({ ...row, isInternalTransfer: false });
+        }
+      }
+
+      if (!uniqueItemMap.has(mainItemId)) {
+        const mainPrice = itemPriceMap.get(mainItemId);
+        finishedProducts.unshift({
+          id: null,
+          itemId: mainItemId,
+          itemName: bomDetails.itemName,
+          itemCode: bomDetails.itemCode,
+          materialType: 'Exit',
+          quantity: 1,
+          isInternalTransfer: false,
+          itemImageUrl: itemImageMap.get(mainItemId) || null,
+          costPrice: mainPrice?.costPrice ?? null,
+          purchasePrice: mainPrice?.purchasePrice ?? null,
+          itemUomName: bomDetails.itemUomName || null,
+        });
+      }
+
+      bomDetails.materialDetails = BomItemCategorizerUtility.categorizeItems(
+        [...rawMaterials, ...semiFinished, ...finishedProducts],
+        1,
+        currencySymbol,
+      );
 
       // Fetch attachments for this BOM entity
       bomDetails.attachments = await this.attachmentMasterService.getAttachmentsByEntity(

@@ -14,13 +14,13 @@ const changePasswordSchema = z
   .object({
     currentPassword: z
       .string()
-      .min(1, "⚠Please enter your Current Password.")
-      .min(6, "⚠Password must be at least 6 characters."),
+      .min(1, "Please enter your Current Password.")
+      .min(6, "Password must be at least 6 characters."),
     newPassword: z
       .string()
-      .min(1, "⚠Please enter a New Password.")
-      .min(6, "⚠Password must be at least 6 characters."),
-    confirmPassword: z.string().min(1, "⚠Please re-enter your New Password."),
+      .min(1, "Please enter a New Password.")
+      .min(6, "Password must be at least 6 characters."),
+    confirmPassword: z.string().min(1, "Please re-enter your New Password."),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords do not match",

@@ -273,7 +273,11 @@ export default function ItemCategoryDrawerForm({
 
   return (
     <div className="flex h-full flex-col text-black">
-      <form onSubmit={handleFormSubmit} id="drawer-form" className="flex h-full flex-col">
+      <form
+        onSubmit={handleFormSubmit}
+        id="drawer-form"
+        className="flex h-full flex-col"
+      >
         <div className="flex-1 overflow-y-auto px-6 py-6">
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -321,9 +325,9 @@ export default function ItemCategoryDrawerForm({
           )}
 
           <div className="mb-5">
-              <label className="block text-xs font-semibold text-gray-500 tracking-wide">
-                Category Code <span className="text-red-400 ml-1">*</span>
-              </label>
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+              Category Code <span className="text-red-400 ml-1">*</span>
+            </label>
             <input
               type="text"
               value={formData.categoryCode || ""}
@@ -336,7 +340,7 @@ export default function ItemCategoryDrawerForm({
               <p className="mt-1 text-sm text-red-500">{errors.categoryCode}</p>
             )}
           </div>
-          
+
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">
               Reference Code
@@ -350,7 +354,9 @@ export default function ItemCategoryDrawerForm({
               `}
             />
             {errors.referenceCode && (
-              <p className="mt-1 text-sm text-red-500">{errors.referenceCode}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.referenceCode}
+              </p>
             )}
           </div>
 
@@ -361,18 +367,19 @@ export default function ItemCategoryDrawerForm({
             <Select
               instanceId="select-parent"
               value={
-                parentOptions.find((c) => c.value === formData.parentId) ||
-                null
+                parentOptions.find((c) => c.value === formData.parentId) || null
               }
-              onChange={(opt) => handleChange("parentId", opt ? opt.value : null)}
+              onChange={(opt) =>
+                handleChange("parentId", opt ? opt.value : null)
+              }
               options={parentOptions}
               isLoading={loadingDependentFields}
               isClearable={true}
               isSearchable={true}
               placeholder="Select Parent Category"
-              noOptionsMessage={() => 
-                (user?.isSuperAdmin && !formData.companyId) 
-                  ? "⚠ Please select Company." 
+              noOptionsMessage={() =>
+                user?.isSuperAdmin && !formData.companyId
+                  ? " Please select Company."
                   : "No parent categories found for this company"
               }
               classNamePrefix="react-select"
@@ -394,9 +401,9 @@ export default function ItemCategoryDrawerForm({
               options={storageOptions}
               isLoading={loadingDependentFields}
               placeholder="Select Storages"
-              noOptionsMessage={() => 
-                (user?.isSuperAdmin && !formData.companyId) 
-                  ? "⚠ Please select Company." 
+              noOptionsMessage={() =>
+                user?.isSuperAdmin && !formData.companyId
+                  ? " Please select Company."
                   : "No storages found for this company"
               }
               error={errors.storageIds}
@@ -413,8 +420,7 @@ export default function ItemCategoryDrawerForm({
             <Select
               instanceId="select-status"
               value={
-                STATUS_OPTIONS.find((s) => s.value === formData.status) ||
-                null
+                STATUS_OPTIONS.find((s) => s.value === formData.status) || null
               }
               onChange={(opt) => handleChange("status", opt ? opt.value : "")}
               options={STATUS_OPTIONS}

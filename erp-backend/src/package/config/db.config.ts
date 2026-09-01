@@ -27,6 +27,7 @@ import { ItemImageEntity } from 'src/item/entity/item-image.entity';
 import { AttachmentMasterEntity } from 'src/attachment-master/entity/attachment-master.entity';
 import { BomEntity } from 'src/bom/entity/bom.entity';
 import { BomProcessItemEntity } from 'src/bom/entity/bom-process-item.entity';
+import { ProductionOrderEntity } from 'src/production-order/entity/production-order.entity';
 dotenv.config();
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -64,6 +65,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     AttachmentMasterEntity,
     BomEntity,
     BomProcessItemEntity,
+    ProductionOrderEntity,
   ],
   synchronize: false,
   migrationsRun: false,

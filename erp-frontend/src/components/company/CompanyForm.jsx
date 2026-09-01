@@ -472,7 +472,11 @@ export default function CompanyForm({
                     border-2 border-dashed border-blue-200 flex flex-col items-center
                     justify-center text-blue-300 gap-1.5 cursor-pointer hover:border-blue-400
                     transition-colors"
-                    onClick={() => document.getElementById("company-form-logo-input")?.click()}
+                    onClick={() =>
+                      document
+                        .getElementById("company-form-logo-input")
+                        ?.click()
+                    }
                   >
                     <Building2 size={32} />
                     <span className="text-[10px] font-medium text-blue-400">
@@ -483,7 +487,9 @@ export default function CompanyForm({
 
                 <button
                   type="button"
-                  onClick={() => document.getElementById("company-form-logo-input")?.click()}
+                  onClick={() =>
+                    document.getElementById("company-form-logo-input")?.click()
+                  }
                   className="absolute -bottom-2.5 -right-2.5 w-8 h-8 rounded-full
                   bg-[#1565c0] text-white flex items-center justify-center
                   shadow-lg hover:bg-[#0f57a6] transition cursor-pointer"
@@ -513,7 +519,9 @@ export default function CompanyForm({
 
                 <button
                   type="button"
-                  onClick={() => document.getElementById("company-form-logo-input")?.click()}
+                  onClick={() =>
+                    document.getElementById("company-form-logo-input")?.click()
+                  }
                   className="mt-1 px-4 py-1.5 border border-gray-200 rounded-lg text-xs font-medium
                   text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition cursor-pointer"
                 >
@@ -551,7 +559,7 @@ export default function CompanyForm({
                 />
                 {errors.companyName && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.companyName}
+                    {errors.companyName}
                   </p>
                 )}
               </div>
@@ -584,7 +592,7 @@ export default function CompanyForm({
                 />
                 {errors.parentCompanyId && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.parentCompanyId}
+                    {errors.parentCompanyId}
                   </p>
                 )}
               </div>
@@ -605,7 +613,7 @@ export default function CompanyForm({
                 />
                 {errors.shortName && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.shortName}
+                    {errors.shortName}
                   </p>
                 )}
               </div>
@@ -628,7 +636,7 @@ export default function CompanyForm({
                 />
                 {errors.companyCode && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.companyCode}
+                    {errors.companyCode}
                   </p>
                 )}
               </div>
@@ -649,7 +657,7 @@ export default function CompanyForm({
                 />
                 {errors.legalName && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.legalName}
+                    {errors.legalName}
                   </p>
                 )}
               </div>
@@ -672,7 +680,7 @@ export default function CompanyForm({
                 />
                 {errors.registrationNumber && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.registrationNumber}
+                    {errors.registrationNumber}
                   </p>
                 )}
               </div>
@@ -693,7 +701,7 @@ export default function CompanyForm({
                 />
                 {errors.taxNumber && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.taxNumber}
+                    {errors.taxNumber}
                   </p>
                 )}
               </div>
@@ -714,7 +722,7 @@ export default function CompanyForm({
                 />
                 {errors.website && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.website}
+                    {errors.website}
                   </p>
                 )}
               </div>
@@ -735,7 +743,7 @@ export default function CompanyForm({
                 />
                 {errors.email && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.email}
+                    {errors.email}
                   </p>
                 )}
               </div>
@@ -762,7 +770,7 @@ export default function CompanyForm({
                 />
                 {errors.status && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.status}
+                    {errors.status}
                   </p>
                 )}
               </div>
@@ -856,7 +864,7 @@ export default function CompanyForm({
                 </div>
                 {(errors.phone || errors.dialCode) && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.phone || errors.dialCode}
+                    {errors.phone || errors.dialCode}
                   </p>
                 )}
               </div>
@@ -893,7 +901,7 @@ export default function CompanyForm({
                   />
                   {errors.addressLine1 && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
-                      ⚠ {errors.addressLine1}
+                      {errors.addressLine1}
                     </p>
                   )}
                 </div>
@@ -916,7 +924,7 @@ export default function CompanyForm({
                   />
                   {errors.addressLine2 && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
-                      ⚠ {errors.addressLine2}
+                      {errors.addressLine2}
                     </p>
                   )}
                 </div>
@@ -945,7 +953,7 @@ export default function CompanyForm({
                   />
                   {errors.country && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
-                      ⚠ {errors.country}
+                      {errors.country}
                     </p>
                   )}
                 </div>
@@ -981,7 +989,7 @@ export default function CompanyForm({
                   />
                   {errors.state && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
-                      ⚠ {errors.state}
+                      {errors.state}
                     </p>
                   )}
                 </div>
@@ -1019,7 +1027,7 @@ export default function CompanyForm({
                   />
                   {errors.city && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
-                      ⚠ {errors.city}
+                      {errors.city}
                     </p>
                   )}
                 </div>
@@ -1039,7 +1047,7 @@ export default function CompanyForm({
                   />
                   {errors.zipCode && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
-                      ⚠ {errors.zipCode}
+                      {errors.zipCode}
                     </p>
                   )}
                 </div>
@@ -1074,7 +1082,7 @@ export default function CompanyForm({
                 />
                 {errors.contactPersonName && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.contactPersonName}
+                    {errors.contactPersonName}
                   </p>
                 )}
               </div>
@@ -1097,7 +1105,7 @@ export default function CompanyForm({
                 />
                 {errors.contactPersonEmail && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠ {errors.contactPersonEmail}
+                    {errors.contactPersonEmail}
                   </p>
                 )}
               </div>
@@ -1143,7 +1151,7 @@ export default function CompanyForm({
 
                   {errors.contactPersonPhone && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
-                      ⚠ {errors.contactPersonPhone}
+                      {errors.contactPersonPhone}
                     </p>
                   )}
                 </div>

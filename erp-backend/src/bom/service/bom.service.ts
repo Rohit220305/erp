@@ -39,11 +39,6 @@ export class BomService {
   @InjectRepository(ItemEntity)
   private readonly itemRepo: Repository<ItemEntity>;
 
-  /**
-   * TASK 7: Cross-Tenant & Entity Ownership Validation Guard
-   * Validates that all referenced items, process templates, and optional customers
-   * belong to the specified companyId and are active (sysRecDeleted = 0).
-   */
   private async validateCrossTenant(
     companyId: number,
     itemId: number,
@@ -51,7 +46,6 @@ export class BomService {
     customerId?: number | null,
     items?: BomProcessItemDto[],
   ): Promise<void> {
-    // 1. Validate primary finished item
     const mainItem = await this.itemRepo.findOne({
       where: { id: itemId, companyId, sysRecDeleted: false },
     });
@@ -59,7 +53,6 @@ export class BomService {
       throw new Error(`Primary Item (ID: ${itemId}) does not exist or does not belong to your company.`);
     }
 
-    // 2. Validate process template
     const template = await this.processTemplateRepo.findOne({
       where: { id: processTemplateId, companyId, sysRecDeleted: false },
     });
@@ -67,14 +60,11 @@ export class BomService {
       throw new Error(`Process Template (ID: ${processTemplateId}) does not exist or does not belong to your company.`);
     }
 
-    // 3. Validate customer if provided
     if (customerId) {
-      // Validate customer ownership via companyId scoping
       const customer = await this.itemRepo.query(
         `SELECT id FROM party_master WHERE id = ? AND companyId = ? AND sysRecDeleted = 0 LIMIT 1`,
         [customerId, companyId],
       ).catch(() => null);
-      // Fallback query to company table if party_master is not present
       if (!customer || customer.length === 0) {
         const companyCustomer = await this.itemRepo.query(
           `SELECT id FROM company WHERE id = ? AND sysRecDeleted = 0 LIMIT 1`,
@@ -86,7 +76,6 @@ export class BomService {
       }
     }
 
-    // 4. Validate component item IDs in process items table
     if (items && items.length > 0) {
       const itemIds = Array.from(new Set(items.map((i) => i.itemId)));
       const validItems = await this.itemRepo.find({
@@ -99,19 +88,12 @@ export class BomService {
     }
   }
 
-  /**
-   * TASK 8: isInternalTransfer Backend Validation Guard
-   * Enforces that an Entry row can ONLY have isInternalTransfer = true if the exact itemId
-   * appeared as an Exit material in a process step with a strictly lower sequence number
-   * (sequenceNo < currentStepSequenceNo) within the same process template.
-   */
   public async validateInternalTransfers(
     processTemplateId: number,
     items: BomProcessItemDto[],
   ): Promise<void> {
     if (!items || items.length === 0) return;
 
-    // Fetch template process step mappings ordered by sequenceNo ASC
     const mappings = await this.processTemplateMappingRepo.find({
       where: { templateId: processTemplateId },
       order: { sequenceNo: 'ASC' },
@@ -124,7 +106,6 @@ export class BomService {
     const mappingSeqMap = new Map<number, number>();
     mappings.forEach((m) => mappingSeqMap.set(m.id, m.sequenceNo));
 
-    // Group items by step sequence number
     const itemsBySeq = new Map<number, BomProcessItemDto[]>();
     for (const item of items) {
       const seq = mappingSeqMap.get(item.processTemplateMappingId);
@@ -145,7 +126,6 @@ export class BomService {
     for (const seq of sortedSeqs) {
       const stepItems = itemsBySeq.get(seq) || [];
 
-      // Validate Entry items at current step
       for (const item of stepItems) {
         if (item.materialType === MaterialType.Entry && item.isInternalTransfer === true) {
           if (!producedExitItemsSet.has(item.itemId)) {
@@ -157,7 +137,6 @@ export class BomService {
         }
       }
 
-      // Record Exit items produced at current step for downstream steps
       for (const item of stepItems) {
         if (item.materialType === MaterialType.Exit) {
           producedExitItemsSet.add(item.itemId);
@@ -166,9 +145,6 @@ export class BomService {
     }
   }
 
-  /**
-   * Helper to auto-generate a unique sequential BOM code: BOM/YYYY/MM/00001
-   */
   private async generateUniqueBomCode(companyId: number, manager?: any): Promise<string> {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -205,9 +181,6 @@ export class BomService {
     return await this.finishFailure(response);
   }
 
-  /**
-   * TASK 9: Transaction-Wrapped Insert BOM Service
-   */
   async insertBom(req: IAppRequest, params: BomAddDto, files?: any[]) {
     let return_data: any = {};
     try {
@@ -219,7 +192,6 @@ export class BomService {
         throw new Error('Company ID is required');
       }
 
-      // Cross-tenant validation
       await this.validateCrossTenant(
         params.companyId,
         params.itemId,
@@ -228,7 +200,6 @@ export class BomService {
         params.items,
       );
 
-      // Validate internal transfer guard
       await this.validateInternalTransfers(params.processTemplateId, params.items);
 
       let finalBomCode = params.bomCode ? params.bomCode.trim() : '';
@@ -253,7 +224,6 @@ export class BomService {
         ...dbInsertData
       } = params as any;
 
-      // Remove attachmentIds if it still exists in params somehow
       delete dbInsertData.attachmentIds;
 
       Object.keys(dbInsertData).forEach(key => {
@@ -281,7 +251,6 @@ export class BomService {
         await this.bomProcessItemRepo.insert(processItemsData);
       }
 
-      // Save attachments if provided
       let attachmentMessage = '';
       if (files && files.length > 0) {
         try {
@@ -289,7 +258,7 @@ export class BomService {
             params.companyId,
             AttachmentModule.BOM,
             insertId,
-            [], // no retained attachments on insert
+            [],
             files
           );
           if (syncRes.success === 0) {
@@ -300,7 +269,6 @@ export class BomService {
         }
       }
 
-      // Log activity
       const logPayload = this.general.buildActivityLogPayload(
         req,
         'BOM_CREATE',
@@ -334,9 +302,6 @@ export class BomService {
     return await this.finishFailure(response);
   }
 
-  /**
-   * TASK 9: Transaction-Wrapped Update BOM Service (Full Delete-and-Reinsert of process items)
-   */
   async updateBom(req: IAppRequest, params: BomUpdateDto, files?: any[]) {
     let return_data: any = {};
     try {
@@ -356,7 +321,6 @@ export class BomService {
 
       const companyId = existingBom.companyId;
 
-      // Cross-tenant validation
       await this.validateCrossTenant(
         companyId,
         params.itemId || existingBom.itemId,
@@ -365,13 +329,11 @@ export class BomService {
         params.items,
       );
 
-      // Validate internal transfer guard
       await this.validateInternalTransfers(
         params.processTemplateId || existingBom.processTemplateId,
         params.items,
       );
 
-      // Check bomCode uniqueness if modified
       if (params.bomCode && params.bomCode !== existingBom.bomCode) {
         const codeExists = await this.bomRepo.findOne({
           where: { bomCode: params.bomCode, companyId, sysRecDeleted: false },
@@ -405,10 +367,8 @@ export class BomService {
         await this.bomRepo.update({ id: params.id }, cleanUpdateData);
       }
 
-      // HARD DELETE previous process items (matches ProcessTemplateMappingEntity pattern)
       await this.bomProcessItemRepo.delete({ bomId: params.id });
 
-      // Bulk re-insert updated process items
       if (params.items && params.items.length > 0) {
         const processItemsData = params.items.map((item: any) => ({
           bomId: params.id,
@@ -421,14 +381,12 @@ export class BomService {
         await this.bomProcessItemRepo.insert(processItemsData);
       }
 
-      // Update attachments if provided
       let attachmentMessage = '';
       let parsedRetainedAttachments: any[] = [];
       if (params.retainedAttachments) {
         try {
           parsedRetainedAttachments = JSON.parse(params.retainedAttachments);
         } catch (e) {
-          // invalid json, default to empty
         }
       }
 
@@ -447,7 +405,6 @@ export class BomService {
         attachmentMessage = ' BOM updated successfully, but attachments failed to sync.';
       }
 
-      // Log activity
       const logPayload = this.general.buildActivityLogPayload(
         req,
         'BOM_UPDATE',
@@ -481,9 +438,6 @@ export class BomService {
     return await this.finishFailure(response);
   }
 
-  /**
-   * Delete BOM Service (Soft delete master, hard delete process items)
-   */
   async deleteBom(req: IAppRequest, params: BomDeleteDto) {
     let return_data: any = {};
     try {
@@ -506,10 +460,8 @@ export class BomService {
         req,
       );
 
-      // Soft delete parent
       await this.bomRepo.update({ id: params.id }, payload);
 
-      // Hard delete child mappings
       await this.bomProcessItemRepo.delete({ bomId: params.id });
 
       const logPayload = this.general.buildActivityLogPayload(

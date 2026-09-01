@@ -309,7 +309,6 @@ export default function ItemCategoryForm({
           </div>
 
           <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                 Category Name <span className="text-red-400 ml-1">*</span>
@@ -335,8 +334,9 @@ export default function ItemCategoryForm({
                 <Select
                   instanceId="select-company"
                   value={
-                    companyOptions.find((c) => c.value === formData.companyId) ||
-                    null
+                    companyOptions.find(
+                      (c) => c.value === formData.companyId,
+                    ) || null
                   }
                   onChange={(opt) =>
                     handleChange("companyId", opt ? opt.value : "")
@@ -354,7 +354,7 @@ export default function ItemCategoryForm({
                 )}
               </div>
             )}
-            
+
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                 Category Code <span className="text-red-400 ml-1">*</span>
@@ -389,7 +389,7 @@ export default function ItemCategoryForm({
                 <p className="text-xs text-red-500">{errors.referenceCode}</p>
               )}
             </div>
-            
+
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                 Parent Category
@@ -400,15 +400,17 @@ export default function ItemCategoryForm({
                   parentOptions.find((c) => c.value === formData.parentId) ||
                   null
                 }
-                onChange={(opt) => handleChange("parentId", opt ? opt.value : null)}
+                onChange={(opt) =>
+                  handleChange("parentId", opt ? opt.value : null)
+                }
                 options={parentOptions}
                 isLoading={loadingDependentFields}
                 isClearable={true}
                 isSearchable={true}
                 placeholder="Select Parent Category"
-                noOptionsMessage={() => 
-                  (user?.isSuperAdmin && !formData.companyId) 
-                    ? "⚠ Please select Company." 
+                noOptionsMessage={() =>
+                  user?.isSuperAdmin && !formData.companyId
+                    ? " Please select Company."
                     : "No parent categories found for this company"
                 }
                 classNamePrefix="react-select"
@@ -430,9 +432,9 @@ export default function ItemCategoryForm({
                 options={storageOptions}
                 isLoading={loadingDependentFields}
                 placeholder="Select Storages"
-                noOptionsMessage={() => 
-                  (user?.isSuperAdmin && !formData.companyId) 
-                    ? "⚠ Please select Company." 
+                noOptionsMessage={() =>
+                  user?.isSuperAdmin && !formData.companyId
+                    ? " Please select Company."
                     : "No storages found for this company"
                 }
                 error={errors.storageIds}
@@ -464,7 +466,6 @@ export default function ItemCategoryForm({
                 <p className="text-xs text-red-500">{errors.status}</p>
               )}
             </div>
-            
           </div>
         </div>
 
@@ -482,9 +483,7 @@ export default function ItemCategoryForm({
             disabled={loading}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm cursor-pointer font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
           >
-            {loading
-              ? "Saving..."
-              : "Submit"}
+            {loading ? "Saving..." : "Submit"}
           </button>
         </div>
       </form>

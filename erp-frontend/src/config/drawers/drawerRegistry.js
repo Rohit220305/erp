@@ -13,6 +13,7 @@ import { workCentreDrawerConfig } from './work-centre.drawer.config';
 import { itemDrawerConfig } from './item.drawer.config';
 import { processTemplateDrawerConfig } from './process-template.drawer.config';
 import { bomDrawerConfig } from './bom.drawer.config';
+import { productionOrderDrawerConfig } from './production-order.drawer.config';
 
 export const drawerRegistry = {
   "User": userDrawerConfig,
@@ -30,5 +31,6 @@ export const drawerRegistry = {
   "Item": itemDrawerConfig,
   "ProcessTemplate": processTemplateDrawerConfig,
   "Bom": bomDrawerConfig,
+  "ProductionOrder": productionOrderDrawerConfig,
 };
 

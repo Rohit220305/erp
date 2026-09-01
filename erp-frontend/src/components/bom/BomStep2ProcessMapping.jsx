@@ -6,7 +6,6 @@ import { PlusCircle, MinusCircle, Star, ChevronDown, ChevronUp, Layers } from "l
 import { getItem } from "@/lib/api/item-api";
 import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 
-// Simple, easily customizable inline styles for React Select
 const selectStyles = {
   control: (base, state) => ({
     ...base,
@@ -378,7 +377,7 @@ export default function BomStep2ProcessMapping({
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-4 gap-x-6 text-xs">
           <div>
-            <span className="text-gray-400 block mb-1">BoM Name</span>
+            <span className="text-gray-400 block mb-1">BOM Name</span>
             <span className="font-medium text-gray-900">{formData.bomName || "—"}</span>
           </div>
 

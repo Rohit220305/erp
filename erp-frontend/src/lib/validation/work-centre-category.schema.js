@@ -7,11 +7,11 @@ export const getWorkCentreCategorySchema = (isSuperAdmin = false) => {
         .number()
         .or(z.string().transform((val) => (val ? Number(val) : undefined)))
         .optional(),
-      categoryName: z.string().min(1, "⚠Please enter Category Name."),
-      categoryCode: z.string().min(1, "⚠Please enter Category Code."),
+      categoryName: z.string().min(1, "Please enter Category Name."),
+      categoryCode: z.string().min(1, "Please enter Category Code."),
       description: z.string().optional().nullable(),
       status: z
-        .enum(["Active", "Inactive"], "⚠Please select Status.")
+        .enum(["Active", "Inactive"], "Please select Status.")
         .default("Active"),
     })
     .refine(
@@ -22,8 +22,8 @@ export const getWorkCentreCategorySchema = (isSuperAdmin = false) => {
         return true;
       },
       {
-        message: "⚠Please select Company.",
+        message: "Please select Company.",
         path: ["companyId"],
-      }
+      },
     );
 };

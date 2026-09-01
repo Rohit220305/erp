@@ -306,13 +306,13 @@ export default function UserDetailPage({ user }) {
               )}
 
 
-              {displayedTab === "activity" && (
+              {/* {displayedTab === "activity" && (
                 <div className="bg-white rounded-xl hover:shadow-lg transition py-6 me-4 h-[75vh]">
                   <div className="h-full">
                     <ActivityLogTimeline userId={user?.id} />
                   </div>
                 </div>
-              )}
+              )} */}
             </>
           )}
         </div>

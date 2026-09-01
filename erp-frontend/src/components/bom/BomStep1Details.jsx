@@ -279,14 +279,14 @@ export default function BomStep1Details({
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 md:p-8 shadow-sm">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-        {/* Row 1: BoM Name & Customer Name */}
+        {/* Row 1: BOM Name & Customer Name */}
         <div>
           <label className="mb-2 block text-xs font-semibold text-gray-700">
-            BoM Name<span className="text-red-500">*</span>
+            BOM Name<span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            placeholder="Enter BoM Name"
+            placeholder="Enter BOM Name"
             value={formData.bomName || ""}
             onChange={(e) => handleNameChange(e.target.value)}
             className={`w-full h-[48px] rounded-md border bg-white px-4 text-sm outline-none transition focus:border-[#1565c0]

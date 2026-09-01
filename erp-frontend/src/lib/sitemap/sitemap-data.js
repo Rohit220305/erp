@@ -77,13 +77,26 @@ export const sitemapData = [
         path: "/process-template",
         permission: "PROCESS_TEMPLATE_LIST",
       },
-      {
-        label: "Bill of Materials (BOM)",
-        path: "/bom",
-        permission: "BOM_LIST",
-      },
+      
     ],
   },
+  // {
+  //   title: "Manufacturing",
+  //   menus: [
+  //     {
+  //       label: "Bill of Materials",
+  //       path: "/bom",
+  //       permission: "BOM_LIST",
+  //     },
+  //     {
+  //       label: "Production Order",
+  //       path: "/production-order",
+  //       permission: "PRODUCTION_ORDER_LIST",
+  //     },
+
+
+  //   ],
+  // }
 
 
 

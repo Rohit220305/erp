@@ -188,9 +188,9 @@ export default function ProcessTemplateDetailPage({ data }) {
   });
 
   return (
-    <div className="h-full p-6 px-10 overflow-hidden">
+    <div className="h-full overflow-hidden">
       <div className="grid grid-cols-12 gap-6 h-full items-start">
-        <div className="col-span-2 h-full">
+        <div className="col-span-2 h-full ms-10">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5 border border-gray-100 space-y-4 h-full">
             <div>
               <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#1565c0] flex items-center justify-center mb-3">
@@ -242,7 +242,7 @@ export default function ProcessTemplateDetailPage({ data }) {
           </div>
         </div>
 
-        <div className="col-span-10 h-full overflow-y-auto pr-2 pb-6">
+        <div className="col-span-10 h-full overflow-y-auto  pb-6 pe-10">
           {activeTab === "summary" ? (
             <div className="space-y-6">
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -402,12 +402,10 @@ export default function ProcessTemplateDetailPage({ data }) {
             <div className="space-y-4">
               <div className="flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-3">
-                  
                   <div>
                     <h3 className="text-sm font-bold text-gray-900">
                       Process Flow Chart
                     </h3>
-                    
                   </div>
                 </div>
               </div>

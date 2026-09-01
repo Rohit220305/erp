@@ -8,11 +8,15 @@ export const getProcessTemplateSchema = (isSuperAdmin = false) => {
         .or(z.string().transform((val) => (val ? Number(val) : undefined)))
         .nullable()
         .optional(),
-      templateName: z.string({ required_error: "⚠ Please enter Template Name." }).min(1, "⚠ Please enter Template Name."),
-      templateCode: z.string({ required_error: "⚠ Please enter Template Code." }).min(1, "⚠ Please enter Template Code."),
+      templateName: z
+        .string({ required_error: " Please enter Template Name." })
+        .min(1, " Please enter Template Name."),
+      templateCode: z
+        .string({ required_error: " Please enter Template Code." })
+        .min(1, " Please enter Template Code."),
       executionType: z
         .enum(["Sequential", "Flexible"], {
-          errorMap: () => ({ message: "⚠ Please select Execution Type." }),
+          errorMap: () => ({ message: " Please select Execution Type." }),
         })
         .nullable()
         .optional()
@@ -20,7 +24,7 @@ export const getProcessTemplateSchema = (isSuperAdmin = false) => {
       remark: z.string().nullable().optional(),
       status: z
         .enum(["Active", "Inactive"], {
-          errorMap: () => ({ message: "⚠ Please select Status." }),
+          errorMap: () => ({ message: " Please select Status." }),
         })
         .nullable()
         .optional()
@@ -38,9 +42,9 @@ export const getProcessTemplateSchema = (isSuperAdmin = false) => {
               .array(z.number().or(z.string().transform((val) => Number(val))))
               .nullable()
               .optional(),
-          })
+          }),
         )
-        .min(1, "⚠ Please add at least one process in the sequence grid."),
+        .min(1, " Please add at least one process in the sequence grid."),
     })
     .refine(
       (data) => {
@@ -50,8 +54,8 @@ export const getProcessTemplateSchema = (isSuperAdmin = false) => {
         return true;
       },
       {
-        message: "⚠ Please select Company.",
+        message: " Please select Company.",
         path: ["companyId"],
-      }
+      },
     );
 };

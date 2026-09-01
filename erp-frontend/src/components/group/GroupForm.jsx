@@ -212,7 +212,6 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
           </h2>
 
           <div className="grid md:grid-cols-2 gap-6">
-
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Group Code <span className="text-red-500">*</span>
@@ -228,7 +227,9 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
                   ${mode === "edit" ? "bg-gray-50 text-gray-500 cursor-not-allowed" : "bg-white"}
                 `}
               />
-              {errors.groupCode && <p className="text-xs text-red-500">⚠ {errors.groupCode}</p>}
+              {errors.groupCode && (
+                <p className="text-xs text-red-500"> {errors.groupCode}</p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -244,11 +245,15 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
                   ${errors.groupName ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                 `}
               />
-              {errors.groupName && <p className="text-xs text-red-500">⚠ {errors.groupName}</p>}
+              {errors.groupName && (
+                <p className="text-xs text-red-500"> {errors.groupName}</p>
+              )}
             </div>
 
             <div className="md:col-span-2 space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Description
+              </label>
               <textarea
                 placeholder="Enter group description (optional)"
                 rows={4}
@@ -258,7 +263,9 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
                   ${errors.description ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                 `}
               />
-              {errors.description && <p className="text-xs text-red-500">⚠ {errors.description}</p>}
+              {errors.description && (
+                <p className="text-xs text-red-500"> {errors.description}</p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -267,7 +274,10 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
               </label>
               <Select
                 instanceId="select-status"
-                value={STATUS_OPTIONS.find((s) => s.value === formData.status) || null}
+                value={
+                  STATUS_OPTIONS.find((s) => s.value === formData.status) ||
+                  null
+                }
                 onChange={(opt) => handleChange("status", opt ? opt.value : "")}
                 options={STATUS_OPTIONS}
                 isClearable={true}
@@ -276,9 +286,10 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
                 classNamePrefix="react-select"
                 styles={customSelectStyles(errors.status)}
               />
-              {errors.status && <p className="text-xs text-red-500">⚠ {errors.status}</p>}
+              {errors.status && (
+                <p className="text-xs text-red-500"> {errors.status}</p>
+              )}
             </div>
-
           </div>
         </div>
 
@@ -324,7 +335,11 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}
+        title={
+          confirmState.type === "submit"
+            ? "Confirm Submission"
+            : "Discard Changes"
+        }
         message={
           confirmState.type === "submit"
             ? "Are you sure you want to save these changes?"
@@ -340,7 +355,9 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}
-        onCancel={() => setConfirmState({ isOpen: false, type: null, data: null })}
+        onCancel={() =>
+          setConfirmState({ isOpen: false, type: null, data: null })
+        }
       />
     </div>
   );

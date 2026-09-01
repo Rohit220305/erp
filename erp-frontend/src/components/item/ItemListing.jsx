@@ -112,7 +112,7 @@ export default function ItemListing() {
       <SideDrawer
         open={!!selectedStorageForDetails}
         onClose={() => setSelectedStorageForDetails(null)}
-        moduleName="Storage"
+        moduleName="Storage"  
         mode="details"
         data={selectedStorageForDetails ? { id: selectedStorageForDetails.storageId } : null}
       />

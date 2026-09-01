@@ -424,9 +424,12 @@ export default function ProcessDrawerForm({
 
   return (
     <div className="flex h-full flex-col text-black">
-      <form onSubmit={handleFormSubmit} id="drawer-form" className="flex h-full flex-col">
+      <form
+        onSubmit={handleFormSubmit}
+        id="drawer-form"
+        className="flex h-full flex-col"
+      >
         <div className="flex-1 overflow-y-auto px-6 py-6">
-
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">
               Process Name <span className="text-red-500">*</span>
@@ -451,8 +454,13 @@ export default function ProcessDrawerForm({
               </label>
               <Select
                 instanceId="select-company"
-                value={companyOptions.find((c) => c.value === formData.companyId) || null}
-                onChange={(opt) => handleChange("companyId", opt ? opt.value : "")}
+                value={
+                  companyOptions.find((c) => c.value === formData.companyId) ||
+                  null
+                }
+                onChange={(opt) =>
+                  handleChange("companyId", opt ? opt.value : "")
+                }
                 options={companyOptions}
                 isDisabled={mode === "edit"}
                 isClearable={true}
@@ -488,43 +496,71 @@ export default function ProcessDrawerForm({
 
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">
-              Process Image 
+              Process Image
             </label>
-            
-            <div 
+
+            <div
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition"
-              onClick={() => !isImageUploading && document.getElementById("process-drawer-image-input")?.click()}
+              onClick={() =>
+                !isImageUploading &&
+                document.getElementById("process-drawer-image-input")?.click()
+              }
             >
               <span className="text-gray-500 text-sm">Choose File</span>
-              <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
+              <div
+                className="relative group flex items-center"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Info size={20} className="text-gray-500 cursor-pointer" />
                 <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 hidden group-hover:block bg-[#1565c0] text-white text-xs rounded shadow-lg z-20 whitespace-nowrap p-3 leading-relaxed">
                   <div className="absolute left-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-[#1565c0]"></div>
-                  Valid extensions : gif, png, jpg, jpeg, jpe, bmp, ico.<br />
+                  Valid extensions : gif, png, jpg, jpeg, jpe, bmp, ico.
+                  <br />
                   Valid size : Less than (&lt;) 5 MB.
                 </div>
               </div>
             </div>
-            
+
             {isImageUploading && (
               <div className="mt-4 flex items-center gap-4">
                 <div className="flex-1 max-w-[120px]">
                   <div className="h-[22px] w-full bg-[#e0e0e0] overflow-hidden flex items-center">
-                    <div className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold" style={{ width: `${imageUploadProgress}%` }}>
+                    <div
+                      className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold"
+                      style={{ width: `${imageUploadProgress}%` }}
+                    >
                       {imageUploadProgress > 20 && `${imageUploadProgress}%`}
                     </div>
                   </div>
                 </div>
-                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); cancelImageUpload(); }} className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer">Cancel</button>
-              </div>
-            )}
-            
-            {!isImageUploading && imagePreview && (
-              <div className="mt-4 relative inline-block">
-                <img src={imagePreview} alt="Preview" className="w-[84px] h-[64px] object-cover rounded border border-gray-300 shadow-sm" />
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsDeleteImageModalOpen(true); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cancelImageUpload();
+                  }}
+                  className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {!isImageUploading && imagePreview && (
+              <div className="mt-4 relative inline-block">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-[84px] h-[64px] object-cover rounded border border-gray-300 shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDeleteImageModalOpen(true);
+                  }}
                   className="absolute -top-2.5 -right-2.5 bg-gray-400 text-white rounded-full p-0.5 hover:bg-gray-600 transition shadow-md z-10 cursor-pointer"
                 >
                   <X size={14} />
@@ -543,48 +579,75 @@ export default function ProcessDrawerForm({
 
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">
-              Instruction PDF 
+              Instruction PDF
             </label>
-            
-            <div 
+
+            <div
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition"
-              onClick={() => !isPdfUploading && document.getElementById("process-drawer-pdf-input")?.click()}
+              onClick={() =>
+                !isPdfUploading &&
+                document.getElementById("process-drawer-pdf-input")?.click()
+              }
             >
               <span className="text-gray-500 text-sm">Choose File</span>
-              <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
+              <div
+                className="relative group flex items-center"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Info size={20} className="text-gray-500 cursor-pointer" />
                 <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 hidden group-hover:block bg-[#1565c0] text-white text-xs rounded shadow-lg z-20 whitespace-nowrap p-3 leading-relaxed">
                   <div className="absolute left-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-[#1565c0]"></div>
-                  Valid extension : pdf.<br />
+                  Valid extension : pdf.
+                  <br />
                   Valid size : Less than (&lt;) 100 MB.
                 </div>
               </div>
             </div>
-            
+
             {isPdfUploading && (
               <div className="mt-4 flex items-center gap-4">
                 <div className="flex-1 max-w-[120px]">
                   <div className="h-[22px] w-full bg-[#e0e0e0] overflow-hidden flex items-center">
-                    <div className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold" style={{ width: `${pdfUploadProgress}%` }}>
+                    <div
+                      className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold"
+                      style={{ width: `${pdfUploadProgress}%` }}
+                    >
                       {pdfUploadProgress > 20 && `${pdfUploadProgress}%`}
                     </div>
                   </div>
                 </div>
-                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); cancelPdfUpload(); }} className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer">Cancel</button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cancelPdfUpload();
+                  }}
+                  className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer"
+                >
+                  Cancel
+                </button>
               </div>
             )}
-            
+
             {!isPdfUploading && pdfPreview && (
               <div className="mt-4 relative inline-block bg-gray-100 p-3 rounded border border-gray-300 shadow-sm pr-10 min-w-[120px] max-w-full">
                 <div className="flex items-center gap-2">
                   <FileText size={20} className="text-gray-500 flex-shrink-0" />
-                  <span className="text-sm text-gray-700 truncate" title={pdfPreview.split('/').pop() || 'Document.pdf'}>
-                    {pdfPreview.split('/').pop() || 'Document.pdf'}
+                  <span
+                    className="text-sm text-gray-700 truncate"
+                    title={pdfPreview.split("/").pop() || "Document.pdf"}
+                  >
+                    {pdfPreview.split("/").pop() || "Document.pdf"}
                   </span>
                 </div>
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsDeletePdfModalOpen(true); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDeletePdfModalOpen(true);
+                  }}
                   className="absolute -top-2.5 -right-2.5 bg-gray-400 text-white rounded-full p-0.5 hover:bg-gray-600 transition shadow-md z-10 cursor-pointer"
                 >
                   <X size={14} />
@@ -607,20 +670,28 @@ export default function ProcessDrawerForm({
             </label>
             <Select
               instanceId="select-work-centre"
-              value={workCentreOptions.find((c) => c.value === formData.workCentreId) || null}
-              onChange={(opt) => handleChange("workCentreId", opt ? opt.value : "")}
+              value={
+                workCentreOptions.find(
+                  (c) => c.value === formData.workCentreId,
+                ) || null
+              }
+              onChange={(opt) =>
+                handleChange("workCentreId", opt ? opt.value : "")
+              }
               options={workCentreOptions}
               isClearable={true}
               isSearchable={true}
-              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+              menuPortalTarget={
+                typeof document !== "undefined" ? document.body : null
+              }
               styles={{
                 ...customSelectStyles(errors.workCentreId),
                 menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               }}
               placeholder="Select Work Centre"
-              noOptionsMessage={() => 
-                (user?.isSuperAdmin && !formData.companyId) 
-                  ? "⚠ Please select Company." 
+              noOptionsMessage={() =>
+                user?.isSuperAdmin && !formData.companyId
+                  ? " Please select Company."
                   : "No work centres found for this company"
               }
               classNamePrefix="react-select"
@@ -632,7 +703,7 @@ export default function ProcessDrawerForm({
 
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">
-              Description 
+              Description
             </label>
             <textarea
               value={formData.description || ""}
@@ -653,12 +724,16 @@ export default function ProcessDrawerForm({
             </label>
             <Select
               instanceId="select-status"
-              value={STATUS_OPTIONS.find((s) => s.value === formData.status) || null}
+              value={
+                STATUS_OPTIONS.find((s) => s.value === formData.status) || null
+              }
               onChange={(opt) => handleChange("status", opt ? opt.value : "")}
               options={STATUS_OPTIONS}
               isClearable={true}
               isSearchable={false}
-              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+              menuPortalTarget={
+                typeof document !== "undefined" ? document.body : null
+              }
               styles={{
                 ...customSelectStyles(errors.status),
                 menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -670,7 +745,6 @@ export default function ProcessDrawerForm({
               <p className="mt-1 text-sm text-red-500">{errors.status}</p>
             )}
           </div>
-          
         </div>
 
         <div className="border-t bg-white px-6 pt-5 pb-10">
@@ -696,7 +770,11 @@ export default function ProcessDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}
+        title={
+          confirmState.type === "submit"
+            ? "Confirm Submission"
+            : "Discard Changes"
+        }
         message={
           confirmState.type === "submit"
             ? "Are you sure you want to save this process?"
@@ -712,7 +790,9 @@ export default function ProcessDrawerForm({
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}
-        onCancel={() => setConfirmState({ isOpen: false, type: null, data: null })}
+        onCancel={() =>
+          setConfirmState({ isOpen: false, type: null, data: null })
+        }
       />
 
       <DeleteConfirmModal

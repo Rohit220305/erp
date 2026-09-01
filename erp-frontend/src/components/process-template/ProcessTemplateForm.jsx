@@ -129,19 +129,19 @@ export default function ProcessTemplateForm({
     const fieldErrors = {};
 
     if (!formData.templateName?.trim()) {
-      fieldErrors.templateName = "⚠ Please enter Template Name.";
+      fieldErrors.templateName = " Please enter Template Name.";
     }
     if (!formData.templateCode?.trim()) {
-      fieldErrors.templateCode = "⚠ Please enter Template Code.";
+      fieldErrors.templateCode = " Please enter Template Code.";
     }
     if (!formData.executionType) {
-      fieldErrors.executionType = "⚠ Please select Process Execution Type.";
+      fieldErrors.executionType = " Please select Process Execution Type.";
     }
     if (!formData.status) {
-      fieldErrors.status = "⚠ Please select Status.";
+      fieldErrors.status = " Please select Status.";
     }
     if (user?.isSuperAdmin && !effectiveCompanyId) {
-      fieldErrors.companyId = "⚠ Please select Company.";
+      fieldErrors.companyId = " Please select Company.";
     }
 
     if (Object.keys(fieldErrors).length > 0) {
@@ -194,7 +194,7 @@ export default function ProcessTemplateForm({
     }
 
     if (!processes || processes.length === 0) {
-      setErrors({ processes: "⚠ Please add at least one process." });
+      setErrors({ processes: " Please add at least one process." });
       setCurrentStep(2);
       toast.error("Please add at least one process in Step 2.");
       return false;
@@ -202,7 +202,9 @@ export default function ProcessTemplateForm({
 
     for (let i = 0; i < processes.length; i++) {
       if (!processes[i].processId) {
-        setErrors({ processes: `⚠ Row #${i + 1} does not have a process selected.` });
+        setErrors({
+          processes: ` Row #${i + 1} does not have a process selected.`,
+        });
         setCurrentStep(2);
         toast.error(`Row #${i + 1} does not have a process selected.`);
         return false;
@@ -420,8 +422,6 @@ export default function ProcessTemplateForm({
           </div>
         </div>
       </div>
-
-      
 
       <ConfirmModal
         isOpen={confirmState.isOpen}

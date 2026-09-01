@@ -1,0 +1,194 @@
+{
+  "moduleName": "ProductionOrder",
+  "title": "Production Orders",
+  "permissions": {
+    "list": "PRODUCTION_ORDER_LIST",
+    "create": "PRODUCTION_ORDER_CREATE",
+    "view": "PRODUCTION_ORDER_VIEW",
+    "update": "PRODUCTION_ORDER_UPDATE",
+    "delete": "PRODUCTION_ORDER_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Production Request Code",
+      "key": "productionOrderCode",
+      "type": "link",
+      "linkPath": "/production-order/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Item Name",
+      "key": "itemName",
+      "type": "drawerLink",
+      "drawerModule": "Item",
+      "drawerIdKey": "itemId",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Item Code",
+      "key": "itemCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "BOM Code",
+      "key": "bomCode",
+      "type": "drawerLink",
+      "drawerModule": "Bom",
+      "drawerIdKey": "bomId",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Produced Qty",
+      "key": "productionQuantityDisplay",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Package Qty",
+      "key": "packageQuantityDisplay",
+      "type": "text",
+      "searchable": false,
+      "sortable": false,
+      "width": "150px"
+    },
+    {
+      "label": "No. of Batches",
+      "key": "batchCount",
+      "type": "text",
+      "searchable": false,
+      "sortable": false,
+      "width": "120px"
+    },
+    {
+      "label": "Production Date",
+      "key": "productionDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Request By",
+      "key": "addedByName",
+      "type": "drawerLink",
+      "drawerModule": "User",
+      "drawerIdKey": "addedBy",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "140px",
+      "options": [
+        { "label": "Draft", "value": "Draft" },
+        { "label": "Pending", "value": "Pending" },
+        { "label": "In Progress", "value": "In Progress" },
+        { "label": "Partial Cancelled", "value": "PartialCancelled" },
+        { "label": "Cancelled", "value": "Cancelled" },
+        { "label": "Completed", "value": "Completed" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Order",
+        "type": "redirect",
+        "path": "/production-order/add",
+        "permission": "PRODUCTION_ORDER_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editRedirect",
+        "path": "/production-order/edit/{id}",
+        "icon": "Edit",
+        "permission": "PRODUCTION_ORDER_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "PRODUCTION_ORDER_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    { "label": "Production Request Code", "value": "productionOrderCode", "type": "text" },
+    { "label": "Item Name", "value": "itemName", "type": "text" },
+    { "label": "Item Code", "value": "itemCode", "type": "text" },
+    { "label": "BOM Code", "value": "bomCode", "type": "text" },
+    { "label": "Request By", "value": "addedByName", "type": "text" },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Draft", "value": "Draft" },
+        { "label": "Pending", "value": "Pending" },
+        { "label": "In Progress", "value": "In Progress" },
+        { "label": "Partial Cancelled", "value": "PartialCancelled" },
+        { "label": "Cancelled", "value": "Cancelled" },
+        { "label": "Completed", "value": "Completed" }
+      ]
+    }
+  ],
+  "searchFields": [
+    { "label": "Production Request Code", "value": "productionOrderCode", "type": "text" },
+    { "label": "Item Name", "value": "itemName", "type": "text" },
+    { "label": "Item Code", "value": "itemCode", "type": "text" },
+    { "label": "BOM Code", "value": "bomCode", "type": "text" },
+    { "label": "Request By", "value": "addedByName", "type": "text" },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Draft", "value": "Draft" },
+        { "label": "Pending", "value": "Pending" },
+        { "label": "In Progress", "value": "In Progress" },
+        { "label": "Partial Cancelled", "value": "PartialCancelled" },
+        { "label": "Cancelled", "value": "Cancelled" },
+        { "label": "Completed", "value": "Completed" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "productionOrderCode": "",
+    "itemName": "",
+    "itemCode": "",
+    "bomCode": "",
+    "addedByName": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Draft", "value": "Draft" },
+    { "label": "Pending", "value": "Pending" },
+    { "label": "In Progress", "value": "In Progress" },
+    { "label": "Partial Cancelled", "value": "PartialCancelled" },
+    { "label": "Cancelled", "value": "Cancelled" },
+    { "label": "Completed", "value": "Completed" }
+  ]
+}

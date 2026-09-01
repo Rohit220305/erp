@@ -355,9 +355,12 @@ export default function WorkCentreDrawerForm({
 
   return (
     <div className="flex h-full flex-col text-black">
-      <form onSubmit={handleFormSubmit} id="drawer-form" className="flex h-full flex-col">
+      <form
+        onSubmit={handleFormSubmit}
+        id="drawer-form"
+        className="flex h-full flex-col"
+      >
         <div className="flex-1 overflow-y-auto px-6 py-6">
-
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">
               Work Centre Name <span className="text-red-500">*</span>
@@ -365,13 +368,17 @@ export default function WorkCentreDrawerForm({
             <input
               type="text"
               value={formData.workCentreName || ""}
-              onChange={(e) => handleNameChange("workCentreName", e.target.value)}
+              onChange={(e) =>
+                handleNameChange("workCentreName", e.target.value)
+              }
               className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.workCentreName ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
             {errors.workCentreName && (
-              <p className="mt-1 text-sm text-red-500">{errors.workCentreName}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.workCentreName}
+              </p>
             )}
           </div>
 
@@ -382,8 +389,13 @@ export default function WorkCentreDrawerForm({
               </label>
               <Select
                 instanceId="select-company"
-                value={companyOptions.find((c) => c.value === formData.companyId) || null}
-                onChange={(opt) => handleChange("companyId", opt ? opt.value : "")}
+                value={
+                  companyOptions.find((c) => c.value === formData.companyId) ||
+                  null
+                }
+                onChange={(opt) =>
+                  handleChange("companyId", opt ? opt.value : "")
+                }
                 options={companyOptions}
                 isDisabled={mode === "edit"}
                 isClearable={true}
@@ -392,8 +404,13 @@ export default function WorkCentreDrawerForm({
                 classNamePrefix="react-select"
                 maxMenuHeight={200}
                 menuPosition="fixed"
-                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
-                styles={{ ...customSelectStyles(errors.companyId, mode === "edit"), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                menuPortalTarget={
+                  typeof window !== "undefined" ? document.body : null
+                }
+                styles={{
+                  ...customSelectStyles(errors.companyId, mode === "edit"),
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                }}
               />
               {errors.companyId && (
                 <p className="mt-1 text-sm text-red-500">{errors.companyId}</p>
@@ -416,7 +433,9 @@ export default function WorkCentreDrawerForm({
               `}
             />
             {errors.workCentreCode && (
-              <p className="mt-1 text-sm text-red-500">{errors.workCentreCode}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.workCentreCode}
+              </p>
             )}
           </div>
 
@@ -427,14 +446,23 @@ export default function WorkCentreDrawerForm({
 
             <div
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition"
-              onClick={() => !isUploading && document.getElementById("work-centre-drawer-file-input")?.click()}
+              onClick={() =>
+                !isUploading &&
+                document
+                  .getElementById("work-centre-drawer-file-input")
+                  ?.click()
+              }
             >
               <span className="text-gray-500 text-sm">Choose File</span>
-              <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
+              <div
+                className="relative group flex items-center"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Info size={20} className="text-gray-500 cursor-pointer" />
                 <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 hidden group-hover:block bg-[#1565c0] text-white text-xs rounded shadow-lg z-20 whitespace-nowrap p-3 leading-relaxed">
                   <div className="absolute left-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-[#1565c0]"></div>
-                  Valid extensions : gif, png, jpg, jpeg, jpe, bmp, ico.<br />
+                  Valid extensions : gif, png, jpg, jpeg, jpe, bmp, ico.
+                  <br />
                   Valid size : Less than (&lt;) 5 MB.
                 </div>
               </div>
@@ -444,21 +472,42 @@ export default function WorkCentreDrawerForm({
               <div className="mt-4 flex items-center gap-4">
                 <div className="flex-1 max-w-[120px]">
                   <div className="h-[22px] w-full bg-[#e0e0e0] overflow-hidden flex items-center">
-                    <div className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold" style={{ width: `${uploadProgress}%` }}>
+                    <div
+                      className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold"
+                      style={{ width: `${uploadProgress}%` }}
+                    >
                       {uploadProgress > 20 && `${uploadProgress}%`}
                     </div>
                   </div>
                 </div>
-                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); cancelUpload(); }} className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer">Cancel</button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cancelUpload();
+                  }}
+                  className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer"
+                >
+                  Cancel
+                </button>
               </div>
             )}
 
             {!isUploading && imagePreview && (
               <div className="mt-4 relative inline-block">
-                <img src={imagePreview} alt="Preview" className="w-[84px] h-[64px] object-cover rounded border border-gray-300 shadow-sm" />
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-[84px] h-[64px] object-cover rounded border border-gray-300 shadow-sm"
+                />
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsDeleteImageModalOpen(true); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDeleteImageModalOpen(true);
+                  }}
                   className="absolute -top-2.5 -right-2.5 bg-gray-400 text-white rounded-full p-0.5 hover:bg-gray-600 transition shadow-md z-10 cursor-pointer"
                 >
                   <X size={14} />
@@ -481,22 +530,32 @@ export default function WorkCentreDrawerForm({
             </label>
             <Select
               instanceId="select-category"
-              value={categoryOptions.find((c) => c.value === formData.categoryId) || null}
-              onChange={(opt) => handleChange("categoryId", opt ? opt.value : "")}
+              value={
+                categoryOptions.find((c) => c.value === formData.categoryId) ||
+                null
+              }
+              onChange={(opt) =>
+                handleChange("categoryId", opt ? opt.value : "")
+              }
               options={categoryOptions}
               isClearable={true}
               isSearchable={true}
               placeholder="Select Category"
               noOptionsMessage={() =>
-                (user?.isSuperAdmin && !formData.companyId)
-                  ? "⚠ Please select Company."
+                user?.isSuperAdmin && !formData.companyId
+                  ? " Please select Company."
                   : "No categories found for this company"
               }
               classNamePrefix="react-select"
               maxMenuHeight={200}
               menuPosition="fixed"
-              menuPortalTarget={typeof window !== "undefined" ? document.body : null}
-              styles={{ ...customSelectStyles(errors.categoryId), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+              menuPortalTarget={
+                typeof window !== "undefined" ? document.body : null
+              }
+              styles={{
+                ...customSelectStyles(errors.categoryId),
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              }}
             />
             {errors.categoryId && (
               <p className="mt-1 text-sm text-red-500">{errors.categoryId}</p>
@@ -509,8 +568,14 @@ export default function WorkCentreDrawerForm({
             </label>
             <Select
               instanceId="select-usage-status"
-              value={USAGE_STATUS_OPTIONS.find((s) => s.value === formData.usageStatus) || null}
-              onChange={(opt) => handleChange("usageStatus", opt ? opt.value : "")}
+              value={
+                USAGE_STATUS_OPTIONS.find(
+                  (s) => s.value === formData.usageStatus,
+                ) || null
+              }
+              onChange={(opt) =>
+                handleChange("usageStatus", opt ? opt.value : "")
+              }
               options={USAGE_STATUS_OPTIONS}
               isClearable={true}
               isSearchable={false}
@@ -518,8 +583,13 @@ export default function WorkCentreDrawerForm({
               classNamePrefix="react-select"
               maxMenuHeight={200}
               menuPosition="fixed"
-              menuPortalTarget={typeof window !== "undefined" ? document.body : null}
-              styles={{ ...customSelectStyles(errors.usageStatus), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+              menuPortalTarget={
+                typeof window !== "undefined" ? document.body : null
+              }
+              styles={{
+                ...customSelectStyles(errors.usageStatus),
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              }}
             />
             {errors.usageStatus && (
               <p className="mt-1 text-sm text-red-500">{errors.usageStatus}</p>
@@ -532,7 +602,9 @@ export default function WorkCentreDrawerForm({
             </label>
             <Select
               instanceId="select-status"
-              value={STATUS_OPTIONS.find((s) => s.value === formData.status) || null}
+              value={
+                STATUS_OPTIONS.find((s) => s.value === formData.status) || null
+              }
               onChange={(opt) => handleChange("status", opt ? opt.value : "")}
               options={STATUS_OPTIONS}
               isClearable={true}
@@ -541,14 +613,18 @@ export default function WorkCentreDrawerForm({
               classNamePrefix="react-select"
               maxMenuHeight={200}
               menuPosition="fixed"
-              menuPortalTarget={typeof window !== "undefined" ? document.body : null}
-              styles={{ ...customSelectStyles(errors.status), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+              menuPortalTarget={
+                typeof window !== "undefined" ? document.body : null
+              }
+              styles={{
+                ...customSelectStyles(errors.status),
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              }}
             />
             {errors.status && (
               <p className="mt-1 text-sm text-red-500">{errors.status}</p>
             )}
           </div>
-
         </div>
 
         <div className="border-t bg-white px-6 pt-5 pb-10">
@@ -574,7 +650,11 @@ export default function WorkCentreDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}
+        title={
+          confirmState.type === "submit"
+            ? "Confirm Submission"
+            : "Discard Changes"
+        }
         message={
           confirmState.type === "submit"
             ? "Are you sure you want to save this work centre?"
@@ -590,23 +670,46 @@ export default function WorkCentreDrawerForm({
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}
-        onCancel={() => setConfirmState({ isOpen: false, type: null, data: null })}
+        onCancel={() =>
+          setConfirmState({ isOpen: false, type: null, data: null })
+        }
       />
 
       {isDeleteImageModalOpen && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={() => setIsDeleteImageModalOpen(false)}></div>
+          <div
+            className="absolute inset-0 bg-black/10 backdrop-blur-[1px]"
+            onClick={() => setIsDeleteImageModalOpen(false)}
+          ></div>
           <div className="relative bg-[#f0f0f0] w-72 shadow-2xl z-10 flex flex-col border border-gray-200">
             <div className="bg-[#1565c0] flex justify-between items-center px-4 py-2.5 text-white">
-              <span className="text-sm font-semibold tracking-wide">Delete</span>
-              <X size={16} className="cursor-pointer hover:text-gray-200" onClick={() => setIsDeleteImageModalOpen(false)} />
+              <span className="text-sm font-semibold tracking-wide">
+                Delete
+              </span>
+              <X
+                size={16}
+                className="cursor-pointer hover:text-gray-200"
+                onClick={() => setIsDeleteImageModalOpen(false)}
+              />
             </div>
             <div className="p-5 text-sm text-gray-700">
               Are you sure want to delete this?
             </div>
             <div className="p-4 pt-1 flex justify-center gap-3">
-              <button type="button" onClick={confirmRemoveImage} className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer">Delete</button>
-              <button type="button" onClick={() => setIsDeleteImageModalOpen(false)} className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer">Cancel</button>
+              <button
+                type="button"
+                onClick={confirmRemoveImage}
+                className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer"
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDeleteImageModalOpen(false)}
+                className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

@@ -125,15 +125,33 @@ export const menuCategories = [
             path: "/process-template",
             permission: "PROCESS_TEMPLATE_LIST",
           },
-          {
-            label: "BOM Master",
-            path: "/bom",
-            permission: "BOM_LIST",
-          },
         ],
       },
-     
     ],
   },
+  // {
+  //   category: "Production",
+  //   icon: "Package",
+  //   groups: [
+  //     {
+  //       title: "Manufacturing",
+  //       icon: "Package",
+  //       iconBg: "#1565c0",
+  //       permission: "PRODUCTION_ORDER_LIST",
+  //       items: [
+  //         {
+  //           label: "Bill Of Materials",
+  //           path: "/bom",
+  //           permission: "BOM_LIST",
+  //         },
+  //         {
+  //           label: "Production Order",
+  //           path: "/production-order",
+  //           permission: "PRODUCTION_ORDER_LIST",
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // },
 ];
 

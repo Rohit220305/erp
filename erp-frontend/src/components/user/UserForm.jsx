@@ -323,7 +323,9 @@ export default function UserForm({
             )}
             <button
               type="button"
-              onClick={() => document.getElementById("user-form-photo-input")?.click()}
+              onClick={() =>
+                document.getElementById("user-form-photo-input")?.click()
+              }
               className="absolute bottom-0 right-0 w-7 h-7 bg-[#1565c0] text-white rounded-full flex items-center justify-center shadow-md hover:bg-[#0f57a6] transition cursor-pointer"
               title="Upload Photo"
             >
@@ -368,9 +370,7 @@ export default function UserForm({
                 `}
               />
               {errors.firstName && (
-                <p className="text-xs text-red-500 mt-1">
-                  ⚠ {errors.firstName}
-                </p>
+                <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>
               )}
             </div>
 
@@ -388,7 +388,7 @@ export default function UserForm({
                 `}
               />
               {errors.lastName && (
-                <p className="text-xs text-red-500 mt-1">⚠ {errors.lastName}</p>
+                <p className="text-xs text-red-500 mt-1"> {errors.lastName}</p>
               )}
             </div>
 
@@ -408,7 +408,7 @@ export default function UserForm({
                 `}
               />
               {errors.userName && (
-                <p className="text-xs text-red-500 mt-1">⚠ {errors.userName}</p>
+                <p className="text-xs text-red-500 mt-1"> {errors.userName}</p>
               )}
             </div>
 
@@ -426,7 +426,7 @@ export default function UserForm({
                 `}
               />
               {errors.email && (
-                <p className="text-xs text-red-500 mt-1">⚠ {errors.email}</p>
+                <p className="text-xs text-red-500 mt-1"> {errors.email}</p>
               )}
             </div>
 
@@ -454,9 +454,7 @@ export default function UserForm({
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-red-500 mt-1">
-                    ⚠ {errors.password}
-                  </p>
+                  <p className="text-xs text-red-500 mt-1">{errors.password}</p>
                 )}
               </div>
             )}
@@ -529,7 +527,7 @@ export default function UserForm({
                 />
                 {errors.companyId && (
                   <p className="text-xs text-red-500 mt-1">
-                    ⚠ {errors.companyId}
+                    {errors.companyId}
                   </p>
                 )}
               </div>
@@ -560,9 +558,7 @@ export default function UserForm({
                   styles={customSelectStyles(errors.groupIds)}
                 />
                 {errors.groupIds && (
-                  <p className="text-xs text-red-500 mt-1">
-                    ⚠ {errors.groupIds}
-                  </p>
+                  <p className="text-xs text-red-500 mt-1">{errors.groupIds}</p>
                 )}
                 {formData.groupIds && formData.groupIds.length > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
@@ -599,7 +595,7 @@ export default function UserForm({
                 styles={customSelectStyles(errors.status)}
               />
               {errors.status && (
-                <p className="text-xs text-red-500 mt-1">⚠ {errors.status}</p>
+                <p className="text-xs text-red-500 mt-1"> {errors.status}</p>
               )}
             </div>
 
@@ -639,13 +635,12 @@ export default function UserForm({
               </div>
               {(errors.phone || errors.dialCode) && (
                 <p className="text-xs text-red-500 mt-1">
-                  ⚠ {errors.phone || errors.dialCode}
+                  {errors.phone || errors.dialCode}
                 </p>
               )}
             </div>
           </div>
         </div>
-
 
         <div className="flex gap-3 justify-center border-t pt-4">
           <button

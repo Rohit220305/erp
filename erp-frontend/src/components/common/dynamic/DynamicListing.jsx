@@ -275,7 +275,7 @@ export default function DynamicListing({
         title: "Listing",
         breadcrumbs: [
           { label: "Master", href: "/" },
-          { label: activeSchema.title, href: activeSchema.modulePath || `/${activeSchema.moduleName.toLowerCase()}` },
+          { label: activeSchema.title, href: activeSchema.modulePath },
         ],
       },
     });

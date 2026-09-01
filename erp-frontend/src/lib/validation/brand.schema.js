@@ -11,9 +11,11 @@ export const getBrandSchema = (isSuperAdmin = false) => {
         .number()
         .or(z.string().transform((val) => (val ? Number(val) : undefined)))
         .optional(),
-      brandName: z.string().min(1, "⚠ Please enter Brand Name."),
-      brandCode: z.string().min(1, "⚠ Please enter Brand Code."),
-      status: z.enum(["Active", "Inactive"], "⚠ Please select Status.").default("Active"),
+      brandName: z.string().min(1, " Please enter Brand Name."),
+      brandCode: z.string().min(1, " Please enter Brand Code."),
+      status: z
+        .enum(["Active", "Inactive"], " Please select Status.")
+        .default("Active"),
     })
     .refine(
       (data) => {
@@ -23,16 +25,13 @@ export const getBrandSchema = (isSuperAdmin = false) => {
         return true;
       },
       {
-        message: "⚠ Please select Company.",
+        message: " Please select Company.",
         path: ["companyId"],
-      }
+      },
     )
-    .refine(
-      (data) => !!data.manufacturerId,
-      {
-        message: "⚠ Please select Manufacturer.",
-        path: ["manufacturerId"],
-      }
-    );
+    .refine((data) => !!data.manufacturerId, {
+      message: " Please select Manufacturer.",
+      path: ["manufacturerId"],
+    });
 };
 

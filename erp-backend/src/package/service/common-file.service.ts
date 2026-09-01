@@ -122,4 +122,35 @@ export class CommonFileService {
 
     return { valid: true };
   }
+
+  async validateDocumentAndCleanUp(file: any): Promise<{ valid: boolean; error?: any }> {
+    if (!file) {
+      return { valid: true };
+    }
+
+    const allowedDocumentTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/jpg',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+
+    if (!allowedDocumentTypes.includes(file.mimetype)) {
+      await this.deleteTempFile(file.filename);
+      return {
+        valid: false,
+        error: {
+          success: 0,
+          message: 'Invalid File',
+        },
+      };
+    }
+
+    return { valid: true };
+  }
 }

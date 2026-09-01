@@ -8,7 +8,7 @@
     "update": "STORAGE_UPDATE",
     "delete": "STORAGE_DELETE"
   },
-  "columns": [
+  "columns": [  
     {
       "label": "Image",
       "key": "imageUrl",

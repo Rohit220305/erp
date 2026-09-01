@@ -65,7 +65,7 @@ export class BomController {
       const validFiles: any[] = [];
       if (files && files.length > 0) {
         for (const file of files) {
-          const fileCheck = await this.commonFileService.validateAndCleanUp(file);
+          const fileCheck = await this.commonFileService.validateDocumentAndCleanUp(file);
           if (!fileCheck.valid) return fileCheck.error;
           validFiles.push(file);
         }
@@ -91,7 +91,7 @@ export class BomController {
       const validFiles: any[] = [];
       if (files && files.length > 0) {
         for (const file of files) {
-          const fileCheck = await this.commonFileService.validateAndCleanUp(file);
+          const fileCheck = await this.commonFileService.validateDocumentAndCleanUp(file);
           if (!fileCheck.valid) return fileCheck.error;
           validFiles.push(file);
         }

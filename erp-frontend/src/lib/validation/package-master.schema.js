@@ -7,12 +7,12 @@ export const getPackageSchema = (isSuperAdmin = false) => {
         .number()
         .or(z.string().transform((val) => (val ? Number(val) : undefined)))
         .optional(),
-      packageName: z.string().min(1, "⚠Please enter Package Type Name."),
-      packageCode: z.string().min(1, "⚠Please enter Package Type Code."),
+      packageName: z.string().min(1, "Please enter Package Type Name."),
+      packageCode: z.string().min(1, "Please enter Package Type Code."),
       abbreviation: z.string().optional().nullable(),
       description: z.string().optional().nullable(),
       status: z
-        .enum(["Active", "Inactive"], "⚠Please select Status.")
+        .enum(["Active", "Inactive"], "Please select Status.")
         .default("Active"),
     })
     .refine(
@@ -23,8 +23,8 @@ export const getPackageSchema = (isSuperAdmin = false) => {
         return true;
       },
       {
-        message: "⚠Please select Company.",
+        message: "Please select Company.",
         path: ["companyId"],
-      }
+      },
     );
 };

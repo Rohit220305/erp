@@ -672,10 +672,10 @@ export default function ItemForm({
         placeholder={`Select ${label}`}
         noOptionsMessage={() => {
           if (manufacturerScoped && !formData.manufacturerId) {
-            return "⚠ Please select Manufacturer first.";
+            return " Please select Manufacturer first.";
           }
           if (companyScoped && user?.isSuperAdmin && !formData.companyId) {
-            return "⚠ Please select Company.";
+            return " Please select Company.";
           }
           return `No ${label.toLowerCase()} found`;
         }}
@@ -893,19 +893,19 @@ export default function ItemForm({
               label: "Batch Code / Lot No",
               required: true,
             })}
-          <div className="grid md:grid-cols-2 gap-x-16 gap-y-6 ">
-            {renderInputField({
-              name: "shelfLife",
-              label: "Shelf Life",
-              type: "number",
-              required: true,
-            })}
-            {renderSelectField({
-              name: "shelfLifeUnit",
-              label: "Shelf Life Unit",
-              options: SHELF_LIFE_UNIT_OPTIONS,
-              required: true,
-            })}
+            <div className="grid md:grid-cols-2 gap-x-16 gap-y-6 ">
+              {renderInputField({
+                name: "shelfLife",
+                label: "Shelf Life",
+                type: "number",
+                required: true,
+              })}
+              {renderSelectField({
+                name: "shelfLifeUnit",
+                label: "Shelf Life Unit",
+                options: SHELF_LIFE_UNIT_OPTIONS,
+                required: true,
+              })}
             </div>
 
             <div className="space-y-1.5">
@@ -934,7 +934,10 @@ export default function ItemForm({
 
               <div
                 className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition w-full"
-                onClick={() => !isUploading && document.getElementById("item-form-image-input")?.click()}
+                onClick={() =>
+                  !isUploading &&
+                  document.getElementById("item-form-image-input")?.click()
+                }
               >
                 <span className="text-gray-500 text-sm">Choose Files</span>
                 <div
@@ -1109,7 +1112,7 @@ export default function ItemForm({
                       placeholder="Select Weight UOM"
                       noOptionsMessage={() =>
                         user?.isSuperAdmin && !formData.companyId
-                          ? "⚠ Please select Company."
+                          ? " Please select Company."
                           : "No weight uom found"
                       }
                       classNamePrefix="react-select"
@@ -1167,7 +1170,7 @@ export default function ItemForm({
                       placeholder="Select Volume UOM"
                       noOptionsMessage={() =>
                         user?.isSuperAdmin && !formData.companyId
-                          ? "⚠ Please select Company."
+                          ? " Please select Company."
                           : "No volume uom found"
                       }
                       classNamePrefix="react-select"
@@ -1271,7 +1274,7 @@ export default function ItemForm({
                   placeholder="Select Dimension UOM"
                   noOptionsMessage={() =>
                     user?.isSuperAdmin && !formData.companyId
-                      ? "⚠ Please select Company."
+                      ? " Please select Company."
                       : "No dimension uom found"
                   }
                   classNamePrefix="react-select"

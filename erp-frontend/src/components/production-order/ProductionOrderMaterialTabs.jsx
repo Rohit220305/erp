@@ -1,0 +1,215 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Package } from "lucide-react";
+import SharedImageZoom from "@/components/common/SharedImageZoom";
+
+export default function ProductionOrderMaterialTabs({
+  materialDetails = { rawMaterials: [], semiFinished: [], finishedProducts: [] },
+  packageQuantity = 1,
+  currencySymbol = "",
+  showToggle = true,
+  isPackageToggleOn = false,
+  onPackageToggleChange = null,
+  onOpenDrawer = null,
+}) {
+  const [activeTab, setActiveTab] = useState("rawMaterials");
+  const [internalPackageToggle, setInternalPackageToggle] = useState(isPackageToggleOn);
+
+  useEffect(() => {
+    setInternalPackageToggle(isPackageToggleOn);
+  }, [isPackageToggleOn]);
+
+  const handleToggleClick = () => {
+    const nextValue = !internalPackageToggle;
+    setInternalPackageToggle(nextValue);
+    if (onPackageToggleChange) {
+      onPackageToggleChange(nextValue);
+    }
+  };
+
+  const rawMaterials = materialDetails?.rawMaterials || [];
+  const semiFinished = materialDetails?.semiFinished || [];
+  const finishedProducts = materialDetails?.finishedProducts || [];
+
+  const getActiveItems = () => {
+    if (activeTab === "rawMaterials") return rawMaterials;
+    if (activeTab === "semiFinished") return semiFinished;
+    if (activeTab === "finishedProducts") return finishedProducts;
+    return [];
+  };
+
+  const activeItems = getActiveItems();
+  const isFinishedTab = activeTab === "finishedProducts";
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6">
+      {/* Header Bar */}
+      <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 bg-gray-50/50">
+        <h3 className="text-base font-semibold text-gray-900">Material Details</h3>
+
+        <div className="flex items-center gap-6">
+          {/* Package Quantity Toggle */}
+          {showToggle && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-gray-600">Package Quantity</span>
+              <button
+                type="button"
+                onClick={handleToggleClick}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
+                  internalPackageToggle ? "bg-[#1565c0]" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    internalPackageToggle ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
+
+          {/* 3 Material Tabs Switcher */}
+          <div className="flex items-center gap-1 border-b border-gray-200">
+            <button
+              type="button"
+              onClick={() => setActiveTab("rawMaterials")}
+              className={`px-4 py-2 text-xs font-medium transition-colors border-b-2 cursor-pointer ${
+                activeTab === "rawMaterials"
+                  ? "border-[#1565c0] text-[#1565c0] font-semibold"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Raw Material(s)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("semiFinished")}
+              className={`px-4 py-2 text-xs font-medium transition-colors border-b-2 cursor-pointer ${
+                activeTab === "semiFinished"
+                  ? "border-[#1565c0] text-[#1565c0] font-semibold"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Semi Finished Products
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("finishedProducts")}
+              className={`px-4 py-2 text-xs font-medium transition-colors border-b-2 cursor-pointer ${
+                activeTab === "finishedProducts"
+                  ? "border-[#1565c0] text-[#1565c0] font-semibold"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Finished Products
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Section */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-xs text-gray-700">
+          <thead className="bg-gray-200 text-gray-600 font-semibold border-b border-gray-100">
+            <tr>
+              <th className="py-3 px-4 w-16 text-center">Sr. No.</th>
+              <th className="py-3 px-4 w-24 text-center">Item Image</th>
+              <th className="py-3 px-4 min-w-[220px]">Item Name*</th>
+              <th className="py-3 px-4 text-center">Qty Per Unit*</th>
+              <th className="py-3 px-4 text-right">Cost Per Unit*</th>
+              <th className="py-3 px-4 text-center">
+                {isFinishedTab ? "Produced Qty" : "Total Required Qty"}
+              </th>
+              <th className="py-3 px-4 text-centre">Total Cost</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {activeItems.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-8 text-center text-gray-400">
+                  No items in this category.
+                </td>
+              </tr>
+            ) : (
+              activeItems.map((item, idx) => {
+                const pkgQtyVal = Number(packageQuantity) || 1;
+                const dualQtyText = internalPackageToggle
+                  ? item.packageQuantityDisplay || `${(item.totalRequiredQty ? item.totalRequiredQty / (item.primitiveQuantity || 1) : pkgQtyVal).toFixed(2)} PKG`
+                  : null;
+
+                return (
+                  <tr key={item.id || idx} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3 px-4 text-center font-medium text-gray-500">
+                      {idx + 1}
+                    </td>
+
+                    {/* Thumbnail Image */}
+                    <td className="py-3 px-4 text-center">
+                      <SharedImageZoom
+                        id={`po-material-item-${item.itemId || item.id || idx}`}
+                        src={item.itemImageUrl}
+                        alt={item.itemName}
+                        placeholderText={<Package size={18} />}
+                        thumbnailClassName="w-10 h-10 rounded-lg border border-gray-200 shrink-0 mx-auto cursor-pointer"
+                      />
+                    </td>
+
+                    {/* Item Name & Code */}
+                    <td className="py-3 px-4">
+                      {onOpenDrawer ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenDrawer("Item", item.itemId)}
+                          className="font-medium text-[#1565c0] hover:underline text-left cursor-pointer"
+                        >
+                          {item.itemName}
+                        </button>
+                      ) : (
+                        <span className="font-medium text-gray-900">{item.itemName}</span>
+                      )}
+                      <p className="text-[11px] text-gray-400 font-mono mt-0.5">
+                        ({item.itemCode || "N/A"})
+                      </p>
+                    </td>
+
+                    {/* Qty Per Unit */}
+                    <td className="py-3 px-4 text-center font-mono">
+                      {isFinishedTab ? "NA" : item.qtyPerUnitDisplay || `${item.qtyPerUnit}`}
+                    </td>
+
+                    {/* Cost Per Unit */}
+                    <td className="py-3 px-4 text-right font-mono">
+                      {item.unitPriceFormatted || (item.unitPrice > 0 ? `${currencySymbol} ${item.unitPrice}` : "NA")}
+                    </td>
+
+                    {/* Total Required Qty / Produced Qty */}
+                    <td className="py-3 px-4 text-center font-mono">
+                      <div>
+                        <span className="font-semibold text-gray-900">
+                          {item.totalRequiredQtyDisplay || `${item.totalRequiredQty}`}
+                        </span>
+                        {dualQtyText && (
+                          <p className="text-[11px] text-[#1565c0] font-semibold mt-0.5">{dualQtyText}</p>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Total Cost */}
+                    <td className="py-3 px-4 text-start font-mono font-semibold text-gray-900">
+                      {item.totalCostFormatted || (item.totalCost > 0 ? `${currencySymbol} ${item.totalCost}` : "NA")}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Table Footer */}
+      <div className="px-6 py-2 bg-gray-50/50 border-t border-gray-100 text-right">
+        <span className="text-[11px] text-gray-400 italic">*NA: Not Applicable</span>
+      </div>
+    </div>
+  );
+}

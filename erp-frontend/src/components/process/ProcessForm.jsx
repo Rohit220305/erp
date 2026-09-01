@@ -440,43 +440,71 @@ export default function ProcessForm({
           <div className="grid md:grid-cols-2 gap-x-8 gap-y-6 mb-8">
             <div className="flex flex-col">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-3">
-                Process Image 
+                Process Image
               </label>
-              
-              <div 
+
+              <div
                 className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition w-full"
-                onClick={() => !isImageUploading && document.getElementById("process-form-image-input")?.click()}
+                onClick={() =>
+                  !isImageUploading &&
+                  document.getElementById("process-form-image-input")?.click()
+                }
               >
                 <span className="text-gray-500 text-sm">Choose File</span>
-                <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
+                <div
+                  className="relative group flex items-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Info size={20} className="text-gray-500 cursor-pointer" />
                   <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 hidden group-hover:block bg-[#1565c0] text-white text-xs rounded shadow-lg z-20 whitespace-nowrap p-3 leading-relaxed">
                     <div className="absolute left-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-[#1565c0]"></div>
-                    Valid extensions : png, jpg, jpeg, webp.<br />
+                    Valid extensions : png, jpg, jpeg, webp.
+                    <br />
                     Valid size : Less than (&lt;) 5 MB.
                   </div>
                 </div>
               </div>
-              
+
               {isImageUploading && (
                 <div className="mt-4 flex items-center gap-4">
                   <div className="flex-1 max-w-[120px]">
                     <div className="h-[22px] w-full bg-[#e0e0e0] overflow-hidden flex items-center">
-                      <div className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold" style={{ width: `${imageUploadProgress}%` }}>
+                      <div
+                        className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold"
+                        style={{ width: `${imageUploadProgress}%` }}
+                      >
                         {imageUploadProgress > 20 && `${imageUploadProgress}%`}
                       </div>
                     </div>
                   </div>
-                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); cancelImageUpload(); }} className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer">Cancel</button>
-                </div>
-              )}
-              
-              {!isImageUploading && imagePreview && (
-                <div className="mt-4 relative inline-block self-start">
-                  <img src={imagePreview} alt="Preview" className="w-[84px] h-[64px] object-cover rounded border border-gray-300 shadow-sm" />
                   <button
                     type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsDeleteImageModalOpen(true); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      cancelImageUpload();
+                    }}
+                    className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {!isImageUploading && imagePreview && (
+                <div className="mt-4 relative inline-block self-start">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-[84px] h-[64px] object-cover rounded border border-gray-300 shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDeleteImageModalOpen(true);
+                    }}
                     className="absolute -top-2.5 -right-2.5 bg-gray-400 text-white rounded-full p-0.5 hover:bg-gray-600 transition shadow-md z-10 cursor-pointer"
                   >
                     <X size={14} />
@@ -495,48 +523,78 @@ export default function ProcessForm({
 
             <div className="flex flex-col">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-3">
-                Instruction PDF 
+                Instruction PDF
               </label>
-              
-              <div 
+
+              <div
                 className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition w-full"
-                onClick={() => !isPdfUploading && document.getElementById("process-form-pdf-input")?.click()}
+                onClick={() =>
+                  !isPdfUploading &&
+                  document.getElementById("process-form-pdf-input")?.click()
+                }
               >
                 <span className="text-gray-500 text-sm">Choose File</span>
-                <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
+                <div
+                  className="relative group flex items-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Info size={20} className="text-gray-500 cursor-pointer" />
                   <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 hidden group-hover:block bg-[#1565c0] text-white text-xs rounded shadow-lg z-20 whitespace-nowrap p-3 leading-relaxed">
                     <div className="absolute left-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-[#1565c0]"></div>
-                    Valid extension : pdf.<br />
+                    Valid extension : pdf.
+                    <br />
                     Valid size : Less than (&lt;) 100 MB.
                   </div>
                 </div>
               </div>
-              
+
               {isPdfUploading && (
                 <div className="mt-4 flex items-center gap-4">
                   <div className="flex-1 max-w-[120px]">
                     <div className="h-[22px] w-full bg-[#e0e0e0] overflow-hidden flex items-center">
-                      <div className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold" style={{ width: `${pdfUploadProgress}%` }}>
+                      <div
+                        className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold"
+                        style={{ width: `${pdfUploadProgress}%` }}
+                      >
                         {pdfUploadProgress > 20 && `${pdfUploadProgress}%`}
                       </div>
                     </div>
                   </div>
-                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); cancelPdfUpload(); }} className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer">Cancel</button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      cancelPdfUpload();
+                    }}
+                    className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer"
+                  >
+                    Cancel
+                  </button>
                 </div>
               )}
-              
+
               {!isPdfUploading && pdfPreview && (
                 <div className="mt-4 relative inline-block self-start bg-gray-100 p-3 rounded border border-gray-300 shadow-sm pr-10 min-w-[120px] max-w-[250px]">
                   <div className="flex items-center gap-2">
-                    <FileText size={20} className="text-gray-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-700 truncate" title={pdfPreview.split('/').pop() || 'Document.pdf'}>
-                      {pdfPreview.split('/').pop() || 'Document.pdf'}
+                    <FileText
+                      size={20}
+                      className="text-gray-500 flex-shrink-0"
+                    />
+                    <span
+                      className="text-sm text-gray-700 truncate"
+                      title={pdfPreview.split("/").pop() || "Document.pdf"}
+                    >
+                      {pdfPreview.split("/").pop() || "Document.pdf"}
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsDeletePdfModalOpen(true); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDeletePdfModalOpen(true);
+                    }}
                     className="absolute -top-2.5 -right-2.5 bg-gray-400 text-white rounded-full p-0.5 hover:bg-gray-600 transition shadow-md z-10 cursor-pointer"
                   >
                     <X size={14} />
@@ -562,7 +620,9 @@ export default function ProcessForm({
               <input
                 type="text"
                 value={formData.processName || ""}
-                onChange={(e) => handleNameChange("processName", e.target.value)}
+                onChange={(e) =>
+                  handleNameChange("processName", e.target.value)
+                }
                 className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.processName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                 `}
@@ -579,8 +639,14 @@ export default function ProcessForm({
                 </label>
                 <Select
                   instanceId="select-company"
-                  value={companyOptions.find((c) => c.value === formData.companyId) || null}
-                  onChange={(opt) => handleChange("companyId", opt ? opt.value : "")}
+                  value={
+                    companyOptions.find(
+                      (c) => c.value === formData.companyId,
+                    ) || null
+                  }
+                  onChange={(opt) =>
+                    handleChange("companyId", opt ? opt.value : "")
+                  }
                   options={companyOptions}
                   isDisabled={mode === "edit"}
                   isClearable={true}
@@ -620,15 +686,21 @@ export default function ProcessForm({
               </label>
               <Select
                 instanceId="select-work-centre"
-                value={workCentreOptions.find((c) => c.value === formData.workCentreId) || null}
-                onChange={(opt) => handleChange("workCentreId", opt ? opt.value : "")}
+                value={
+                  workCentreOptions.find(
+                    (c) => c.value === formData.workCentreId,
+                  ) || null
+                }
+                onChange={(opt) =>
+                  handleChange("workCentreId", opt ? opt.value : "")
+                }
                 options={workCentreOptions}
                 isClearable={true}
                 isSearchable={true}
                 placeholder="Select Work Centre"
-                noOptionsMessage={() => 
-                  (user?.isSuperAdmin && !formData.companyId) 
-                    ? "⚠ Please select Company." 
+                noOptionsMessage={() =>
+                  user?.isSuperAdmin && !formData.companyId
+                    ? " Please select Company."
                     : "No work centres found for this company"
                 }
                 classNamePrefix="react-select"
@@ -662,7 +734,10 @@ export default function ProcessForm({
               </label>
               <Select
                 instanceId="select-status"
-                value={STATUS_OPTIONS.find((s) => s.value === formData.status) || null}
+                value={
+                  STATUS_OPTIONS.find((s) => s.value === formData.status) ||
+                  null
+                }
                 onChange={(opt) => handleChange("status", opt ? opt.value : "")}
                 options={STATUS_OPTIONS}
                 isClearable={true}
@@ -675,7 +750,6 @@ export default function ProcessForm({
                 <p className="text-xs text-red-500">{errors.status}</p>
               )}
             </div>
-            
           </div>
         </div>
 

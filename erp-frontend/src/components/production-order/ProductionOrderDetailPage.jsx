@@ -1,0 +1,327 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useHeader } from "@/context/HeaderContext";
+import { CAPABILITIES } from "@/config/capabilities.config";
+import SideDrawer from "@/components/common/SideDrawer";
+import ProductionOrderMaterialTabs from "./ProductionOrderMaterialTabs";
+import {
+  Package,
+  FileText,
+  Download,
+  Paperclip,
+  MessageSquare,
+} from "lucide-react";
+
+export default function ProductionOrderDetailPage({ data }) {
+  const router = useRouter();
+  const { can } = useAuth();
+  const { setConfig, resetConfig } = useHeader();
+
+  const [drawerState, setDrawerState] = useState({
+    isOpen: false,
+    moduleName: null,
+    id: null,
+  });
+
+  const orderData = data?.data || data?.settings?.data || data;
+  console.log("ProductionOrderDetailPage - orderData:", orderData);
+  const canEdit = can(CAPABILITIES.PRODUCTION_ORDER?.UPDATE || "PRODUCTION_ORDER_UPDATE");
+  const canViewItem = can(CAPABILITIES.ITEM?.VIEW || "ITEM_VIEW");
+  const canViewBom = can(CAPABILITIES.BOM?.VIEW || "BOM_VIEW");
+  const canViewUser = can(CAPABILITIES.USER?.VIEW || "USER_VIEW");
+
+  useEffect(() => {
+    setConfig({
+      header: {
+        actionButton: null,
+        icons: ["refresh"],
+        showBookmark: true,
+        showLanguage: true,
+        showProfile: true,
+        showMenu: true,
+      },
+      navbar: {
+        title: "Details",
+        breadcrumbs: [
+          { label: "Master" , href: "/"},
+          { label: "Production Orders", href: "/production-order" },
+        ],
+        actionButton: canEdit && orderData?.id
+          ? {
+              label: "Edit",
+              onClick: () => router.push(`/production-order/edit/${orderData.id}`),
+            }
+          : null,
+      },
+    });
+    return () => {
+      resetConfig();
+    };
+  }, [setConfig, resetConfig, router, orderData?.id, orderData?.productionOrderCode, canEdit]);
+
+  if (!orderData) {
+    return (
+      <div className="p-6 text-gray-500 text-center font-medium">
+        Production Order data unavailable.
+      </div>
+    );
+  }
+
+  const handleOpenDrawer = (moduleName, id) => {
+    if (!id) return;
+    setDrawerState({ isOpen: true, moduleName, id });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Pending":
+        return "bg-orange-100 text-orange-700 border-orange-200";
+      case "In Progress":
+        return "bg-purple-100 text-purple-700 border-purple-200";
+      case "Draft":
+        return "bg-amber-100 text-amber-700 border-amber-200";
+      case "PartialCancelled":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "Cancelled":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "Completed":
+        return "bg-green-100 text-green-700 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
+  const userInitial = orderData.addedByName ? orderData.addedByName.charAt(0).toUpperCase() : "U";
+
+  return (
+    <div className="py-6 px-10 max-h-full overflow-y-auto">
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-12 lg:col-span-2">
+          <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
+            <div className="mb-4">
+              <h2 className="font-semibold text-base text-gray-900">
+                {orderData.productionOrderCode}
+              </h2>
+              <div className="mt-2">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(
+                    orderData.status,
+                  )}`}
+                >
+                  {orderData.status || "—"}
+                </span>
+              </div>
+            </div>
+
+            <hr className="my-4 border-gray-100" />
+
+            <button className="w-full bg-[#1565c0] text-white py-2.5 px-4 rounded-lg text-sm font-medium transition hover:bg-[#0f57a6]">
+              Summary
+            </button>
+          </div>
+        </div>
+
+        <div className="col-span-12 lg:col-span-10 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl hover:shadow-lg transition p-6 space-y-4">
+              <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                <div className="w-12 h-12 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                  <Package className="w-6 h-6 text-[#1565c0]" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-sm text-gray-900 truncate">
+                    {orderData.productionOrderCode}
+                  </h3>
+                  {canViewItem && orderData.itemId ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDrawer("Item", orderData.itemId)}
+                      className="text-xs font-medium text-[#1565c0] hover:underline cursor-pointer truncate block"
+                    >
+                      {orderData.itemName}
+                    </button>
+                  ) : (
+                    <span className="text-xs font-medium text-gray-700 truncate block">
+                      {orderData.itemName}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Item Code</span>
+                  <span className="font-mono font-medium text-gray-800">{orderData.itemCode || "—"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">BOM Code</span>
+                  {canViewBom && orderData.bomId ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDrawer("Bom", orderData.bomId)}
+                      className="font-mono font-medium text-[#1565c0] hover:underline cursor-pointer"
+                    >
+                      {orderData.bomCode || orderData.bomName || "—"}
+                    </button>
+                  ) : (
+                    <span className="font-mono font-medium text-gray-800">{orderData.bomCode || orderData.bomName || "—"}</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Production Date</span>
+                  <span className="font-medium text-gray-800">{orderData.productionDateFormatted || "—"}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl hover:shadow-lg transition p-6 space-y-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Quantity Details
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <tbody className="divide-y divide-gray-100">
+                    <tr>
+                      <td className="py-1.5 text-gray-500 font-sans">Produced Qty</td>
+                      <td className="py-1.5 text-right font-bold text-gray-900">
+                        {orderData.productionQuantityDisplay}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 text-gray-500 font-sans">Package Qty</td>
+                      <td className="py-1.5 text-right font-bold text-[#1565c0]">
+                        {orderData.packageQuantityDisplay}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 text-gray-500 font-sans">Pending Qty</td>
+                      <td className="py-1.5 text-right font-bold text-orange-600">
+                        {orderData.pendingQuantityDisplay || orderData.productionQuantityDisplay}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 text-gray-500 font-sans">No. of Batches</td>
+                      <td className="py-1.5 text-right font-semibold text-purple-600">
+                        {orderData.batchCount || 0}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl hover:shadow-lg transition p-6 space-y-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Cost Details
+              </h4>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Unit Cost</span>
+                  <span className="font-bold text-gray-900">{orderData.itemCostPerUnitFormatted || "₦ 0.00"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Estimated Total</span>
+                  <span className="font-bold text-gray-900">{orderData.estimatedTotalCostFormatted || "₦ 0.00"}</span>
+                </div>
+                
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl hover:shadow-lg transition p-6 space-y-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Requested By
+              </h4>
+              <div className="flex items-center gap-3 pt-1">
+                <div className="w-10 h-10 rounded-full bg-[#1565c0] text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                  {userInitial}
+                </div>
+                <div className="min-w-0">
+                  {canViewUser && orderData.addedBy ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDrawer("User", orderData.addedBy)}
+                      className="text-xs font-bold text-[#1565c0] hover:underline cursor-pointer block truncate"
+                    >
+                      {orderData.addedByName || "System"}
+                    </button>
+                  ) : (
+                    <p className="text-xs font-bold text-gray-900 truncate">
+                      {orderData.addedByName || "System"}
+                    </p>
+                  )}
+                  <p className="text-[11px] text-gray-400 font-medium mt-0.5">
+                    {orderData.addedDateFormatted || "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ProductionOrderMaterialTabs
+            materialDetails={orderData.materialDetails || { rawMaterials: [], semiFinished: [], finishedProducts: [] }}
+            packageQuantity={orderData.packageQuantity || 1}
+            currencySymbol={orderData.currencySymbol || "₦"}
+            showToggle={true}
+            onOpenDrawer={handleOpenDrawer}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl hover:shadow-lg transition p-6 space-y-3">
+              <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-gray-400" /> Remarks
+              </h3>
+              <p className="text-xs text-gray-700 font-medium leading-relaxed">
+                {orderData.remark || "No Remarks found."}
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl hover:shadow-lg transition p-6 space-y-3">
+              <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2">
+                <Paperclip className="w-4 h-4 text-gray-400" /> Attachments
+              </h3>
+
+              {!orderData.attachments || orderData.attachments.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No Attachments found.</p>
+              ) : (
+                <div className="space-y-2">
+                  {orderData.attachments.map((file, idx) => (
+                    <div
+                      key={file.id || idx}
+                      className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-xs"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <FileText className="w-4 h-4 text-[#1565c0]" />
+                        <span className="font-medium text-gray-800 truncate">
+                          {file.originalName || file.filename || `Attachment-${idx + 1}`}
+                        </span>
+                      </div>
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1 text-gray-500 hover:text-[#1565c0] transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <SideDrawer
+        open={drawerState.isOpen}
+        onClose={() => setDrawerState({ isOpen: false, moduleName: null, id: null })}
+        moduleName={drawerState.moduleName}
+        mode="details"
+        data={drawerState.id ? { id: drawerState.id } : null}
+      />
+    </div>
+  );
+}

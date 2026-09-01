@@ -5,5 +5,6 @@ export enum AttachmentModule {
   USER = 'USER',
   COMPANY = 'COMPANY',
   BOM = 'BOM',
+  PRODUCTION_ORDER = 'PRODUCTION_ORDER',
 }
 

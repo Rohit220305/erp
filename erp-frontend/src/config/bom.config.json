@@ -1,6 +1,6 @@
 {
   "moduleName": "Bom",
-  "title": "Bill of Materials (BOM)",
+  "title": "Bill of Materials",
   "permissions": {
     "list": "BOM_LIST",
     "create": "BOM_CREATE",

@@ -7,12 +7,13 @@ export const getItemUomSchema = (isSuperAdmin = false) => {
         .number()
         .or(z.string().transform((val) => (val ? Number(val) : undefined)))
         .optional(),
-      uomName: z.string().min(1, "⚠ Please enter UOM Name"),
+      uomName: z.string().min(1, " Please enter UOM Name"),
       isoCode: z.string().optional().nullable(),
       abbreviation: z.string().optional().nullable(),
-      itemUomCode: z.string().min(1, "⚠ Please enter UOM Code"),
-      unitType: z.string().min(1, "⚠ Please select Unit Type"),
-      status: z.enum(["Active", "Inactive"], "Please select Status.")
+      itemUomCode: z.string().min(1, " Please enter UOM Code"),
+      unitType: z.string().min(1, " Please select Unit Type"),
+      status: z
+        .enum(["Active", "Inactive"], "Please select Status.")
         .default("Active"),
     })
     .refine(
@@ -23,8 +24,8 @@ export const getItemUomSchema = (isSuperAdmin = false) => {
         return true;
       },
       {
-        message: "⚠Please select Company.",
+        message: "Please select Company.",
         path: ["companyId"],
-      }
+      },
     );
 };

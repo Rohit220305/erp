@@ -73,10 +73,10 @@ export default function BomForm({
         showMenu: true,
       },
       navbar: {
-        title: mode === "create" ? "Add New BOM" : "Edit BOM",
+        title: mode === "create" ? "Add" : "Edit",
         breadcrumbs: [
           { label: "Master", href: "/" },
-          { label: "BOM Master", href: "/bom" },
+          { label: "Bill of Materials", href: "/bom" },
         ],
         actionButton: null,
       },
@@ -175,22 +175,22 @@ export default function BomForm({
     const fieldErrors = {};
 
     if (!formData.bomName?.trim()) {
-      fieldErrors.bomName = "⚠ Please enter BOM Name.";
+      fieldErrors.bomName = " Please enter BOM Name.";
     }
     if (!formData.productionMethod) {
-      fieldErrors.productionMethod = "⚠ Please select Production Method.";
+      fieldErrors.productionMethod = " Please select Production Method.";
     }
     if (!formData.itemId) {
-      fieldErrors.itemId = "⚠ Please select Output Item.";
+      fieldErrors.itemId = " Please select Item.";
     }
     if (!formData.processTemplateId) {
-      fieldErrors.processTemplateId = "⚠ Please select Process Template.";
+      fieldErrors.processTemplateId = " Please select Process Template.";
     }
     if (!formData.status) {
-      fieldErrors.status = "⚠ Please select Status.";
+      fieldErrors.status = " Please select Status.";
     }
     if (user?.isSuperAdmin && !effectiveCompanyId) {
-      fieldErrors.companyId = "⚠ Please select Company.";
+      fieldErrors.companyId = " Please select Company.";
     }
 
     if (Object.keys(fieldErrors).length > 0) {
@@ -206,7 +206,7 @@ export default function BomForm({
     const validItems = (processItems || []).filter((i) => i.itemId && Number(i.itemId) > 0);
 
     if (validItems.length === 0) {
-      setErrors({ items: "⚠ Please select material item for at least one row in Step 2." });
+      setErrors({ items: " Please select material item for at least one row in Step 2." });
       setCurrentStep(2);
       toast.error("Please select material item for at least one row in Step 2.");
       return false;
