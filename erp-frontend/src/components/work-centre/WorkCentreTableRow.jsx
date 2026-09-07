@@ -1,10 +1,18 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { Tag } from "lucide-react";
+import { Factory, Tag } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
-export default function WorkCentreTableRow({ item, onRowAction, setSelectedItemForDetails }) {
+export default function WorkCentreTableRow({
+  item,
+  onRowAction,
+  setSelectedItemForDetails,
+  setSelectedCompanyForDetails,
+  setSelectedWorkCentreCategoryForDetails,
+}) {
   const { can, user } = useAuth();
   const isActive = item.status === "Active" || item.status === "active";
   const isAvailable = item.usageStatus === "Available" || item.usageStatus === "available";
@@ -22,18 +30,19 @@ export default function WorkCentreTableRow({ item, onRowAction, setSelectedItemF
               thumbnailClassName="w-10 h-10 rounded-lg border border-gray-200 shrink-0"
             />
           ) : (
-            <Tag className="text-gray-400 w-5 h-5" />
+            <Factory size={24} className="text-gray-500" />
           )}
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         {canView ? (
-          <button
+          <ModuleLink
+            href={buildRoute("work-centre", "detail", { id: item.id })}
             onClick={() => setSelectedItemForDetails(item)}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+            className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
           >
             {item.workCentreName}
-          </button>
+          </ModuleLink>
         ) : (
           <span className="text-sm font-medium text-gray-900">
             {item.workCentreName}
@@ -49,21 +58,41 @@ export default function WorkCentreTableRow({ item, onRowAction, setSelectedItemF
       </td>
       {user?.isSuperAdmin && (
         <td className="px-6 py-4 whitespace-nowrap min-w-[200px] max-w-[200px] truncate">
-          <span
-            className="text-sm font-medium text-gray-900"
-            title={item.companyName}
-          >
-            {item.companyName || "—"}
-          </span>
+          {item.companyName ? (
+            <ModuleLink
+              href={buildRoute("company", "detail", { id: item.companyId })}
+              onClick={() =>
+                setSelectedCompanyForDetails?.({ companyId: item.companyId })
+              }
+              className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
+              title={item.companyName}
+            >
+              {item.companyName}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm font-medium text-gray-900">—</span>
+          )}
         </td>
       )}
       <td className="px-6 py-4 whitespace-nowrap min-w-[180px] max-w-[180px] truncate">
-        <span
-          className="text-sm font-medium text-gray-900"
-          title={item.categoryName}
-        >
-          {item.categoryName || "—"}
-        </span>
+        {item.categoryName ? (
+          <ModuleLink
+            href={buildRoute("work-centre-category", "detail", {
+              id: item.categoryId,
+            })}
+            onClick={() =>
+              setSelectedWorkCentreCategoryForDetails?.({
+                categoryId: item.categoryId,
+              })
+            }
+            className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
+            title={item.categoryName}
+          >
+            {item.categoryName}
+          </ModuleLink>
+        ) : (
+          <span className="text-sm font-medium text-gray-900">—</span>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span

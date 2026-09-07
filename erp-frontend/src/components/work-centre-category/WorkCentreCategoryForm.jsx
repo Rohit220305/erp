@@ -12,6 +12,7 @@ import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import workCentreCategoryConfig from "@/config/work-centre-category.config.json";
 import { getWorkCentreCategorySchema } from "@/lib/validation/work-centre-category.schema";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -128,8 +129,8 @@ export default function WorkCentreCategoryForm({
       navbar: {
         title: `${mode === "create" ? "Add" : "Edit"} ${workCentreCategoryConfig.moduleName}`,
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: workCentreCategoryConfig.title, href: "/work-centre-category" },
+          { label: "Home", href: buildRoute("home", "list") },
+          { label: workCentreCategoryConfig.title, href: buildRoute("work-centre-category", "list") },
           {
             label: `${mode === "create" ? "Add" : "Edit"} ${workCentreCategoryConfig.moduleName}`,
           },
@@ -222,7 +223,7 @@ export default function WorkCentreCategoryForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/work-centre-category");
+      router.push(buildRoute("work-centre-category", "list"));
     }
   };
 
@@ -245,7 +246,7 @@ export default function WorkCentreCategoryForm({
             ? "Work Centre Category created successfully!"
             : "Work Centre Category updated successfully!"
         );
-        router.push("/work-centre-category");
+        router.push(buildRoute("work-centre-category", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} category`);
       }
@@ -273,9 +274,10 @@ export default function WorkCentreCategoryForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Category Name"
                 value={formData.categoryName || ""}
                 onChange={(e) => handleNameChange("categoryName", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.categoryName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
               />
@@ -319,9 +321,10 @@ export default function WorkCentreCategoryForm({
               <input
                 type="text"
                 disabled={mode === "edit"}
+                placeholder="Enter Category Code"
                 value={formData.categoryCode || ""}
                 onChange={(e) => handleChange("categoryCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
                         ${errors.categoryCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                         ${mode === "edit" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white"}
                       `}
@@ -379,23 +382,13 @@ export default function WorkCentreCategoryForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
-          confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
-        }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this category?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        entityName="Work Centre Category"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/work-centre-category");
+            router.push(buildRoute("work-centre-category", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

@@ -5,7 +5,7 @@ import Select from "react-select";
 import { Info, X, FileText } from "lucide-react";
 import { getItem } from "@/lib/api/item-api";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
-import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
+import ConfirmModal from "@/components/common/ConfirmModal";
 
 const PRODUCTION_METHOD_OPTIONS = [
   { label: "Process Manufacturing", value: "process" },
@@ -279,17 +279,16 @@ export default function BomStep1Details({
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 md:p-8 shadow-sm">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-        {/* Row 1: BOM Name & Customer Name */}
         <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
-            BOM Name<span className="text-red-500">*</span>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            BOM Name<span className="text-red-400 ml-1">*</span>
           </label>
           <input
             type="text"
             placeholder="Enter BOM Name"
             value={formData.bomName || ""}
             onChange={(e) => handleNameChange(e.target.value)}
-            className={`w-full h-[48px] rounded-md border bg-white px-4 text-sm outline-none transition focus:border-[#1565c0]
+            className={`w-full h-[48px] rounded-md border bg-white px-4 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:border-[#1565c0]
               ${errors?.bomName ? "border-red-500 bg-red-50" : "border-gray-300"}
             `}
           />
@@ -298,25 +297,9 @@ export default function BomStep1Details({
           )}
         </div>
 
-        {/* <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
-            Customer Name
-          </label>
-          <Select
-            instanceId="select-customer"
-            value={null}
-            isDisabled={true}
-            options={[]}
-            placeholder="Select Customer (Module coming soon...)"
-            classNamePrefix="react-select"
-            styles={customSelectStyles(false, true)}
-          />
-        </div> */}
-
-        {/* Row 2: Production Method & Item */}
         <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
-            Production Method<span className="text-red-500">*</span>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            Production Method<span className="text-red-400 ml-1">*</span>
           </label>
           <Select
             instanceId="select-production-method"
@@ -343,8 +326,8 @@ export default function BomStep1Details({
         </div>
 
         <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
-            Item<span className="text-red-500">*</span>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            Item<span className="text-red-400 ml-1">*</span>
           </label>
           <Select
             instanceId="select-output-item"
@@ -363,7 +346,7 @@ export default function BomStep1Details({
         </div>
 
         <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
             Primitive Qty
           </label>
           <div className="h-[48px] rounded-md border border-gray-200 bg-gray-50 px-4 flex items-center text-sm font-medium text-gray-700">
@@ -372,8 +355,8 @@ export default function BomStep1Details({
         </div>
 
         <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
-            Process Template<span className="text-red-500">*</span>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            Process Template<span className="text-red-400 ml-1">*</span>
           </label>
           <Select
             instanceId="select-process-template"
@@ -399,9 +382,8 @@ export default function BomStep1Details({
           )}
         </div>
 
-        {/* Row 4: Remarks & Attachment */}
         <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
             Remarks
           </label>
           <div className="relative">
@@ -409,7 +391,7 @@ export default function BomStep1Details({
               placeholder="Enter Remarks"
               value={formData.remarks || ""}
               onChange={(e) => handleChange("remarks", e.target.value)}
-              className={`w-full h-[48px] rounded-md border bg-white px-4 py-3 text-sm outline-none transition focus:border-[#1565c0] pr-10 resize-none
+              className={`w-full h-[48px] rounded-md border bg-white px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:border-[#1565c0] pr-10 resize-none
                 ${errors?.remarks ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -430,7 +412,7 @@ export default function BomStep1Details({
         </div>
 
         <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
             Reference Number
           </label>
           <div className="relative">
@@ -439,7 +421,7 @@ export default function BomStep1Details({
               placeholder="Enter Reference Number"
               value={formData.referenceNumber || ""}
               onChange={(e) => handleChange("referenceNumber", e.target.value)}
-              className={`w-full h-[48px] rounded-md border bg-white px-4 text-sm outline-none transition focus:border-[#1565c0] pr-10
+              className={`w-full h-[48px] rounded-md border bg-white px-4 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:border-[#1565c0] pr-10
                 ${errors?.referenceNumber ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -462,7 +444,7 @@ export default function BomStep1Details({
         </div>
 
         <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
             Attachment
           </label>
 
@@ -532,7 +514,6 @@ export default function BomStep1Details({
             </div>
           )}
 
-          {/* Uploaded Files Square Thumbnail Cards Grid with SharedImageZoom */}
           {(existingFiles.length > 0 || newFiles.length > 0) && (
             <div className="mt-4 flex flex-wrap gap-3">
               {existingFiles.map((file) => (
@@ -557,8 +538,8 @@ export default function BomStep1Details({
         </div>
 
         <div>
-          <label className="mb-2 block text-xs font-semibold text-gray-700">
-            Status<span className="text-red-500">*</span>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            Status<span className="text-red-400 ml-1">*</span>
           </label>
           <Select
             instanceId="select-status"
@@ -578,11 +559,10 @@ export default function BomStep1Details({
           )}
         </div>
 
-        {/* Row 6: Company (Super Admin) */}
         {user?.isSuperAdmin && (
           <div>
-            <label className="mb-2 block text-xs font-semibold text-gray-700">
-              Company<span className="text-red-500">*</span>
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+              Company<span className="text-red-400 ml-1">*</span>
             </label>
             <Select
               instanceId="select-company"
@@ -609,12 +589,12 @@ export default function BomStep1Details({
         )}
       </div>
 
-      <DeleteConfirmModal
+      <ConfirmModal
         isOpen={Boolean(deleteConfirmTarget)}
-        title="Delete"
-        message="Are you sure want to delete this?"
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        actionType="delete"
+        entityName="Attachment"
+        title="Confirm Delete"
+        message="Are you sure you want to delete this attachment?"
         onConfirm={confirmRemoveFile}
         onCancel={() => setDeleteConfirmTarget(null)}
       />

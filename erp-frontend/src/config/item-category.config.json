@@ -35,14 +35,7 @@
       "sortable": true,
       "width": "180px"
     },
-    {
-      "label": "Parent Category",
-      "key": "parentCategoryName",
-      "type": "text",
-      "searchable": true,
-      "sortable": true,
-      "width": "200px"
-    },
+    
     {
       "label": "Added Date",
       "key": "addedDateFormatted",

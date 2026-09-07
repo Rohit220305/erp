@@ -16,11 +16,11 @@ import { createProductionOrder, updateProductionOrder } from "@/lib/api/producti
 import { productionOrderSchema } from "@/lib/validation/production-order.schema";
 import ProductionOrderMaterialTabs from "./ProductionOrderMaterialTabs";
 import ConfirmModal from "@/components/common/ConfirmModal";
-import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import AccessDenied from "@/components/common/AccessDenied";
 import Loader from "@/components/common/Loader";
 import productionOrderConfig from "@/config/production-order.config.json";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
@@ -155,10 +155,16 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
   const [selectedBomDetails, setSelectedBomDetails] = useState(null);
 
   const [packageQuantity, setPackageQuantity] = useState(1);
+  const [displayPackageQuantity, setDisplayPackageQuantity] = useState(1);
   const [itemCostPerUnit, setItemCostPerUnit] = useState(0);
   const [itemCostPerUnitFormatted, setItemCostPerUnitFormatted] = useState("NA");
   const [estimatedTotalCostFormatted, setEstimatedTotalCostFormatted] = useState("NA");
   const [materialDetails, setMaterialDetails] = useState({
+    rawMaterials: [],
+    semiFinished: [],
+    finishedProducts: [],
+  });
+  const [dynamicMaterialDetails, setDynamicMaterialDetails] = useState({
     rawMaterials: [],
     semiFinished: [],
     finishedProducts: [],
@@ -187,13 +193,10 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         showMenu: true,
       },
       navbar: {
-        title:
-          mode === "create"
-            ? `Add `
-            : `Edit `,
+        title: mode === "create" ? "Add" : "Edit",
         breadcrumbs: [
-          { label: "Home", href: "/" },
-          { label: productionOrderConfig.title, href: "/production-order" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Production Orders", href: buildRoute("production-order", "list") },
         ],
       },
     });
@@ -228,10 +231,10 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       productionQuantity: initialData?.productionQuantity || 0,
       productionDate: initialData?.productionDate
         ? new Date(initialData.productionDate).toISOString().split("T")[0]
-        : todayStr,
+        : "",
       referenceNumber: initialData?.referenceNumber || "",
       remark: initialData?.remark || "",
-      status: initialData?.status || "Draft",
+      status: initialData?.status || "Pending",
     },
   });
 
@@ -248,7 +251,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
     if (initialData) {
       const formattedDate = initialData.productionDate
         ? new Date(initialData.productionDate).toISOString().split("T")[0]
-        : todayStr;
+        : "";
 
       reset({
         companyId: initialData.companyId || "",
@@ -258,7 +261,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         productionDate: formattedDate,
         referenceNumber: initialData.referenceNumber || "",
         remark: initialData.remark || "",
-        status: initialData.status || "Draft",
+        status: initialData.status || "Pending",
       });
 
       setExistingAttachments(initialData.attachments || []);
@@ -370,7 +373,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         const itemList = itemRes?.settings?.data?.list || itemRes?.data?.list || itemRes?.data || [];
 
         const mappedItems = itemList.map((i) => ({
-          label: `${i.itemName} (${i.itemCode})`,
+          label: i.itemName,
           value: i.id,
           primitiveQuantity: i.primitiveQuantity || 1,
           itemUomName: i.itemUomName,
@@ -417,7 +420,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
 
         const bomList = bomRes?.settings?.data?.list || bomRes?.data?.list || bomRes?.data || [];
         const mappedBoms = bomList.map((b) => ({
-          label: `${b.bomName} (${b.bomCode})`,
+          label: b.bomName,
           value: b.id,
         }));
         setBomOptions(mappedBoms);
@@ -479,15 +482,19 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
     const primitiveQty = Number(selectedItemDetails?.primitiveQuantity) || 1;
     const prodQty = Number(watchProductionQuantity) || 0;
     if (prodQty > 0) {
-      setPackageQuantity(parseFloat((prodQty / primitiveQty).toFixed(4)));
+      const calc = parseFloat((prodQty / primitiveQty).toFixed(4));
+      setPackageQuantity(calc);
+      setDisplayPackageQuantity(calc);
     }
-  }, [selectedItemDetails, watchProductionQuantity]);
+  }, [selectedItemDetails]);
 
   const handleProductionQtyChange = (e) => {
-    const val = parseFloat(e.target.value) || 0;
-    setValue("productionQuantity", val);
+    setValue("productionQuantity", e.target.value);
     setIsDirty(true);
+  };
 
+  const handleProductionQtyBlur = (e) => {
+    const val = parseFloat(e.target.value) || 0;
     const primitiveQty = selectedItemDetails?.primitiveQuantity || 1;
 
     if (val > 0 && val < primitiveQty) {
@@ -501,12 +508,18 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
 
     const calculatedPkgQty = parseFloat((val / primitiveQty).toFixed(4));
     setPackageQuantity(calculatedPkgQty);
+    setDisplayPackageQuantity(calculatedPkgQty);
   };
 
   const handlePackageQtyChange = (e) => {
+    setDisplayPackageQuantity(e.target.value);
+    setIsDirty(true);
+  };
+
+  const handlePackageQtyBlur = (e) => {
     const pkgVal = parseFloat(e.target.value) || 0;
     setPackageQuantity(pkgVal);
-    setIsDirty(true);
+    setDisplayPackageQuantity(pkgVal);
 
     const primitiveQty = selectedItemDetails?.primitiveQuantity || 1;
     const calculatedProdQty = parseFloat((pkgVal * primitiveQty).toFixed(4));
@@ -516,10 +529,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
   };
 
   useEffect(() => {
-    const numProdQty = Number(watchProductionQuantity) || 0;
-    const primitiveQty = Number(selectedItemDetails?.primitiveQuantity) || 1;
-    const numPkgQty = numProdQty / primitiveQty;
-
+    const numPkgQty = Number(packageQuantity) || 0;
     const totalCost = parseFloat((itemCostPerUnit * numPkgQty).toFixed(2));
     const symbol = selectedBomDetails?.currencySymbol || "";
     setEstimatedTotalCostFormatted(
@@ -527,7 +537,34 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         ? `${symbol ? symbol + " " : ""}${totalCost.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
         : "NA"
     );
-  }, [watchProductionQuantity, itemCostPerUnit, selectedItemDetails, selectedBomDetails]);
+  }, [packageQuantity, itemCostPerUnit, selectedBomDetails?.currencySymbol]);
+
+  useEffect(() => {
+    const scale = Number(packageQuantity) || 1;
+    const processItems = (items, calculateCost = true) => {
+      return (items || []).map((item) => {
+        const baseQty = Number(item.totalRequiredQty) || Number(item.qtyPerUnit) || 0;
+        const newRequiredQty = baseQty * scale;
+        const newTotalCost = calculateCost ? newRequiredQty * (Number(item.unitPrice) || 0) : 0;
+
+        return {
+          ...item,
+          totalRequiredQty: parseFloat(newRequiredQty.toFixed(4)),
+          totalRequiredQtyDisplay: `${parseFloat(newRequiredQty.toFixed(4))}`,
+          totalCost: parseFloat(newTotalCost.toFixed(2)),
+          totalCostFormatted: newTotalCost > 0
+            ? `${selectedBomDetails?.currencySymbol || ""} ${newTotalCost.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+            : "NA",
+        };
+      });
+    };
+
+    setDynamicMaterialDetails({
+      rawMaterials: processItems(materialDetails.rawMaterials, true),
+      semiFinished: processItems(materialDetails.semiFinished, false),
+      finishedProducts: processItems(materialDetails.finishedProducts, false),
+    });
+  }, [materialDetails, packageQuantity, selectedBomDetails?.currencySymbol]);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -561,7 +598,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       if (formDataToSubmit.remark) {
         submitFormData.append("remark", formDataToSubmit.remark);
       }
-      submitFormData.append("status", "Draft");
+      submitFormData.append("status", "Pending");
 
       files.forEach((file) => {
         submitFormData.append("attachments", file);
@@ -617,32 +654,51 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       <label className="block text-xs font-semibold text-gray-500 tracking-wide">
         {label} {required && <span className="text-red-400 ml-1">*</span>}
       </label>
-      <input
-        type={type}
-        disabled={disabled}
-        readOnly={readOnly}
-        value={
-          valueCustom !== undefined
-            ? valueCustom
-            : watch(name) === null || watch(name) === undefined
-              ? ""
-              : watch(name)
-        }
-        onChange={(e) => {
-          if (onChangeCustom) {
-            onChangeCustom(e);
-          } else {
-            setValue(name, e.target.value);
-            setIsDirty(true);
-            if (errors[name]) clearErrors(name);
+      <div className="relative w-full">
+        <input
+          type={type}
+          disabled={disabled}
+          readOnly={readOnly}
+          value={
+            valueCustom !== undefined
+              ? valueCustom
+              : watch(name) === null || watch(name) === undefined
+                ? ""
+                : watch(name)
           }
-        }}
-        className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-          ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200 font-semibold" : "bg-white border-gray-200 hover:border-gray-300"}
-          ${errors[name] ? "border-red-400 bg-red-50" : ""}`}
-        placeholder={props.placeholder || `Enter ${label}`}
-        {...props}
-      />
+          onChange={(e) => {
+            if (onChangeCustom) {
+              onChangeCustom(e);
+            } else {
+              setValue(name, e.target.value);
+              setIsDirty(true);
+              if (errors[name]) clearErrors(name);
+            }
+          }}
+          className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+            ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200 font-semibold" : "bg-white border-gray-200 hover:border-gray-300"}
+            ${errors[name] ? "border-red-400 bg-red-50" : ""}
+            ${props.className || ""} ${type === "date" && !disabled && !readOnly ? "cursor-pointer" : ""}
+            ${type === "date" && !(valueCustom !== undefined ? valueCustom : watch(name)) ? "[&::-webkit-datetime-edit]:text-transparent" : ""}`}
+          placeholder={props.placeholder || `Enter ${label}`}
+          onClick={(e) => {
+            if (type === "date" && !disabled && !readOnly && e.target.showPicker) {
+              try { e.target.showPicker(); } catch (err) {}
+            }
+            if (props.onClick) props.onClick(e);
+          }}
+          onKeyDown={(e) => {
+            if (type === "date") e.preventDefault();
+            if (props.onKeyDown) props.onKeyDown(e);
+          }}
+          {...props}
+        />
+        {type === "date" && !(valueCustom !== undefined ? valueCustom : watch(name)) && (
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af] pointer-events-none">
+            {props.placeholder || `Select ${label}`}
+          </span>
+        )}
+      </div>
       {subtext && <p className="text-xs text-gray-400 italic">{subtext}</p>}
       {errors[name] && <p className="text-xs text-red-500">{errors[name]?.message || errors[name]}</p>}
     </div>
@@ -799,31 +855,30 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
               )}
             </div>
 
-            {/* Production Qty Input */}
             {renderInputField({
               name: "productionQuantity",
               label: `Production Qty (${selectedItemDetails?.itemUomName || "Units"})`,
               type: "number",
               step: "any",
               required: true,
-              valueCustom: watchProductionQuantity || "",
+              valueCustom: watchProductionQuantity !== undefined && watchProductionQuantity !== null ? watchProductionQuantity : "",
               onChangeCustom: handleProductionQtyChange,
+              onBlur: handleProductionQtyBlur,
               placeholder: "Enter Production Quantity",
             })}
 
-            {/* Package Qty Input */}
             {renderInputField({
               name: "packageQuantity",
               label: `Package Qty (${selectedItemDetails?.packageUomName || "Unit(s)"})`,
               type: "number",
               step: "any",
               required: true,
-              valueCustom: packageQuantity || "",
+              valueCustom: displayPackageQuantity !== undefined && displayPackageQuantity !== null ? displayPackageQuantity : "",
               onChangeCustom: handlePackageQtyChange,
+              onBlur: handlePackageQtyBlur,
               placeholder: "Enter Package Quantity",
             })}
 
-            {/* Item Cost Per Unit */}
             {renderInputField({
               name: "itemCostPerUnit",
               label: "Item Cost Per Unit",
@@ -833,7 +888,6 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
               subtext: primitiveQtyText,
             })}
 
-            {/* Estimated Total Cost */}
             {renderInputField({
               name: "estimatedTotalCost",
               label: "Estimated Total Cost",
@@ -842,19 +896,19 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
               valueCustom: estimatedTotalCostFormatted,
             })}
 
-            {/* Reference Number */}
             {renderInputField({
               name: "referenceNumber",
               label: "Reference Number",
               placeholder: "Enter Reference Number",
             })}
 
-            {/* Production Date */}
             {renderInputField({
               name: "productionDate",
               label: "Production Date",
               type: "date",
               required: true,
+              min: todayStr,
+              placeholder: "Please Select Production Date",
             })}
 
             {renderInputField({
@@ -864,8 +918,6 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
               required: true,
             })}
 
-           
-            {/* Attachment Field (Matching BomStep1Details.jsx reference) */}
             <div className="">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-1.5">
                 Attachment
@@ -937,7 +989,6 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
                 </div>
               )}
 
-              {/* Uploaded Files Square Thumbnail Cards Grid with SharedImageZoom & Delete Confirm */}
               {(existingAttachments.length > 0 || files.length > 0) && (
                 <div className="mt-4 flex flex-wrap gap-3">
                   {existingAttachments.map((file) => (
@@ -969,9 +1020,8 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
             </div>
           </div>
 
-          
         <ProductionOrderMaterialTabs
-          materialDetails={materialDetails}
+          materialDetails={dynamicMaterialDetails}
           packageQuantity={packageQuantity}
           currencySymbol={selectedBomDetails?.currencySymbol || ""}
           showToggle={true}
@@ -980,7 +1030,6 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         />
         </div>
 
-       
         <div className="flex items-center justify-center gap-4 pt-4">
           <button
             type="button"
@@ -1003,9 +1052,10 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         </div>
       </form>
 
-      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        entityName="Production Order"
         title={
           confirmState.type === "submit"
             ? mode === "create"
@@ -1025,7 +1075,11 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
             handleActualSubmit(confirmState.data);
           } else {
             setConfirmState({ isOpen: false, type: null, data: null });
-            router.push("/production-order");
+            if (mode === "edit" && (id || initialData?.id)) {
+              router.push(buildRoute("production-order", "detail", { id: id || initialData?.id }));
+            } else {
+              router.push(buildRoute("production-order", "list"));
+            }
           }
         }}
         onCancel={() =>
@@ -1033,13 +1087,10 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         }
       />
 
-      {/* Delete Confirmation Modal for File Attachments */}
-      <DeleteConfirmModal
+      <ConfirmModal
         isOpen={Boolean(deleteConfirmTarget)}
-        title="Delete"
-        message="Are you sure want to delete this?"
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        actionType="delete"
+        entityName="Attachment"
         onConfirm={confirmRemoveFile}
         onCancel={() => setDeleteConfirmTarget(null)}
       />

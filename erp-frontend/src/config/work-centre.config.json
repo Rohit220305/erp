@@ -1,6 +1,6 @@
 {
   "moduleName": "WorkCentre",
-  "title": "Work Centre Master",
+  "title": "Work Centre",
   "permissions": {
     "list": "WORK_CENTRE_LIST",
     "create": "WORK_CENTRE_CREATE",
@@ -32,7 +32,7 @@
       "type": "text",
       "searchable": true,
       "sortable": true,
-      "width": "120px"
+      "width": "220px"
     },
     {
       "label": "Company",

@@ -3,9 +3,12 @@ import { CAPABILITIES } from "@/config/capabilities.config";
 import { useRouter } from "next/navigation";
 import { Coins } from "lucide-react";
 import { useHeader } from "@/context/HeaderContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
+import ModuleLink from "@/components/common/ModuleLink";
+import SideDrawer from "@/components/common/SideDrawer";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const DetailRow = ({ label, value }) => (
   <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
@@ -18,6 +21,11 @@ export default function CurrencyDetailPage({ currency }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
   const { can } = useAuth();
+  const [sideDrawerState, setSideDrawerState] = useState({
+    isOpen: false,
+    moduleName: null,
+    id: null,
+  });
 
   useEffect(() => {
     setConfig({
@@ -33,13 +41,13 @@ export default function CurrencyDetailPage({ currency }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "Currency Master", href: "/currency" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Currency Master", href: buildRoute("currency", "list") },
         ],
         actionButton: can(CAPABILITIES.CURRENCY.UPDATE)
           ? {
               label: "Edit",
-              onClick: () => router.push(`/currency/edit/${currency.id}`),
+              onClick: () => router.push(buildRoute("currency", "edit", { id: currency?.id })),
             }
           : null,
       },
@@ -48,7 +56,7 @@ export default function CurrencyDetailPage({ currency }) {
     return () => {
       resetConfig();
     };
-  }, [setConfig, router, currency.id, resetConfig, can]);
+  }, [setConfig, router, currency?.id, resetConfig, can]);
 
   if (
     !currency ||
@@ -61,6 +69,10 @@ export default function CurrencyDetailPage({ currency }) {
     }
     return <div className="p-6 text-gray-500">Currency data could not be loaded.</div>;
   }
+
+  const addedByUserId = currency?.addedBy || currency?.addedById;
+  const updatedByUserId = currency?.updatedBy || currency?.updatedById;
+
   return (
     <div className="p-6">
       <div className="grid grid-cols-12 gap-6">
@@ -126,12 +138,22 @@ export default function CurrencyDetailPage({ currency }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 break-inside-avoid">
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h3 className="font-semibold text-gray-900 mb-5 text-base border-b border-gray-100 pb-3">
-                  Added info
+                  Added Info
                 </h3>
                 <div>
-                  <p className="text-gray-900 font-medium">{currency.addedByName || "-"}</p>
+                  {currency.addedByName && addedByUserId && can(CAPABILITIES.USER.VIEW) ? (
+                    <ModuleLink
+                      href={buildRoute("user", "detail", { id: addedByUserId })}
+                      onClick={() => setSideDrawerState({ isOpen: true, moduleName: "User", id: addedByUserId })}
+                      className="text-[#1565c0] font-medium block"
+                    >
+                      {currency.addedByName}
+                    </ModuleLink>
+                  ) : (
+                    <p className="text-gray-900 font-medium">{currency.addedByName || "-"}</p>
+                  )}
                   <p className="text-gray-400 text-xs mt-0.5">
-                    {currency.addedDateFormatted}
+                    {currency.addedDateFormatted || "-"}
                   </p>
                 </div>
               </div>
@@ -139,11 +161,20 @@ export default function CurrencyDetailPage({ currency }) {
               {currency.updatedDateFormatted && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   <h3 className="font-semibold text-gray-900 mb-5 text-base border-b border-gray-100 pb-3">
-                    Updated info
+                    Updated Info
                   </h3>
                   <div>
-                   
-                    <p className="text-gray-900 font-medium">{currency.updatedByName || "-"}</p>
+                    {currency.updatedByName && updatedByUserId && can(CAPABILITIES.USER.VIEW) ? (
+                      <ModuleLink
+                        href={buildRoute("user", "detail", { id: updatedByUserId })}
+                        onClick={() => setSideDrawerState({ isOpen: true, moduleName: "User", id: updatedByUserId })}
+                        className="text-[#1565c0] font-medium block"
+                      >
+                        {currency.updatedByName}
+                      </ModuleLink>
+                    ) : (
+                      <p className="text-gray-900 font-medium">{currency.updatedByName || "-"}</p>
+                    )}
                     <p className="text-gray-400 text-xs mt-0.5">
                       {currency.updatedDateFormatted}
                     </p>
@@ -154,6 +185,15 @@ export default function CurrencyDetailPage({ currency }) {
           </div>
         </div>
       </div>
+
+      <SideDrawer
+        open={sideDrawerState.isOpen}
+        onClose={() => setSideDrawerState({ isOpen: false, moduleName: null, id: null })}
+        moduleName={sideDrawerState.moduleName}
+        mode="details"
+        data={sideDrawerState.id ? { id: sideDrawerState.id } : null}
+      />
     </div>
   );
 }
+

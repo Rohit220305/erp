@@ -12,6 +12,7 @@ import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import packageMasterConfig from "@/config/package-master.config.json";
 import { getPackageSchema } from "@/lib/validation/package-master.schema";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -130,8 +131,11 @@ export default function PackageForm({
       navbar: {
         title: `${mode === "create" ? "Add" : "Edit"} Package Type`,
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: packageMasterConfig.title, href: "/package-master" },
+          { label: "Master", href: buildRoute("home", "list") },
+          {
+            label: packageMasterConfig.title,
+            href: buildRoute("packageMaster", "list"),
+          },
           {
             label: `${mode === "create" ? "Add" : "Edit"} Package Type`,
           },
@@ -224,7 +228,7 @@ export default function PackageForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/package-master");
+      router.push(buildRoute("packageMaster", "list"));
     }
   };
 
@@ -247,7 +251,7 @@ export default function PackageForm({
             ? "Package Type created successfully!"
             : "Package Type updated successfully!"
         );
-        router.push("/package-master");
+        router.push(buildRoute("packageMaster", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} package type`);
       }
@@ -268,16 +272,18 @@ export default function PackageForm({
           </div>
 
           <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                 Package Type Name <span className="text-red-400 ml-1">*</span>
               </label>
               <input
                 type="text"
+                placeholder="Enter Package Type Name"
                 value={formData.packageName || ""}
-                onChange={(e) => handleNameChange("packageName", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                onChange={(e) =>
+                  handleNameChange("packageName", e.target.value)
+                }
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.packageName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
               />
@@ -294,8 +300,9 @@ export default function PackageForm({
                 <Select
                   instanceId="select-company"
                   value={
-                    companyOptions.find((c) => c.value === formData.companyId) ||
-                    null
+                    companyOptions.find(
+                      (c) => c.value === formData.companyId,
+                    ) || null
                   }
                   onChange={(opt) =>
                     handleChange("companyId", opt ? opt.value : "")
@@ -313,17 +320,18 @@ export default function PackageForm({
                 )}
               </div>
             )}
-            
+
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                 Package Type Code <span className="text-red-400 ml-1">*</span>
               </label>
               <input
                 type="text"
+                placeholder="Enter Package Type Code"
                 disabled={mode === "edit"}
                 value={formData.packageCode || ""}
                 onChange={(e) => handleChange("packageCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
                         ${errors.packageCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                         ${mode === "edit" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white"}
                       `}
@@ -339,9 +347,10 @@ export default function PackageForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Abbreviation"
                 value={formData.abbreviation || ""}
                 onChange={(e) => handleChange("abbreviation", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.abbreviation ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
               />
@@ -372,16 +381,17 @@ export default function PackageForm({
                 <p className="text-xs text-red-500">{errors.status}</p>
               )}
             </div>
-            
+
             <div className="space-y-1.5 md:col-span-2">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                 Description
               </label>
               <textarea
+                placeholder="Enter Description"
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
                 rows={3}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.description ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
               />
@@ -389,7 +399,6 @@ export default function PackageForm({
                 <p className="text-xs text-red-500">{errors.description}</p>
               )}
             </div>
-
           </div>
         </div>
 
@@ -407,32 +416,26 @@ export default function PackageForm({
             disabled={loading}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm cursor-pointer font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
           >
-            {loading
-              ? "Saving..."
-              : "Submit"}
+            {loading ? "Saving..." : "Submit"}
           </button>
         </div>
       </form>
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this package type?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Package Type"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/package-master");
+            router.push(buildRoute("packageMaster", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

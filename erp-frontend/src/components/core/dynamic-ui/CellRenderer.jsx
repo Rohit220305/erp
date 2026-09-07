@@ -5,6 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { Building2 } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ActionRenderer from "./ActionRenderer";
+import StatusBadge from "@/components/common/StatusBadge";
+import { formatNumber, formatCurrency, formatQuantityWithUom, formatPercent } from "@/utils/number-formatter";
 
 export default function CellRenderer({
   item,
@@ -78,16 +80,19 @@ export default function CellRenderer({
 
     case "statusBadge":
     case "status":
-      return (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${value === "Active"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-            }`}
-        >
-          {value || "-"}
-        </span>
-      );
+      return <StatusBadge status={value} />;
+
+    case "number":
+      return <span>{formatNumber(value, column.formatOptions)}</span>;
+
+    case "currency":
+      return <span>{formatCurrency(value, data?.currencySymbol || column.currencySymbol || "₦", column.formatOptions)}</span>;
+
+    case "quantity":
+      return <span>{formatQuantityWithUom(value, data?.uomName || column.uomName || "", column.formatOptions)}</span>;
+
+    case "percent":
+      return <span>{formatPercent(value, column.formatOptions)}</span>;
 
     case "phone":
       return (

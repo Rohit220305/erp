@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 import Image from "next/image";
+import Link from "next/link";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import {
   Search,
   ChevronDown,
@@ -56,7 +58,7 @@ export default function Header() {
     } catch (e) {
     } finally {
       logout();
-      router.push("/login");
+      router.push(buildRoute("auth", "login"));
     }
   };
 
@@ -64,7 +66,7 @@ export default function Header() {
     try {
       const res = await switchProfile(groupId);
       toast.success(res?.message || "Profile switched successfully");
-      router.push("/");
+      router.push(buildRoute("home", "list"));
     } catch (err) {
       toast.error(err?.message || "Failed to switch profile");
     }
@@ -78,7 +80,7 @@ export default function Header() {
         toast.success(
           `Back to ${prevSession.firstName} ${prevSession.lastName}'s session`,
         );
-        router.push("/");
+        router.push(buildRoute("home", "list"));
       } else {
         toast.error("No previous session found");
         await handleLogout();
@@ -93,9 +95,9 @@ export default function Header() {
     <header className="bg-white border-b border-dashed border-gray-300 h-[74px]">
       <div className="h-full flex items-center justify-between px-8">
         <div className="flex items-center">
-          <div
+          <Link
+            href={buildRoute("home", "list")}
             className="flex items-center hover:cursor-pointer"
-            onClick={() => router.push("/")}
           >
             <Image
               src="/images/production-logo.png"
@@ -103,7 +105,7 @@ export default function Header() {
               width={50}
               height={50}
             />
-          </div>
+          </Link>
 
           {/* <div className="mx-6 h-10 w-px bg-gray-300" />
 
@@ -184,8 +186,8 @@ export default function Header() {
               allGroups={allGroups}
               activeGroupId={activeGroupId}
               onSwitchProfile={handleSwitchProfile}
-              onProfile={() => user?.id && router.push(`/admin/${user.id}`)}
-              onChangePassword={() => router.push("/settings/change-password")}
+              onProfile={() => user?.id && router.push(buildRoute("user", "detail", { id: user.id }))}
+              onChangePassword={() => router.push(buildRoute("settings", "changePassword"))}
               onLogout={handleLogout}
               onBackToSession={handleBackToSession}
               isImpersonating={isImpersonating}

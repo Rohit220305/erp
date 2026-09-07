@@ -59,7 +59,7 @@ export class ProductionOrderEntity extends AbstractBaseEntity {
   @Column({
     type: 'enum',
     enum: ProductionOrderStatus,
-    default: ProductionOrderStatus.Draft,
+    default: ProductionOrderStatus.Pending,
   })
   status: ProductionOrderStatus;
 }

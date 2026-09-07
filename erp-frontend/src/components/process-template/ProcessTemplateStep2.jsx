@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Select from "react-select";
 import { listProcesses } from "@/lib/api/process-api";
 import { ArrowUp, ArrowDown, Trash2, Plus, Info } from "lucide-react";
-import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
+import ConfirmModal from "@/components/common/ConfirmModal";
 
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
@@ -510,12 +510,12 @@ export default function ProcessTemplateStep2({
         </div>
       </div>
 
-      <DeleteConfirmModal
+      <ConfirmModal
         isOpen={deleteModalOpen}
-        title="Delete Process"
+        actionType="delete"
+        entityName="Process"
+        title="Confirm Delete"
         message="Are you sure you want to remove this process from the sequence?"
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
         onConfirm={handleConfirmDelete}
         onCancel={() => {
           setDeleteModalOpen(false);

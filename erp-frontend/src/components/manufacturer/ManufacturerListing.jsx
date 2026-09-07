@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import DynamicListing from "@/components/common/dynamic/DynamicListing";
 import manufacturerConfig from "@/config/manufacturer.config.json";
 import {
@@ -7,10 +8,12 @@ import {
   getManufacturer,
   deleteManufacturer,
 } from "@/lib/api/manufacturer-api";
-import { useAuth } from "@/context/AuthContext";
+import SideDrawer from "@/components/common/SideDrawer";
 import ManufacturerTableRow from "./ManufacturerTableRow";
 
 export default function ManufacturerListing() {
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
+
   const customConfig = {
     ...manufacturerConfig,
     forceView: "table",
@@ -20,18 +23,29 @@ export default function ManufacturerListing() {
   };
 
   return (
-    <DynamicListing
-      schema={customConfig}
-      fetchData={listManufacturers}
-      fetchItem={getManufacturer}
-      deleteFn={deleteManufacturer}
-      renderTableRow={(item, onRowAction, setSelectedItemForDetails) => (
-        <ManufacturerTableRow
-          item={item}
-          onRowAction={onRowAction}
-          setSelectedItemForDetails={setSelectedItemForDetails}
-        />
-      )}
-    />
+    <>
+      <DynamicListing
+        schema={customConfig}
+        fetchData={listManufacturers}
+        fetchItem={getManufacturer}
+        deleteFn={deleteManufacturer}
+        renderTableRow={(item, onRowAction, setSelectedItemForDetails) => (
+          <ManufacturerTableRow
+            item={item}
+            onRowAction={onRowAction}
+            setSelectedItemForDetails={setSelectedItemForDetails}
+            setSelectedCompanyForDetails={setSelectedCompanyForDetails}
+          />
+        )}
+      />
+
+      <SideDrawer
+        open={!!selectedCompanyForDetails}
+        onClose={() => setSelectedCompanyForDetails(null)}
+        moduleName="Company"
+        mode="details"
+        data={selectedCompanyForDetails ? { id: selectedCompanyForDetails.companyId } : null}
+      />
+    </>
   );
 }

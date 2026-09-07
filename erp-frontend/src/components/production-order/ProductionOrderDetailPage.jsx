@@ -7,6 +7,9 @@ import { useHeader } from "@/context/HeaderContext";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import SideDrawer from "@/components/common/SideDrawer";
 import ProductionOrderMaterialTabs from "./ProductionOrderMaterialTabs";
+import ModuleLink from "@/components/common/ModuleLink";
+import StatusBadge from "@/components/common/StatusBadge";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import {
   Package,
   FileText,
@@ -32,6 +35,7 @@ export default function ProductionOrderDetailPage({ data }) {
   const canViewItem = can(CAPABILITIES.ITEM?.VIEW || "ITEM_VIEW");
   const canViewBom = can(CAPABILITIES.BOM?.VIEW || "BOM_VIEW");
   const canViewUser = can(CAPABILITIES.USER?.VIEW || "USER_VIEW");
+  const canCreateBatch = can(CAPABILITIES.PRODUCTION_BATCH?.CREATE || "PRODUCTION_BATCH_CREATE");
 
   useEffect(() => {
     setConfig({
@@ -46,15 +50,27 @@ export default function ProductionOrderDetailPage({ data }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master" , href: "/"},
-          { label: "Production Orders", href: "/production-order" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Production Orders", href: buildRoute("production-order", "list") },
         ],
-        actionButton: canEdit && orderData?.id
-          ? {
-              label: "Edit",
-              onClick: () => router.push(`/production-order/edit/${orderData.id}`),
-            }
-          : null,
+        actionButtons: [
+          ...(canEdit && orderData?.id
+            ? [
+                {
+                  label: "Edit",
+                  onClick: () => router.push(buildRoute("production-order", "edit", { id: orderData.id })),
+                },
+              ]
+            : []),
+          ...(canCreateBatch
+            ? [
+                {
+                  label: "Create Batch",
+                  onClick: () => router.push(`/production-batch/create/${orderData.id}`),
+                },
+              ]
+            : []),
+        ],
       },
     });
     return () => {
@@ -75,25 +91,9 @@ export default function ProductionOrderDetailPage({ data }) {
     setDrawerState({ isOpen: true, moduleName, id });
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "bg-orange-100 text-orange-700 border-orange-200";
-      case "In Progress":
-        return "bg-purple-100 text-purple-700 border-purple-200";
-      case "Draft":
-        return "bg-amber-100 text-amber-700 border-amber-200";
-      case "PartialCancelled":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Cancelled":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "Completed":
-        return "bg-green-100 text-green-700 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
-    }
-  };
 
+
+  const userId = orderData.addedBy || orderData.addedById || orderData.added_by || orderData.createdBy;
   const userInitial = orderData.addedByName ? orderData.addedByName.charAt(0).toUpperCase() : "U";
 
   return (
@@ -106,21 +106,17 @@ export default function ProductionOrderDetailPage({ data }) {
                 {orderData.productionOrderCode}
               </h2>
               <div className="mt-2">
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(
-                    orderData.status,
-                  )}`}
-                >
-                  {orderData.status || "—"}
-                </span>
+                <StatusBadge status={orderData.status || "—"} />
               </div>
             </div>
 
             <hr className="my-4 border-gray-100" />
 
-            <button className="w-full bg-[#1565c0] text-white py-2.5 px-4 rounded-lg text-sm font-medium transition hover:bg-[#0f57a6]">
-              Summary
-            </button>
+            <div className="space-y-3">
+              <button className="w-full bg-[#1565c0] text-white py-2.5 px-4 rounded-lg text-sm font-medium transition hover:bg-[#0f57a6]">
+                Summary
+              </button>
+            </div>
           </div>
         </div>
 
@@ -136,13 +132,13 @@ export default function ProductionOrderDetailPage({ data }) {
                     {orderData.productionOrderCode}
                   </h3>
                   {canViewItem && orderData.itemId ? (
-                    <button
-                      type="button"
+                    <ModuleLink
+                      href={buildRoute("item", "detail", { id: orderData.itemId })}
                       onClick={() => handleOpenDrawer("Item", orderData.itemId)}
                       className="text-xs font-medium text-[#1565c0] hover:underline cursor-pointer truncate block"
                     >
                       {orderData.itemName}
-                    </button>
+                    </ModuleLink>
                   ) : (
                     <span className="text-xs font-medium text-gray-700 truncate block">
                       {orderData.itemName}
@@ -159,13 +155,13 @@ export default function ProductionOrderDetailPage({ data }) {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">BOM Code</span>
                   {canViewBom && orderData.bomId ? (
-                    <button
-                      type="button"
+                    <ModuleLink
+                      href={buildRoute("bom", "detail", { id: orderData.bomId })}
                       onClick={() => handleOpenDrawer("Bom", orderData.bomId)}
                       className="font-mono font-medium text-[#1565c0] hover:underline cursor-pointer"
                     >
                       {orderData.bomCode || orderData.bomName || "—"}
-                    </button>
+                    </ModuleLink>
                   ) : (
                     <span className="font-mono font-medium text-gray-800">{orderData.bomCode || orderData.bomName || "—"}</span>
                   )}
@@ -202,12 +198,12 @@ export default function ProductionOrderDetailPage({ data }) {
                         {orderData.pendingQuantityDisplay || orderData.productionQuantityDisplay}
                       </td>
                     </tr>
-                    <tr>
+                    {/* <tr>
                       <td className="py-1.5 text-gray-500 font-sans">No. of Batches</td>
                       <td className="py-1.5 text-right font-semibold text-purple-600">
                         {orderData.batchCount || 0}
                       </td>
-                    </tr>
+                    </tr> */}
                   </tbody>
                 </table>
               </div>
@@ -239,14 +235,14 @@ export default function ProductionOrderDetailPage({ data }) {
                   {userInitial}
                 </div>
                 <div className="min-w-0">
-                  {canViewUser && orderData.addedBy ? (
-                    <button
-                      type="button"
-                      onClick={() => handleOpenDrawer("User", orderData.addedBy)}
+                  {canViewUser ? (
+                    <ModuleLink
+                      href={userId ? buildRoute("user", "detail", { id: userId }) : buildRoute("user", "list")}
+                      onClick={userId ? () => handleOpenDrawer("User", userId) : null}
                       className="text-xs font-bold text-[#1565c0] hover:underline cursor-pointer block truncate"
                     >
                       {orderData.addedByName || "System"}
-                    </button>
+                    </ModuleLink>
                   ) : (
                     <p className="text-xs font-bold text-gray-900 truncate">
                       {orderData.addedByName || "System"}

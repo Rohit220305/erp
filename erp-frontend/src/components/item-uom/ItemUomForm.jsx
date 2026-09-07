@@ -12,6 +12,7 @@ import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import itemUomConfig from "@/config/item-uom.config.json";
 import { getItemUomSchema } from "@/lib/validation/item-uom.schema";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -141,8 +142,8 @@ export default function ItemUomForm({
       navbar: {
         title: mode === "create" ? `Add ${itemUomConfig.title}` : `Edit ${itemUomConfig.title}`,
         breadcrumbs: [
-          { label: "Home", href: "/" },
-          { label: itemUomConfig.title, href: "/item-uom" },
+          { label: "Home", href: buildRoute("home", "list") },
+          { label: itemUomConfig.title, href: buildRoute("itemUom", "list") },
           { label: mode === "create" ? "Add" : "Edit" },
         ],
       },
@@ -233,7 +234,7 @@ export default function ItemUomForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/item-uom");
+      router.push(buildRoute("itemUom", "list"));
     }
   };
 
@@ -256,7 +257,7 @@ export default function ItemUomForm({
             ? "Item UOM created successfully!"
             : "Item UOM updated successfully!"
         );
-        router.push("/item-uom");
+        router.push(buildRoute("itemUom", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} Item UOM`);
       }
@@ -284,9 +285,10 @@ export default function ItemUomForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter UOM Name"
                 value={formData.uomName || ""}
                 onChange={(e) => handleNameChange("uomName", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.uomName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                 `}
               />
@@ -329,10 +331,11 @@ export default function ItemUomForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter UOM Code"
                 disabled={mode === "edit"}
                 value={formData.itemUomCode || ""}
                 onChange={(e) => handleChange("itemUomCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
                   ${errors.itemUomCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : "bg-white"}
                 `}
@@ -348,9 +351,10 @@ export default function ItemUomForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter ISO Code"
                 value={formData.isoCode || ""}
                 onChange={(e) => handleChange("isoCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white border-gray-200 hover:border-gray-300`}
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white border-gray-200 hover:border-gray-300`}
               />
             </div>
 
@@ -360,9 +364,10 @@ export default function ItemUomForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Abbreviation"
                 value={formData.abbreviation || ""}
                 onChange={(e) => handleChange("abbreviation", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white border-gray-200 hover:border-gray-300`}
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white border-gray-200 hover:border-gray-300`}
               />
             </div>
 
@@ -435,23 +440,19 @@ export default function ItemUomForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this Item UOM?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Item UOM"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/item-uom");
+            router.push(buildRoute("itemUom", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

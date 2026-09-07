@@ -165,8 +165,8 @@ export default function SearchDrawer({
                           onChange={(e) =>
                             updateRow(idx, "value", e.target.value)
                           }
-                          placeholder="Please enter value"
-                          className="w-full rounded border border-gray-300 bg-gray-50 px-3 py-2 text-sm outline-none transition focus:border-[#1565c0] focus:bg-white"
+                          placeholder="Enter value"
+                          className="w-full rounded border border-gray-300 bg-gray-50 px-3 py-2 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:border-[#1565c0] focus:bg-white"
                         />
                       )}
                     </div>

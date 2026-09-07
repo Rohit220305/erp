@@ -5,6 +5,8 @@ import { ChevronDown, Package } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import { CAPABILITIES } from "@/config/capabilities.config";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 export default function ItemListCard({
   item,
@@ -42,15 +44,16 @@ export default function ItemListCard({
                 />
                 <div className="min-w-0">
                   {hasViewPerm ? (
-                    <span
+                    <ModuleLink
+                      href={buildRoute("item", "detail", { id: item.id })}
                       onClick={() =>
                         setSelectedItemForDetails &&
                         setSelectedItemForDetails(item)
                       }
-                      className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-semibold text-sm truncate"
+                      className="block font-semibold text-sm truncate text-[#1565c0]"
                     >
                       {item.itemName || "—"}
-                    </span>
+                    </ModuleLink>
                   ) : (
                     <p className="text-sm font-semibold text-gray-800 truncate">
                       {item.itemName || "—"}
@@ -68,12 +71,13 @@ export default function ItemListCard({
                 Category
               </p>
               {canViewCategory && setSelectedCategoryForDetails ? (
-                <span
+                <ModuleLink
+                  href={item.categoryId ? buildRoute("item-category", "detail", { id: item.categoryId }) : "#"}
                   onClick={() => setSelectedCategoryForDetails(item)}
-                  className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-medium text-[13px] truncate"
+                  className="block font-medium text-[13px] truncate text-[#1565c0]"
                 >
                   {item.categoryName || "—"}
-                </span>
+                </ModuleLink>
               ) : (
                 <div className="text-[13px] text-gray-800 font-medium truncate">
                   {item.categoryName || "—"}

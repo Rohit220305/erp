@@ -230,6 +230,15 @@ export class GeneralUtilities {
     if (map['updatedDate']) {
       map['updatedDateFormatted'] = map['updatedDate'];
     }
+    if (map['productionDate']) {
+      map['productionDateFormatted'] = map['productionDate'];
+    }
+    if (map['productionQuantity']) {
+      map['productionQuantityDisplay'] = map['productionQuantity'];
+    }
+    if (map['pendingQuantity']) {
+      map['pendingQuantityDisplay'] = map['pendingQuantity'];
+    }
 
     return map;
   }
@@ -242,9 +251,11 @@ export class GeneralUtilities {
     const columnMap = this.buildColumnMapFromSelects(qb);
 
     if (params?.search) {
-      const searchColumns = Object.values(columnMap);
+      const searchColumns = Object.values(columnMap).filter(col => !col.toUpperCase().includes('SELECT '));
       const clauses = searchColumns.map(col => `${col} LIKE :search`).join(' OR ');
-      qb.andWhere(`(${clauses})`, { search: `%${params.search}%` });
+      if (clauses) {
+        qb.andWhere(`(${clauses})`, { search: `%${params.search}%` });
+      }
     }
 
     if (params?.filters && params.filters.length > 0) {

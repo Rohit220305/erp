@@ -1,4 +1,5 @@
-"use client";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
@@ -22,13 +23,13 @@ export default function GroupListCard({ group, can }) {
                 Group Name
               </p>
               <div className="min-w-0">
-                {can(CAPABILITIES.GROUP.VIEW) ? (
-                  <p
-                    className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer truncate w-fit"
-                    onClick={() => router.push(`/group/${group.id}`)}
+                {can(CAPABILITIES.GROUP.UPDATE) || can(CAPABILITIES.GROUP.VIEW) ? (
+                  <ModuleLink
+                    href={buildRoute("group", "edit", { id: group.id })}
+                    className="text-sm truncate block"
                   >
                     {group.groupName || "—"}
-                  </p>
+                  </ModuleLink>
                 ) : (
                   <p className="text-sm font-semibold text-gray-800 truncate">
                     {group.groupName || "—"}

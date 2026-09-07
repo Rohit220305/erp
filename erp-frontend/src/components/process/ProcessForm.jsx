@@ -15,6 +15,7 @@ import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 import processConfig from "@/config/process.config.json";
 import { getProcessSchema } from "@/lib/validation/process.schema";
 import { X, Info, FileText } from "lucide-react";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -177,10 +178,13 @@ export default function ProcessForm({
         showMenu: true,
       },
       navbar: {
-        title: mode === "create" ? `Add ${processConfig.title}` : `Edit ${processConfig.title}`,
+        title:
+          mode === "create"
+            ? `Add ${processConfig.title}`
+            : `Edit ${processConfig.title}`,
         breadcrumbs: [
-          { label: "Home", href: "/" },
-          { label: processConfig.title, href: "/process" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Process Master", href: buildRoute("process", "list") },
           { label: mode === "create" ? "Add" : "Edit" },
         ],
       },
@@ -367,7 +371,7 @@ export default function ProcessForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/process");
+      router.push(buildRoute("process", "list"));
     }
   };
 
@@ -416,7 +420,7 @@ export default function ProcessForm({
             ? "Process created successfully!"
             : "Process updated successfully!"
         );
-        router.push("/process");
+        router.push(buildRoute("process", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} process`);
       }
@@ -619,11 +623,12 @@ export default function ProcessForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Process Name"
                 value={formData.processName || ""}
                 onChange={(e) =>
                   handleNameChange("processName", e.target.value)
                 }
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.processName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                 `}
               />
@@ -668,9 +673,10 @@ export default function ProcessForm({
               <input
                 type="text"
                 disabled={mode === "edit"}
+                placeholder="Enter Process Code"
                 value={formData.processCode || ""}
                 onChange={(e) => handleChange("processCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
                   ${errors.processCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : "bg-white"}
                 `}
@@ -700,7 +706,7 @@ export default function ProcessForm({
                 placeholder="Select Work Centre"
                 noOptionsMessage={() =>
                   user?.isSuperAdmin && !formData.companyId
-                    ? " Please select Company."
+                    ? "Please select Company."
                     : "No work centres found for this company"
                 }
                 classNamePrefix="react-select"
@@ -716,10 +722,11 @@ export default function ProcessForm({
                 Description
               </label>
               <textarea
+                placeholder="Enter Description"
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
                 rows={3}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.description ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                 `}
               />
@@ -774,23 +781,19 @@ export default function ProcessForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
-          confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+        actionType={
+          confirmState.type === "discard"
+            ? "discard"
+            : mode === "create"
+              ? "create"
+              : "update"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this Process?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Process"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/process");
+            router.push(buildRoute("process", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

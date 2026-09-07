@@ -5,19 +5,19 @@ const phoneRegex = /^[0-9]{6,15}$/;
 const baseUserShape = {
   firstName: z
     .string()
-    .min(2, "Please enter a First Name.")
+    .min(2, "Please enter First Name.")
     .max(100),
   lastName: z
     .string()
-    .min(2, "Please enter a Last Name.")
+    .min(2, "Please enter Last Name.")
     .max(100),
   userName: z
     .string()
-    .min(3, "Please enter a Username of at least 3 characters.")
+    .min(3, "Please enter Username (at least 3 characters).")
     .max(100)
     .regex(
       /^[a-zA-Z0-9._-]+$/,
-      "Invalid Username.",
+      "Please enter a valid Username.",
     ),
   email: z.string().email("Please enter a valid Email."),
   companyId: z.coerce
@@ -32,7 +32,7 @@ const baseUserShape = {
   dialCode: z.string().optional().nullable(),
   phone: z
     .string()
-    .regex(phoneRegex, "Please enter valid Phone Number.")
+    .regex(phoneRegex, "Please enter a valid Phone Number.")
     .optional()
     .nullable()
     .or(z.literal("")),
@@ -45,14 +45,14 @@ const validateSuperAdminRequirements = (data, ctx) => {
     if (!data.companyId || Number(data.companyId) < 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Please select a company.",
+        message: "Please select Company.",
         path: ["companyId"],
       });
     }
     if (!data.groupIds || !Array.isArray(data.groupIds) || data.groupIds.length < 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Please select at least one Role / Group.",
+        message: "Please select Roles / Groups.",
         path: ["groupIds"],
       });
     }
@@ -64,17 +64,17 @@ export const userAddSchema = z
     ...baseUserShape,
     password: z
       .string()
-      .min(5, "Please enter a password of at least 6 characters"),
+      .min(6, "Please enter Password (at least 6 characters)."),
   })
   .superRefine(validateSuperAdminRequirements);
 
 export const userEditSchema = z
   .object({
     ...baseUserShape,
-    id: z.coerce.number({ required_error: "Please provide a user ID." }),
+    id: z.coerce.number({ required_error: "Please provide User ID." }),
     password: z
       .string()
-      .min(5, "Please enter a password of at least 6 characters.")
+      .min(6, "Please enter Password (at least 6 characters).")
       .optional()
       .or(z.literal("")),
   })

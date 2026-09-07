@@ -17,17 +17,14 @@ export const ALLOWED_DOCUMENT_TYPES = [
   ...ALLOWED_IMAGE_TYPES,
   'application/pdf',
   'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
 
-/**
- * Factory function to create custom Multer configurations dynamically
- */
 export const createMulterConfig = (options?: MulterOptions) => {
   const allowedTypes = options?.allowedMimeTypes || ALLOWED_DOCUMENT_TYPES;
-  const maxSizeBytes = options?.maxSizeBytes || 100 * 1024 * 1024; // Default 100MB
+  const maxSizeBytes = options?.maxSizeBytes || 100 * 1024 * 1024;
 
   return {
     storage: diskStorage({
@@ -51,20 +48,14 @@ export const createMulterConfig = (options?: MulterOptions) => {
   };
 };
 
-/**
- * Predefined Presets
- */
-// 1. Strict image-only upload (5MB max) - Used for User Avatars, Item Images, Brand Logos
 export const imageMulterConfig = createMulterConfig({
   allowedMimeTypes: ALLOWED_IMAGE_TYPES,
   maxSizeBytes: 5 * 1024 * 1024,
 });
 
-// 2. Generic document upload (100MB max) - Used for BOM, Process, Attachments
 export const documentMulterConfig = createMulterConfig({
   allowedMimeTypes: ALLOWED_DOCUMENT_TYPES,
   maxSizeBytes: 100 * 1024 * 1024,
 });
 
-// Backward-compatibility alias
 export const multerConfig = imageMulterConfig;

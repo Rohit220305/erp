@@ -14,6 +14,7 @@ import ConfirmModal from "@/components/common/ConfirmModal";
 import workCentreConfig from "@/config/work-centre.config.json";
 import { getWorkCentreSchema } from "@/lib/validation/work-centre.schema";
 import { X, Info } from "lucide-react";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -170,13 +171,13 @@ export default function WorkCentreForm({
         title: mode === "create" ? `Add ${workCentreConfig.title}` : `Edit ${workCentreConfig.title}`,
         breadcrumbs: [
           { label: "Home", href: "/" },
-          { label: workCentreConfig.title, href: "/work-centre" },
+          { label: workCentreConfig.title, href: buildRoute("work-centre", "list") },
           { label: mode === "create" ? "Add" : "Edit" },
         ],
       },
     });
     return () => resetConfig();
-  }, [mode]);
+  }, [mode, setConfig, resetConfig]);
 
   const requiredPermission =
     mode === "create"
@@ -310,7 +311,7 @@ export default function WorkCentreForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/work-centre");
+      router.push(buildRoute("work-centre", "list"));
     }
   };
 
@@ -352,7 +353,7 @@ export default function WorkCentreForm({
             ? "Work Centre created successfully!"
             : "Work Centre updated successfully!"
         );
-        router.push("/work-centre");
+        router.push(buildRoute("work-centre", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} work centre`);
       }
@@ -463,11 +464,12 @@ export default function WorkCentreForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Work Centre Name"
                 value={formData.workCentreName || ""}
                 onChange={(e) =>
                   handleNameChange("workCentreName", e.target.value)
                 }
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.workCentreName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                 `}
               />
@@ -511,10 +513,11 @@ export default function WorkCentreForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Work Centre Code"
                 disabled={mode === "edit"}
                 value={formData.workCentreCode || ""}
                 onChange={(e) => handleChange("workCentreCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
                   ${errors.workCentreCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : "bg-white"}
                 `}
@@ -627,6 +630,8 @@ export default function WorkCentreForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : undefined}
+        entityName="Work Centre"
         title={
           confirmState.type === "submit"
             ? "Confirm Submission"
@@ -643,7 +648,7 @@ export default function WorkCentreForm({
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/work-centre");
+            router.push(buildRoute("work-centre", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

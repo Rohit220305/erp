@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -185,13 +186,15 @@ export default function MenuDrawer({ open, onClose }) {
 
                     <ul>
                       {group.items.map((item) => (
-                        <li
-                          key={item.label}
-                          className="py-2 text-[15px] text-black hover:text-[#1565c0] cursor-pointer transition-colors"
-                          onClick={() => handleItemClick(item.path)}
-                        >
-                          <span className="mr-2 text-black">-</span>
-                          {item.label}
+                        <li key={item.label} className="py-2">
+                          <Link
+                            href={item.path}
+                            onClick={() => onClose?.()}
+                            className="text-[15px] text-black hover:text-[#1565c0] cursor-pointer transition-colors block"
+                          >
+                            <span className="mr-2 text-black">-</span>
+                            {item.label}
+                          </Link>
                         </li>
                       ))}
                     </ul>

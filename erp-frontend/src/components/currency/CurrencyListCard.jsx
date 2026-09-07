@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 
 export default function CurrencyListCard({ item, config, setSelectedItemForDetails }) {
@@ -25,12 +27,13 @@ export default function CurrencyListCard({ item, config, setSelectedItemForDetai
               {config.moduleName || "Currency"}
             </p>
             {hasViewPerm ? (
-              <span
+              <ModuleLink
+                href={buildRoute("currency", "detail", { id: item.id })}
                 onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
-                className="block font-semibold text-sm text-[#1565c0] hover:underline cursor-pointer truncate leading-snug"
+                className="block font-semibold text-sm text-[#1565c0] truncate leading-snug"
               >
                 {item.currencyName || "—"}
-              </span>
+              </ModuleLink>
             ) : (
               <p className="font-semibold text-sm text-gray-800 truncate leading-snug">
                 {item.currencyName || "—"}

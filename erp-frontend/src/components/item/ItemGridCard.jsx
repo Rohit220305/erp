@@ -4,6 +4,8 @@ import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import { Package } from "lucide-react";
 import { CAPABILITIES } from "@/config/capabilities.config";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 export default function ItemGridCard({
   item,
@@ -23,14 +25,7 @@ export default function ItemGridCard({
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between">
-        <div
-          className={`flex items-center gap-3 ${hasViewPerm ? "cursor-pointer" : ""}`}
-          onClick={() =>
-            hasViewPerm &&
-            setSelectedItemForDetails &&
-            setSelectedItemForDetails(item)
-          }
-        >
+        <div className="flex items-center gap-3">
           <div className="relative shrink-0">
             <SharedImageZoom
               id={`item-grid-${item.id}`}
@@ -46,15 +41,19 @@ export default function ItemGridCard({
             />
           </div>
           <div className="min-w-0">
-            <p
-              className={`font-medium leading-tight mb-0.5 truncate ${
-                hasViewPerm
-                  ? "text-[#1565c0] hover:underline decoration-1 underline-offset-2"
-                  : "text-gray-900"
-              }`}
-            >
-              {item.itemName || "—"}
-            </p>
+            {hasViewPerm ? (
+              <ModuleLink
+                href={buildRoute("item", "detail", { id: item.id })}
+                onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
+                className="font-medium leading-tight mb-0.5 block text-[#1565c0]"
+              >
+                {item.itemName || "—"}
+              </ModuleLink>
+            ) : (
+              <p className="font-medium leading-tight mb-0.5 truncate text-gray-900">
+                {item.itemName || "—"}
+              </p>
+            )}
             <p className="text-gray-400 text-xs font-mono mt-1 leading-tight truncate">
               {item.itemCode || "—"}
             </p>
@@ -68,12 +67,13 @@ export default function ItemGridCard({
         <div className="grid grid-cols-[90px_1fr] items-center gap-2">
           <span className="text-gray-400">Category</span>
           {canViewCategory && setSelectedCategoryForDetails ? (
-            <span
+            <ModuleLink
+              href={item.categoryId ? buildRoute("item-category", "detail", { id: item.categoryId }) : "#"}
               onClick={() => setSelectedCategoryForDetails(item)}
-              className="text-[#1565c0] hover:underline cursor-pointer font-medium truncate"
+              className="text-[#1565c0] font-medium block"
             >
               {item.categoryName || "—"}
-            </span>
+            </ModuleLink>
           ) : (
             <span className="text-gray-900 font-medium truncate">{item.categoryName || "—"}</span>
           )}

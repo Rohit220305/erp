@@ -16,3 +16,5 @@ export const currencyEditSchema = z.object({
     .enum(["Active", "Inactive"], "Please select Status.")
     .default("Active"),
 });
+
+

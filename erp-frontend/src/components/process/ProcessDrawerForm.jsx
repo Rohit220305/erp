@@ -431,26 +431,27 @@ export default function ProcessDrawerForm({
       >
         <div className="flex-1 overflow-y-auto px-6 py-6">
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Process Name <span className="text-red-500">*</span>
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+              Process Name <span className="text-red-400 ml-1">*</span>
             </label>
             <input
               type="text"
+              placeholder="Enter Process Name"
               value={formData.processName || ""}
               onChange={(e) => handleNameChange("processName", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.processName ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
             {errors.processName && (
-              <p className="mt-1 text-sm text-red-500">{errors.processName}</p>
+              <p className="mt-1 text-xs text-red-500">{errors.processName}</p>
             )}
           </div>
 
           {user?.isSuperAdmin && (
             <div className="mb-5">
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Company <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+                Company <span className="text-red-400 ml-1">*</span>
               </label>
               <Select
                 instanceId="select-company"
@@ -470,32 +471,33 @@ export default function ProcessDrawerForm({
                 styles={customSelectStyles(errors.companyId, mode === "edit")}
               />
               {errors.companyId && (
-                <p className="mt-1 text-sm text-red-500">{errors.companyId}</p>
+                <p className="mt-1 text-xs text-red-500">{errors.companyId}</p>
               )}
             </div>
           )}
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Process Code <span className="text-red-500">*</span>
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+              Process Code <span className="text-red-400 ml-1">*</span>
             </label>
             <input
               type="text"
               disabled={mode === "edit"}
+              placeholder="Enter Process Code"
               value={formData.processCode || ""}
               onChange={(e) => handleChange("processCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.processCode ? "border-red-500 bg-red-50" : "border-gray-300"}
                 ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : ""}
               `}
             />
             {errors.processCode && (
-              <p className="mt-1 text-sm text-red-500">{errors.processCode}</p>
+              <p className="mt-1 text-xs text-red-500">{errors.processCode}</p>
             )}
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
               Process Image
             </label>
 
@@ -578,7 +580,7 @@ export default function ProcessDrawerForm({
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
               Instruction PDF
             </label>
 
@@ -665,8 +667,8 @@ export default function ProcessDrawerForm({
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Work Centre <span className="text-red-500">*</span>
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+              Work Centre <span className="text-red-400 ml-1">*</span>
             </label>
             <Select
               instanceId="select-work-centre"
@@ -691,36 +693,37 @@ export default function ProcessDrawerForm({
               placeholder="Select Work Centre"
               noOptionsMessage={() =>
                 user?.isSuperAdmin && !formData.companyId
-                  ? " Please select Company."
+                  ? "Please select Company."
                   : "No work centres found for this company"
               }
               classNamePrefix="react-select"
             />
             {errors.workCentreId && (
-              <p className="mt-1 text-sm text-red-500">{errors.workCentreId}</p>
+              <p className="mt-1 text-xs text-red-500">{errors.workCentreId}</p>
             )}
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
               Description
             </label>
             <textarea
+              placeholder="Enter Description"
               value={formData.description || ""}
               onChange={(e) => handleChange("description", e.target.value)}
               rows={3}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.description ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
             {errors.description && (
-              <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+              <p className="mt-1 text-xs text-red-500">{errors.description}</p>
             )}
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Status <span className="text-red-500">*</span>
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+              Status <span className="text-red-400 ml-1">*</span>
             </label>
             <Select
               instanceId="select-status"
@@ -742,7 +745,7 @@ export default function ProcessDrawerForm({
               classNamePrefix="react-select"
             />
             {errors.status && (
-              <p className="mt-1 text-sm text-red-500">{errors.status}</p>
+              <p className="mt-1 text-xs text-red-500">{errors.status}</p>
             )}
           </div>
         </div>
@@ -770,18 +773,14 @@ export default function ProcessDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
-          confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+        actionType={
+          confirmState.type === "discard"
+            ? "discard"
+            : mode === "create"
+              ? "create"
+              : "update"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this process?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Process"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);

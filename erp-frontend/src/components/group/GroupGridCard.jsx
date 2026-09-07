@@ -1,20 +1,17 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { MoreVertical } from "lucide-react";
 
 export default function GroupGridCard({ group, onDelete }) {
-  const router = useRouter();
   const isActive = group.status === "Active" || group.status === "active";
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between">
-        <div 
-          className="flex items-center gap-3 cursor-pointer"
-          onClick={() => router.push(`/group/${group.id}`)}
+        <ModuleLink
+          href={buildRoute("group", "edit", { id: group.id })}
+          className="flex items-center gap-3"
         >
-
           <div>
             <p className="text-[#1565c0] font-medium leading-tight mb-0.5 hover:underline decoration-1 underline-offset-2">
               {group.groupName || "—"}
@@ -23,8 +20,7 @@ export default function GroupGridCard({ group, onDelete }) {
               {group.groupCode || "—"}
             </p>
           </div>
-        </div>
-    
+        </ModuleLink>
       </div>
 
       <hr className="border-gray-100 my-4" />

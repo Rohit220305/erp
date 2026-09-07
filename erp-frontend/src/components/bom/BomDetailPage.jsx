@@ -10,6 +10,9 @@ import { updateBom } from "@/lib/api/bom-api";
 import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import ModuleLink from "@/components/common/ModuleLink";
+import StatusBadge from "@/components/common/StatusBadge";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import {
   Layers,
   FileText,
@@ -21,21 +24,24 @@ import {
   Star,
   Search,
   CheckCircle,
+  ExternalLink,
 } from "lucide-react";
 
 function DetailRow({ label, value, valueClassName = "" }) {
+  if (!value && value !== 0) return null;
   return (
     <div className="flex justify-between py-1 items-center">
       <span className="text-gray-500 font-medium">{label}</span>
       <span className={`font-semibold text-gray-800 ${valueClassName}`}>
-        {value || "-"}
+        {value}
       </span>
     </div>
   );
 }
 
-function UserInfoCard({ title, name, date }) {
-  const initial = name ? name.charAt(0).toUpperCase() : "B";
+function UserInfoCard({ title, name, date, href, onClick }) {
+  if (!name && !date && !href) return null;
+  const initial = name ? name.charAt(0).toUpperCase() : "U";
   return (
     <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
       <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">
@@ -46,7 +52,17 @@ function UserInfoCard({ title, name, date }) {
           {initial}
         </div>
         <div>
-          <p className="text-xs font-bold text-gray-900">{name || "—"}</p>
+          {href ? (
+            <ModuleLink
+              href={href}
+              onClick={onClick}
+              className="text-xs font-bold text-[#1565c0] hover:underline cursor-pointer"
+            >
+              {name || "User"}
+            </ModuleLink>
+          ) : (
+            <p className="text-xs font-bold text-gray-900">{name || "—"}</p>
+          )}
           <p className="text-[11px] text-gray-400 font-medium mt-0.5">
             {date || "—"}
           </p>
@@ -68,6 +84,8 @@ export default function BomDetailPage({ data }) {
     moduleName: null,
     id: null,
   });
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
 
   const handleOpenDrawer = (moduleName, id) => {
     if (!id) return;
@@ -86,55 +104,58 @@ export default function BomDetailPage({ data }) {
     itemName,
     itemCode,
     itemImageUrl,
+    companyId,
+    companyName,
     processTemplateId,
     processTemplateName,
     customerId,
     customerName,
     costPerUnitFormatted,
     liveCalculatedCostPerUnit,
-    currencySymbol = "₦",
+    currencySymbol,
     referenceNumber,
     remarks,
     status = "Active",
     addedByName,
+    addedBy,
     addedDateFormatted,
     updatedByName,
+    updatedBy,
     updatedDateFormatted,
     items = [],
     processStages = [],
     attachments = [],
     files = [],
   } = bomData || {};
-
+  console.log(data, "data")
   const isActive = status === "Active" || status === "active";
   const allAttachments = attachments.length > 0 ? attachments : files;
 
-  // Build process steps grouped for the bottom accordion
   const processList =
     processStages.length > 0
       ? processStages
       : (() => {
-          const map = new Map();
-          (items || []).forEach((item) => {
-            const seq = item.sequenceNo || 1;
-            if (!map.has(seq)) {
-              map.set(seq, {
-                sequenceNo: seq,
-                processName: item.processName || `Process #${seq}`,
-                processCode: item.processCode || "",
-                entryItems: [],
-                exitItems: [],
-              });
-            }
-            const stage = map.get(seq);
-            if (item.materialType === "Exit") {
-              stage.exitItems.push(item);
-            } else {
-              stage.entryItems.push(item);
-            }
-          });
-          return Array.from(map.values());
-        })();
+        const map = new Map();
+        (items || []).forEach((item) => {
+          const seq = item.sequenceNo || 1;
+          if (!map.has(seq)) {
+            map.set(seq, {
+              sequenceNo: seq,
+              processName: item.processName || `Process #${seq}`,
+              processCode: item.processCode || "",
+              entryItems: [],
+              exitItems: [],
+            });
+          }
+          const stage = map.get(seq);
+          if (item.materialType === "Exit") {
+            stage.exitItems.push(item);
+          } else {
+            stage.entryItems.push(item);
+          }
+        });
+        return Array.from(map.values());
+      })();
 
   useEffect(() => {
     const initialOpens = {};
@@ -177,15 +198,15 @@ export default function BomDetailPage({ data }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "Bill of Materials", href: "/bom" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Bill of Materials", href: buildRoute("bom", "list") },
         ],
         actionButton:
           targetId && can(CAPABILITIES.BOM?.UPDATE || "BOM_UPDATE")
             ? {
-                label: "Edit",
-                onClick: () => router.push(`/bom/edit/${targetId}`),
-              }
+              label: "Edit",
+              onClick: () => router.push(buildRoute("bom", "edit", { id: targetId })),
+            }
             : null,
       },
     });
@@ -237,7 +258,7 @@ export default function BomDetailPage({ data }) {
       const res = await deleteBom({ id });
       if (res?.success === 1 || res?.settings?.success === 1) {
         toast.success("BOM deleted successfully");
-        router.push("/bom");
+        router.push(buildRoute("bom", "list"));
       } else {
         toast.error(res?.message || "Failed to delete BOM");
       }
@@ -257,14 +278,11 @@ export default function BomDetailPage({ data }) {
         maximumFractionDigits: 2,
       },
     )}`;
-  console.log(data);
   return (
     <div className="h-full overflow-hidden ">
       <div className="flex gap-8 ps-10 h-full">
-        {/* Left Navigation Sidebar (Full Height Fixed) */}
         <div className="w-72 shrink-0 h-full bg-white border-r border-gray-200 p-4 font-sans  justify-between overflow-y-auto shadow-xs">
           <div className="space-y-5">
-            {/* Header with Title, Code & Menu */}
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-base font-bold text-gray-900 leading-tight">
@@ -277,12 +295,9 @@ export default function BomDetailPage({ data }) {
               <button
                 type="button"
                 className="text-gray-500 hover:text-gray-700 p-1 rounded transition"
-              >
-                <Menu size={18} />
-              </button>
+              ></button>
             </div>
 
-            {/* Active & Inactive Tabs */}
             <div className="space-y-1.5">
               <button
                 type="button"
@@ -298,58 +313,14 @@ export default function BomDetailPage({ data }) {
                   <span>Summary</span>
                 </div>
               </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("audit")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  activeTab === "audit"
-                    ? "bg-[#1565c0] text-white shadow-sm"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle size={16} />
-                  <span>Quality Audit</span>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Static Pill Badge Counters anchored at bottom */}
-          <div className="pt-3 border-t border-gray-100 space-y-2">
-            <div className="bg-[#f8f9fa] rounded-lg px-3.5 py-2.5 flex items-center justify-between text-xs text-gray-600 font-medium border border-gray-100">
-              <div className="flex items-center gap-2.5">
-                <FileText size={15} className="text-gray-400" />
-                <span>Notes</span>
-              </div>
-              <span className="bg-gray-200 text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded-md">
-                0
-              </span>
-            </div>
-
-            <div className="bg-[#f8f9fa] rounded-lg px-3.5 py-2.5 flex items-center justify-between text-xs text-gray-600 font-medium border border-gray-100">
-              <div className="flex items-center gap-2.5">
-                <Layers size={15} className="text-gray-400" />
-                <span>Activities</span>
-              </div>
-              <span className="bg-gray-200 text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded-md">
-                0
-              </span>
             </div>
           </div>
         </div>
 
-        {/* Right Main Content Area (Independently Scrollable) */}
         <div className="flex-1 h-full overflow-y-auto flex flex-col justify-between pb-16 pe-10">
           <div>
-            {/* Top Header Action Bar */}
-
-            {/* Main Content Workspace Layout */}
             <div className="  max-w-[1700px] w-full mx-auto space-y-6">
-              {/* Top 3 Summary Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-                {/* Card 1: BOM Summary */}
                 <div className="md:col-span-4 bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col justify-between space-y-4">
                   <div className="flex items-start gap-3.5">
                     <SharedImageZoom
@@ -377,29 +348,46 @@ export default function BomDetailPage({ data }) {
                       <span className="text-gray-500 font-medium">
                         Item Name
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDrawer("Item", itemId)}
-                        className="text-[#1565c0] font-semibold hover:underline text-right truncate max-w-[170px] cursor-pointer"
-                      >
-                        {itemName || `Item #${itemId}`}
-                      </button>
+                      {itemId ? (
+                        <ModuleLink
+                          href={buildRoute("item", "detail", { id: itemId })}
+                          onClick={() => handleOpenDrawer("Item", itemId)}
+                          className="text-[#1565c0] font-semibold hover:underline text-right truncate max-w-[170px] cursor-pointer"
+                        >
+                          {itemName || `Item #${itemId}`}
+                        </ModuleLink>
+                      ) : (
+                        <span className="font-semibold text-gray-800 text-right truncate max-w-[170px]">
+                          {itemName || "—"}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex justify-between py-1 items-center">
                       <span className="text-gray-500 font-medium">
                         Process Template
                       </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleOpenDrawer("ProcessTemplate", processTemplateId)
-                        }
-                        className="text-[#1565c0] font-semibold hover:underline text-right truncate max-w-[170px] cursor-pointer"
-                      >
-                        {processTemplateName ||
-                          `Template #${processTemplateId}`}
-                      </button>
+                      {processTemplateId ? (
+                        <ModuleLink
+                          href={buildRoute("process-template", "detail", {
+                            id: processTemplateId,
+                          })}
+                          onClick={() =>
+                            handleOpenDrawer(
+                              "ProcessTemplate",
+                              processTemplateId,
+                            )
+                          }
+                          className="text-[#1565c0] font-semibold hover:underline text-right truncate max-w-[170px] cursor-pointer"
+                        >
+                          {processTemplateName ||
+                            `Template #${processTemplateId}`}
+                        </ModuleLink>
+                      ) : (
+                        <span className="font-semibold text-gray-800 text-right truncate max-w-[170px]">
+                          {processTemplateName || "—"}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex justify-between py-1 items-center">
@@ -422,16 +410,11 @@ export default function BomDetailPage({ data }) {
 
                     <div className="flex justify-between py-1 items-center">
                       <span className="text-gray-500 font-medium">Status</span>
-                      <span
-                        className={`font-bold ${isActive ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {status}
-                      </span>
+                      <StatusBadge status={status || "Active"} />
                     </div>
                   </div>
                 </div>
 
-                {/* Card 2: Production Item Info */}
                 <div className="md:col-span-4 bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col justify-between space-y-3">
                   <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Production Item Info
@@ -492,8 +475,7 @@ export default function BomDetailPage({ data }) {
                   </div>
                 </div>
 
-                {/* Card 3: Attachments */}
-                <div className="md:col-span-4 bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col">
+                <div className="md:col-span-2 bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col">
                   <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">
                     Attachments
                   </h3>
@@ -526,7 +508,7 @@ export default function BomDetailPage({ data }) {
                               rel="noreferrer"
                               className="text-[#1565c0] hover:bg-blue-50 p-1 rounded transition"
                             >
-                              <Download size={15} />
+                              <ExternalLink size={15} />
                             </a>
                           )}
                         </div>
@@ -534,56 +516,43 @@ export default function BomDetailPage({ data }) {
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* Middle Audit Info Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Modified Info */}
-                <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                  <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">
-                    Modified Info
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#1565c0] text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                      {(updatedByName || addedByName || "Ben Docket")
-                        .charAt(0)
-                        .toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-900">
-                        {updatedByName || addedByName || "Ben Docket"}
-                      </p>
-                      <p className="text-[11px] text-gray-400 font-medium mt-0.5">
-                        {updatedDateFormatted ||
-                          addedDateFormatted ||
-                          "29/06/2026 02:25 PM"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Added Info */}
-                <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                  <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">
-                    Added Info
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#1565c0] text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                      {(addedByName || "Ben Docket").charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-900">
-                        {addedByName || "Ben Docket"}
-                      </p>
-                      <p className="text-[11px] text-gray-400 font-medium mt-0.5">
-                        {addedDateFormatted || "29/06/2026 01:58 PM"}
-                      </p>
-                    </div>
-                  </div>
+              <div className="col-span-2">
+                <div className="flex flex-col gap-3">
+                  {addedByName && (
+                    <UserInfoCard
+                      title="Added Info"
+                      name={addedByName}
+                      date={addedDateFormatted}
+                      href={
+                        addedBy
+                          ? buildRoute("user", "detail", { id: addedBy })
+                          : buildRoute("user", "list")
+                      }
+                      onClick={() =>
+                        addedBy && handleOpenDrawer("User", addedBy)
+                      }
+                    />
+                  )}
+                  {updatedBy && (
+                    <UserInfoCard
+                      title="Modified Info"
+                      name={updatedByName}
+                      date={updatedDateFormatted}
+                      href={
+                        updatedBy
+                          ? buildRoute("user", "detail", { id: updatedBy })
+                          : buildRoute("user", "list")
+                      }
+                      onClick={() =>
+                        (updatedBy || addedBy) &&
+                        handleOpenDrawer("User", updatedBy || addedBy)
+                      }
+                    />
+                  )}
                 </div>
               </div>
+              </div>
 
-              {/* Bottom Accordions: Mapped Process Steps & Materials */}
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                   <h3 className="text-sm font-bold text-gray-900">
@@ -599,7 +568,6 @@ export default function BomDetailPage({ data }) {
                   </button>
                 </div>
 
-                {/* Accordion List */}
                 <div className="space-y-3">
                   {processList.length === 0 ? (
                     <div className="py-8 text-center text-xs text-gray-400 italic">
@@ -644,7 +612,6 @@ export default function BomDetailPage({ data }) {
                           key={pIdx}
                           className="border border-gray-200 rounded-xl overflow-hidden shadow-2xs"
                         >
-                          {/* Accordion Banner Header */}
                           <button
                             type="button"
                             onClick={() => toggleSingleAccordion(pIdx)}
@@ -656,7 +623,6 @@ export default function BomDetailPage({ data }) {
                           >
                             <span className="tracking-wide">
                               {procName}
-                              {procCode}
                             </span>
                             {isOpen ? (
                               <ChevronUp size={18} />
@@ -665,7 +631,6 @@ export default function BomDetailPage({ data }) {
                             )}
                           </button>
 
-                          {/* Smooth Animated Grid Wrapper */}
                           <div
                             className={`grid transition-all duration-300 ease-in-out ${
                               isOpen
@@ -674,9 +639,7 @@ export default function BomDetailPage({ data }) {
                             }`}
                           >
                             <div className="overflow-hidden">
-                              {/* Accordion Body: Side-by-Side Entry & Exit Tables */}
                               <div className="p-5 bg-white grid grid-cols-1 lg:grid-cols-12 gap-6 items-start border-t border-gray-200">
-                                {/* Left Column: Entry Material */}
                                 <div className="lg:col-span-6 space-y-2.5">
                                   <h4 className="text-xs font-bold text-gray-700">
                                     Entry Material
@@ -742,26 +705,24 @@ export default function BomDetailPage({ data }) {
                                                 </td>
                                                 <td className="py-2.5 px-3 font-semibold text-[#1565c0]">
                                                   <div className="flex items-center gap-1.5">
-                                                    {eItem.isPrimary ===
-                                                      "Yes" && (
-                                                      <Star
-                                                        size={13}
-                                                        className="text-amber-500 fill-amber-500 shrink-0"
-                                                      />
-                                                    )}
-                                                    <button
-                                                      type="button"
+                                                    
+                                                    <ModuleLink
+                                                      href={buildRoute(
+                                                        "item",
+                                                        "detail",
+                                                        { id: eItem.itemId },
+                                                      )}
                                                       onClick={() =>
                                                         handleOpenDrawer(
                                                           "Item",
                                                           eItem.itemId,
                                                         )
                                                       }
-                                                      className="hover:underline text-left cursor-pointer"
+                                                      className="hover:underline text-left cursor-pointer font-semibold text-[#1565c0]"
                                                     >
                                                       {eItem.itemName ||
                                                         `Item #${eItem.itemId}`}
-                                                    </button>
+                                                    </ModuleLink>
                                                   </div>
                                                   <p className="text-[10px] text-gray-400 font-mono font-normal">
                                                     {eItem.itemCode
@@ -799,7 +760,6 @@ export default function BomDetailPage({ data }) {
                                   </div>
                                 </div>
 
-                                {/* Right Column: Exit Material */}
                                 <div className="lg:col-span-6 space-y-2.5">
                                   <h4 className="text-xs font-bold text-gray-700">
                                     Exit Material
@@ -856,19 +816,23 @@ export default function BomDetailPage({ data }) {
                                                   />
                                                 </td>
                                                 <td className="py-2.5 px-3 font-semibold text-[#1565c0]">
-                                                  <button
-                                                    type="button"
+                                                  <ModuleLink
+                                                    href={buildRoute(
+                                                      "item",
+                                                      "detail",
+                                                      { id: exItem.itemId },
+                                                    )}
                                                     onClick={() =>
                                                       handleOpenDrawer(
                                                         "Item",
                                                         exItem.itemId,
                                                       )
                                                     }
-                                                    className="hover:underline text-left cursor-pointer"
+                                                    className="hover:underline text-left cursor-pointer font-semibold text-[#1565c0]"
                                                   >
                                                     {exItem.itemName ||
                                                       `Item #${exItem.itemId}`}
-                                                  </button>
+                                                  </ModuleLink>
                                                   <p className="text-[10px] text-gray-400 font-mono font-normal">
                                                     {exItem.itemCode
                                                       ? `(${exItem.itemCode})`
@@ -899,7 +863,6 @@ export default function BomDetailPage({ data }) {
           </div>
         </div>
       </div>
-      {/* Dynamic Unified SideDrawer for Item, Customer, and ProcessTemplate */}
       <SideDrawer
         open={drawerState.isOpen}
         onClose={() =>

@@ -160,26 +160,26 @@ export default function ProcessTemplateStep1({
     <div className="space-y-6 bg-white rounded-xl border border-gray-100 p-6 md:p-8 shadow-sm">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Template Name<span className="text-red-500">*</span>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            Template Name<span className="text-red-400 ml-1">*</span>
           </label>
           <input
             type="text"
             placeholder="Enter Template Name"
             value={formData.templateName || ""}
             onChange={(e) => handleNameChange(e.target.value)}
-            className={`w-full h-[48px] rounded-md border bg-white px-4 text-sm outline-none transition focus:border-[#1565c0]
+            className={`w-full h-[48px] rounded-md border bg-white px-4 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:border-[#1565c0]
               ${errors?.templateName ? "border-red-500 bg-red-50" : "border-gray-300"}
             `}
           />
           {errors?.templateName && (
-            <p className="mt-1.5 text-sm text-red-500">{errors.templateName}</p>
+            <p className="mt-1 text-xs text-red-500">{errors.templateName}</p>
           )}
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Template Code<span className="text-red-500">*</span>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            Template Code<span className="text-red-400 ml-1">*</span>
           </label>
           <input
             type="text"
@@ -187,19 +187,19 @@ export default function ProcessTemplateStep1({
             disabled={mode === "edit"}
             value={formData.templateCode || ""}
             onChange={(e) => handleChange("templateCode", e.target.value)}
-            className={`w-full h-[48px] rounded-md border bg-white px-4 text-sm outline-none transition focus:border-[#1565c0]
+            className={`w-full h-[48px] rounded-md border bg-white px-4 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:border-[#1565c0]
               ${errors?.templateCode ? "border-red-500 bg-red-50" : "border-gray-300"}
               ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : ""}
             `}
           />
           {errors?.templateCode && (
-            <p className="mt-1.5 text-sm text-red-500">{errors.templateCode}</p>
+            <p className="mt-1 text-xs text-red-500">{errors.templateCode}</p>
           )}
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Process Execution Type<span className="text-red-500">*</span>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            Process Execution Type<span className="text-red-400 ml-1">*</span>
           </label>
           <Select
             instanceId="select-execution-type"
@@ -208,18 +208,18 @@ export default function ProcessTemplateStep1({
             options={EXECUTION_TYPE_OPTIONS}
             isClearable={true}
             isSearchable={false}
-            placeholder="Select Process Execution Type"
+            placeholder="Select Execution Type"
             classNamePrefix="react-select"
             styles={customSelectStyles(errors?.executionType)}
           />
           {errors?.executionType && (
-            <p className="mt-1.5 text-sm text-red-500">{errors.executionType}</p>
+            <p className="mt-1 text-xs text-red-500">{errors.executionType}</p>
           )}
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Status<span className="text-red-500">*</span>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            Status<span className="text-red-400 ml-1">*</span>
           </label>
           <Select
             instanceId="select-status"
@@ -233,14 +233,14 @@ export default function ProcessTemplateStep1({
             styles={customSelectStyles(errors?.status)}
           />
           {errors?.status && (
-            <p className="mt-1.5 text-sm text-red-500">{errors.status}</p>
+            <p className="mt-1 text-xs text-red-500">{errors.status}</p>
           )}
         </div>
 
         {user?.isSuperAdmin && (
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Company<span className="text-red-500">*</span>
+            <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+              Company<span className="text-red-400 ml-1">*</span>
             </label>
             <Select
               instanceId="select-company"
@@ -259,12 +259,12 @@ export default function ProcessTemplateStep1({
               styles={customSelectStyles(errors?.companyId, mode === "edit")}
             />
             {errors?.companyId && (
-              <p className="mt-1.5 text-sm text-red-500">{errors.companyId}</p>
+              <p className="mt-1 text-xs text-red-500">{errors.companyId}</p>
             )}
           </div>
         )}
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
             Remarks
           </label>
           <div className="relative">
@@ -273,7 +273,7 @@ export default function ProcessTemplateStep1({
               placeholder="Enter Remarks"
               value={formData.remark || ""}
               onChange={(e) => handleChange("remark", e.target.value)}
-              className={`w-full rounded-md border bg-white px-4 py-3 text-sm outline-none transition focus:border-[#1565c0] pr-10
+              className={`w-full rounded-md border bg-white px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:border-[#1565c0] pr-10
                 ${errors?.remark ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -282,7 +282,7 @@ export default function ProcessTemplateStep1({
             </div>
           </div>
           {errors?.remark && (
-            <p className="mt-1.5 text-sm text-red-500">{errors.remark}</p>
+            <p className="mt-1 text-xs text-red-500">{errors.remark}</p>
           )}
         </div>
       </div>

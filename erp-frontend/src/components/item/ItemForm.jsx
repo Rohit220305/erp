@@ -21,6 +21,7 @@ import Loader from "@/components/common/Loader";
 import itemConfig from "@/config/item.config.json";
 import { getItemSchema } from "@/lib/validation/item.schema";
 import { X, Info, Star, RefreshCw } from "lucide-react";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -350,8 +351,8 @@ export default function ItemForm({
             ? `Add ${itemConfig.title}`
             : `Edit ${itemConfig.title}`,
         breadcrumbs: [
-          { label: "Home", href: "/" },
-          { label: itemConfig.title, href: "/item" },
+          { label: "Home", href: buildRoute("home", "list") },
+          { label: itemConfig.title, href: buildRoute("item", "list") },
           { label: mode === "create" ? "Add" : "Edit" },
         ],
       },
@@ -508,7 +509,7 @@ export default function ItemForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/item");
+      router.push(buildRoute("item", "list"));
     }
   };
 
@@ -595,7 +596,7 @@ export default function ItemForm({
         toast.success(
           `Item ${mode === "create" ? "created" : "updated"} successfully!`,
         );
-        router.push("/item");
+        router.push(buildRoute("item", "list"));
       } else {
         toast.error(
           message ||
@@ -1310,22 +1311,20 @@ export default function ItemForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this item?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Item"
         onConfirm={() => {
-          if (confirmState.type === "submit")
+          if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
-          else router.push("/item");
+          } else {
+            router.push(buildRoute("item", "list"));
+          }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}
         onCancel={() =>
@@ -1333,50 +1332,22 @@ export default function ItemForm({
         }
       />
 
-      {imageToDelete && (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/10 backdrop-blur-[1px]"
-            onClick={() => setImageToDelete(null)}
-          ></div>
-          <div className="relative bg-[#f0f0f0] w-72 shadow-2xl z-10 flex flex-col border border-gray-200">
-            <div className="bg-[#1565c0] flex justify-between items-center px-4 py-2.5 text-white">
-              <span className="text-sm font-semibold tracking-wide">
-                Delete
-              </span>
-              <X
-                size={16}
-                className="cursor-pointer hover:text-gray-200"
-                onClick={() => setImageToDelete(null)}
-              />
-            </div>
-            <div className="p-5 text-sm text-gray-700">
-              Are you sure want to delete this?
-            </div>
-            <div className="p-4 pt-1 flex justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  if (imageToDelete.type === "existing")
-                    removeExistingImage(imageToDelete.index);
-                  else removeNewImage(imageToDelete.index);
-                  setImageToDelete(null);
-                }}
-                className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer"
-              >
-                Delete
-              </button>
-              <button
-                type="button"
-                onClick={() => setImageToDelete(null)}
-                className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!imageToDelete}
+        actionType="delete"
+        entityName="Image"
+        onConfirm={() => {
+          if (imageToDelete) {
+            if (imageToDelete.type === "existing") {
+              removeExistingImage(imageToDelete.index);
+            } else {
+              removeNewImage(imageToDelete.index);
+            }
+            setImageToDelete(null);
+          }
+        }}
+        onCancel={() => setImageToDelete(null)}
+      />
     </div>
   );
 }

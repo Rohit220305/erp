@@ -13,6 +13,7 @@ export default function BomListing() {
   const [selectedOutputItemForDetails, setSelectedOutputItemForDetails] = useState(null);
   const [selectedProcessTemplateForDetails, setSelectedProcessTemplateForDetails] = useState(null);
   const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
   return (
     <>
@@ -29,6 +30,7 @@ export default function BomListing() {
             setSelectedOutputItemForDetails={setSelectedOutputItemForDetails}
             setSelectedProcessTemplateForDetails={setSelectedProcessTemplateForDetails}
             setSelectedCompanyForDetails={setSelectedCompanyForDetails}
+            setSelectedUserForDetails={setSelectedUserForDetails}
           />
         )}
         renderListCard={(item, setSelectedItemForDetails) => (
@@ -40,6 +42,7 @@ export default function BomListing() {
             setSelectedOutputItemForDetails={setSelectedOutputItemForDetails}
             setSelectedProcessTemplateForDetails={setSelectedProcessTemplateForDetails}
             setSelectedCompanyForDetails={setSelectedCompanyForDetails}
+            setSelectedUserForDetails={setSelectedUserForDetails}
           />
         )}
         renderGridCard={(item, setSelectedItemForDetails) => (
@@ -51,6 +54,7 @@ export default function BomListing() {
             setSelectedOutputItemForDetails={setSelectedOutputItemForDetails}
             setSelectedProcessTemplateForDetails={setSelectedProcessTemplateForDetails}
             setSelectedCompanyForDetails={setSelectedCompanyForDetails}
+            setSelectedUserForDetails={setSelectedUserForDetails}
           />
         )}
       />
@@ -77,6 +81,14 @@ export default function BomListing() {
         moduleName="Company"
         mode="details"
         data={selectedCompanyForDetails ? { id: selectedCompanyForDetails.companyId || selectedCompanyForDetails.id } : null}
+      />
+
+      <SideDrawer
+        open={!!selectedUserForDetails}
+        onClose={() => setSelectedUserForDetails(null)}
+        moduleName="User"
+        mode="details"
+        data={selectedUserForDetails ? { id: selectedUserForDetails.id || selectedUserForDetails.userId || selectedUserForDetails.addedBy } : null}
       />
     </>
   );

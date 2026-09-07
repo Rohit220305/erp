@@ -233,7 +233,11 @@ export default function PackageDrawerForm({
 
   return (
     <div className="flex h-full flex-col text-black">
-      <form onSubmit={handleFormSubmit} id="drawer-form" className="flex h-full flex-col">
+      <form
+        onSubmit={handleFormSubmit}
+        id="drawer-form"
+        className="flex h-full flex-col"
+      >
         <div className="flex-1 overflow-y-auto px-6 py-6">
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -241,9 +245,10 @@ export default function PackageDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Package Type Name"
               value={formData.packageName || ""}
               onChange={(e) => handleNameChange("packageName", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.packageName ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -286,10 +291,11 @@ export default function PackageDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Package Type Code"
               disabled={mode === "edit"}
               value={formData.packageCode || ""}
               onChange={(e) => handleChange("packageCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.packageCode ? "border-red-500 bg-red-50" : "border-gray-300"}
                 ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : ""}
               `}
@@ -305,9 +311,10 @@ export default function PackageDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Abbreviation"
               value={formData.abbreviation || ""}
               onChange={(e) => handleChange("abbreviation", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.abbreviation ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -321,10 +328,11 @@ export default function PackageDrawerForm({
               Description
             </label>
             <textarea
+              placeholder="Enter Description"
               value={formData.description || ""}
               onChange={(e) => handleChange("description", e.target.value)}
               rows={3}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.description ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -340,8 +348,7 @@ export default function PackageDrawerForm({
             <Select
               instanceId="select-status"
               value={
-                STATUS_OPTIONS.find((s) => s.value === formData.status) ||
-                null
+                STATUS_OPTIONS.find((s) => s.value === formData.status) || null
               }
               onChange={(opt) => handleChange("status", opt ? opt.value : "")}
               options={STATUS_OPTIONS}
@@ -380,18 +387,14 @@ export default function PackageDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this package type?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Package Type"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);

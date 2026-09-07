@@ -4,15 +4,18 @@ import { Package, Eye, Edit, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { CAPABILITIES } from "@/config/capabilities.config";
+import ModuleLink from "@/components/common/ModuleLink";
+import StatusBadge from "@/components/common/StatusBadge";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 export default function ProductionOrderGridCard({
   item,
   config,
   onRowAction,
   setSelectedItemForDetails,
-  setSelectedCategoryForDetails, // Item drawer
-  setSelectedCompanyForDetails,  // BOM drawer
-  setSelectedUserForDetails,     // User drawer
+  setSelectedOutputItemForDetails,
+  setSelectedBomForDetails,
+  setSelectedUserForDetails,
 }) {
   const router = useRouter();
   const { can } = useAuth();
@@ -23,42 +26,26 @@ export default function ProductionOrderGridCard({
   const canViewItem = can(CAPABILITIES.ITEM?.VIEW || "ITEM_VIEW");
   const canViewBom = can(CAPABILITIES.BOM?.VIEW || "BOM_VIEW");
   const canViewUser = can(CAPABILITIES.USER?.VIEW || "USER_VIEW");
+  const canCreateBatch = can(CAPABILITIES.PRODUCTION_BATCH?.CREATE || "PRODUCTION_BATCH_CREATE");
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "bg-orange-100 text-orange-700 border-orange-200";
-      case "In Progress":
-        return "bg-purple-100 text-purple-700 border-purple-200";
-      case "Draft":
-        return "bg-amber-100 text-amber-700 border-amber-200";
-      case "PartialCancelled":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Cancelled":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "Completed":
-        return "bg-green-100 text-green-700 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
-    }
-  };
 
+
+  const userId = item.addedBy || item.addedById || item.added_by || item.createdBy;
   const userInitial = item.addedByName ? item.addedByName.charAt(0).toUpperCase() : "U";
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col justify-between space-y-4">
-      {/* Top Header Row */}
       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <Package className="w-4 h-4 text-[#1565c0]" />
-          {canViewOrder && setSelectedItemForDetails ? (
-            <button
-              type="button"
-              onClick={() => setSelectedItemForDetails(item)}
+          {canViewOrder ? (
+            <ModuleLink
+              href={buildRoute("production-order", "detail", { id: item.id })}
+              onClick={setSelectedItemForDetails ? () => setSelectedItemForDetails(item) : null}
               className="font-bold text-sm text-[#1565c0] hover:underline cursor-pointer"
             >
               {item.productionOrderCode}
-            </button>
+            </ModuleLink>
           ) : (
             <span className="font-bold text-sm text-gray-800">
               {item.productionOrderCode}
@@ -67,40 +54,42 @@ export default function ProductionOrderGridCard({
         </div>
 
         <div className="flex items-center gap-2">
-          <span
-            className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${getStatusColor(
-              item.status,
-            )}`}
-          >
-            {item.status}
-          </span>
+          <StatusBadge status={item.status} />
         </div>
       </div>
 
-      {/* Item Info */}
-      <div>
-        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
-          Production Item
-        </span>
-        {canViewItem && setSelectedCategoryForDetails ? (
-          <button
-            type="button"
-            onClick={() =>
-              setSelectedCategoryForDetails({ itemId: item.itemId })
-            }
-            className="text-xs font-bold text-[#1565c0] hover:underline cursor-pointer block"
-          >
-            {item.itemName}
-          </button>
-        ) : (
-          <span className="text-xs font-bold text-gray-800 block">
-            {item.itemName}
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">
+            Production Item
           </span>
-        )}
-        <span className="text-[11px]  text-gray-400">{item.itemCode}</span>
+          {canViewItem && item.itemId ? (
+            <ModuleLink
+              href={buildRoute("item", "detail", { id: item.itemId })}
+              onClick={setSelectedOutputItemForDetails ? () => setSelectedOutputItemForDetails({ itemId: item.itemId, id: item.itemId }) : null}
+              className="text-xs font-bold text-[#1565c0] hover:underline cursor-pointer block"
+            >
+              {item.itemName}
+            </ModuleLink>
+          ) : (
+            <span className="text-xs font-bold text-gray-800 block">
+              {item.itemName}
+            </span>
+          )}
+          <span className="text-[11px]  text-gray-400">{item.itemCode}</span>
+        </div>
+        {/* {canCreateBatch && (
+          <div className="ml-2 shrink-0">
+            <button
+              onClick={() => router.push(`/production-batch/create/${item.id}`)}
+              className="bg-white border border-[#1565c0] text-[#1565c0] font-medium text-xs py-1.5 px-3 rounded hover:bg-blue-50 transition whitespace-nowrap cursor-pointer"
+            >
+              Create Batch
+            </button>
+          </div>
+        )} */}
       </div>
 
-      {/* Key-Value Data (Left Title, Right Value) */}
       <div className="space-y-2.5 text-xs py-4 border-t border-gray-100">
         <div className="flex items-center justify-between">
           <span className="text-gray-500 font-medium">Production Date</span>
@@ -119,16 +108,14 @@ export default function ProductionOrderGridCard({
         <div className="flex items-center justify-between">
           <span className="text-gray-500 font-medium">BOM</span>
           <div className="font-semibold text-gray-800  w-50">
-            {canViewBom && setSelectedCompanyForDetails ? (
-              <button
-                type="button"
-                onClick={() =>
-                  setSelectedCompanyForDetails({ bomId: item.bomId })
-                }
+            {canViewBom && item.bomId ? (
+              <ModuleLink
+                href={buildRoute("bom", "detail", { id: item.bomId })}
+                onClick={setSelectedBomForDetails ? () => setSelectedBomForDetails({ bomId: item.bomId, id: item.bomId }) : null}
                 className="font-semibold text-[#1565c0] hover:underline cursor-pointer "
               >
                 {item.bomCode || item.bomName || "-"}
-              </button>
+              </ModuleLink>
             ) : (
               <span className="font-semibold text-gray-800 ">
                 {item.bomCode || item.bomName || "-"}
@@ -138,7 +125,6 @@ export default function ProductionOrderGridCard({
         </div>
       </div>
 
-      {/* Bottom Quantities Bar */}
       <div className="  p-3 flex items-center justify-between text-xs  border-t border-gray-100 ">
         <div>
           <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">
@@ -159,23 +145,20 @@ export default function ProductionOrderGridCard({
         </div>
       </div>
 
-      {/* Footer Bar */}
       <div className="flex  items-center justify-between pt-2 border-t border-gray-100 text-xs ">
         <div className="flex items-center gap-2 bg-gray-100  w-full rounded-lg px-3 py-4">
           <div className="w-7 h-7 rounded-full bg-[#1565c0] text-white flex items-center justify-center text-xs font-bold shadow-sm">
             {userInitial}
           </div>
           <div>
-            {canViewUser && setSelectedUserForDetails ? (
-              <button
-                type="button"
-                onClick={() =>
-                  setSelectedUserForDetails({ addedBy: item.addedBy })
-                }
+            {canViewUser ? (
+              <ModuleLink
+                href={userId ? buildRoute("user", "detail", { id: userId }) : buildRoute("user", "list")}
+                onClick={setSelectedUserForDetails && userId ? () => setSelectedUserForDetails({ addedBy: userId, userId, id: userId }) : null}
                 className="font-medium text-[#1565c0] hover:underline cursor-pointer"
               >
                 {item.addedByName || "-"}
-              </button>
+              </ModuleLink>
             ) : (
               <span className="font-medium text-gray-800">
                 {item.addedByName || "-"}
@@ -186,8 +169,6 @@ export default function ProductionOrderGridCard({
             </p>
           </div>
         </div>
-
-        {/* Action Buttons */}
       </div>
     </div>
   );

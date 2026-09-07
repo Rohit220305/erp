@@ -122,6 +122,11 @@ export class ProductionOrderListService {
         "currency.currencyCode = cc.currencyCode AND currency.status = 'Active' AND currency.sysRecDeleted = 0",
       );
 
+      qb.addSelect(
+        '(SELECT COUNT(1) FROM production_batch pb WHERE pb.productionOrderId = po.id AND pb.sysRecDeleted = 0 AND pb.status != \'Cancelled\')',
+        'batchCount',
+      );
+
       qb.where('po.sysRecDeleted = 0');
 
       if (!this.general.isSuperAdmin(req)) {
@@ -142,51 +147,12 @@ export class ProductionOrderListService {
         qb.andWhere('po.status = :status', { status: params.status });
       }
 
-      if (params.search && params.search.trim() !== '') {
-        const searchVal = `%${params.search.trim()}%`;
-        qb.andWhere(
-          '(po.productionOrderCode LIKE :search OR item.itemName LIKE :search OR item.itemCode LIKE :search OR bom.bomName LIKE :search OR bom.bomCode LIKE :search OR CONCAT(addedByUser.firstName, " ", addedByUser.lastName) LIKE :search OR po.referenceNumber LIKE :search)',
-          { search: searchVal },
-        );
-      }
+      await this.general.applyListQuery(qb, params, 'po.id');
 
-      const columnMap: Record<string, string> = {
-        id: 'po.id',
-        productionOrderCode: 'po.productionOrderCode',
-        itemName: 'item.itemName',
-        itemCode: 'item.itemCode',
-        bomCode: 'bom.bomCode',
-        bomName: 'bom.bomName',
-        productionQuantityDisplay: 'po.productionQuantity',
-        productionQuantity: 'po.productionQuantity',
-        packageQuantityDisplay: 'po.productionQuantity',
-        packageQuantity: 'po.productionQuantity',
-        productionDateFormatted: 'po.productionDate',
-        productionDate: 'po.productionDate',
-        addedByName: "CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)",
-        addedBy: 'po.addedBy',
-        status: 'po.status',
-        addedDate: 'po.addedDate',
-      };
-
-      if (params.filters && params.filters.length > 0) {
-        const whereString = await this.general.makeFilterString(
-          params.filters,
-          columnMap,
-          params.logicalOperator,
-        );
-        if (whereString) {
-          qb.andWhere(`(${whereString})`);
-        }
-      }
-
-      const sortColumn = params.sortField && columnMap[params.sortField] ? columnMap[params.sortField] : 'po.id';
-      const sortOrder = params.sortOrder && ['ASC', 'DESC'].includes(params.sortOrder.toUpperCase()) ? (params.sortOrder.toUpperCase() as 'ASC' | 'DESC') : 'DESC';
-      qb.orderBy(sortColumn, sortOrder);
-
+      const totalCount = await qb.getCount();
       qb.offset(skip).limit(limit);
 
-      const [rawList, totalCount] = await Promise.all([qb.getRawMany(), qb.getCount()]);
+      const rawList = await qb.getRawMany();
 
       const formattedList = await Promise.all(
         rawList.map(async (row) => {
@@ -202,6 +168,7 @@ export class ProductionOrderListService {
 
           return {
             ...row,
+            batchCount: parseInt(String(row.batchCount || 0), 10),
             productionQuantity: numProdQty,
             pendingQuantity: numPendingQty,
             primitiveQuantity: numPrimitiveQty,
@@ -301,6 +268,11 @@ export class ProductionOrderListService {
         "currency.currencyCode = cc.currencyCode AND currency.status = 'Active' AND currency.sysRecDeleted = 0",
       );
 
+      qb.addSelect(
+        '(SELECT COUNT(1) FROM production_batch pb WHERE pb.productionOrderId = po.id AND pb.sysRecDeleted = 0 AND pb.status != \'Cancelled\')',
+        'batchCount',
+      );
+
       qb.where('po.id = :id', { id: query.id });
       qb.andWhere('po.sysRecDeleted = 0');
 
@@ -321,6 +293,7 @@ export class ProductionOrderListService {
       const currencySymbol = poDetails.currencySymbol || '';
       const symbolPrefix = currencySymbol ? `${currencySymbol} ` : '';
 
+      poDetails.batchCount = parseInt(String(poDetails.batchCount || 0), 10);
       poDetails.productionQuantity = numProdQty;
       poDetails.pendingQuantity = numPendingQty;
       poDetails.primitiveQuantity = numPrimitiveQty;
@@ -335,7 +308,6 @@ export class ProductionOrderListService {
       poDetails.updatedDateFormatted = poDetails.updatedDate ? await this.general.dateFormat(poDetails.updatedDate) : null;
       poDetails.productionDateFormatted = poDetails.productionDate ? await this.general.dateFormat(poDetails.productionDate) : null;
 
-      // Fetch component items for the referenced BOM to calculate cost and categorize material tabs
       const itemQb = this.bomProcessItemRepo.createQueryBuilder('bpi');
       itemQb.select([
         'bpi.id AS id',
@@ -364,7 +336,6 @@ export class ProductionOrderListService {
 
       const rawItems = await itemQb.getRawMany();
 
-      // Collect all component item IDs to build price and image lookup maps
       const itemIds = Array.from(new Set(rawItems.map((r) => Number(r.itemId))));
       const allItemIds = Array.from(new Set([Number(poDetails.itemId), ...itemIds].filter(Boolean)));
 
@@ -403,7 +374,6 @@ export class ProductionOrderListService {
 
       poDetails.itemImageUrl = itemImageMap.get(Number(poDetails.itemId)) || null;
 
-      // Build entry/exit item ID sets for cost calculation (row-level, no dedup needed)
       const exitItemIds = new Set(
         rawItems.filter((r) => r.materialType === 'Exit').map((r) => Number(r.itemId)),
       );
@@ -411,8 +381,6 @@ export class ProductionOrderListService {
         rawItems.filter((r) => r.materialType === 'Entry').map((r) => Number(r.itemId)),
       );
 
-      // For BomCostUtility: keep all rows, mark Entry isInternalTransfer correctly
-      // (Exit rows are skipped by BomCostUtility automatically)
       const itemsForCostCalc = rawItems.map((r) => ({
         itemId: Number(r.itemId),
         materialType: r.materialType,
@@ -420,7 +388,6 @@ export class ProductionOrderListService {
         isInternalTransfer: r.materialType === 'Entry' && exitItemIds.has(Number(r.itemId)),
       }));
 
-      // Calculate Live Cost Per Unit via BomCostUtility
       const costResult = BomCostUtility.calculateLiveCost(itemsForCostCalc, itemPriceMap);
 
       poDetails.itemCostPerUnit = costResult.totalUnitCost;
@@ -430,8 +397,6 @@ export class ProductionOrderListService {
       poDetails.estimatedTotalCost = estimatedTotalCost;
       poDetails.estimatedTotalCostFormatted = symbolPrefix ? `${symbolPrefix}${estimatedTotalCost.toFixed(2)}` : estimatedTotalCost.toFixed(2);
 
-      // --- Deduplication-first categorisation ---
-      // Build a deduplicated map: one representative row per unique itemId
       const uniqueItemMap = new Map<number, any>();
       for (const r of rawItems) {
         const id = Number(r.itemId);
@@ -454,21 +419,16 @@ export class ProductionOrderListService {
         const inExit = exitItemIds.has(itemId);
 
         if (itemId === mainItemId) {
-          // Main manufactured product always goes to Finished Products
           finishedProducts.unshift({ ...row, isInternalTransfer: false });
         } else if (inEntry && inExit) {
-          // Appears in both — intermediate semi-finished product
           semiFinished.push({ ...row, isInternalTransfer: true });
         } else if (inEntry && !inExit) {
-          // Entry-only — raw material from inventory
           rawMaterials.push({ ...row, isInternalTransfer: false });
         } else if (!inEntry && inExit) {
-          // Exit-only and not main product — byproduct, goes to Finished Products
           finishedProducts.push({ ...row, isInternalTransfer: false });
         }
       }
 
-      // If main product has no BOM row, construct it from poDetails directly
       if (!uniqueItemMap.has(mainItemId)) {
         const mainPrice = itemPriceMap.get(mainItemId);
         finishedProducts.unshift({
@@ -486,7 +446,6 @@ export class ProductionOrderListService {
         });
       }
 
-      // Pass pre-categorised unique items through BomItemCategorizerUtility for formatting
       poDetails.materialDetails = BomItemCategorizerUtility.categorizeItems(
         [
           ...rawMaterials,
@@ -497,7 +456,6 @@ export class ProductionOrderListService {
         currencySymbol,
       );
 
-      // Fetch attachments
       poDetails.attachments = await this.attachmentMasterService.getAttachmentsByEntity(
         poDetails.companyId,
         AttachmentModule.PRODUCTION_ORDER,

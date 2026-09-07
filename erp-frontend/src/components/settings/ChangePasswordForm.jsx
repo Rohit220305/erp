@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { changePassword } from "@/lib/api/auth-api";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { Eye, EyeOff, Lock, ShieldCheck, KeyRound } from "lucide-react";
 import toast from "react-hot-toast";
 import ConfirmModal from "@/components/common/ConfirmModal";
@@ -101,7 +102,7 @@ export default function ChangePasswordForm() {
           toast.success("Password changed successfully!");
           setValues(initialValues);
           setErrors({});
-          router.push("/");
+          router.push(buildRoute("home", "list"));
         } else {
           toast.error(res?.message || "Failed to change password");
         }

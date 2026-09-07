@@ -11,11 +11,11 @@ export const getProcessSchema = (isSuperAdmin = false) => {
         .number()
         .or(z.string().transform((val) => (val ? Number(val) : undefined)))
         .optional(),
-      processName: z.string().min(1, " Please enter Process Name."),
-      processCode: z.string().min(1, " Please enter Process Code."),
+      processName: z.string().min(1, "Please enter Process Name."),
+      processCode: z.string().min(1, "Please enter Process Code."),
       description: z.string().optional(),
       status: z
-        .enum(["Active", "Inactive"], " Please select Status.")
+        .enum(["Active", "Inactive"], "Please select Status.")
         .default("Active"),
     })
     .refine(
@@ -26,12 +26,13 @@ export const getProcessSchema = (isSuperAdmin = false) => {
         return true;
       },
       {
-        message: " Please select Company.",
+        message: "Please select Company.",
         path: ["companyId"],
       },
     )
     .refine((data) => !!data.workCentreId, {
-      message: " Please select Work Centre.",
+      message: "Please select Work Centre.",
       path: ["workCentreId"],
     });
 };
+

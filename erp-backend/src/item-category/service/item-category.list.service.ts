@@ -153,6 +153,8 @@ export class ItemCategoryListService {
         'category.companyId AS companyId',
         'category.addedDate AS addedDate',
         'category.updatedDate AS updatedDate',
+        'category.addedBy AS addedBy',
+        'category.updatedBy AS updatedBy',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');

@@ -335,18 +335,8 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
-          confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
-        }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save these changes?"
-            : "Are you sure you want to discard? Any unsaved changes will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        entityName="Group"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);

@@ -1,22 +1,33 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { CAPABILITIES } from "@/config/capabilities.config";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
-export default function ItemCategoryTableRow({ item, onRowAction, setSelectedItemForDetails }) {
+export default function ItemCategoryTableRow({
+  item,
+  onRowAction,
+  setSelectedItemForDetails,
+  setSelectedCompanyForDetails,
+  setSelectedItemCategoryForDetails,
+}) {
   const { can, user } = useAuth();
   const isActive = item.status === "Active" || item.status === "active";
-  const canView = can("ITEM_CATEGORY_VIEW");
+  const canViewCategory = can(CAPABILITIES.ITEM_CATEGORY?.VIEW || "ITEM_CATEGORY_VIEW");
+  const canViewCompany = can(CAPABILITIES.COMPANY?.VIEW || "COMPANY_VIEW");
 
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
-        {canView ? (
-          <button
+        {canViewCategory ? (
+          <ModuleLink
+            href={buildRoute("item-category", "detail", { id: item.id })}
             onClick={() => setSelectedItemForDetails(item)}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+            className="text-[#1565c0] font-medium text-sm"
           >
             {item.categoryName}
-          </button>
+          </ModuleLink>
         ) : (
           <span className="text-sm font-medium text-gray-900">
             {item.categoryName}
@@ -25,9 +36,19 @@ export default function ItemCategoryTableRow({ item, onRowAction, setSelectedIte
       </td>
       {user?.isSuperAdmin && (
         <td className="px-6 py-4 whitespace-nowrap min-w-[200px] max-w-[200px] truncate">
-          <span className="text-sm text-gray-700" title={item.companyName}>
-            {item.companyName || "—"}
-          </span>
+          {canViewCompany && item.companyId ? (
+            <ModuleLink
+              href={buildRoute("company", "detail", { id: item.companyId })}
+              onClick={setSelectedCompanyForDetails ? () => setSelectedCompanyForDetails({ companyId: item.companyId }) : null}
+              className="text-[#1565c0] font-medium text-sm"
+            >
+              {item.companyName || "—"}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm font-medium text-gray-900" title={item.companyName}>
+              {item.companyName || "—"}
+            </span>
+          )}
         </td>
       )}
       <td className="px-6 py-4 whitespace-nowrap">
@@ -37,11 +58,7 @@ export default function ItemCategoryTableRow({ item, onRowAction, setSelectedIte
           </span>
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className="text-sm text-gray-700">
-          {item.parentCategoryName || "—"}
-        </span>
-      </td>
+     
       <td className="px-6 py-4 whitespace-nowrap">
         <span className="text-sm text-gray-500">
           {item.addedDateFormatted || "—"}

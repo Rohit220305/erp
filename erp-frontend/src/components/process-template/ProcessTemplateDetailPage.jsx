@@ -9,7 +9,9 @@ import { CAPABILITIES } from "@/config/capabilities.config";
 import { updateProcessTemplate } from "@/lib/api/process-template-api";
 import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
-import { GitBranch, Workflow, FileText, CheckCircle2, ArrowRight } from "lucide-react";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { GitBranch, Workflow, FileText, CheckCircle2 } from "lucide-react";
 
 import dynamic from "next/dynamic";
 import Loader from "@/components/common/Loader";
@@ -27,18 +29,20 @@ const ProcessFlowchartContainer = dynamic(
 );
 
 function DetailRow({ label, value, valueClassName = "" }) {
+  if (!value && value !== 0) return null;
   return (
     <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
       <span className="text-sm text-gray-500">{label}</span>
       <span className={`text-sm font-medium text-right ${valueClassName}`}>
-        {value || "-"}
+        {value}
       </span>
     </div>
   );
 }
 
-function UserInfoCard({ title, name, date }) {
-  const initial = name ? name.charAt(0).toUpperCase() : "S";
+function UserInfoCard({ title, name, date, userId, onOpenUser }) {
+  if (!name && !userId) return null;
+  const initial = name ? name.charAt(0).toUpperCase() : "U";
   return (
     <div className="bg-white rounded-xl hover:shadow-lg transition p-6 border border-gray-100">
       <h3 className="text-sm font-semibold text-gray-600 mb-5">{title}</h3>
@@ -47,12 +51,20 @@ function UserInfoCard({ title, name, date }) {
           {initial}
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-[#1565c0]">
-            {name}
-          </span>
-          <span className="text-xs text-gray-400 mt-1">
-            {date || "-"}
-          </span>
+          {userId ? (
+            <ModuleLink
+              href={buildRoute("user", "detail", { id: userId })}
+              onClick={onOpenUser}
+              className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer"
+            >
+              {name || "User"}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm font-semibold text-gray-900">
+              {name || "User"}
+            </span>
+          )}
+          {date && <span className="text-xs text-gray-400 mt-1">{date}</span>}
         </div>
       </div>
     </div>
@@ -63,8 +75,10 @@ export default function ProcessTemplateDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
   const { can } = useAuth();
-  const [activeTab, setActiveTab] = useState("summary"); // "summary" | "flowchart"
+  const [activeTab, setActiveTab] = useState("summary");
   const [drawerState, setDrawerState] = useState({ isOpen: false, processId: null });
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
   const initialProcesses = data?.processes || [];
   const [currentProcesses, setCurrentProcesses] = useState(initialProcesses);
@@ -132,16 +146,16 @@ export default function ProcessTemplateDetailPage({ data }) {
         showMenu: true,
       },
       navbar: {
-        title: "Process Template Details",
+        title: "Details",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "Process Template", href: "/process-template" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Process Template", href: buildRoute("process-template", "list") },
         ],
         actionButton:
           can(CAPABILITIES.PROCESS_TEMPLATE?.UPDATE || "PROCESS_TEMPLATE_UPDATE") && !data?.isTemplateInUse
             ? {
               label: "Edit",
-              onClick: () => router.push(`/process-template/edit/${data?.id}`),
+              onClick: () => router.push(buildRoute("process-template", "edit", { id: data?.id })),
             }
             : null,
       },
@@ -171,9 +185,14 @@ export default function ProcessTemplateDetailPage({ data }) {
     executionType,
     remark,
     status,
+    companyId,
     companyName,
+    addedById,
+    addedBy,
     addedByName,
     addedDateFormatted,
+    updatedById,
+    updatedBy,
     updatedByName,
     updatedDateFormatted,
     isTemplateInUse = false,
@@ -193,9 +212,7 @@ export default function ProcessTemplateDetailPage({ data }) {
         <div className="col-span-2 h-full ms-10">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5 border border-gray-100 space-y-4 h-full">
             <div>
-              <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#1565c0] flex items-center justify-center mb-3">
-                <GitBranch size={24} />
-              </div>
+              
               <h2 className="font-semibold text-base text-gray-900 leading-tight">
                 {templateName}
               </h2>
@@ -258,6 +275,18 @@ export default function ProcessTemplateDetailPage({ data }) {
                       label="Execution Type"
                       value={executionType || "Sequential"}
                     />
+                    {companyName && (
+                      <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
+                        <span className="text-sm text-gray-500">Company</span>
+                        <ModuleLink
+                          href={buildRoute("company", "detail", { id: companyId })}
+                          onClick={() => setSelectedCompanyForDetails({ companyId })}
+                          className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
+                        >
+                          {companyName}
+                        </ModuleLink>
+                      </div>
+                    )}
                     <DetailRow
                       label="Status"
                       value={status}
@@ -284,16 +313,22 @@ export default function ProcessTemplateDetailPage({ data }) {
                 </div>
 
                 <div className="xl:col-span-1 flex flex-col gap-4">
-                  <UserInfoCard
-                    title="Added Info"
-                    name={addedByName}
-                    date={addedDateFormatted}
-                  />
-                  {updatedByName && (
+                  {(addedByName || addedDateFormatted) && (
+                    <UserInfoCard
+                      title="Added Info"
+                      name={addedByName}
+                      date={addedDateFormatted}
+                      userId={addedById || addedBy}
+                      onOpenUser={() => setSelectedUserForDetails({ userId: addedById || addedBy })}
+                    />
+                  )}
+                  {(updatedByName || updatedDateFormatted) && (
                     <UserInfoCard
                       title="Modified Info"
                       name={updatedByName}
                       date={updatedDateFormatted}
+                      userId={updatedById || updatedBy}
+                      onOpenUser={() => setSelectedUserForDetails({ userId: updatedById || updatedBy })}
                     />
                   )}
                 </div>
@@ -313,7 +348,7 @@ export default function ProcessTemplateDetailPage({ data }) {
                   <table className="w-full table-fixed text-left border-collapse">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        <th className="py-3 px-4 w-40 text-center">Seq #</th>
+                        <th className="py-3 px-4 w-40 text-center">Sr. No.</th>
                         <th className="py-3 px-4 w-1/2 text-center">
                           Process Name
                         </th>
@@ -428,6 +463,22 @@ export default function ProcessTemplateDetailPage({ data }) {
         moduleName="Process"
         mode="details"
         data={drawerState.processId ? { id: drawerState.processId } : null}
+      />
+
+      <SideDrawer
+        open={!!selectedCompanyForDetails}
+        onClose={() => setSelectedCompanyForDetails(null)}
+        moduleName="Company"
+        mode="details"
+        data={selectedCompanyForDetails ? { id: selectedCompanyForDetails.companyId } : null}
+      />
+
+      <SideDrawer
+        open={!!selectedUserForDetails}
+        onClose={() => setSelectedUserForDetails(null)}
+        moduleName="User"
+        mode="details"
+        data={selectedUserForDetails ? { id: selectedUserForDetails.userId } : null}
       />
     </div>
   );

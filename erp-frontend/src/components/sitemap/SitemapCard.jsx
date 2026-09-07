@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function SitemapCard({ title, menus, path }) {
@@ -17,12 +18,13 @@ export default function SitemapCard({ title, menus, path }) {
           const label = typeof menu === "string" ? menu : menu.label;
           const menuPath = typeof menu === "string" ? path : menu.path;
           return (
-            <li
-              key={label}
-              className="mb-2 text-[15px] text-gray-600 hover:text-blue-600 cursor-pointer"
-              onClick={() => menuPath && router.push(menuPath)}
-            >
-              • {label}
+            <li key={label} className="mb-2 text-[15px]">
+              <Link
+                href={menuPath || "#"}
+                className="text-gray-600 hover:text-blue-600 cursor-pointer block transition-colors"
+              >
+                • {label}
+              </Link>
             </li>
           );
         })}

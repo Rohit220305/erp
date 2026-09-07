@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import toast from "react-hot-toast";
 
 import { listUsers, deleteUser } from "@/lib/api/user-api";
@@ -61,7 +62,7 @@ export default function UserListing() {
         const data = res?.data || res?.settings?.data;
         loginAs(data, data?.token);
         toast.success(res?.message || "Logged in successfully");
-        router.push("/");
+        router.push(buildRoute("home", "list"));
       } else {
         toast.error(res?.message || "Failed to login as user");
       }
@@ -95,35 +96,36 @@ export default function UserListing() {
         schema={dynamicSchema}
         fetchData={listUsers}
         deleteFn={(target) => deleteUser(target.id)}
-        renderTableRow={(item, onRowAction, setSelectedItemForDetails) => (
+        renderTableRow={(userRecord, onRowAction, setSelectedUserForDetails) => (
           <UserTableRow
-            item={item}
+            key={userRecord.id}
+            user={userRecord}
             currentUser={currentUser}
             handleLoginAs={handleLoginAs}
             setSelectedUserForPasswordReset={setSelectedUserForPasswordReset}
             setSelectedCompanyForDetails={setSelectedCompanyForDetails}
-            setSelectedItemForDetails={setSelectedItemForDetails}
+            setSelectedUserForDetails={setSelectedUserForDetails}
           />
         )}
-        renderListCard={(item, setSelectedItemForDetails) => (
+        renderListCard={(userRecord, setSelectedUserForDetails) => (
           <UserListCard
-            key={item.id}
-            user={item}
+            key={userRecord.id}
+            user={userRecord}
             handleLoginAs={handleLoginAs}
             currentUser={currentUser}
             can={can}
-            setSelectedUserForDetails={setSelectedItemForDetails}
+            setSelectedUserForDetails={setSelectedUserForDetails}
             setSelectedCompanyForDetails={setSelectedCompanyForDetails}
           />
         )}
-        renderGridCard={(item, setSelectedItemForDetails) => (
+        renderGridCard={(userRecord, setSelectedUserForDetails) => (
           <UserGridCard
-            key={item.id}
-            user={item}
+            key={userRecord.id}
+            user={userRecord}
             handleLoginAs={handleLoginAs}
             currentUser={currentUser}
             can={can}
-            setSelectedUserForDetails={setSelectedItemForDetails}
+            setSelectedUserForDetails={setSelectedUserForDetails}
             setSelectedUserForPasswordReset={setSelectedUserForPasswordReset}
             setSelectedCompanyForDetails={setSelectedCompanyForDetails}
           />

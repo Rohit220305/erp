@@ -1,11 +1,22 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { CAPABILITIES } from "@/config/capabilities.config";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
+import ModuleLink from "@/components/common/ModuleLink";
 
-export default function ItemUomTableRow({ item, onRowAction, setSelectedItemForDetails }) {
+export default function ItemUomTableRow({
+  item,
+  onRowAction,
+  setSelectedItemForDetails,
+  setSelectedCompanyForDetails,
+  setSelectedUserForDetails,
+}) {
   const { can, user } = useAuth();
   const isActive = item.status === "Active" || item.status === "active";
-  const canView = can("ITEM_UOM_VIEW");
+  const canView = can(CAPABILITIES.ITEM_UOM?.VIEW || "ITEM_UOM_VIEW");
+  const canViewCompany = can(CAPABILITIES.COMPANY?.VIEW || "COMPANY_VIEW");
+  const canViewUser = can(CAPABILITIES.USER?.VIEW || "USER_VIEW");
 
   const formatUnitType = (type) => {
     if (!type) return "—";
@@ -16,7 +27,7 @@ export default function ItemUomTableRow({ item, onRowAction, setSelectedItemForD
       volume: "Volume",
       weight: "Weight",
       time: "Time",
-      pumping_rate: "Pumping Rate"
+      pumping_rate: "Pumping Rate",
     };
     return types[type] || type;
   };
@@ -25,12 +36,13 @@ export default function ItemUomTableRow({ item, onRowAction, setSelectedItemForD
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
         {canView ? (
-          <button
+          <ModuleLink
+            href={buildRoute("itemUom", "detail", { id: item.id })}
             onClick={() => setSelectedItemForDetails(item)}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+            className="text-sm font-medium text-[#1565c0]"
           >
             {item.uomName}
-          </button>
+          </ModuleLink>
         ) : (
           <span className="text-sm font-medium text-gray-900">
             {item.uomName}
@@ -39,9 +51,24 @@ export default function ItemUomTableRow({ item, onRowAction, setSelectedItemForD
       </td>
       {user?.isSuperAdmin && (
         <td className="px-6 py-4 whitespace-nowrap min-w-[250px] max-w-[250px] truncate">
-          <span className="text-sm text-gray-700" title={item.companyName}>
-            {item.companyName || "—"}
-          </span>
+          {canViewCompany && item.companyId ? (
+            <ModuleLink
+              href={buildRoute("company", "detail", { id: item.companyId })}
+              onClick={
+                setSelectedCompanyForDetails
+                  ? () => setSelectedCompanyForDetails({ companyId: item.companyId })
+                  : null
+              }
+              className="text-sm text-[#1565c0]"
+              title={item.companyName}
+            >
+              {item.companyName || "—"}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm text-gray-700" title={item.companyName}>
+              {item.companyName || "—"}
+            </span>
+          )}
         </td>
       )}
       <td className="px-6 py-4 whitespace-nowrap">
@@ -60,9 +87,26 @@ export default function ItemUomTableRow({ item, onRowAction, setSelectedItemForD
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className="text-sm text-gray-700">
-          {item.addedByName || "—"}
-        </span>
+        {(() => {
+          const addedByUserId = item.addedBy || item.addedById || item.added_by || item.createdBy;
+          return canViewUser && (addedByUserId || item.addedByName) ? (
+            <ModuleLink
+              href={addedByUserId ? buildRoute("user", "detail", { id: addedByUserId }) : "#"}
+              onClick={
+                setSelectedUserForDetails && addedByUserId
+                  ? () => setSelectedUserForDetails({ userId: addedByUserId, id: addedByUserId, addedBy: addedByUserId })
+                  : null
+              }
+              className="text-sm text-[#1565c0]"
+            >
+              {item.addedByName || "System"}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm text-gray-700">
+              {item.addedByName || "System"}
+            </span>
+          );
+        })()}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span className="text-sm text-gray-500">

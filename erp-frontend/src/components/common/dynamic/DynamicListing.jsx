@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { useAuth } from "@/context/AuthContext";
 import { useListing } from "@/context/ListingContext";
 import { useHeader } from "@/context/HeaderContext";
@@ -108,7 +109,7 @@ export default function DynamicListing({
             });
           }
         } catch (error) {
-          console.error("Failed to fetch work centre categories for dynamic options:", error);
+          console.error("Failed to fetch work centre category for dynamic options:", error);
         }
       }
 
@@ -274,8 +275,8 @@ export default function DynamicListing({
       navbar: {
         title: "Listing",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: activeSchema.title, href: activeSchema.modulePath },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: activeSchema.title, href: activeSchema.modulePath || (activeSchema.moduleName ? buildRoute(activeSchema.moduleName, "list") : "#") },
         ],
       },
     });
@@ -424,9 +425,8 @@ export default function DynamicListing({
 
       <ConfirmModal
         isOpen={!!deleteTarget}
-        title={`Delete ${activeSchema.title}`}
-        message="Are you sure you want to delete this record? This action cannot be undone."
-        confirmLabel="Delete"
+        actionType="delete"
+        entityName={activeSchema.moduleName || activeSchema.title}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

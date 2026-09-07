@@ -44,7 +44,6 @@ export class BomProcessItemDto {
   @IsBoolean()
   isInternalTransfer?: boolean;
 
-  // Optional isPrimary enum field (scope and enforcement deferred for future feature)
   @IsOptional()
   @IsEnum(YesNo)
   isPrimary?: YesNo = YesNo.No;
@@ -181,4 +180,12 @@ export class BomListDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'ASC' | 'DESC';
+
+  @IsOptional()
+  @IsArray()
+  filters?: any[];
+
+  @IsOptional()
+  @IsString()
+  logicalOperator?: string;
 }

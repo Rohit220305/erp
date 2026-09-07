@@ -32,8 +32,6 @@ export class BomProcessItemEntity {
   })
   quantity: number;
 
-  // NOTE: isPrimary scope (e.g. primary per step vs primary per BOM) and uniqueness
-  // enforcement are currently TBD and deferred to a future feature. No validation exists in this pass.
   @Column({ type: 'enum', enum: YesNo, default: YesNo.No })
   isPrimary: YesNo;
 }

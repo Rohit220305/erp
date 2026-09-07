@@ -252,9 +252,10 @@ export default function ItemUomDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter UOM Name"
               value={formData.uomName || ""}
               onChange={(e) => handleNameChange("uomName", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.uomName ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -297,10 +298,11 @@ export default function ItemUomDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter UOM Code"
               disabled={mode === "edit"}
               value={formData.itemUomCode || ""}
               onChange={(e) => handleChange("itemUomCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.itemUomCode ? "border-red-500 bg-red-50" : "border-gray-300"}
                 ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : ""}
               `}
@@ -316,9 +318,10 @@ export default function ItemUomDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter ISO Code"
               value={formData.isoCode || ""}
               onChange={(e) => handleChange("isoCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0] border-gray-300`}
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0] border-gray-300`}
             />
           </div>
 
@@ -328,9 +331,10 @@ export default function ItemUomDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Abbreviation"
               value={formData.abbreviation || ""}
               onChange={(e) => handleChange("abbreviation", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0] border-gray-300`}
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0] border-gray-300`}
             />
           </div>
 
@@ -404,18 +408,14 @@ export default function ItemUomDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this Item UOM?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Item UOM"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);

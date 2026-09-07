@@ -4,7 +4,10 @@ import { useState } from "react";
 import { ChevronDown, Layers } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { CAPABILITIES } from "@/config/capabilities.config";
+import StatusBadge from "@/components/common/StatusBadge";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 export default function BomListCard({
   item,
@@ -13,6 +16,7 @@ export default function BomListCard({
   setSelectedOutputItemForDetails,
   setSelectedProcessTemplateForDetails,
   setSelectedCompanyForDetails,
+  setSelectedUserForDetails,
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { can } = useAuth();
@@ -22,15 +26,14 @@ export default function BomListCard({
   const viewPerm = config?.permissions?.view || "BOM_VIEW";
   const hasViewPerm = can(viewPerm);
   const canViewItem = can(CAPABILITIES.ITEM?.VIEW || "ITEM_VIEW");
+  const canViewUser = can(CAPABILITIES.USER?.VIEW || "USER_VIEW");
   const isActive = item.status === "Active" || item.status === "active";
 
   return (
     <div className="mx-2 my-2">
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-300 shadow-xs hover:shadow-sm">
-        {/* Summary Top Row */}
         <div className="flex items-center px-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center flex-1 min-w-0">
-            {/* Column 1: Item Image & Item Name */}
             <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
                 Item Name
@@ -46,8 +49,8 @@ export default function BomListCard({
                 />
                 <div className="min-w-0">
                   {canViewItem && setSelectedOutputItemForDetails ? (
-                    <button
-                      type="button"
+                    <ModuleLink
+                      href={buildRoute("item", "detail", { id: item.itemId })}
                       onClick={() =>
                         setSelectedOutputItemForDetails({
                           categoryId: item.itemId,
@@ -57,7 +60,7 @@ export default function BomListCard({
                       className="block text-[#1565c0] hover:underline cursor-pointer font-semibold text-xs truncate text-left"
                     >
                       {item.itemName || "—"}
-                    </button>
+                    </ModuleLink>
                   ) : (
                     <p className="text-xs font-semibold text-gray-800 truncate">
                       {item.itemName || "—"}
@@ -70,19 +73,18 @@ export default function BomListCard({
               </div>
             </div>
 
-            {/* Column 2: BoM Name */}
             <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
                 BoM Name
               </p>
               {hasViewPerm && setSelectedItemForDetails ? (
-                <button
-                  type="button"
+                <ModuleLink
+                  href={buildRoute("bom", "detail", { id: item.id })}
                   onClick={() => setSelectedItemForDetails(item)}
                   className="block text-[#1565c0] hover:underline cursor-pointer font-semibold text-xs truncate text-left"
                 >
                   {item.bomName || "—"}
-                </button>
+                </ModuleLink>
               ) : (
                 <p className="text-xs font-semibold text-gray-800 truncate">
                   {item.bomName || "—"}
@@ -90,25 +92,15 @@ export default function BomListCard({
               )}
             </div>
 
-            {/* Column 3: Status Pill Badge */}
             <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
                 Status
               </p>
               <div>
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    isActive
-                      ? "bg-emerald-500 text-white"
-                      : "bg-red-500 text-white"
-                  }`}
-                >
-                  {item.status || "Active"}
-                </span>
+                <StatusBadge status={item.status || "Active"} />
               </div>
             </div>
 
-            {/* Column 4: BoM Code */}
             <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
                 BoM Code
@@ -132,56 +124,82 @@ export default function BomListCard({
           </div>
         </div>
 
-        {/* Expanded Details Row */}
         <div
           className={`transition-all duration-300 ease-in-out overflow-hidden ${
             isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 space-y-3">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-              <div>
-                <span className="text-gray-400 block mb-1">Reference Number</span>
-                <span className="font-medium text-gray-800">
+          <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100">
+            <div className="grid grid-cols-4 gap-4 items-start pr-[52px]">
+              <div className="min-w-0">
+                <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
+                  Reference Number
+                </p>
+                <p className="text-xs font-medium text-gray-800 truncate">
                   {item.referenceNumber || "-"}
-                </span>
+                </p>
               </div>
 
-              <div>
-                <span className="text-gray-400 block mb-1">Production Method</span>
-                <span className="font-semibold text-gray-800">
+              <div className="min-w-0">
+                <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
+                  Production Method
+                </p>
+                <p className="text-xs font-semibold text-gray-800 capitalize truncate">
                   {item.productionMethod || "-"}
-                </span>
+                </p>
               </div>
 
-              <div>
-                <span className="text-gray-400 block mb-1">Cost Per Unit</span>
-                <span className="font-semibold text-gray-900">
+              <div className="min-w-0">
+                <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
+                  Cost Per Unit
+                </p>
+                <p className="text-xs font-semibold text-gray-900 truncate">
                   {item.costPerUnitFormatted || item.costPerUnit || "-"}
-                </span>
+                </p>
               </div>
 
-              <div>
-                <span className="text-gray-400 block mb-1">Item Bar Code</span>
-                <span className="font-medium text-[#1565c0] font-mono">
+              <div className="min-w-0">
+                <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
+                  Item Bar Code
+                </p>
+                <p className="text-xs font-medium text-[#1565c0] font-mono truncate">
                   {item.itemBarcode || "-"}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-xs pt-1 border-t border-gray-100">
-              <div>
-                <span className="text-gray-400 block mb-1">Added By</span>
-                <span className="font-semibold text-[#1565c0]">
-                  {item.addedByName || "-"}
-                </span>
+                </p>
               </div>
 
-              <div>
-                <span className="text-gray-400 block mb-1">Added Date</span>
-                <span className="font-medium text-gray-800">
+              <div className="min-w-0 mt-3">
+                <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
+                  Added By
+                </p>
+                {(() => {
+                  const userId = item.addedBy || item.addedById || item.added_by || item.createdBy;
+                  return canViewUser ? (
+                    <ModuleLink
+                      href={userId ? buildRoute("user", "detail", { id: userId }) : buildRoute("user", "list")}
+                      onClick={
+                        setSelectedUserForDetails && userId
+                          ? () => setSelectedUserForDetails({ id: userId, userId, addedBy: userId })
+                          : null
+                      }
+                      className="font-semibold text-xs text-[#1565c0] hover:underline cursor-pointer truncate block"
+                    >
+                      {item.addedByName || "-"}
+                    </ModuleLink>
+                  ) : (
+                    <span className="font-semibold text-xs text-gray-900 truncate block">
+                      {item.addedByName || "-"}
+                    </span>
+                  );
+                })()}
+              </div>
+
+              <div className="min-w-0 mt-3">
+                <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
+                  Added Date
+                </p>
+                <p className="text-xs font-medium text-gray-800 truncate">
                   {item.addedDateFormatted || "-"}
-                </span>
+                </p>
               </div>
             </div>
           </div>

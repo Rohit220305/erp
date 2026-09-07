@@ -5,8 +5,7 @@ export const processTemplateDrawerConfig = {
   header: {
     image: { 
       key: "imageUrl", 
-      fallbackType: "icon", 
-      fallbackIcon: GitBranch
+     
     },
     title: { 
       type: "text", 

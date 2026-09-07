@@ -1,6 +1,6 @@
 {
   "moduleName": "Currency",
-  "title": "Currencies",
+  "title": "Currency Master",
   "permissions": {
     "list": "CURRENCY_LIST",
     "create": "CURRENCY_CREATE",

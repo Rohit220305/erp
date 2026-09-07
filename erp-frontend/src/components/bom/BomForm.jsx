@@ -10,6 +10,7 @@ import { listProcessTemplates, getProcessTemplate } from "@/lib/api/process-temp
 import { createBom, updateBom } from "@/lib/api/bom-api";
 import { getBomSchema } from "@/lib/validation/bom.schema";
 import { CAPABILITIES } from "@/config/capabilities.config";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import BomStep1Details from "./BomStep1Details";
@@ -92,7 +93,6 @@ export default function BomForm({
     }
   }, [initialData]);
 
-  // Load select options
   useEffect(() => {
     async function loadGlobalData() {
       try {
@@ -134,7 +134,6 @@ export default function BomForm({
     ? formData.companyId
     : user?.companyId || initialData?.companyId;
 
-  // Load currency symbol for company
   useEffect(() => {
     if (effectiveCompanyId) {
       getCompany(effectiveCompanyId)
@@ -148,7 +147,6 @@ export default function BomForm({
     }
   }, [effectiveCompanyId]);
 
-  // Fetch process template sequence when template selection changes
   useEffect(() => {
     if (formData.processTemplateId) {
       getProcessTemplate({ id: formData.processTemplateId })
@@ -175,22 +173,22 @@ export default function BomForm({
     const fieldErrors = {};
 
     if (!formData.bomName?.trim()) {
-      fieldErrors.bomName = " Please enter BOM Name.";
+      fieldErrors.bomName = "Please enter BOM Name.";
     }
     if (!formData.productionMethod) {
-      fieldErrors.productionMethod = " Please select Production Method.";
+      fieldErrors.productionMethod = "Please select Production Method.";
     }
     if (!formData.itemId) {
-      fieldErrors.itemId = " Please select Item.";
+      fieldErrors.itemId = "Please select Item.";
     }
     if (!formData.processTemplateId) {
-      fieldErrors.processTemplateId = " Please select Process Template.";
+      fieldErrors.processTemplateId = "Please select Process Template.";
     }
     if (!formData.status) {
-      fieldErrors.status = " Please select Status.";
+      fieldErrors.status = "Please select Status.";
     }
     if (user?.isSuperAdmin && !effectiveCompanyId) {
-      fieldErrors.companyId = " Please select Company.";
+      fieldErrors.companyId = "Please select Company.";
     }
 
     if (Object.keys(fieldErrors).length > 0) {
@@ -206,7 +204,7 @@ export default function BomForm({
     const validItems = (processItems || []).filter((i) => i.itemId && Number(i.itemId) > 0);
 
     if (validItems.length === 0) {
-      setErrors({ items: " Please select material item for at least one row in Step 2." });
+      setErrors({ items: "Please select material item for at least one row in Step 2." });
       setCurrentStep(2);
       toast.error("Please select material item for at least one row in Step 2.");
       return false;
@@ -262,11 +260,20 @@ export default function BomForm({
     }
   };
 
+  const navigateOnDiscard = () => {
+    const targetId = initialData?.id || id;
+    if (mode === "edit" && targetId) {
+      router.push(buildRoute("bom", "detail", { id: targetId }));
+    } else {
+      router.push(buildRoute("bom", "list"));
+    }
+  };
+
   const handleDiscard = () => {
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/bom");
+      navigateOnDiscard();
     }
   };
 
@@ -315,8 +322,7 @@ export default function BomForm({
       newFiles.forEach((file) => {
         fd.append("attachments", file);
       });
-      console.log("Submitting BOM form data:", payloadObj, "with files:", newFiles);
-      console.log(fd);
+
       const res = mode === "create"
         ? await createBom(fd)
         : await updateBom(fd);
@@ -332,7 +338,7 @@ export default function BomForm({
             : "BOM updated successfully!"
         );
         router.refresh();
-        router.push("/bom");
+        router.push(buildRoute("bom", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} BOM`);
       }
@@ -347,7 +353,6 @@ export default function BomForm({
   return (
     <div className="h-full overflow-y-auto pb-20 flex flex-col justify-between">
       <div className="space-y-6">
-        {/* Step Indicator Header */}
         <div className="flex items-center gap-4 text-sm bg-[#f8f9fa] p-4 px-10 border-b border-gray-200">
           <button
             type="button"
@@ -355,13 +360,12 @@ export default function BomForm({
             className="flex items-center gap-2 cursor-pointer focus:outline-none"
           >
             <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
-                currentStep === 1
-                  ? "bg-[#1565c0] text-white shadow-sm"
-                  : currentStep > 1
-                    ? "bg-[#16a34a] text-white"
-                    : "bg-gray-200 text-gray-600"
-              }`}
+              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${currentStep === 1
+                ? "bg-[#1565c0] text-white shadow-sm"
+                : currentStep > 1
+                  ? "bg-[#16a34a] text-white"
+                  : "bg-gray-200 text-gray-600"
+                }`}
             >
               {currentStep > 1 ? <Check size={14} /> : "1"}
             </div>
@@ -382,11 +386,10 @@ export default function BomForm({
             className="flex items-center gap-2 cursor-pointer focus:outline-none"
           >
             <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
-                currentStep === 2
-                  ? "bg-[#1565c0] text-white shadow-sm"
-                  : "bg-gray-200 text-gray-600"
-              }`}
+              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${currentStep === 2
+                ? "bg-[#1565c0] text-white shadow-sm"
+                : "bg-gray-200 text-gray-600"
+                }`}
             >
               2
             </div>
@@ -497,33 +500,19 @@ export default function BomForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
             ? mode === "create"
-              ? "Confirm Submission"
-              : "Confirm Update"
-            : "Discard Changes"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? mode === "create"
-              ? "Are you sure you want to save this Bill of Materials (BOM)?"
-              : "Are you sure you want to update this Bill of Materials (BOM)?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={
-          confirmState.type === "submit"
-            ? mode === "create"
-              ? "Save"
-              : "Update"
-            : "Discard"
-        }
-        danger={confirmState.type === "discard"}
+        entityName="Bill of Materials"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit();
           } else {
-            router.push("/bom");
+            navigateOnDiscard();
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

@@ -4,7 +4,7 @@ export const bomDrawerConfig = {
   title: "BOM Details",
   header: {
     image: { 
-      key: "imageUrl", 
+      key: "itemImageUrl", 
       fallbackType: "icon", 
       fallbackIcon: Layers
     },
@@ -31,7 +31,9 @@ export const bomDrawerConfig = {
         { label: "Production Method", key: "productionMethod", type: "text" },
         { label: "Output Item", key: "itemName", type: "text" },
         { label: "Process Template", key: "processTemplateName", type: "text" },
-        { label: "Cost Per Unit", key: "costPerUnitFormatted", type: "text" },
+        { label: "Cost Per Unit", key: "costPerUnit", type: "text" },
+        { label: "Added By", key: "addedByName", type: "text" },
+        { label: "Added Date", key: "addedDateFormatted", type: "text" },
         { label: "Company", key: "companyName", type: "text", showForSuperAdminOnly: true }
       ]
     },

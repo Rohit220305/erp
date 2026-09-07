@@ -6,6 +6,7 @@ import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { BomEntity } from '../entity/bom.entity';
 import { BomProcessItemEntity } from '../entity/bom-process-item.entity';
+import { ProcessTemplateMappingEntity } from '../../process-template/entity/process.template.mapping.entity';
 import { ItemEntity } from '../../item/entity/item.entity';
 import { ItemImageEntity } from '../../item/entity/item-image.entity';
 import { BomDetailsDto, BomListDto } from '../dto/bom.dto';
@@ -32,6 +33,9 @@ export class BomListService {
 
   @InjectRepository(ItemImageEntity)
   private readonly itemImageRepo: Repository<ItemImageEntity>;
+
+  @InjectRepository(ProcessTemplateMappingEntity)
+  private readonly processTemplateMappingRepo: Repository<ProcessTemplateMappingEntity>;
 
   async startBomList(req: IAppRequest, params: BomListDto) {
     const response = await this.getBomList(req, params);
@@ -67,6 +71,8 @@ export class BomListService {
         'bom.companyId AS companyId',
         'bom.addedDate AS addedDate',
         'bom.updatedDate AS updatedDate',
+        'bom.addedBy AS addedBy',
+        'bom.updatedBy AS updatedBy',
       ]);
 
       qb.addSelect('company.companyName', 'companyName');
@@ -115,29 +121,7 @@ export class BomListService {
         qb.andWhere('bom.status = :status', { status: params.status });
       }
 
-      if (params.search && params.search.trim() !== '') {
-        const search = `%${params.search.trim()}%`;
-        qb.andWhere(
-          '(bom.bomName LIKE :search OR bom.bomCode LIKE :search OR item.itemName LIKE :search OR template.templateName LIKE :search)',
-          { search },
-        );
-      }
-
-      const columnMap: Record<string, string> = {
-        id: 'bom.id',
-        bomName: 'bom.bomName',
-        bomCode: 'bom.bomCode',
-        productionMethod: 'bom.productionMethod',
-        itemName: 'item.itemName',
-        processTemplateName: 'template.templateName',
-        status: 'bom.status',
-        addedDate: 'bom.addedDate',
-      };
-
-      const sortColumn = params.sortField && columnMap[params.sortField] ? columnMap[params.sortField] : 'bom.id';
-      const sortOrder = params.sortOrder && ['ASC', 'DESC'].includes(params.sortOrder.toUpperCase()) ? (params.sortOrder.toUpperCase() as 'ASC' | 'DESC') : 'DESC';
-
-      qb.orderBy(sortColumn, sortOrder);
+      await this.general.applyListQuery(qb, params, 'bom.id');
 
       const totalCount = await qb.getCount();
       qb.offset(skip).limit(limit);
@@ -147,7 +131,6 @@ export class BomListService {
       await this.general.formatDate(rawResults);
 
       if (rawResults.length > 0) {
-        // 1. Batch fetch primary active item images
         const itemIds = Array.from(new Set(rawResults.map((r) => Number(r.itemId)).filter(Boolean)));
         const itemImageMap = new Map<number, string>();
         if (itemIds.length > 0) {
@@ -165,7 +148,6 @@ export class BomListService {
           );
         }
 
-        // 2. Batch fetch process items and calculate live costs
         const bomIds = rawResults.map((r) => Number(r.id));
         const allProcessItems = await this.bomProcessItemRepo.find({
           where: { bomId: In(bomIds) },
@@ -248,11 +230,7 @@ export class BomListService {
     return await this.finishFailure(response);
   }
 
-  /**
-   * TASK 10: Get BOM Details
-   * Resolves header info, stage items, item cost lookup, and routes ALL quantity/cost arithmetic
-   * through the shared BomCostUtility.calculateLiveCost engine.
-   */
+
   async getBomDetails(req: IAppRequest, params: BomDetailsDto) {
     let return_data: any = {};
     try {
@@ -318,7 +296,6 @@ export class BomListService {
       bomDetails.addedDateFormatted = bomDetails.addedDate ? await this.general.dateFormat(bomDetails.addedDate) : null;
       bomDetails.updatedDateFormatted = bomDetails.updatedDate ? await this.general.dateFormat(bomDetails.updatedDate) : null;
 
-      // Fetch process item mappings with process step details
       const itemQb = this.bomProcessItemRepo.createQueryBuilder('bpi');
       itemQb.select([
         'bpi.id AS id',
@@ -345,7 +322,6 @@ export class BomListService {
 
       const rawItems = await itemQb.getRawMany();
 
-      // Collect all component item IDs to build price lookup map and image map
       const itemIds = Array.from(new Set(rawItems.map((r) => Number(r.itemId))));
       const allItemIds = Array.from(
         new Set([Number(bomDetails.itemId), ...itemIds].filter(Boolean))
@@ -369,7 +345,6 @@ export class BomListService {
           });
         });
 
-        // Query active item images ordered by primary first
         const images = await this.itemImageRepo.find({
           where: { itemId: In(allItemIds), sysRecDeleted: false },
           order: { isPrimary: 'DESC', id: 'ASC' },
@@ -387,19 +362,17 @@ export class BomListService {
 
       bomDetails.itemImageUrl = itemImageMap.get(Number(bomDetails.itemId)) || null;
 
-      // Identify all item IDs produced as an "Exit" in this BOM
       const exitItemIds = new Set(
         rawItems
           .filter((r) => r.materialType === 'Exit')
           .map((r) => Number(r.itemId))
       );
 
-      // ROUTE ALL ARITHMETIC through BomCostUtility (Task 10 Requirement)
       const costResult = BomCostUtility.calculateLiveCost(
         rawItems.map((r) => ({
           itemId: Number(r.itemId),
           materialType: r.materialType,
-          quantity: r.quantity, // ColumnTransformer handles parsing
+          quantity: r.quantity,
           isInternalTransfer: r.materialType === 'Entry' && exitItemIds.has(Number(r.itemId)),
         })),
         itemPriceMap,
@@ -413,6 +386,36 @@ export class BomListService {
       bomDetails.costBreakdown = costResult;
 
       const processStagesMap = new Map<number, any>();
+
+      if (bomDetails.processTemplateId) {
+        const templateMappings = await this.processTemplateMappingRepo
+          .createQueryBuilder('ptm')
+          .select([
+            'ptm.id AS processTemplateMappingId',
+            'ptm.sequenceNo AS sequenceNo',
+            'pm.id AS processId',
+            'pm.processName AS processName',
+            'pm.processCode AS processCode',
+          ])
+          .leftJoin('process_master', 'pm', 'pm.id = ptm.processId')
+          .where('ptm.templateId = :templateId', { templateId: bomDetails.processTemplateId })
+          .orderBy('ptm.sequenceNo', 'ASC')
+          .getRawMany();
+
+        templateMappings.forEach((tm) => {
+          const seq = Number(tm.sequenceNo);
+          processStagesMap.set(seq, {
+            sequenceNo: seq,
+            processTemplateMappingId: Number(tm.processTemplateMappingId),
+            processId: Number(tm.processId),
+            processName: tm.processName,
+            processCode: tm.processCode,
+            entryItems: [],
+            exitItems: [],
+          });
+        });
+      }
+
       rawItems.forEach((r) => {
         const seq = Number(r.sequenceNo);
         if (!processStagesMap.has(seq)) {
@@ -449,7 +452,6 @@ export class BomListService {
 
       bomDetails.processStages = Array.from(processStagesMap.values());
 
-      // --- Deduplication-first material categorisation for BOM details ---
       const entryItemIds = new Set(
         rawItems.filter((r) => r.materialType === 'Entry').map((r) => Number(r.itemId)),
       );
@@ -509,7 +511,6 @@ export class BomListService {
         currencySymbol,
       );
 
-      // Fetch attachments for this BOM entity
       bomDetails.attachments = await this.attachmentMasterService.getAttachmentsByEntity(
         bomDetails.companyId,
         AttachmentModule.BOM,

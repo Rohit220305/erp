@@ -16,9 +16,26 @@ export default function GroupListing() {
       schema={groupSchema}
       fetchData={listGroups}
       deleteFn={(target) => deleteGroup(target.id)}
-      renderTableRow={(item, key) => <GroupTableRow item={item} columnKey={key} />}
-      renderListCard={(item, setDetails) => <GroupListCard key={item.id} group={item} can={can} />}
-      renderGridCard={(item, setDetails) => <GroupGridCard key={item.id} group={item} />}
+      renderTableRow={(group, onRowAction) => (
+        <GroupTableRow
+          key={group.id}
+          group={group}
+          onRowAction={onRowAction}
+        />
+      )}
+      renderListCard={(group) => (
+        <GroupListCard
+          key={group.id}
+          group={group}
+          can={can}
+        />
+      )}
+      renderGridCard={(group) => (
+        <GroupGridCard
+          key={group.id}
+          group={group}
+        />
+      )}
       extraApiParams={{ includeSuperAdmin: user?.isSuperAdmin === true }}
     />
   );

@@ -9,19 +9,19 @@ export const getBomSchema = (isSuperAdmin = false) => {
         .or(z.string().transform((val) => (val ? Number(val) : undefined)))
         .optional()
         .nullable(),
-      bomName: z.string({ required_error: " Please enter BOM Name." }).trim().min(1, " Please enter BOM Name."),
+      bomName: z.string({ required_error: "Please enter BOM Name." }).trim().min(1, "Please enter BOM Name."),
       bomCode: z.string().trim().optional().nullable(),
       productionMethod: z.enum(["process", "discrete"], {
-        errorMap: () => ({ message: " Please select Production Method." }),
+        errorMap: () => ({ message: "Please select Production Method." }),
       }),
-      itemId: z.coerce.number({ required_error: " Please select Item." }).min(1, " Please select Item."),
-      processTemplateId: z.coerce.number({ required_error: " Please select Process Template." }).min(1, " Please select Process Template."),
+      itemId: z.coerce.number({ required_error: "Please select Item." }).min(1, "Please select Item."),
+      processTemplateId: z.coerce.number({ required_error: "Please select Process Template." }).min(1, "Please select Process Template."),
       customerId: z.coerce.number().optional().nullable(),
       referenceNumber: z.string().trim().optional().nullable(),
       remarks: z.string().trim().optional().nullable(),
       status: z
         .enum(["Active", "Inactive"], {
-          errorMap: () => ({ message: " Please select Status." }),
+          errorMap: () => ({ message: "Please select Status." }),
         })
         .default("Active"),
       retainedAttachments: z.any().optional().nullable(),
@@ -30,7 +30,7 @@ export const getBomSchema = (isSuperAdmin = false) => {
         .array(
           z.object({
             id: z.any().optional().nullable(),
-            processTemplateMappingId: z.coerce.number({ required_error: " Missing process template mapping." }).min(1),
+            processTemplateMappingId: z.coerce.number({ required_error: "Missing process template mapping." }).min(1),
             materialType: z.preprocess(
               (val) => {
                 if (!val) return "Entry";
@@ -39,16 +39,16 @@ export const getBomSchema = (isSuperAdmin = false) => {
                 return "Entry";
               },
               z.enum(["Entry", "Exit"], {
-                errorMap: () => ({ message: " Please select Material Type." }),
+                errorMap: () => ({ message: "Please select Material Type." }),
               })
             ),
-            itemId: z.coerce.number({ required_error: " Please select Material Item." }).min(1, " Please select Material Item."),
-            quantity: z.coerce.number({ required_error: " Please enter Quantity." }).gt(0, " Quantity must be greater than 0."),
+            itemId: z.coerce.number({ required_error: "Please select Material Item." }).min(1, "Please select Material Item."),
+            quantity: z.coerce.number({ required_error: "Please enter Quantity." }).gt(0, "Quantity must be greater than 0."),
             isInternalTransfer: z.boolean().optional().default(false),
             isPrimary: z.enum(["Yes", "No"]).optional().default("No"),
           })
         )
-        .min(1, " Please add at least one material item in Step 2."),
+        .min(1, "Please add at least one material item in Step 2."),
     })
     .refine(
       (data) => {
@@ -58,7 +58,7 @@ export const getBomSchema = (isSuperAdmin = false) => {
         return true;
       },
       {
-        message: " Please select Company.",
+        message: "Please select Company.",
         path: ["companyId"],
       }
     );

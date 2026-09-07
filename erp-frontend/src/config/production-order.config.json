@@ -96,7 +96,7 @@
       "sortable": true,
       "width": "140px",
       "options": [
-        { "label": "Draft", "value": "Draft" },
+       
         { "label": "Pending", "value": "Pending" },
         { "label": "In Progress", "value": "In Progress" },
         { "label": "Partial Cancelled", "value": "PartialCancelled" },
@@ -146,7 +146,6 @@
       "value": "status",
       "type": "select",
       "options": [
-        { "label": "Draft", "value": "Draft" },
         { "label": "Pending", "value": "Pending" },
         { "label": "In Progress", "value": "In Progress" },
         { "label": "Partial Cancelled", "value": "PartialCancelled" },
@@ -166,7 +165,6 @@
       "value": "status",
       "type": "select",
       "options": [
-        { "label": "Draft", "value": "Draft" },
         { "label": "Pending", "value": "Pending" },
         { "label": "In Progress", "value": "In Progress" },
         { "label": "Partial Cancelled", "value": "PartialCancelled" },
@@ -184,7 +182,6 @@
     "status": ""
   },
   "sidebarStatuses": [
-    { "label": "Draft", "value": "Draft" },
     { "label": "Pending", "value": "Pending" },
     { "label": "In Progress", "value": "In Progress" },
     { "label": "Partial Cancelled", "value": "PartialCancelled" },

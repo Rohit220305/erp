@@ -122,6 +122,8 @@ export class BrandListService {
         'brand.manufacturerId AS manufacturerId',
         'brand.addedDate AS addedDate',
         'brand.updatedDate AS updatedDate',
+        'brand.addedBy AS addedBy',
+        'brand.updatedBy AS updatedBy',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');

@@ -137,6 +137,8 @@ export class ProcessListService {
         'process_master.workCentreId AS workCentreId',
         'process_master.addedDate AS addedDate',
         'process_master.updatedDate AS updatedDate',
+        'process_master.addedBy AS addedBy',
+        'process_master.updatedBy AS updatedBy',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');

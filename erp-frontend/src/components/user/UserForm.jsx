@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import Select from "react-select";
+import AsyncSelect from "react-select/async";
 import { userAddSchema, userEditSchema } from "@/lib/validation/user.schema";
 import { createUser, updateUser } from "@/lib/api/user-api";
 import { listCompanies } from "@/lib/api/company-api";
@@ -14,6 +16,14 @@ import { Country } from "country-state-city";
 import ConfirmModal from "../common/ConfirmModal";
 
 const ALL_COUNTRIES = Country.getAllCountries();
+
+function debounce(func, delay = 300) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => func.apply(this, args), delay);
+  };
+}
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -51,7 +61,7 @@ const customSelectStyles = (error, disabled) => ({
     ...base,
     borderColor: error ? "#f87171" : "#d1d5db",
     borderRadius: "0.5rem",
-    minHeight: "40px",
+    minHeight: "56px",
     backgroundColor: disabled ? "#f9fafb" : "#ffffff",
     boxShadow: "none",
     cursor: disabled ? "not-allowed" : "pointer",
@@ -120,8 +130,28 @@ export default function UserForm({
     initialValues?.photoUrl || null,
   );
 
-  const [companies, setCompanies] = useState([]);
-  const [groups, setGroups] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState(() => {
+    if (initialValues?.companyName && initialValues?.companyId) {
+      return { label: initialValues.companyName, value: initialValues.companyId };
+    }
+    if (!currentUser?.isSuperAdmin && currentUser?.companyId) {
+      return {
+        label: currentUser?.companyName || "Current Company",
+        value: currentUser.companyId,
+      };
+    }
+    return null;
+  });
+
+  const [selectedGroups, setSelectedGroups] = useState(() => {
+    if (initialValues?.groups && Array.isArray(initialValues.groups)) {
+      return initialValues.groups.map((g) => ({
+        label: g.groupName || `Group #${g.groupId}`,
+        value: Number(g.groupId),
+      }));
+    }
+    return [];
+  });
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -144,60 +174,91 @@ export default function UserForm({
         groupIds: gIds,
       });
       setPhotoPreview(initialValues.photoUrl || null);
+
+      if (initialValues.companyId) {
+        setSelectedCompany({
+          label: initialValues.companyName || `Company #${initialValues.companyId}`,
+          value: initialValues.companyId,
+        });
+      }
+
+      if (initialValues.groups && Array.isArray(initialValues.groups)) {
+        setSelectedGroups(
+          initialValues.groups.map((g) => ({
+            label: g.groupName || `Group #${g.groupId}`,
+            value: Number(g.groupId),
+          })),
+        );
+      }
+    } else if (!currentUser?.isSuperAdmin && currentUser?.companyId) {
+      setSelectedCompany({
+        label: currentUser?.companyName || "Current Company",
+        value: currentUser.companyId,
+      });
     }
   }, [initialValues, currentUser]);
 
-  useEffect(() => {
-    async function loadDropdowns() {
-      try {
-        const [cRes, gRes] = await Promise.all([
-          listCompanies({ page: 1, limit: 100, search: "" }),
-          listGroups({ page: 1, limit: 100, search: "" }),
-        ]);
-        const cData = cRes?.settings?.data || cRes?.data || {};
-        const gData = gRes?.settings?.data || gRes?.data || {};
-        setCompanies(cData.list || []);
-        setGroups(gData.list || []);
-      } catch (e) {
-        console.error(e);
+  const companyLoaderRef = useRef();
+  if (!companyLoaderRef.current) {
+    companyLoaderRef.current = debounce(async (inputValue, callback) => {
+      if (!inputValue || !inputValue.trim()) {
+        callback([]);
+        return;
       }
-    }
-    loadDropdowns();
-  }, []);
+      try {
+        const res = await listCompanies({
+          page: 1,
+          limit: 20,
+          search: inputValue.trim(),
+        });
+        const cData = res?.settings?.data || res?.data || {};
+        const list = cData.list || [];
+        const options = list.map((c) => ({
+          label: c.companyName,
+          value: c.id,
+        }));
+        callback(options);
+      } catch (e) {
+        console.error("Error loading companies:", e);
+        callback([]);
+      }
+    }, 300);
+  }
 
-  const handleChange = (name, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setIsDirty(true);
-
-    if (errors[name]) {
-      setErrors((prevErrors) => {
-        const copy = { ...prevErrors };
-        delete copy[name];
-        return copy;
-      });
-    }
-  };
-
-  const EXCLUDED_SUPER_ADMIN_ROLES = [
-    "super_admin",
-    "superadmin",
-    "super admin",
-  ];
-
-  const companyOptions = (companies || []).map((c) => ({
-    label: c.companyName,
-    value: c.id,
-  }));
-  const groupOptions = (groups || [])
-    .filter(
-      (g) =>
-        !EXCLUDED_SUPER_ADMIN_ROLES.includes(g.groupCode?.toLowerCase()) &&
-        !EXCLUDED_SUPER_ADMIN_ROLES.includes(g.groupName?.toLowerCase()),
-    )
-    .map((g) => ({ label: g.groupName, value: g.id }));
+  const groupLoaderRef = useRef();
+  if (!groupLoaderRef.current) {
+    groupLoaderRef.current = debounce(async (inputValue, callback) => {
+      if (!inputValue || !inputValue.trim()) {
+        callback([]);
+        return;
+      }
+      try {
+        const res = await listGroups({
+          page: 1,
+          limit: 20,
+          search: inputValue.trim(),
+        });
+        const gData = res?.settings?.data || res?.data || {};
+        const list = gData.list || [];
+        const EXCLUDED_SUPER_ADMIN_ROLES = [
+          "super_admin",
+          "superadmin",
+          "super admin",
+        ];
+        const options = list
+          .filter(
+            (g) =>
+              !EXCLUDED_SUPER_ADMIN_ROLES.includes(g.groupCode?.toLowerCase()) &&
+              !EXCLUDED_SUPER_ADMIN_ROLES.includes(g.groupName?.toLowerCase()),
+          )
+          .map((g) => ({ label: g.groupName, value: g.id }));
+        callback(options);
+      } catch (e) {
+        console.error("Error loading groups:", e);
+        callback([]);
+      }
+    }, 300);
+  }
 
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
@@ -213,6 +274,22 @@ export default function UserForm({
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
     setIsDirty(true);
+  };
+
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setIsDirty(true);
+
+    if (errors[name]) {
+      setErrors((prevErrors) => {
+        const copy = { ...prevErrors };
+        delete copy[name];
+        return copy;
+      });
+    }
   };
 
   const validateForm = () => {
@@ -280,7 +357,7 @@ export default function UserForm({
             ? "User created successfully!"
             : "User updated successfully!",
         );
-        router.push("/admin");
+        router.push(buildRoute("user", "list"));
       } else {
         toast.error(
           message ||
@@ -350,22 +427,22 @@ export default function UserForm({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
             Personal Information
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-1">
+          <div className="grid md:grid-cols-2 gap-x-16 gap-y-6">
+            <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700">
                 First Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                placeholder="Enter first name"
+                placeholder="Enter First Name"
                 value={formData.firstName}
                 onChange={(e) => handleChange("firstName", e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                className={`w-full p-4 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
                   ${errors.firstName ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                 `}
               />
@@ -374,74 +451,74 @@ export default function UserForm({
               )}
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700">
                 Last Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                placeholder="Enter last name"
+                placeholder="Enter Last Name"
                 value={formData.lastName}
                 onChange={(e) => handleChange("lastName", e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                className={`w-full p-4 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
                   ${errors.lastName ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                 `}
               />
               {errors.lastName && (
-                <p className="text-xs text-red-500 mt-1"> {errors.lastName}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>
               )}
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700">
                 Username <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                placeholder="Enter username"
+                placeholder="Enter Username"
                 readOnly={mode === "edit"}
                 value={formData.userName}
                 onChange={(e) => handleChange("userName", e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20
+                className={`w-full p-4 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20
                   ${errors.userName ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                   ${mode === "edit" ? "bg-gray-50 text-gray-500" : "bg-white"}
                 `}
               />
               {errors.userName && (
-                <p className="text-xs text-red-500 mt-1"> {errors.userName}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.userName}</p>
               )}
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700">
                 Email <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
-                placeholder="user@email.com"
+                placeholder="Enter Email"
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                className={`w-full p-4 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
                   ${errors.email ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                 `}
               />
               {errors.email && (
-                <p className="text-xs text-red-500 mt-1"> {errors.email}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.email}</p>
               )}
             </div>
 
             {mode === "create" && (
-              <div className="space-y-1 relative">
+              <div className="space-y-1.5 relative">
                 <label className="block text-sm font-medium text-gray-700">
                   Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter password"
+                    placeholder="Enter Password"
                     value={formData.password}
                     onChange={(e) => handleChange("password", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                    className={`w-full p-4 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
                       ${errors.password ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                     `}
                   />
@@ -461,14 +538,14 @@ export default function UserForm({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
             Company & Role
           </h2>
 
           {formData.isSuperAdmin ? (
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-1">
+            <div className="grid md:grid-cols-2 gap-x-16 gap-y-6">
+              <div className="space-y-1.5">
                 <label className="block text-sm font-medium text-gray-700">
                   Company
                 </label>
@@ -478,12 +555,12 @@ export default function UserForm({
                     disabled
                     readOnly
                     value="System (All Companies)"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed font-medium"
+                    className="w-full p-4 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed font-medium"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <label className="block text-sm font-medium text-gray-700">
                   Roles / Groups
                 </label>
@@ -493,28 +570,32 @@ export default function UserForm({
                     disabled
                     readOnly
                     value="Super Admin"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed font-medium"
+                    className="w-full p-4 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed font-medium"
                   />
                 </div>
               </div>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-1">
+            <div className="grid md:grid-cols-2 gap-x-16 gap-y-6">
+              <div className="space-y-1.5">
                 <label className="block text-sm font-medium text-gray-700">
                   Company <span className="text-red-500">*</span>
                 </label>
-                <Select
+                <AsyncSelect
+                  cacheOptions
+                  defaultOptions={false}
+                  noOptionsMessage={({ inputValue }) =>
+                    !inputValue || !inputValue.trim()
+                      ? "Type to search Company..."
+                      : "No companies found"
+                  }
                   instanceId="select-companyId"
-                  value={
-                    companyOptions.find(
-                      (c) => String(c.value) === String(formData.companyId),
-                    ) || null
-                  }
-                  onChange={(opt) =>
-                    handleChange("companyId", opt ? opt.value : "")
-                  }
-                  options={companyOptions}
+                  loadOptions={companyLoaderRef.current}
+                  value={selectedCompany}
+                  onChange={(opt) => {
+                    setSelectedCompany(opt);
+                    handleChange("companyId", opt ? opt.value : "");
+                  }}
                   isDisabled={!currentUser?.isSuperAdmin}
                   isClearable={true}
                   isSearchable={true}
@@ -532,51 +613,52 @@ export default function UserForm({
                 )}
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <label className="block text-sm font-medium text-gray-700">
                   Roles / Groups <span className="text-red-500">*</span>
                 </label>
-                <Select
+                <AsyncSelect
                   isMulti
+                  cacheOptions
+                  defaultOptions={false}
+                  noOptionsMessage={({ inputValue }) =>
+                    !inputValue || !inputValue.trim()
+                      ? "Type to search Roles / Groups..."
+                      : "No roles/groups found"
+                  }
                   instanceId="select-groupIds"
-                  value={(formData.groupIds || [])
-                    .map((id) =>
-                      groupOptions.find((g) => Number(g.value) === Number(id)),
-                    )
-                    .filter(Boolean)}
-                  onChange={(opts) =>
+                  loadOptions={groupLoaderRef.current}
+                  value={selectedGroups}
+                  onChange={(opts) => {
+                    const arr = opts || [];
+                    setSelectedGroups(arr);
                     handleChange(
                       "groupIds",
-                      opts ? opts.map((o) => Number(o.value)) : [],
-                    )
-                  }
-                  options={groupOptions}
+                      arr.map((o) => Number(o.value)),
+                    );
+                  }}
                   isClearable={true}
                   isSearchable={true}
-                  placeholder="Select Roles / Groups..."
+                  placeholder="Select Roles / Groups"
                   classNamePrefix="react-select"
                   styles={customSelectStyles(errors.groupIds)}
                 />
                 {errors.groupIds && (
                   <p className="text-xs text-red-500 mt-1">{errors.groupIds}</p>
                 )}
-                {formData.groupIds && formData.groupIds.length > 0 && (
+                {selectedGroups && selectedGroups.length > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
                     ★ Primary profile:{" "}
                     <span className="font-semibold text-[#1565c0]">
-                      {
-                        groupOptions.find(
-                          (g) => Number(g.value) === formData.groupIds[0],
-                        )?.label
-                      }
+                      {selectedGroups[0]?.label}
                     </span>
                   </p>
                 )}
               </div>
             </div>
           )}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-1">
+          <div className="grid md:grid-cols-2 gap-x-16 gap-y-6">
+            <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700">
                 Status <span className="text-red-500">*</span>
               </label>
@@ -595,16 +677,16 @@ export default function UserForm({
                 styles={customSelectStyles(errors.status)}
               />
               {errors.status && (
-                <p className="text-xs text-red-500 mt-1"> {errors.status}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.status}</p>
               )}
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700">
                 Phone Number
               </label>
               <div className="flex gap-2">
-                <div className="w-[120px] shrink-0">
+                <div className="w-[180px] shrink-0">
                   <Select
                     instanceId="select-dialCode"
                     value={
@@ -625,10 +707,10 @@ export default function UserForm({
                 </div>
                 <input
                   type="text"
-                  placeholder="Phone number"
+                  placeholder="Enter Phone Number"
                   value={formData.phone || ""}
                   onChange={(e) => handleChange("phone", e.target.value)}
-                  className={`flex-1 px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                  className={`flex-1 p-4 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
                     ${errors.phone ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                   `}
                 />
@@ -663,18 +745,8 @@ export default function UserForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
-          confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
-        }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save these changes?"
-            : "Are you sure you want to discard? Any unsaved changes will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        entityName="User"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);

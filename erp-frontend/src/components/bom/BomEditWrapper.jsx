@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getBom } from "@/lib/api/bom-api";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import toast from "react-hot-toast";
 import BomForm from "./BomForm";
 import Loader from "@/components/common/Loader";
@@ -45,12 +46,12 @@ export default function BomEditWrapper({ id }) {
           setInitialData(data);
         } else {
           toast.error("Failed to load BOM details");
-          router.push("/bom");
+          router.push(buildRoute("bom", "list"));
         }
       } catch (error) {
         if (!isMounted) return;
         toast.error("Error loading BOM details");
-        router.push("/bom");
+        router.push(buildRoute("bom", "list"));
       } finally {
         if (isMounted) setLoading(false);
       }

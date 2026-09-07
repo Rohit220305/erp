@@ -241,9 +241,10 @@ export default function ManufacturerDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Manufacturer Name"
               value={formData.manufacturerName || ""}
               onChange={(e) => handleNameChange("manufacturerName", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.manufacturerName ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -286,10 +287,11 @@ export default function ManufacturerDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Manufacturer Code"
               disabled={mode === "edit"}
               value={formData.manufacturerCode || ""}
               onChange={(e) => handleChange("manufacturerCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.manufacturerCode ? "border-red-500 bg-red-50" : "border-gray-300"}
                 ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : ""}
               `}
@@ -305,9 +307,10 @@ export default function ManufacturerDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Reference Code"
               value={formData.referenceCode || ""}
               onChange={(e) => handleChange("referenceCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.referenceCode ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -363,18 +366,14 @@ export default function ManufacturerDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this manufacturer?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Manufacturer"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);

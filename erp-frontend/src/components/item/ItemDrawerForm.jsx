@@ -454,10 +454,14 @@ export default function ItemDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={confirmState.type === "submit" ? "Confirm Submission" : "Discard Changes"}
-        message={confirmState.type === "submit" ? "Save this item?" : "Discard unsaved changes?"}
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        actionType={
+          confirmState.type === "submit"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
+        }
+        entityName="Item"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);

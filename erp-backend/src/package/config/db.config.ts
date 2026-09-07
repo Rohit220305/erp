@@ -28,6 +28,10 @@ import { AttachmentMasterEntity } from 'src/attachment-master/entity/attachment-
 import { BomEntity } from 'src/bom/entity/bom.entity';
 import { BomProcessItemEntity } from 'src/bom/entity/bom-process-item.entity';
 import { ProductionOrderEntity } from 'src/production-order/entity/production-order.entity';
+import { ProductionBatchEntity } from 'src/production-batch/entity/production-batch.entity';
+import { ProductionBatchProcessEntity } from 'src/production-batch/entity/production-batch-process.entity';
+import { ProductionBatchItemEntity } from 'src/production-batch/entity/production-batch-item.entity';
+import { BatchConsumptionLogEntity } from 'src/production-batch/entity/batch-consumption-log.entity';
 dotenv.config();
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -66,6 +70,10 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     BomEntity,
     BomProcessItemEntity,
     ProductionOrderEntity,
+    ProductionBatchEntity,
+    ProductionBatchProcessEntity,
+    ProductionBatchItemEntity,
+    BatchConsumptionLogEntity,
   ],
   synchronize: false,
   migrationsRun: false,

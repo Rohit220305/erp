@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import Loader from "@/components/common/Loader";
+import StatusBadge from "@/components/common/StatusBadge";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { drawerRegistry } from "@/config/drawers/drawerRegistry";
 
@@ -83,6 +84,17 @@ function DetailField({ field, data, user }) {
   const displayValue = getFieldValue(field, data, user);
   if (displayValue === null) return null;
 
+  if (field.type === "statusBadge" || field.key === "status" || field.key === "materialStatus") {
+    return (
+      <div className={field.fullWidth ? "col-span-2" : "col-span-1"}>
+        <p className="text-xs text-gray-400 mb-1">{field.label}</p>
+        <div>
+          <StatusBadge status={displayValue !== "-" ? displayValue : null} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={field.fullWidth ? "col-span-2" : "col-span-1"}>
       <p className="text-xs text-gray-400 mb-1">{field.label}</p>
@@ -91,17 +103,14 @@ function DetailField({ field, data, user }) {
   );
 }
 
-function StatusBadge({ badgeConfig, data }) {
+function HeaderStatusBadge({ badgeConfig, data }) {
   if (!badgeConfig || !data[badgeConfig.key]) return null;
 
   const value = data[badgeConfig.key];
-  const isActive = value === (badgeConfig.activeValue || "Active");
-  const badgeColor = isActive ? "bg-[#2ecc71] text-white" : "bg-red-500 text-white";
-
   return (
-    <span className={`mt-1 inline-block px-3 py-1 rounded-sm text-xs font-semibold ${badgeColor}`}>
-      {value}
-    </span>
+    <div className="mt-1">
+      <StatusBadge status={value} />
+    </div>
   );
 }
 
@@ -163,35 +172,37 @@ export default function DetailDrawerContent({ open, onClose, item, moduleName, f
     ? can(drawerConfig.primaryAction.permission)
     : true;
 
-  const handleActionClick = () => {
-    onClose?.();
+  const getActionHref = () => {
     let path = drawerConfig.primaryAction.path;
     if (path.includes("{id}")) {
       path = path.replace("{id}", getEntityId(delayedItem, moduleName));
     }
-    router.push(path);
+    return path;
   };
-
   return (
     <div className="flex h-full flex-col overflow-y-auto px-6 py-6">
       {(isLoading || (open && !delayedItem)) ? (
         <div className="flex h-full items-center justify-center"><Loader /></div>
       ) : delayedItem && drawerConfig ? (
         <>
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 mb-6 ">
             <HeaderImage imgConfig={drawerConfig.header?.image} data={delayedItem} />
-            <div>
+            <div className="flex justify-between w-full">
               <p className="font-semibold text-lg text-gray-800">
                 {getTitle(drawerConfig.header?.title, delayedItem)}
-              </p>
-              <StatusBadge badgeConfig={drawerConfig.header?.badge} data={delayedItem} />
+              </p>  
+              <HeaderStatusBadge badgeConfig={drawerConfig.header?.badge} data={delayedItem} />
             </div>
           </div>
 
           {hasViewPerm && drawerConfig.primaryAction && (
-            <button onClick={handleActionClick} className="cursor-pointer w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2.5 rounded-md transition mb-8">
+            <Link
+              href={getActionHref()}
+              onClick={() => onClose?.()}
+              className="cursor-pointer w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2.5 rounded-md transition mb-8 block text-center"
+            >
               {drawerConfig.primaryAction.label || "More Details"}
-            </button>
+            </Link>
           )}
 
           <div className="flex flex-col gap-6">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { getBrand } from "@/lib/api/brand-api";
 import toast from "react-hot-toast";
 import BrandForm from "./BrandForm";
@@ -24,12 +25,12 @@ export default function BrandEditWrapper({ id }) {
           setInitialData(res.data || res.settings?.data || {});
         } else {
           toast.error("Failed to load brand details");
-          router.push("/brand");
+          router.push(buildRoute("brand", "list"));
         }
       } catch (error) {
         if (!isMounted) return;
         toast.error("Error loading brand details");
-        router.push("/brand");
+        router.push(buildRoute("brand", "list"));
       } finally {
         if (isMounted) setLoading(false);
       }

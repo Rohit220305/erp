@@ -137,7 +137,7 @@ export class AuthService {
 
   private expiresInToMs(expiresIn: string): number {
     const match = expiresIn.match(/^(\d+)([smhd])$/);
-    if (!match) return 15 * 60 * 1000; // fallback 15m
+    if (!match) return 15 * 60 * 1000;
     const value = parseInt(match[1], 10);
     const unit = match[2];
     const multipliers: Record<string, number> = {

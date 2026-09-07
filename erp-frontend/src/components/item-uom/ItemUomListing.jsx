@@ -10,6 +10,9 @@ import ItemUomDrawerForm from "./ItemUomDrawerForm";
 import ItemUomTableRow from "./ItemUomTableRow";
 
 export default function ItemUomListing() {
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
+
   const customConfig = {
     ...config,
     forceView: "table",
@@ -19,18 +22,38 @@ export default function ItemUomListing() {
   };
 
   return (
-    <DynamicListing
-      schema={customConfig}
-      fetchData={listItemUoms}
-      fetchItem={getItemUom}
-      deleteFn={deleteItemUom}
-      renderTableRow={(item, onRowAction, setSelectedItemForDetails) => (
-        <ItemUomTableRow
-          item={item}
-          onRowAction={onRowAction}
-          setSelectedItemForDetails={setSelectedItemForDetails}
-        />
-      )}
-    />
+    <>
+      <DynamicListing
+        schema={customConfig}
+        fetchData={listItemUoms}
+        fetchItem={getItemUom}
+        deleteFn={deleteItemUom}
+        renderTableRow={(item, onRowAction, setSelectedItemForDetails) => (
+          <ItemUomTableRow
+            item={item}
+            onRowAction={onRowAction}
+            setSelectedItemForDetails={setSelectedItemForDetails}
+            setSelectedCompanyForDetails={setSelectedCompanyForDetails}
+            setSelectedUserForDetails={setSelectedUserForDetails}
+          />
+        )}
+      />
+
+      <SideDrawer
+        open={!!selectedCompanyForDetails}
+        onClose={() => setSelectedCompanyForDetails(null)}
+        moduleName="Company"
+        mode="details"
+        data={selectedCompanyForDetails ? { id: selectedCompanyForDetails.companyId } : null}
+      />
+
+      <SideDrawer
+        open={!!selectedUserForDetails}
+        onClose={() => setSelectedUserForDetails(null)}
+        moduleName="User"
+        mode="details"
+        data={selectedUserForDetails ? { id: selectedUserForDetails.userId || selectedUserForDetails.id || selectedUserForDetails.addedBy } : null}
+      />
+    </>
   );
 }

@@ -27,6 +27,7 @@ import { ItemModule } from './item/item.module';
 import { AttachmentMasterModule } from './attachment-master/attachment-master.module';
 import { BomModule } from './bom/bom.module';
 import { ProductionOrderModule } from './production-order/production-order.module';
+import { ProductionBatchModule } from './production-batch/production-batch.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { ProductionOrderModule } from './production-order/production-order.modul
     AttachmentMasterModule,
     BomModule,
     ProductionOrderModule,
+    ProductionBatchModule,
   ],
 
   controllers: [AppController],

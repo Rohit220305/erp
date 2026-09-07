@@ -1,13 +1,22 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { Warehouse } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
-export default function StorageTableRow({ item, onRowAction, setSelectedItemForDetails }) {
+export default function StorageTableRow({
+  item,
+  onRowAction,
+  setSelectedItemForDetails,
+  setSelectedCompanyForDetails,
+}) {
   const { can, user } = useAuth();
   const isActive = item.status === "Active" || item.status === "active";
-  const canView = can("STORAGE_VIEW");
+  const canViewStorage = can(CAPABILITIES.STORAGE?.VIEW || "STORAGE_VIEW");
+  const canViewCompany = can(CAPABILITIES.COMPANY?.VIEW || "COMPANY_VIEW");
 
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
@@ -27,13 +36,14 @@ export default function StorageTableRow({ item, onRowAction, setSelectedItemForD
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        {canView ? (
-          <button
+        {canViewStorage ? (
+          <ModuleLink
+            href={buildRoute("storage", "detail", { id: item.id })}
             onClick={() => setSelectedItemForDetails(item)}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+            className="text-[#1565c0] font-medium text-sm"
           >
             {item.storageName}
-          </button>
+          </ModuleLink>
         ) : (
           <span className="text-sm font-medium text-gray-900">
             {item.storageName}
@@ -42,12 +52,22 @@ export default function StorageTableRow({ item, onRowAction, setSelectedItemForD
       </td>
       {user?.isSuperAdmin && (
         <td className="px-6 py-4 whitespace-nowrap min-w-[250px] max-w-[250px] truncate">
-          <span
-            className="text-sm font-medium text-gray-900"
-            title={item.companyName}
-          >
-            {item.companyName || "—"}
-          </span>
+          {canViewCompany && item.companyId ? (
+            <ModuleLink
+              href={buildRoute("company", "detail", { id: item.companyId })}
+              onClick={setSelectedCompanyForDetails ? () => setSelectedCompanyForDetails({ companyId: item.companyId }) : null}
+              className="text-[#1565c0] font-medium text-sm"
+            >
+              {item.companyName || "—"}
+            </ModuleLink>
+          ) : (
+            <span
+              className="text-sm font-medium text-gray-900"
+              title={item.companyName}
+            >
+              {item.companyName || "—"}
+            </span>
+          )}
         </td>
       )}
       <td className="px-6 py-4 whitespace-nowrap">

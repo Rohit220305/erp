@@ -1,5 +1,5 @@
 export const ManufacturerDrawerConfig = {
-  title: "Manufacturer Details",
+  title: "Manufacturer",
   header: {
     title: {
       type: "text",

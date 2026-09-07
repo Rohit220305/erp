@@ -2,6 +2,7 @@
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { useHeader } from "@/context/HeaderContext";
 import { Tag } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -34,12 +35,12 @@ export default function GroupDetailPage({ group }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "Group Master", href: "/group" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Group Master", href: buildRoute("group", "list") },
         ],
         actionButton: can(CAPABILITIES.GROUP.UPDATE) ? {
           label: "Edit",
-          onClick: () => router.push(`/group/edit/${group?.id}`),
+          onClick: () => router.push(buildRoute("group", "edit", { id: group?.id })),
         } : null,
       },
     });

@@ -124,6 +124,8 @@ export class PackageListService {
         'package.companyId AS companyId',
         'package.addedDate AS addedDate',
         'package.updatedDate AS updatedDate',
+        'package.addedBy AS addedBy',
+        'package.updatedBy AS updatedBy',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');

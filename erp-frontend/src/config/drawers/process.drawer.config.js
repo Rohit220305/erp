@@ -1,4 +1,4 @@
-import { Activity } from "lucide-react";
+import { Activity, Tag } from "lucide-react";
 
 export const processDrawerConfig = {
   title: "Process Details",
@@ -6,7 +6,7 @@ export const processDrawerConfig = {
     image: {
       key: "imageUrl",
       fallbackType: "icon",
-      fallbackIcon: Activity
+      fallbackIcon: Tag
     },
     title: {
       type: "text",

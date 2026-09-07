@@ -173,6 +173,8 @@ export class CompanyListService {
         'company.parentCompanyId AS parentCompanyId',
         'company.addedDate AS addedDate',
         'company.updatedDate AS updatedDate',
+        'company.addedBy AS addedBy',
+        'company.updatedBy AS updatedBy',
         'company.legalName AS legalName',
         'company.registrationNumber AS registrationNumber',
         'company.taxNumber AS taxNumber',

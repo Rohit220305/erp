@@ -16,7 +16,7 @@ export function ListingProvider({ children }) {
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState("");
 
-  const [showColumnSearch, setShowColumnSearch] = useState(true);
+  const [showColumnSearch, setShowColumnSearch] = useState(false);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   const pathname = usePathname();

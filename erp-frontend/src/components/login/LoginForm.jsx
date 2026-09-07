@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { loginUser, selectProfile } from "@/lib/api/auth-api";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { Mail, LockKeyhole, LockOpen, ArrowLeft, ArrowRight, Star } from "lucide-react";
 import toast from "react-hot-toast";
 import { loginSchema } from "@/lib/validation/login.schema";
@@ -12,7 +13,7 @@ import { loginSchema } from "@/lib/validation/login.schema";
 export default function LoginForm() {
   const router = useRouter();
   const { login } = useAuth();
-  
+
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -58,7 +59,7 @@ export default function LoginForm() {
         } else {
           toast.success(response.message || "Login successful");
           login(response.data, response.data.token);
-          window.location.href = "/";
+          window.location.href = buildRoute("home", "list");
         }
       } else {
         toast.error(
@@ -89,7 +90,7 @@ export default function LoginForm() {
       if (res?.success === 1 && res?.data) {
         toast.success(res.message || "Login successful");
         login(res.data, res.data.token);
-        window.location.href = "/";
+        window.location.href = buildRoute("home", "list");
       } else {
         toast.error(res?.message || "Failed to select profile");
       }
@@ -174,7 +175,7 @@ export default function LoginForm() {
             </button>
             <div className="mt-7 flex items-center">
               <Link
-                href="/forgot-password"
+                href={buildRoute("auth", "forgotPassword")}
                 className="cursor-pointer text-sm font-semibold text-black hover:text-[#1565c0]"
               >
                 Forgot Password?
@@ -210,19 +211,17 @@ export default function LoginForm() {
                   <div
                     key={profile.groupId}
                     onClick={() => setSelectedGroupId(profile.groupId)}
-                    className={`flex items-center justify-between p-3.5 rounded-xl border-2 transition cursor-pointer ${
-                      isSelected
+                    className={`flex items-center justify-between p-3.5 rounded-xl border-2 transition cursor-pointer ${isSelected
                         ? "border-[#1565c0] bg-blue-50/60 shadow-sm"
                         : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs ${
-                          isSelected
+                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs ${isSelected
                             ? "bg-[#1565c0] text-white"
                             : "bg-gray-100 text-gray-600"
-                        }`}
+                          }`}
                       >
                         {profile.groupName?.[0] || "P"}
                       </div>

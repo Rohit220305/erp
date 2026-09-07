@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Package } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 export default function ProductionOrderMaterialTabs({
   materialDetails = { rawMaterials: [], semiFinished: [], finishedProducts: [] },
@@ -43,12 +45,10 @@ export default function ProductionOrderMaterialTabs({
   const isFinishedTab = activeTab === "finishedProducts";
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6">
-      {/* Header Bar */}
       <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 bg-gray-50/50">
         <h3 className="text-base font-semibold text-gray-900">Material Details</h3>
 
         <div className="flex items-center gap-6">
-          {/* Package Quantity Toggle */}
           {showToggle && (
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-gray-600">Package Quantity</span>
@@ -68,7 +68,6 @@ export default function ProductionOrderMaterialTabs({
             </div>
           )}
 
-          {/* 3 Material Tabs Switcher */}
           <div className="flex items-center gap-1 border-b border-gray-200">
             <button
               type="button"
@@ -107,7 +106,6 @@ export default function ProductionOrderMaterialTabs({
         </div>
       </div>
 
-      {/* Table Section */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs text-gray-700">
           <thead className="bg-gray-200 text-gray-600 font-semibold border-b border-gray-100">
@@ -143,7 +141,6 @@ export default function ProductionOrderMaterialTabs({
                       {idx + 1}
                     </td>
 
-                    {/* Thumbnail Image */}
                     <td className="py-3 px-4 text-center">
                       <SharedImageZoom
                         id={`po-material-item-${item.itemId || item.id || idx}`}
@@ -154,16 +151,15 @@ export default function ProductionOrderMaterialTabs({
                       />
                     </td>
 
-                    {/* Item Name & Code */}
                     <td className="py-3 px-4">
-                      {onOpenDrawer ? (
-                        <button
-                          type="button"
-                          onClick={() => onOpenDrawer("Item", item.itemId)}
+                      {item.itemId ? (
+                        <ModuleLink
+                          href={buildRoute("item", "detail", { id: item.itemId })}
+                          onClick={onOpenDrawer ? () => onOpenDrawer("Item", item.itemId) : null}
                           className="font-medium text-[#1565c0] hover:underline text-left cursor-pointer"
                         >
                           {item.itemName}
-                        </button>
+                        </ModuleLink>
                       ) : (
                         <span className="font-medium text-gray-900">{item.itemName}</span>
                       )}
@@ -172,17 +168,14 @@ export default function ProductionOrderMaterialTabs({
                       </p>
                     </td>
 
-                    {/* Qty Per Unit */}
                     <td className="py-3 px-4 text-center font-mono">
                       {isFinishedTab ? "NA" : item.qtyPerUnitDisplay || `${item.qtyPerUnit}`}
                     </td>
 
-                    {/* Cost Per Unit */}
                     <td className="py-3 px-4 text-right font-mono">
                       {item.unitPriceFormatted || (item.unitPrice > 0 ? `${currencySymbol} ${item.unitPrice}` : "NA")}
                     </td>
 
-                    {/* Total Required Qty / Produced Qty */}
                     <td className="py-3 px-4 text-center font-mono">
                       <div>
                         <span className="font-semibold text-gray-900">
@@ -194,7 +187,6 @@ export default function ProductionOrderMaterialTabs({
                       </div>
                     </td>
 
-                    {/* Total Cost */}
                     <td className="py-3 px-4 text-start font-mono font-semibold text-gray-900">
                       {item.totalCostFormatted || (item.totalCost > 0 ? `${currencySymbol} ${item.totalCost}` : "NA")}
                     </td>
@@ -206,7 +198,6 @@ export default function ProductionOrderMaterialTabs({
         </table>
       </div>
 
-      {/* Table Footer */}
       <div className="px-6 py-2 bg-gray-50/50 border-t border-gray-100 text-right">
         <span className="text-[11px] text-gray-400 italic">*NA: Not Applicable</span>
       </div>

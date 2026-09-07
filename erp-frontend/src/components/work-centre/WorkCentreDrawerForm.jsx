@@ -367,11 +367,12 @@ export default function WorkCentreDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Work Centre Name"
               value={formData.workCentreName || ""}
               onChange={(e) =>
                 handleNameChange("workCentreName", e.target.value)
               }
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.workCentreName ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -424,10 +425,11 @@ export default function WorkCentreDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Work Centre Code"
               disabled={mode === "edit"}
               value={formData.workCentreCode || ""}
               onChange={(e) => handleChange("workCentreCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:bg-white focus:border-[#1565c0]
                 ${errors.workCentreCode ? "border-red-500 bg-red-50" : "border-gray-300"}
                 ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : ""}
               `}
@@ -650,6 +652,8 @@ export default function WorkCentreDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : undefined}
+        entityName="Work Centre"
         title={
           confirmState.type === "submit"
             ? "Confirm Submission"

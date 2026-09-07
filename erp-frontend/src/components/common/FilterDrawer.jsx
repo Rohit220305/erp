@@ -74,7 +74,7 @@ export default function FilterDrawer({
                 <FilterField
                   key={field.value}
                   label={field.label}
-                  placeholder={`Please enter ${field.label}`}
+                  placeholder={`Enter ${field.label}`}
                   value={filters[field.value] || ""}
                   onChange={(v) => setFilters((p) => ({ ...p, [field.value]: v }))}
                 />
@@ -118,7 +118,7 @@ function FilterField({ label, placeholder, value, onChange }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-3 outline-none transition focus:border-[#1565c0] focus:bg-white"
+        className="w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-3 text-sm placeholder:text-sm placeholder:text-gray-400 outline-none transition focus:border-[#1565c0] focus:bg-white"
       />
     </div>
   );
@@ -141,9 +141,9 @@ function SelectField({ label, placeholder, value, onChange, options, isMultiSele
     control: (base) => ({
       ...base,
       borderColor: "#d1d5db",
-      borderRadius: "0.5rem",
-      minHeight: "40px",
-      backgroundColor: "#ffffff",
+      borderRadius: "0.375rem",
+      minHeight: "48px",
+      backgroundColor: "#f9fafb",
       boxShadow: "none",
       cursor: "pointer",
       fontSize: "0.875rem",

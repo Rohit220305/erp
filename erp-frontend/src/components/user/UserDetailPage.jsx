@@ -2,6 +2,7 @@
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { useHeader } from "@/context/HeaderContext";
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
@@ -21,13 +22,24 @@ import ActivityLogTimeline from "./ActivityLogTimeline";
 import Loader from "@/components/common/Loader";
 import AccessDenied from "@/components/common/AccessDenied";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
+import ModuleLink from "@/components/common/ModuleLink";
+import SideDrawer from "@/components/common/SideDrawer";
 
-function DetailRow({ label, value }) {
- 
+function DetailRow({ label, value, href, onClick }) {
   return (
     <div className="flex items-start justify-between py-2.5 border-b border-gray-100 last:border-0">
       <span className="text-sm text-gray-500 min-w-[140px]">{label}</span>
-      <span className="text-sm font-medium text-right">{value || "-"}</span>
+      {href ? (
+        <ModuleLink
+          href={href}
+          onClick={onClick}
+          className="text-sm font-medium text-right"
+        >
+          {value || "-"}
+        </ModuleLink>
+      ) : (
+        <span className="text-sm font-medium text-right">{value || "-"}</span>
+      )}
     </div>
   );
 }
@@ -44,6 +56,11 @@ export default function UserDetailPage({ user }) {
   const [activeTab, setActiveTab] = useState("summary");
   const [displayedTab, setDisplayedTab] = useState("summary");
   const { execute: executeTabSwitch, isLoading: isTabSwitching } = useAsyncAction(1000);
+  const [sideDrawerState, setSideDrawerState] = useState({
+    isOpen: false,
+    moduleName: null,
+    id: null,
+  });
 
   useEffect(() => {
     if (activeTab !== displayedTab) {
@@ -68,13 +85,13 @@ export default function UserDetailPage({ user }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "User Management", href: "/admin" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "User Management", href: buildRoute("user", "list") },
         ],
         actionButton: can(CAPABILITIES.USER.UPDATE)
           ? {
               label: "Edit",
-              onClick: () => router.push(`/admin/edit/${user?.id}`),
+              onClick: () => router.push(buildRoute("user", "edit", { id: user?.id })),
             }
           : null,
       },
@@ -196,7 +213,12 @@ export default function UserDetailPage({ user }) {
                     <DetailRow label="Last Name" value={user?.lastName} />
                     <DetailRow label="Username" value={user?.userName} />
                     {user?.companyName && (
-                      <DetailRow label="Company" value={user?.companyName} />
+                      <DetailRow
+                        label="Company"
+                        value={user?.companyName}
+                        href={can(CAPABILITIES.COMPANY.VIEW) && user?.companyId ? buildRoute("company", "detail", { id: user.companyId }) : null}
+                        onClick={can(CAPABILITIES.COMPANY.VIEW) && user?.companyId ? () => setSideDrawerState({ isOpen: true, moduleName: "Company", id: user.companyId }) : null}
+                      />
                     )}
                     {user?.id == currentUser?.id ? (
                       <DetailRow label="Role" value={currentUser?.groupName} />
@@ -220,12 +242,16 @@ export default function UserDetailPage({ user }) {
                       <DetailRow
                         label="Added By"
                         value={user.addedByName}
+                        href={can(CAPABILITIES.USER.VIEW) && (user?.addedBy || user?.addedById) ? buildRoute("user", "detail", { id: user.addedBy || user.addedById }) : null}
+                        onClick={can(CAPABILITIES.USER.VIEW) && (user?.addedBy || user?.addedById) ? () => setSideDrawerState({ isOpen: true, moduleName: "User", id: user.addedBy || user.addedById }) : null}
                       />
                     )}
                     {user.updatedByName && (
                       <DetailRow
                         label="Updated By"
                         value={user.updatedByName}
+                        href={can(CAPABILITIES.USER.VIEW) && (user?.updatedBy || user?.updatedById) ? buildRoute("user", "detail", { id: user.updatedBy || user.updatedById }) : null}
+                        onClick={can(CAPABILITIES.USER.VIEW) && (user?.updatedBy || user?.updatedById) ? () => setSideDrawerState({ isOpen: true, moduleName: "User", id: user.updatedBy || user.updatedById }) : null}
                       />
                     )}
                   </div>
@@ -317,6 +343,14 @@ export default function UserDetailPage({ user }) {
           )}
         </div>
       </div>
+
+      <SideDrawer
+        open={sideDrawerState.isOpen}
+        onClose={() => setSideDrawerState({ isOpen: false, moduleName: null, id: null })}
+        moduleName={sideDrawerState.moduleName}
+        mode="details"
+        data={sideDrawerState.id ? { id: sideDrawerState.id } : null}
+      />
     </div>
   );
 }

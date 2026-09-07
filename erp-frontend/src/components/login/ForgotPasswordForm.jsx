@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Mail, KeyRound, LockKeyhole, LockOpen, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { forgotPassword, verifyOtp, resetPasswordOtp } from "@/lib/api/auth-api";
 import { resetPasswordSchema } from "@/lib/validation/reset-password.schema";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 export default function ForgotPasswordForm() {
   const router = useRouter();
@@ -102,7 +104,7 @@ export default function ForgotPasswordForm() {
         toast.success("Password reset successfully. Redirecting to login...");
         setIsSuccess(true);
         setTimeout(() => {
-          router.push("/login");
+          router.push(buildRoute("auth", "login"));
         }, 2000);
       } else {
         toast.error(response?.message || "Failed to reset password.");
@@ -116,19 +118,24 @@ export default function ForgotPasswordForm() {
 
   return (
     <div className="w-full max-w-[370px]">
-      <button
-        onClick={() => {
-          if (step > 1) {
-            setStep(step - 1);
-          } else {
-            router.push("/login");
-          }
-        }}
-        className="mb-6 flex items-center gap-2 text-sm text-gray-600 hover:text-black cursor-pointer transition-colors"
-      >
-        <ArrowLeft size={16} />
-        {step > 1 ? "Back" : "Back to Login"}
-      </button>
+      {step > 1 ? (
+        <button
+          type="button"
+          onClick={() => setStep(step - 1)}
+          className="mb-6 flex items-center gap-2 text-sm text-gray-600 hover:text-black cursor-pointer transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </button>
+      ) : (
+        <Link
+          href={buildRoute("auth", "login")}
+          className="mb-6 flex items-center gap-2 text-sm text-gray-600 hover:text-black cursor-pointer transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back to Login
+        </Link>
+      )}
 
       <h1 className="mb-8 text-2xl font-medium text-black">
         {step === 1 && "Forgot Password"}

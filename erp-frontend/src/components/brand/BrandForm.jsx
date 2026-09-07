@@ -5,6 +5,7 @@ import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
 import { useRouter } from "next/navigation";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { createBrand, updateBrand } from "@/lib/api/brand-api";
 import { listCompanies } from "@/lib/api/company-api";
 import { listManufacturers } from "@/lib/api/manufacturer-api";
@@ -168,8 +169,8 @@ export default function BrandForm({
       navbar: {
         title: mode === "create" ? `Add ${brandConfig.title}` : `Edit ${brandConfig.title}`,
         breadcrumbs: [
-          { label: "Home", href: "/" },
-          { label: brandConfig.title, href: "/brand" },
+          { label: "Home", href: buildRoute("home", "list") },
+          { label: brandConfig.title, href: buildRoute("brand", "list") },
           { label: mode === "create" ? "Add" : "Edit" },
         ],
       },
@@ -309,7 +310,7 @@ export default function BrandForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/brand");
+      router.push(buildRoute("brand", "list"));
     }
   };
 
@@ -353,7 +354,7 @@ export default function BrandForm({
             ? "Brand created successfully!"
             : "Brand updated successfully!"
         );
-        router.push("/brand");
+        router.push(buildRoute("brand", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} brand`);
       }
@@ -464,9 +465,10 @@ export default function BrandForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Brand Name"
                 value={formData.brandName || ""}
                 onChange={(e) => handleNameChange("brandName", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.brandName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                 `}
               />
@@ -510,10 +512,11 @@ export default function BrandForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Brand Code"
                 disabled={mode === "edit"}
                 value={formData.brandCode || ""}
                 onChange={(e) => handleChange("brandCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
                   ${errors.brandCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : "bg-white"}
                 `}
@@ -600,23 +603,19 @@ export default function BrandForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this Brand?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Brand"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/brand");
+            router.push(buildRoute("brand", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

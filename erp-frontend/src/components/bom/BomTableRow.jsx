@@ -3,6 +3,9 @@
 import { useAuth } from "@/context/AuthContext";
 import bomConfig from "@/config/bom.config.json";
 import { CAPABILITIES } from "@/config/capabilities.config";
+import ModuleLink from "@/components/common/ModuleLink";
+import StatusBadge from "@/components/common/StatusBadge";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 export default function BomTableRow({
   item,
@@ -11,15 +14,16 @@ export default function BomTableRow({
   setSelectedOutputItemForDetails,
   setSelectedProcessTemplateForDetails,
   setSelectedCompanyForDetails,
+  setSelectedUserForDetails,
 }) {
   const { can, user } = useAuth();
-  const isActive = item.status === "Active" || item.status === "active";
 
   const canViewBom = can(CAPABILITIES.BOM?.VIEW || "BOM_VIEW");
   const canViewItem = can(CAPABILITIES.ITEM?.VIEW || "ITEM_VIEW");
   const canViewProcessTemplate = can(CAPABILITIES.PROCESS_TEMPLATE?.VIEW || "PROCESS_TEMPLATE_VIEW");
   const canViewCompany = can(CAPABILITIES.COMPANY?.VIEW || "COMPANY_VIEW");
-
+  const canViewUser = can(CAPABILITIES.USER?.VIEW || "USER_VIEW");
+  console.log(item)
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors text-xs font-medium">
       {bomConfig.columns.map((col, idx) => {
@@ -33,13 +37,13 @@ export default function BomTableRow({
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap">
               {canViewBom && setSelectedItemForDetails ? (
-                <button
-                  type="button"
+                <ModuleLink
+                  href={buildRoute("bom", "detail", { id: item.id })}
                   onClick={() => setSelectedItemForDetails(item)}
-                  className="font-semibold text-[#1565c0] hover:underline cursor-pointer text-left"
+                  className="font-semibold text-[#1565c0] hover:underline cursor-pointer"
                 >
                   {value || "—"}
-                </button>
+                </ModuleLink>
               ) : (
                 <span className="font-semibold text-gray-800">{value || "—"}</span>
               )}
@@ -59,13 +63,13 @@ export default function BomTableRow({
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap">
               {canViewItem && setSelectedOutputItemForDetails ? (
-                <button
-                  type="button"
+                <ModuleLink
+                  href={buildRoute("item", "detail", { id: item.itemId })}
                   onClick={() => setSelectedOutputItemForDetails({ categoryId: item.itemId, id: item.itemId })}
-                  className="font-medium text-[#1565c0] hover:underline cursor-pointer text-left"
+                  className="font-medium text-[#1565c0] hover:underline cursor-pointer"
                 >
                   {value || "—"}
-                </button>
+                </ModuleLink>
               ) : (
                 <span className="text-gray-800">{value || "—"}</span>
               )}
@@ -89,6 +93,24 @@ export default function BomTableRow({
           );
         }
 
+        if (col.key === "companyName") {
+          return (
+            <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap">
+              {canViewCompany && setSelectedCompanyForDetails && item.companyId ? (
+                <ModuleLink
+                  href={buildRoute("company", "detail", { id: item.companyId })}
+                  onClick={() => setSelectedCompanyForDetails({ companyId: item.companyId, id: item.companyId })}
+                  className="font-medium text-[#1565c0] hover:underline cursor-pointer"
+                >
+                  {value || "—"}
+                </ModuleLink>
+              ) : (
+                <span className="text-gray-800">{value || "—"}</span>
+              )}
+            </td>
+          );
+        }
+
         if (col.key === "itemBarcode") {
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap font-mono text-gray-800">
@@ -98,11 +120,24 @@ export default function BomTableRow({
         }
 
         if (col.key === "addedByName") {
+          const userId = item.addedBy || item.addedById || item.added_by || item.createdBy;
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap">
-              <span className="font-semibold text-[#1565c0] hover:underline cursor-pointer">
-                {value || "—"}
-              </span>
+              {canViewUser ? (
+                <ModuleLink
+                  href={userId ? buildRoute("user", "detail", { id: userId }) : buildRoute("user", "list")}
+                  onClick={
+                    setSelectedUserForDetails && userId
+                      ? () => setSelectedUserForDetails({ id: userId, userId, addedBy: userId })
+                      : null
+                  }
+                  className="font-medium text-[#1565c0] hover:underline cursor-pointer"
+                >
+                  {value || "—"}
+                </ModuleLink>
+              ) : (
+                <span className="font-medium text-gray-900">{value || "—"}</span>
+              )}
             </td>
           );
         }
@@ -118,13 +153,7 @@ export default function BomTableRow({
         if (col.type === "statusBadge" || col.key === "status") {
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap">
-              <span
-                className={`font-semibold text-xs ${
-                  isActive ? "text-emerald-600" : "text-red-500"
-                }`}
-              >
-                {value || "Active"}
-              </span>
+              <StatusBadge status={value || "Active"} />
             </td>
           );
         }

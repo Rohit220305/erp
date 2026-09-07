@@ -8,6 +8,7 @@ import { listCompanies } from "@/lib/api/company-api";
 import { createProcessTemplate, updateProcessTemplate } from "@/lib/api/process-template-api";
 import { getProcessTemplateSchema } from "@/lib/validation/process-template.schema";
 import { CAPABILITIES } from "@/config/capabilities.config";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import ProcessTemplateStep1 from "./ProcessTemplateStep1";
@@ -76,8 +77,8 @@ export default function ProcessTemplateForm({
       navbar: {
         title: mode === "create" ? "Add New" : "Edit Template",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "Process Template", href: "/process-template" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Process Template", href: buildRoute("process-template", "list") },
         ],
         actionButton: null,
       },
@@ -129,19 +130,19 @@ export default function ProcessTemplateForm({
     const fieldErrors = {};
 
     if (!formData.templateName?.trim()) {
-      fieldErrors.templateName = " Please enter Template Name.";
+      fieldErrors.templateName = "Please enter Template Name.";
     }
     if (!formData.templateCode?.trim()) {
-      fieldErrors.templateCode = " Please enter Template Code.";
+      fieldErrors.templateCode = "Please enter Template Code.";
     }
     if (!formData.executionType) {
-      fieldErrors.executionType = " Please select Process Execution Type.";
+      fieldErrors.executionType = "Please select Execution Type.";
     }
     if (!formData.status) {
-      fieldErrors.status = " Please select Status.";
+      fieldErrors.status = "Please select Status.";
     }
     if (user?.isSuperAdmin && !effectiveCompanyId) {
-      fieldErrors.companyId = " Please select Company.";
+      fieldErrors.companyId = "Please select Company.";
     }
 
     if (Object.keys(fieldErrors).length > 0) {
@@ -194,7 +195,7 @@ export default function ProcessTemplateForm({
     }
 
     if (!processes || processes.length === 0) {
-      setErrors({ processes: " Please add at least one process." });
+      setErrors({ processes: "Please add at least one process." });
       setCurrentStep(2);
       toast.error("Please add at least one process in Step 2.");
       return false;
@@ -203,10 +204,10 @@ export default function ProcessTemplateForm({
     for (let i = 0; i < processes.length; i++) {
       if (!processes[i].processId) {
         setErrors({
-          processes: ` Row #${i + 1} does not have a process selected.`,
+          processes: `Process row ${i + 1} does not have a process selected.`,
         });
         setCurrentStep(2);
-        toast.error(`Row #${i + 1} does not have a process selected.`);
+        
         return false;
       }
     }
@@ -222,11 +223,20 @@ export default function ProcessTemplateForm({
     }
   };
 
+  const navigateOnDiscard = () => {
+    const targetId = initialData?.id || id;
+    if (mode === "edit" && targetId) {
+      router.push(buildRoute("process-template", "detail", { id: targetId }));
+    } else {
+      router.push(buildRoute("process-template", "list"));
+    }
+  };
+
   const handleDiscard = () => {
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/process-template");
+      navigateOnDiscard();
     }
   };
 
@@ -270,7 +280,7 @@ export default function ProcessTemplateForm({
             : "Process Template updated successfully!"
         );
         router.refresh();
-        router.push("/process-template");
+        router.push(buildRoute("process-template", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} template`);
       }
@@ -425,33 +435,19 @@ export default function ProcessTemplateForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
             ? mode === "create"
-              ? "Confirm Submission"
-              : "Confirm Update"
-            : "Discard Changes"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? mode === "create"
-              ? "Are you sure you want to save this process template?"
-              : "Are you sure you want to update this process template?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={
-          confirmState.type === "submit"
-            ? mode === "create"
-              ? "Save"
-              : "Update"
-            : "Discard"
-        }
-        danger={confirmState.type === "discard"}
+        entityName="Process Template"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit();
           } else {
-            router.push("/process-template");
+            navigateOnDiscard();
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

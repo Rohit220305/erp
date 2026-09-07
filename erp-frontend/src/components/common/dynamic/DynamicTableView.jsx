@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import CellRenderer from "@/components/core/dynamic-ui/CellRenderer";
 import { useListing } from "@/context/ListingContext";
 import { FiChevronUp, FiChevronDown } from "react-icons/fi";
+import Select from "react-select";
 import Loader from "@/components/common/Loader";
 
 export default function DynamicTableView({ data, config, onRowAction, loading = false, setSelectedItemForDetails, renderTableRow }) {
@@ -57,7 +58,7 @@ export default function DynamicTableView({ data, config, onRowAction, loading = 
   }, [localFilters, setColumnFilters, columnFilters]);
 
   const tableColumns = [...(columns || [])];
-  
+
   return (
     <div className="bg-white rounded-lg overflow-hidden h-full relative">
       {loading && <Loader overlay />}
@@ -94,25 +95,51 @@ export default function DynamicTableView({ data, config, onRowAction, loading = 
                 return (
                   <th key={`filter-${index}`} style={widthStyle} className="p-0 border-b border-gray-200">
                     <div
-                      className={`grid transition-all duration-300 ease-in-out ${
-                        showColumnSearch ? "grid-rows-[1fr] opacity-100 py-2 px-4" : "grid-rows-[0fr] opacity-0 py-0 px-4"
-                      }`}
+                      className={`grid transition-all duration-300 ease-in-out ${showColumnSearch ? "grid-rows-[1fr] opacity-100 py-2 px-4" : "grid-rows-[0fr] opacity-0 py-0 px-4"
+                        }`}
                     >
                       <div className="overflow-hidden">
                         {header.searchable !== false && (
                           header.options ? (
-                            <select
-                              className="w-full px-2 py-1 text-sm border cursor-pointer border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal"
-                              value={localFilters[header.key] || ""}
-                              onChange={(e) => handleSelectChange(header.key, e.target.value)}
-                            >
-                              <option value="">All</option>
-                              {header.options.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
+                            <Select
+                              classNamePrefix="react-select"
+                              options={[{ label: 'All', value: '' }, ...header.options]}
+                              value={
+                                localFilters[header.key]
+                                  ? {
+                                    value: localFilters[header.key],
+                                    label: header.options.find((o) => o.value === localFilters[header.key])?.label || localFilters[header.key]
+                                  }
+                                  : { label: 'All', value: '' }
+                              }
+                              onChange={(selected) => handleSelectChange(header.key, selected ? selected.value : '')}
+                              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                              menuPlacement="bottom"
+                              menuPosition="fixed"
+                              styles={{
+                                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                control: (base) => ({
+                                  ...base,
+                                  minHeight: '30px',
+                                  height: '30px',
+                                  borderRadius: '0.25rem',
+                                  borderColor: '#d1d5db',
+                                  boxShadow: 'none',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 'normal',
+                                  cursor: 'pointer',
+                                  '&:hover': {
+                                    borderColor: '#3b82f6'
+                                  }
+                                }),
+                                valueContainer: (base) => ({ ...base, padding: '0 8px', height: '30px', display: 'flex', justifyContent: 'flex-start' }),
+                                input: (base) => ({ ...base, margin: 0, padding: 0 }),
+                                indicatorSeparator: (base) => ({ ...base, display: 'none' }),
+                                dropdownIndicator: (base) => ({ ...base, padding: '2px 8px' }),
+                                option: (base) => ({ ...base, fontSize: '0.875rem', textAlign: 'left', cursor: 'pointer' }),
+                                singleValue: (base) => ({ ...base, fontSize: '0.875rem', textAlign: 'left' })
+                              }}
+                            />
                           ) : (
                             <input
                               type="text"
@@ -138,33 +165,31 @@ export default function DynamicTableView({ data, config, onRowAction, loading = 
                 </td>
               </tr>
             ) : (
-              data.map((item, rowIndex) =>
-                renderTableRow
-                  ? (
-                    <React.Fragment key={item.id || rowIndex}>
-                      {renderTableRow(item, onRowAction, setSelectedItemForDetails)}
-                    </React.Fragment>
-                  )
-                  : (
-                    <tr
-                      key={item.id || rowIndex}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      {tableColumns.map((col, colIndex) => {
-                        return (
-                          <td key={colIndex} className="px-4 py-3 text-sm">
-                            <CellRenderer 
-                              item={item} 
-                              column={col} 
-                              config={config} 
-                              onRowAction={onRowAction}
-                              setSelectedItemForDetails={setSelectedItemForDetails}
-                            />
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  )
+              data.map((record, rowIndex) =>
+                renderTableRow ? (
+                  <React.Fragment key={record.id || rowIndex}>
+                    {renderTableRow(record, onRowAction, setSelectedItemForDetails)}
+                  </React.Fragment>
+                ) : (
+                  <tr
+                    key={record.id || rowIndex}
+                    className="border-b border-gray-100 hover:bg-gray-50"
+                  >
+                    {tableColumns.map((col, colIndex) => {
+                      return (
+                        <td key={colIndex} className="px-4 py-3 text-sm">
+                          <CellRenderer
+                            item={record}
+                            column={col}
+                            config={config}
+                            onRowAction={onRowAction}
+                            setSelectedItemForDetails={setSelectedItemForDetails}
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                )
               )
             )}
           </tbody>

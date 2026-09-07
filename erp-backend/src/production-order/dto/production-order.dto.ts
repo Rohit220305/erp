@@ -1,5 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsArray,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -56,7 +57,7 @@ export class ProductionOrderAddDto {
 
   @IsOptional()
   @IsEnum(ProductionOrderStatus)
-  status?: ProductionOrderStatus = ProductionOrderStatus.Draft;
+  status?: ProductionOrderStatus = ProductionOrderStatus.Pending;
 }
 
 export class ProductionOrderUpdateDto extends ProductionOrderAddDto {
@@ -127,6 +128,7 @@ export class ProductionOrderListDto {
   sortOrder?: 'ASC' | 'DESC';
 
   @IsOptional()
+  @IsArray()
   filters?: any[];
 
   @IsOptional()

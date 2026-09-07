@@ -1,40 +1,53 @@
 "use client";
 
-import { CAPABILITIES } from "@/config/capabilities.config";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHeader } from "@/context/HeaderContext";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { CAPABILITIES } from "@/config/capabilities.config";
 import AccessDenied from "@/components/common/AccessDenied";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
-import { Tag, FileText, ExternalLink } from "lucide-react";
+import ModuleLink from "@/components/common/ModuleLink";
 import SideDrawer from "@/components/common/SideDrawer";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { Tag, FileText, ExternalLink } from "lucide-react";
 
 function DetailRow({ label, value, valueClassName = "" }) {
+  if (!value) return null;
   return (
     <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
       <span className="text-sm text-gray-500">{label}</span>
       <span className={`text-sm font-medium text-right ${valueClassName}`}>
-        {value || "-"}
+        {value}
       </span>
     </div>
   );
 }
 
-function UserInfoCard({ title, name, date }) {
+function UserInfoCard({ title, name, date, userId, onOpenUser }) {
   const initial = name ? name.charAt(0).toUpperCase() : "S";
   return (
-    <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+    <div className="bg-white rounded-xl hover:shadow-lg transition p-6 border border-gray-100">
       <h3 className="text-sm font-semibold text-gray-600 mb-5">{title}</h3>
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 rounded-full bg-[#1565c0] text-white flex items-center justify-center text-lg font-semibold shadow-sm shrink-0">
           {initial}
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-[#1565c0]">
-            {name || "System"}
-          </span>
-          <span className="text-xs text-gray-400 mt-1">{date || "-"}</span>
+          {userId ? (
+            <ModuleLink
+              href={buildRoute("user", "detail", { id: userId })}
+              onClick={onOpenUser}
+              className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer"
+            >
+              {name || "System"}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm font-semibold text-gray-900">
+              {name || "System"}
+            </span>
+          )}
+          {date && <span className="text-xs text-gray-400 mt-1">{date}</span>}
         </div>
       </div>
     </div>
@@ -44,8 +57,11 @@ function UserInfoCard({ title, name, date }) {
 export default function ProcessDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
+  const [selectedWorkCentreForDetails, setSelectedWorkCentreForDetails] = useState(null);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
   useEffect(() => {
     setConfig({
@@ -60,21 +76,22 @@ export default function ProcessDetailPage({ data }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "Process Master", href: "/process" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Process Master", href: buildRoute("process", "list") },
+
         ],
         actionButton: can(CAPABILITIES.PROCESS?.UPDATE || "PROCESS_UPDATE")
           ? {
-              label: "Edit",
-              onClick: () => setIsEditDrawerOpen(true),
-            }
+            label: "Edit",
+            onClick: () => setIsEditDrawerOpen(true),
+          }
           : null,
       },
     });
     return () => {
       resetConfig();
     };
-  }, [setConfig, router, data?.id, resetConfig, can]);
+  }, [setConfig, router, data?.id, data?.processName, resetConfig, can]);
 
   if (!data || data.success === 0 || data.settings?.success === 0) {
     if (data?.accessDenied) {
@@ -92,54 +109,63 @@ export default function ProcessDetailPage({ data }) {
   }
 
   const {
+    id,
     processName,
     processCode,
     description,
     status,
     imageUrl,
     instructionPdfUrl,
+    workCentreId,
     workCentreName,
+    companyId,
     companyName,
+    addedBy,
     addedByName,
     addedDateFormatted,
+    updatedBy,
     updatedByName,
     updatedDateFormatted,
   } = data;
 
   const isActive = status === "Active" || status === "active";
+  const hasAddedInfo = Boolean(addedByName || addedDateFormatted || addedBy);
+  const hasUpdatedInfo = Boolean(updatedByName || updatedDateFormatted || updatedBy);
 
   return (
-    <div className="py-6  min-h-full px-10 ">
+    <div className="p-6  min-h-full px-10 overflow-y-scroll">
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-2">
-          <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
+          <div className="bg-white rounded-xl hover:shadow-lg transition p-5 border border-gray-100">
             <div className="mb-4">
               <h2 className="font-semibold text-base text-gray-900">
                 {processName}
               </h2>
-              <p className="text-gray-400 text-sm mt-0.5 uppercase">
-                {processCode}
-              </p>
+              {processCode && (
+                <p className="text-gray-400 text-sm mt-0.5 font-mono uppercase">
+                  {processCode}
+                </p>
+              )}
             </div>
 
             <hr className="my-4 border-gray-100" />
 
-            <button className="w-full bg-[#1565c0] text-white py-2.5 px-4 rounded-lg text-sm font-medium transition hover:bg-[#0f57a6]">
+            <button className="w-full bg-[#1565c0] text-white py-2.5 px-4 rounded-lg text-sm font-medium transition hover:bg-[#0f57a6] cursor-pointer">
               Summary
             </button>
           </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-10">
+        <div className="col-span-12 lg:col-span-10 h-full">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
+            <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6 border border-gray-100">
               <h3 className="text-sm font-semibold text-gray-600 mb-6">
                 Details
               </h3>
 
               <div className="flex items-center gap-4 mb-8">
                 <SharedImageZoom
-                  id={`detail-process-${data.id}`}
+                  id={`detail-process-${id}`}
                   src={imageUrl}
                   alt={processName}
                   placeholderText={<Tag size={24} className="text-[#1565c0]" />}
@@ -150,71 +176,121 @@ export default function ProcessDetailPage({ data }) {
                   <h2 className="font-semibold text-base text-gray-900">
                     {processName}
                   </h2>
-                  <span className="text-xs text-gray-400 uppercase mt-0.5">
-                    {processCode}
-                  </span>
+                  {processCode && (
+                    <span className="text-xs text-gray-400 font-mono uppercase mt-0.5">
+                      {processCode}
+                    </span>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-1">
                 <DetailRow label="Process Name" value={processName} />
                 <DetailRow label="Process Code" value={processCode} />
-                <DetailRow label="Company" value={companyName} />
-                <DetailRow label="Work Centre" value={workCentreName} />
+                {companyName && (
+                  <DetailRow
+                    label="Company"
+                    value={
+                      <ModuleLink
+                        href={buildRoute("company", "detail", {
+                          id: companyId,
+                        })}
+                        onClick={() =>
+                          setSelectedCompanyForDetails({ companyId })
+                        }
+                        className="text-[#1565c0] font-medium hover:underline cursor-pointer"
+                      >
+                        {companyName}
+                      </ModuleLink>
+                    }
+                  />
+                )}
+                {workCentreName && (
+                  <DetailRow
+                    label="Work Centre"
+                    value={
+                      <ModuleLink
+                        href={buildRoute("work-centre", "detail", {
+                          id: workCentreId,
+                        })}
+                        onClick={() =>
+                          setSelectedWorkCentreForDetails({ workCentreId })
+                        }
+                        className="text-[#1565c0] font-medium hover:underline cursor-pointer"
+                      >
+                        {workCentreName}
+                      </ModuleLink>
+                    }
+                  />
+                )}
                 <DetailRow
                   label="Status"
                   value={status}
-                  valueClassName={isActive ? "text-green-500" : "text-red-500"}
+                  valueClassName={
+                    isActive
+                      ? "text-green-600 font-semibold"
+                      : "text-red-600 font-semibold"
+                  }
                 />
               </div>
             </div>
 
-            <div className="xl:col-span-1 flex flex-col gap-6">
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6 flex flex-col gap-4">
-                <h3 className="text-sm font-semibold text-gray-600">
-                  Description
-                </h3>
-                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {description || (
-                    <span className="text-gray-400 italic">
-                      No description provided.
-                    </span>
-                  )}
-                </div>
+            {(hasAddedInfo || hasUpdatedInfo) && (
+              <div className="xl:col-span-1 flex flex-col gap-6">
+                {hasAddedInfo && (
+                  <UserInfoCard
+                    title="Added Info"
+                    name={addedByName}
+                    date={addedDateFormatted}
+                    userId={addedBy}
+                    onOpenUser={() =>
+                      setSelectedUserForDetails({ userId: addedBy })
+                    }
+                  />
+                )}
+                {hasUpdatedInfo && (
+                  <UserInfoCard
+                    title="Modified Info"
+                    name={updatedByName}
+                    date={updatedDateFormatted}
+                    userId={updatedBy}
+                    onOpenUser={() =>
+                      setSelectedUserForDetails({ userId: updatedBy })
+                    }
+                  />
+                )}
               </div>
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6 flex flex-col gap-4">
-                <h3 className="text-sm font-semibold text-gray-600">
-                  Instructions
-                </h3>
-               
-                {instructionPdfUrl ? (
-                  <div className="mt-2 pt-2 ">
+            )}
+            <div className="xl:col-span-1 flex flex-col gap-6">
+              {description && (
+                <div className="bg-white rounded-xl hover:shadow-lg transition p-6 border border-gray-100 flex flex-col gap-4">
+                  <h3 className="text-sm font-semibold text-gray-600">
+                    Description
+                  </h3>
+                  <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap max-h-[200px] overflow-y-scroll">
+                    {description}
+                  </div>
+                </div>
+              )}
+              {instructionPdfUrl && (
+                <div className="bg-white rounded-xl hover:shadow-lg transition p-6 border border-gray-100 flex flex-col ">
+                  <h3 className="text-sm font-semibold text-gray-600">
+                    Instructions
+                  </h3>
+                  <div className="mt-2 pt-2 gap-4 max-h-[200px] overflow-y-scroll">
                     <a
                       href={instructionPdfUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 bg-[#1565c0] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#0f57a6] transition-colors w-max"
+                      className="inline-flex items-center gap-2 bg-[#1565c0] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#0f57a6] transition-colors w-max cursor-pointer"
                     >
                       <FileText size={18} />
                       View Instruction PDF
                       <ExternalLink size={16} className="ml-1 opacity-70" />
                     </a>
                   </div>
-                ) : "-"}
-              </div>
-            </div>
-
-            <div className="xl:col-span-1  flex flex-col gap-6">
-              <UserInfoCard
-                title="Added Info"
-                name={addedByName}
-                date={addedDateFormatted}
-              />
-              <UserInfoCard
-                title="Modified Info"
-                name={updatedByName}
-                date={updatedDateFormatted}
-              />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -231,6 +307,41 @@ export default function ProcessDetailPage({ data }) {
           router.refresh();
         }}
       />
+
+      <SideDrawer
+        open={!!selectedCompanyForDetails}
+        onClose={() => setSelectedCompanyForDetails(null)}
+        moduleName="Company"
+        mode="details"
+        data={
+          selectedCompanyForDetails
+            ? { id: selectedCompanyForDetails.companyId }
+            : null
+        }
+      />
+
+      <SideDrawer
+        open={!!selectedWorkCentreForDetails}
+        onClose={() => setSelectedWorkCentreForDetails(null)}
+        moduleName="WorkCentre"
+        mode="details"
+        data={
+          selectedWorkCentreForDetails
+            ? { id: selectedWorkCentreForDetails.workCentreId }
+            : null
+        }
+      />
+
+      <SideDrawer
+        open={!!selectedUserForDetails}
+        onClose={() => setSelectedUserForDetails(null)}
+        moduleName="User"
+        mode="details"
+        data={
+          selectedUserForDetails ? { id: selectedUserForDetails.userId } : null
+        }
+      />
     </div>
   );
 }
+

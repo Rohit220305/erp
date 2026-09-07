@@ -131,6 +131,8 @@ export class StorageListService {
         'storage.updatedDate AS updatedDate',
         'storage.storageImage AS storageImage',
         'storage.description AS description',
+        'storage.addedBy AS addedBy',
+        'storage.updatedBy AS updatedBy',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');

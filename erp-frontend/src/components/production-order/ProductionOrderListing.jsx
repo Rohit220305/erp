@@ -14,7 +14,7 @@ import {
 import SideDrawer from "@/components/common/SideDrawer";
 
 export default function ProductionOrderListing() {
-  const [selectedItemForDetails, setSelectedItemForDetails] = useState(null);
+  const [selectedOutputItemForDetails, setSelectedOutputItemForDetails] = useState(null);
   const [selectedBomForDetails, setSelectedBomForDetails] = useState(null);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
@@ -30,8 +30,8 @@ export default function ProductionOrderListing() {
             item={item}
             onRowAction={onRowAction}
             setSelectedItemForDetails={setSelectedOrderForDetails}
-            setSelectedCategoryForDetails={setSelectedItemForDetails}
-            setSelectedCompanyForDetails={setSelectedBomForDetails}
+            setSelectedOutputItemForDetails={setSelectedOutputItemForDetails}
+            setSelectedBomForDetails={setSelectedBomForDetails}
             setSelectedUserForDetails={setSelectedUserForDetails}
           />
         )}
@@ -42,8 +42,8 @@ export default function ProductionOrderListing() {
             config={productionOrderConfig}
             onRowAction={onRowAction => {}}
             setSelectedItemForDetails={setSelectedOrderForDetails}
-            setSelectedCategoryForDetails={setSelectedItemForDetails}
-            setSelectedCompanyForDetails={setSelectedBomForDetails}
+            setSelectedOutputItemForDetails={setSelectedOutputItemForDetails}
+            setSelectedBomForDetails={setSelectedBomForDetails}
             setSelectedUserForDetails={setSelectedUserForDetails}
           />
         )}
@@ -54,38 +54,35 @@ export default function ProductionOrderListing() {
             config={productionOrderConfig}
             onRowAction={onRowAction => {}}
             setSelectedItemForDetails={setSelectedOrderForDetails}
-            setSelectedCategoryForDetails={setSelectedItemForDetails}
-            setSelectedCompanyForDetails={setSelectedBomForDetails}
+            setSelectedOutputItemForDetails={setSelectedOutputItemForDetails}
+            setSelectedBomForDetails={setSelectedBomForDetails}
             setSelectedUserForDetails={setSelectedUserForDetails}
           />
         )}
       />
 
-      {/* SideDrawer for Item Details Popup */}
       <SideDrawer
-        open={!!selectedItemForDetails}
-        onClose={() => setSelectedItemForDetails(null)}
+        open={!!selectedOutputItemForDetails}
+        onClose={() => setSelectedOutputItemForDetails(null)}
         moduleName="Item"
         mode="details"
-        data={selectedItemForDetails ? { id: selectedItemForDetails.itemId } : null}
+        data={selectedOutputItemForDetails ? { id: selectedOutputItemForDetails.itemId || selectedOutputItemForDetails.id } : null}
       />
 
-      {/* SideDrawer for BOM Details Popup */}
       <SideDrawer
         open={!!selectedBomForDetails}
         onClose={() => setSelectedBomForDetails(null)}
         moduleName="Bom"
         mode="details"
-        data={selectedBomForDetails ? { id: selectedBomForDetails.bomId } : null}
+        data={selectedBomForDetails ? { id: selectedBomForDetails.bomId || selectedBomForDetails.id } : null}
       />
 
-      {/* SideDrawer for User Details Popup */}
       <SideDrawer
         open={!!selectedUserForDetails}
         onClose={() => setSelectedUserForDetails(null)}
         moduleName="User"
         mode="details"
-        data={selectedUserForDetails ? { id: selectedUserForDetails.addedBy } : null}
+        data={selectedUserForDetails ? { id: selectedUserForDetails.addedBy || selectedUserForDetails.userId || selectedUserForDetails.id } : null}
       />
     </>
   );

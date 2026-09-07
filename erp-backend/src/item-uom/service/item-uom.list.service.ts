@@ -125,6 +125,8 @@ export class ItemUomListService {
         'uom.companyId AS companyId',
         'uom.addedDate AS addedDate',
         'uom.updatedDate AS updatedDate',
+        'uom.addedBy AS addedBy',
+        'uom.updatedBy AS updatedBy',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');

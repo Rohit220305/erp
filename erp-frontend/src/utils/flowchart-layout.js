@@ -15,6 +15,7 @@ export function buildFlowchartGraph(processes = []) {
     processName: p.processName || `Process #${p.processId}`,
     sequenceNo: p.sequenceNo || idx + 1,
     dependencies: (p.dependencies || []).map(Number),
+    status: p.status || p.processState || "YetToStart",
     nodePosition: p.nodePosition || null,
     handleConfig: p.handleConfig || null,
   }));
@@ -59,6 +60,7 @@ export function buildFlowchartGraph(processes = []) {
         processId: p.processId,
         processName: p.processName,
         sequenceNo: p.sequenceNo,
+        status: p.status,
       },
       width: NODE_WIDTH,
       height: NODE_HEIGHT,

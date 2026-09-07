@@ -5,7 +5,7 @@ import Select from "react-select";
 import { useAuth } from "@/context/AuthContext";
 import { createItemCategory, updateItemCategory, listItemCategories } from "@/lib/api/item-category-api";
 import { listCompanies } from "@/lib/api/company-api";
-import { listStorages } from "@/lib/api/storage-api"; // Need to create or import if exists
+import { listStorages } from "@/lib/api/storage-api";
 import toast from "react-hot-toast";
 import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
@@ -285,9 +285,10 @@ export default function ItemCategoryDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Category Name"
               value={formData.categoryName || ""}
               onChange={(e) => handleChange("categoryName", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none text-sm placeholder:text-sm placeholder:text-gray-400 transition focus:bg-white focus:border-[#1565c0]
                 ${errors.categoryName ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -330,9 +331,10 @@ export default function ItemCategoryDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Category Code"
               value={formData.categoryCode || ""}
               onChange={(e) => handleChange("categoryCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none text-sm placeholder:text-sm placeholder:text-gray-400 transition focus:bg-white focus:border-[#1565c0]
                 ${errors.categoryCode ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -347,9 +349,10 @@ export default function ItemCategoryDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Reference Code"
               value={formData.referenceCode || ""}
               onChange={(e) => handleChange("referenceCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none text-sm placeholder:text-sm placeholder:text-gray-400 transition focus:bg-white focus:border-[#1565c0]
                 ${errors.referenceCode ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -459,18 +462,8 @@ export default function ItemCategoryDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
-          confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
-        }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this category?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        entityName="Item Category"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);

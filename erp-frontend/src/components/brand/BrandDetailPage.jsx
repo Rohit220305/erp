@@ -2,42 +2,57 @@
 
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { useRouter } from "next/navigation";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { useHeader } from "@/context/HeaderContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
-import { Tag, SearchX } from "lucide-react";
+import { Tag } from "lucide-react";
 import SideDrawer from "@/components/common/SideDrawer";
-import { useState } from "react";
+import ModuleLink from "@/components/common/ModuleLink";
 
-function DetailRow({ label, value, valueClassName = "" }) {
+function DetailRow({ label, value, valueClassName = "", href, onClick }) {
+  if (!value) return null;
   return (
     <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className={`text-sm font-medium text-right ${valueClassName}`}>
-        {value || "-"}
-      </span>
+      {href ? (
+        <ModuleLink href={href} onClick={onClick} className="text-[#1565c0] font-medium text-sm text-right">
+          {value}
+        </ModuleLink>
+      ) : (
+        <span className={`text-sm font-medium text-right ${valueClassName}`}>
+          {value}
+        </span>
+      )}
     </div>
   );
 }
 
-function UserInfoCard({ title, name, date }) {
+function UserInfoCard({ title, name, date, href, onClick }) {
+  if (!name && !date && !href) return null;
   const initial = name ? name.charAt(0).toUpperCase() : "S";
   return (
     <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
       <h3 className="text-sm font-semibold text-gray-600 mb-5">{title}</h3>
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-[#1565c0] text-white flex items-center justify-center text-lg font-semibold shadow-sm shrink-0">
-          {initial}
-        </div>
+
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-[#1565c0]">
-            {name || "System"}
-          </span>
-          <span className="text-xs text-gray-400 mt-1">
-            {date || "-"}
-          </span>
+          {href ? (
+            <ModuleLink href={href} onClick={onClick} className="text-sm font-semibold text-[#1565c0]">
+              {name || "System"}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm font-semibold text-gray-900">
+              {name || "System"}
+            </span>
+          )}
+          {date && (
+            <span className="text-xs text-gray-400 mt-1">
+              {date}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -49,6 +64,13 @@ export default function BrandDetailPage({ data }) {
   const router = useRouter();
   const { can } = useAuth();
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
+  const [selectedManufacturerForDetails, setSelectedManufacturerForDetails] = useState(null);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
+
+  const canViewCompany = can(CAPABILITIES.COMPANY?.VIEW || "COMPANY_VIEW");
+  const canViewManufacturer = can(CAPABILITIES.MANUFACTURER?.VIEW || "MANUFACTURER_VIEW");
+  const canViewUser = can(CAPABILITIES.USER?.VIEW || "USER_VIEW");
 
   useEffect(() => {
     setConfig({
@@ -63,14 +85,14 @@ export default function BrandDetailPage({ data }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "Brand Master", href: "/brand" },
+          { label: "Home", href: buildRoute("home", "list") },
+          { label: "Brand Master", href: buildRoute("brand", "list") },
         ],
         actionButton: can(CAPABILITIES.BRAND?.UPDATE || "BRAND_UPDATE")
           ? {
-              label: "Edit",
-              onClick: () => setIsEditDrawerOpen(true),
-            }
+            label: "Edit",
+            onClick: () => setIsEditDrawerOpen(true),
+          }
           : null,
       },
     });
@@ -109,6 +131,9 @@ export default function BrandDetailPage({ data }) {
 
   const isActive = status === "Active" || status === "active";
 
+  const addedByUserId = data?.addedBy || data?.addedById || data?.added_by || data?.createdBy;
+  const updatedByUserId = data?.updatedBy || data?.updatedById || data?.updated_by;
+
   return (
     <div className="p-6 bg-[#f8f9fa] min-h-full">
       <div className="grid grid-cols-12 gap-6">
@@ -122,9 +147,9 @@ export default function BrandDetailPage({ data }) {
                 {brandCode}
               </p>
             </div>
-            
+
             <hr className="my-4 border-gray-100" />
-            
+
             <button className="w-full bg-[#1565c0] text-white py-2.5 px-4 rounded-lg text-sm font-medium transition hover:bg-[#0f57a6]">
               Summary
             </button>
@@ -133,10 +158,10 @@ export default function BrandDetailPage({ data }) {
 
         <div className="col-span-12 lg:col-span-10">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            
+
             <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
               <h3 className="text-sm font-semibold text-gray-600 mb-6">Details</h3>
-              
+
               <div className="flex items-center gap-4 mb-8">
                 <SharedImageZoom
                   id={`detail-brand-${data.id}`}
@@ -159,30 +184,48 @@ export default function BrandDetailPage({ data }) {
               <div className="space-y-1">
                 <DetailRow label="Brand Name" value={brandName} />
                 <DetailRow label="Brand Code" value={brandCode} />
-                <DetailRow label="Company" value={companyName} />
-                <DetailRow label="Manufacturer" value={manufacturerName} />
-                <DetailRow 
-                  label="Status" 
-                  value={status} 
-                  valueClassName={isActive ? "text-green-500" : "text-red-500"} 
+                <DetailRow
+                  label="Company"
+                  value={companyName}
+                  href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
+                  onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
+                />
+                <DetailRow
+                  label="Manufacturer"
+                  value={manufacturerName}
+                  href={canViewManufacturer && data?.manufacturerId ? buildRoute("manufacturer", "detail", { id: data.manufacturerId }) : null}
+                  onClick={canViewManufacturer && data?.manufacturerId ? () => setSelectedManufacturerForDetails({ manufacturerId: data.manufacturerId }) : null}
+                />
+                <DetailRow
+                  label="Status"
+                  value={status}
+                  valueClassName={isActive ? "text-green-500" : "text-red-500"}
                 />
               </div>
             </div>
 
-
-
-            <div className="xl:col-span-1 flex flex-col gap-6">
-              <UserInfoCard
-                title="Added Info"
-                name={addedByName}
-                date={addedDateFormatted}
-              />
-              <UserInfoCard
-                title="Modified Info"
-                name={updatedByName}
-                date={updatedDateFormatted}
-              />
-            </div>
+            {(addedByName || addedDateFormatted || addedByUserId || updatedByName || updatedDateFormatted || updatedByUserId) && (
+              <div className="xl:col-span-1 flex flex-col gap-6">
+                {(addedByName || addedDateFormatted || addedByUserId) && (
+                  <UserInfoCard
+                    title="Added Info"
+                    name={addedByName}
+                    date={addedDateFormatted}
+                    href={canViewUser && addedByUserId ? buildRoute("user", "detail", { id: addedByUserId }) : null}
+                    onClick={canViewUser && addedByUserId ? () => setSelectedUserForDetails({ userId: addedByUserId }) : null}
+                  />
+                )}
+                {(updatedByName || updatedDateFormatted || updatedByUserId) && (
+                  <UserInfoCard
+                    title="Modified Info"
+                    name={updatedByName}
+                    date={updatedDateFormatted}
+                    href={canViewUser && updatedByUserId ? buildRoute("user", "detail", { id: updatedByUserId }) : null}
+                    onClick={canViewUser && updatedByUserId ? () => setSelectedUserForDetails({ userId: updatedByUserId }) : null}
+                  />
+                )}
+              </div>
+            )}
 
           </div>
         </div>
@@ -198,6 +241,30 @@ export default function BrandDetailPage({ data }) {
           setIsEditDrawerOpen(false);
           router.refresh();
         }}
+      />
+
+      <SideDrawer
+        open={!!selectedCompanyForDetails}
+        onClose={() => setSelectedCompanyForDetails(null)}
+        moduleName="Company"
+        mode="details"
+        data={selectedCompanyForDetails ? { id: selectedCompanyForDetails.companyId } : null}
+      />
+
+      <SideDrawer
+        open={!!selectedManufacturerForDetails}
+        onClose={() => setSelectedManufacturerForDetails(null)}
+        moduleName="Manufacturer"
+        mode="details"
+        data={selectedManufacturerForDetails ? { id: selectedManufacturerForDetails.manufacturerId } : null}
+      />
+
+      <SideDrawer
+        open={!!selectedUserForDetails}
+        onClose={() => setSelectedUserForDetails(null)}
+        moduleName="User"
+        mode="details"
+        data={selectedUserForDetails ? { id: selectedUserForDetails.userId } : null}
       />
     </div>
   );

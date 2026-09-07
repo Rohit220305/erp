@@ -1,4 +1,5 @@
-"use client";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,20 +13,13 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between">
-        <div
-          className={`flex items-center gap-3 ${can(CAPABILITIES.USER.VIEW) ? "cursor-pointer" : ""}`}
-          onClick={() => {
-            if (can(CAPABILITIES.USER.VIEW)) {
-              setSelectedUserForDetails(user);
-            }
-          }}
-        >
+        <div className="flex items-center gap-3">
           <div className="relative shrink-0">
-              <SharedImageZoom
-                id={`grid-${user.id}`}
-                src={user.photoUrl}
-                alt={user.fullName}
-                placeholderText={user.fullName ? user.fullName.substring(0, 2).toUpperCase() : ""}
+            <SharedImageZoom
+              id={`grid-${user.id}`}
+              src={user.photoUrl}
+              alt={user.fullName}
+              placeholderText={user.fullName ? user.fullName.substring(0, 2).toUpperCase() : ""}
               thumbnailClassName="w-14 h-14 rounded-full object-cover border border-gray-100"
               modalImageClassName="w-64 h-64 rounded-full"
             />
@@ -34,16 +28,24 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
             ></div>
           </div>
           <div>
-            <p className="text-[#1565c0] font-medium leading-tight mb-0.5 hover:underline decoration-1 underline-offset-2">
-              {user.fullName}
-            </p>
+            {can(CAPABILITIES.USER.VIEW) ? (
+              <ModuleLink
+                href={buildRoute("user", "detail", { id: user.id })}
+                onClick={() => setSelectedUserForDetails?.(user)}
+                className="text-[#1565c0] font-medium leading-tight mb-0.5 hover:underline block"
+              >
+                {user.fullName}
+              </ModuleLink>
+            ) : (
+              <p className="text-gray-800 font-medium leading-tight mb-0.5">
+                {user.fullName}
+              </p>
+            )}
             <p className="text-gray-400 text-sm leading-tight">
               {user.email || "—"}
             </p>
           </div>
         </div>
-
-
       </div>
 
       <hr className="border-gray-100 my-4" />
@@ -111,12 +113,13 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
         <div className="grid grid-cols-[110px_1fr] items-center gap-2">
           <span className="text-gray-400">Company Name</span>
           {can(CAPABILITIES.COMPANY.VIEW) ? (
-            <span
-              className="text-[#1565c0] font-medium truncate hover:underline cursor-pointer"
-              onClick={() => setSelectedCompanyForDetails(user)}
+            <ModuleLink
+              href={user?.companyId ? buildRoute("company", "detail", { id: user.companyId }) : "#"}
+              onClick={() => setSelectedCompanyForDetails?.(user)}
+              className="font-medium truncate"
             >
               {user.companyName || "—"}
-            </span>
+            </ModuleLink>
           ) : (
             <span className="text-gray-900 truncate">{user.companyName || "—"}</span>
           )}

@@ -1,0 +1,163 @@
+{
+  "moduleName": "ProductionBatch",
+  "title": "Production Batches",
+  "permissions": {
+    "list": "PRODUCTION_BATCH_LIST",
+    "create": "PRODUCTION_BATCH_CREATE",
+    "view": "PRODUCTION_BATCH_VIEW",
+    "update": "PRODUCTION_BATCH_UPDATE",
+    "delete": "PRODUCTION_BATCH_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Batch Request",
+      "key": "batchCode",
+      "type": "link",
+      "linkPath": "/production-batch/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Production Order",
+      "key": "productionOrderCode",
+      "type": "drawerLink",
+      "drawerModule": "ProductionOrder",
+      "drawerIdKey": "productionOrderId",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Item Name",
+      "key": "itemName",
+      "type": "drawerLink",
+      "drawerModule": "Item",
+      "drawerIdKey": "itemId",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Bill of Material",
+      "key": "bomCode",
+      "type": "drawerLink",
+      "drawerModule": "Bom",
+      "drawerIdKey": "bomId",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Production Quantity",
+      "key": "batchQuantity",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "140px"
+    },
+    {
+      "label": "Requested By",
+      "key": "addedByName",
+      "type": "drawerLink",
+      "drawerModule": "User",
+      "drawerIdKey": "addedBy",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Requested Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "140px",
+      "options": [
+        { "label": "Pending", "value": "Pending" },
+        { "label": "Stock Received", "value": "StockReceived" },
+        { "label": "In Progress", "value": "InProgress" },
+        { "label": "Completed", "value": "Completed" },
+        { "label": "Finished", "value": "Finished" },
+        { "label": "Cancelled", "value": "Cancelled" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [],
+    "row": [
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "PRODUCTION_BATCH_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    { "label": "Batch Code", "value": "batchCode", "type": "text" },
+    { "label": "Production Order Code", "value": "productionOrderCode", "type": "text" },
+    { "label": "Item Name", "value": "itemName", "type": "text" },
+    { "label": "BOM Code", "value": "bomCode", "type": "text" },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Pending", "value": "Pending" },
+        { "label": "Stock Received", "value": "StockReceived" },
+        { "label": "In Progress", "value": "InProgress" },
+        { "label": "Completed", "value": "Completed" },
+        { "label": "Finished", "value": "Finished" },
+        { "label": "Cancelled", "value": "Cancelled" }
+      ]
+    }
+  ],
+  "searchFields": [
+    { "label": "Batch Code", "value": "batchCode", "type": "text" },
+    { "label": "Production Order Code", "value": "productionOrderCode", "type": "text" },
+    { "label": "Item Name", "value": "itemName", "type": "text" },
+    { "label": "BOM Code", "value": "bomCode", "type": "text" },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Pending", "value": "Pending" },
+        { "label": "Stock Received", "value": "StockReceived" },
+        { "label": "In Progress", "value": "InProgress" },
+        { "label": "Completed", "value": "Completed" },
+        { "label": "Finished", "value": "Finished" },
+        { "label": "Cancelled", "value": "Cancelled" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "batchCode": "",
+    "productionOrderCode": "",
+    "itemName": "",
+    "bomCode": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Pending", "value": "Pending" },
+    { "label": "Stock Received", "value": "StockReceived" },
+    { "label": "In Progress", "value": "InProgress" },
+    { "label": "Completed", "value": "Completed" },
+    { "label": "Finished", "value": "Finished" },
+    { "label": "Cancelled", "value": "Cancelled" }
+  ]
+}

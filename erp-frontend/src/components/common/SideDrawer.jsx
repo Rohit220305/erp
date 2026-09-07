@@ -25,15 +25,7 @@ export default function SideDrawer({
 
   const formattedModuleName = moduleName ? moduleName.replace(/([A-Z])/g, ' $1').trim() : "";
 
-  const drawerTitle = customTitle || (
-    mode === "details"
-      ? drawerRegistry[moduleName]?.title || "Details"
-      : mode === "add"
-        ? `Add ${formattedModuleName}`
-        : mode === "edit"
-          ? `Edit ${formattedModuleName}`
-          : ""
-  );
+  const drawerTitle = formattedModuleName;
 
   const FormComponent = moduleName && (mode === "add" || mode === "edit") ? formRegistry[moduleName] : null;
 

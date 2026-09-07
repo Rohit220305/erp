@@ -15,6 +15,7 @@ import { getManufacturer } from "@/lib/api/manufacturer-api";
 import { getProcessTemplate } from "@/lib/api/process-template-api";
 import { getBom } from "@/lib/api/bom-api";
 import { getProductionOrder } from "@/lib/api/production-order-api";
+import { getProductionBatchDetails } from "@/lib/api/production-batch-api";
 
 export const apiRegistry = {
   WorkCentreCategory: { fetchItem: getWorkCentreCategory }, 
@@ -34,5 +35,6 @@ export const apiRegistry = {
   "ProcessTemplate": { fetchItem: getProcessTemplate },
   "Bom": { fetchItem: getBom },
   "ProductionOrder": { fetchItem: getProductionOrder },
+  "ProductionBatch": { fetchItem: getProductionBatchDetails },
 };
 

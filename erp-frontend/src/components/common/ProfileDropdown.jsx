@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import {
   ChevronDown,
   User,
@@ -11,6 +13,7 @@ import {
   Check,
   Repeat,
 } from "lucide-react";
+import ConfirmModal from "./ConfirmModal";
 
 export default function ProfileDropdown({
   user,
@@ -26,6 +29,7 @@ export default function ProfileDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const [switchExpanded, setSwitchExpanded] = useState(false);
+  const [switchTargetGroup, setSwitchTargetGroup] = useState(null);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -46,11 +50,13 @@ export default function ProfileDropdown({
     {
       label: "Profile",
       icon: User,
+      href: user?.id ? buildRoute("user", "detail", { id: user.id }) : "#",
       action: onProfile,
     },
     {
       label: "Change Password",
       icon: Lock,
+      href: buildRoute("settings", "changePassword"),
       action: onChangePassword,
     },
   ];
@@ -92,14 +98,15 @@ export default function ProfileDropdown({
       {open && (
         <div className="absolute right-0 top-[55px] z-[999] w-[280px] overflow-hidden rounded-md bg-white shadow-xl border border-gray-100 transition-all duration-200 ease-out animate-in fade-in slide-in-from-top-2">
           {showBackToSession && (
-            <button
-              type="button"
-              onClick={async () => {
-                setOpen(false);
-                await onBackToSession?.();
+            <Link
+              href={buildRoute("home", "list")}
+              onClick={async (e) => {
+                if (!e.ctrlKey && !e.metaKey && e.button !== 1) {
+                  setOpen(false);
+                  await onBackToSession?.();
+                }
               }}
-              disabled={backToSessionLoading}
-              className="group flex w-full items-center gap-4 border-b border-gray-200 px-3 py-3 hover:bg-gray-50 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
+              className="group flex w-full items-center gap-4 border-b border-gray-200 px-3 py-3 hover:bg-gray-50 transition cursor-pointer"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 group-hover:border-blue-600 transition">
                 {backToSessionLoading ? (
@@ -115,7 +122,7 @@ export default function ProfileDropdown({
               <span className="font-medium text-[14px] text-gray-700 group-hover:text-blue-600 transition">
                 Back to previous session
               </span>
-            </button>
+            </Link>
           )}
 
           {allGroups && allGroups.length > 1 && (
@@ -159,11 +166,11 @@ export default function ProfileDropdown({
                     return (
                       <button
                         key={grp.groupId}
-                        onClick={async () => {
+                        onClick={() => {
                           if (isActive) return;
                           setOpen(false);
                           setSwitchExpanded(false);
-                          await onSwitchProfile?.(grp.groupId);
+                          setSwitchTargetGroup(grp);
                         }}
                         className={`flex w-full items-center justify-between px-5 py-2 text-xs font-medium transition-colors cursor-pointer ${
                           isActive
@@ -198,11 +205,14 @@ export default function ProfileDropdown({
             const Icon = item.icon;
 
             return (
-              <button
+              <Link
                 key={item.label}
-                onClick={() => {
-                  setOpen(false);
-                  item.action?.();
+                href={item.href}
+                onClick={(e) => {
+                  if (!e.ctrlKey && !e.metaKey && e.button !== 1) {
+                    setOpen(false);
+                    item.action?.();
+                  }
                 }}
                 className="group flex w-full items-center gap-4 border-b border-gray-200 px-3 py-3 hover:bg-gray-50 transition cursor-pointer"
               >
@@ -216,14 +226,17 @@ export default function ProfileDropdown({
                 <span className="font-medium text-[14px] text-gray-700 group-hover:text-blue-600 transition">
                   {item.label}
                 </span>
-              </button>
+              </Link>
             );
           })}
 
-          <button
-            onClick={() => {
-              setOpen(false);
-              onLogout?.();
+          <Link
+            href={buildRoute("auth", "login")}
+            onClick={(e) => {
+              if (!e.ctrlKey && !e.metaKey && e.button !== 1) {
+                setOpen(false);
+                onLogout?.();
+              }
             }}
             className="group flex w-full items-center gap-4 px-3 py-3 hover:bg-gray-50 transition cursor-pointer"
           >
@@ -237,9 +250,23 @@ export default function ProfileDropdown({
             <span className="font-medium text-[14px] text-gray-700 group-hover:text-red-500 transition">
               Logout
             </span>
-          </button>
+          </Link>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!switchTargetGroup}
+        actionType="switch"
+        entityName={switchTargetGroup?.groupName}
+        onConfirm={async () => {
+          if (switchTargetGroup) {
+            const targetId = switchTargetGroup.groupId;
+            setSwitchTargetGroup(null);
+            await onSwitchProfile?.(targetId);
+          }
+        }}
+        onCancel={() => setSwitchTargetGroup(null)}
+      />
     </div>
   );
 }

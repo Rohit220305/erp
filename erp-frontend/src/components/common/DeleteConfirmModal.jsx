@@ -30,15 +30,12 @@ export default function DeleteConfirmModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
         onClick={onCancel}
       />
 
-      {/* Modal Container */}
       <div className="relative z-10 bg-white rounded-md shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in-0 zoom-in-95 border border-gray-100">
-        {/* Header Bar */}
         <div className="bg-[#1565c0] px-4 py-2.5 flex items-center justify-between text-white">
           <h3 className="text-sm font-semibold tracking-wide">{title}</h3>
           <button
@@ -51,13 +48,11 @@ export default function DeleteConfirmModal({
           </button>
         </div>
 
-        {/* Modal Body */}
         <div className="p-6 text-center">
           <p className="text-xs sm:text-sm text-gray-700 font-normal mb-6">
             {message}
           </p>
 
-          {/* Action Buttons */}
           <div className="flex items-center justify-center gap-4">
             <button
               type="button"
@@ -76,7 +71,6 @@ export default function DeleteConfirmModal({
           </div>
         </div>
 
-        {/* Bottom Right Resizer Icon */}
         <div className="absolute bottom-1 right-1 pointer-events-none opacity-40">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
             <path d="M7 1L1 7M7 4L4 7M7 7" stroke="#94A3B8" strokeWidth="1.2" strokeLinecap="round" />

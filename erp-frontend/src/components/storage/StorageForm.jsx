@@ -12,6 +12,7 @@ import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import storageConfig from "@/config/storage.config.json";
 import { getStorageSchema } from "@/lib/validation/storage.schema";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { Warehouse, Camera, X, Info } from "lucide-react";
 
 const STATUS_OPTIONS = [
@@ -136,10 +137,13 @@ export default function StorageForm({
         showMenu: true,
       },
       navbar: {
-        title: mode === "create" ? `Add ${storageConfig.title}` : `Edit ${storageConfig.title}`,
+        title:
+          mode === "create"
+            ? `Add ${storageConfig.title}`
+            : `Edit ${storageConfig.title}`,
         breadcrumbs: [
-          { label: "Home", href: "/" },
-          { label: storageConfig.title, href: "/storage" },
+          { label: "Home", href: buildRoute("home", "list") },
+          { label: storageConfig.title, href: buildRoute("storage", "list") },
           { label: mode === "create" ? "Add" : "Edit" },
         ],
       },
@@ -318,7 +322,7 @@ export default function StorageForm({
             ? "Storage created successfully!"
             : "Storage updated successfully!"
         );
-        router.push("/storage");
+        router.push(buildRoute("storage", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} storage`);
       }
@@ -343,41 +347,69 @@ export default function StorageForm({
             <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-3">
               Storage Image <span className="text-red-500">*</span>
             </label>
-            
-            <div 
+
+            <div
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition w-full md:w-1/2"
-              onClick={() => !isUploading && document.getElementById("storage-form-file-input")?.click()}
+              onClick={() =>
+                !isUploading &&
+                document.getElementById("storage-form-file-input")?.click()
+              }
             >
               <span className="text-gray-500 text-sm">Choose File</span>
-              <div className="relative group flex items-center" onClick={e => e.stopPropagation()}>
+              <div
+                className="relative group flex items-center"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Info size={20} className="text-gray-500 cursor-pointer" />
                 <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 hidden group-hover:block bg-[#1565c0] text-white text-xs rounded shadow-lg z-20 whitespace-nowrap p-3 leading-relaxed">
                   <div className="absolute left-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-[#1565c0]"></div>
-                  Valid extensions : gif, png, jpg, jpeg, jpe, bmp, ico.<br />
+                  Valid extensions : gif, png, jpg, jpeg, jpe, bmp, ico.
+                  <br />
                   Valid size : Less than (&lt;) 5 MB.
                 </div>
               </div>
             </div>
-            
+
             {isUploading && (
               <div className="mt-4 flex items-center gap-4">
                 <div className="flex-1 max-w-[120px]">
                   <div className="h-[22px] w-full bg-[#e0e0e0] overflow-hidden flex items-center">
-                    <div className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold" style={{ width: `${uploadProgress}%` }}>
+                    <div
+                      className="h-full bg-[#1565c0] transition-all duration-200 flex items-center justify-center text-[10px] text-white font-bold"
+                      style={{ width: `${uploadProgress}%` }}
+                    >
                       {uploadProgress > 20 && `${uploadProgress}%`}
                     </div>
                   </div>
                 </div>
-                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); cancelUpload(); }} className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer">Cancel</button>
-              </div>
-            )}
-            
-            {!isUploading && imagePreview && (
-              <div className="mt-4 relative inline-block self-start">
-                <img src={imagePreview} alt="Storage preview" className="w-[84px] h-[64px] object-cover rounded border border-gray-300 shadow-sm" />
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsDeleteImageModalOpen(true); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cancelUpload();
+                  }}
+                  className="text-[#1565c0] text-[13px] font-medium hover:underline cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {!isUploading && imagePreview && (
+              <div className="mt-4 relative inline-block self-start">
+                <img
+                  src={imagePreview}
+                  alt="Storage preview"
+                  className="w-[84px] h-[64px] object-cover rounded border border-gray-300 shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDeleteImageModalOpen(true);
+                  }}
                   className="absolute -top-2.5 -right-2.5 bg-gray-400 text-white rounded-full p-0.5 hover:bg-gray-600 transition shadow-md z-10 cursor-pointer"
                 >
                   <X size={14} />
@@ -401,9 +433,12 @@ export default function StorageForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Storage Name"
                 value={formData.storageName || ""}
-                onChange={(e) => handleNameChange("storageName", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                onChange={(e) =>
+                  handleNameChange("storageName", e.target.value)
+                }
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.storageName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                 `}
               />
@@ -419,8 +454,14 @@ export default function StorageForm({
                 </label>
                 <Select
                   instanceId="select-company"
-                  value={companyOptions.find((c) => c.value === formData.companyId) || null}
-                  onChange={(opt) => handleChange("companyId", opt ? opt.value : "")}
+                  value={
+                    companyOptions.find(
+                      (c) => c.value === formData.companyId,
+                    ) || null
+                  }
+                  onChange={(opt) =>
+                    handleChange("companyId", opt ? opt.value : "")
+                  }
                   options={companyOptions}
                   isDisabled={mode === "edit"}
                   isClearable={true}
@@ -442,9 +483,10 @@ export default function StorageForm({
               <input
                 type="text"
                 disabled={mode === "edit"}
+                placeholder="Enter Storage Code"
                 value={formData.storageCode || ""}
                 onChange={(e) => handleChange("storageCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
                   ${errors.storageCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : "bg-white"}
                 `}
@@ -460,7 +502,10 @@ export default function StorageForm({
               </label>
               <Select
                 instanceId="select-status"
-                value={STATUS_OPTIONS.find((s) => s.value === formData.status) || null}
+                value={
+                  STATUS_OPTIONS.find((s) => s.value === formData.status) ||
+                  null
+                }
                 onChange={(opt) => handleChange("status", opt ? opt.value : "")}
                 options={STATUS_OPTIONS}
                 isClearable={true}
@@ -473,16 +518,17 @@ export default function StorageForm({
                 <p className="text-xs text-red-500">{errors.status}</p>
               )}
             </div>
-            
+
             <div className="space-y-1.5 md:col-span-2">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                 Description
               </label>
               <textarea
                 rows={3}
+                placeholder="Enter Description"
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.description ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                 `}
               />
@@ -514,23 +560,19 @@ export default function StorageForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this Storage?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Storage"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/storage");
+            router.push(buildRoute("storage", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}
@@ -541,18 +583,39 @@ export default function StorageForm({
 
       {isDeleteImageModalOpen && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={() => setIsDeleteImageModalOpen(false)}></div>
+          <div
+            className="absolute inset-0 bg-black/10 backdrop-blur-[1px]"
+            onClick={() => setIsDeleteImageModalOpen(false)}
+          ></div>
           <div className="relative bg-[#f0f0f0] w-72 shadow-2xl z-10 flex flex-col border border-gray-200">
             <div className="bg-[#1565c0] flex justify-between items-center px-4 py-2.5 text-white">
-              <span className="text-sm font-semibold tracking-wide">Delete</span>
-              <X size={16} className="cursor-pointer hover:text-gray-200" onClick={() => setIsDeleteImageModalOpen(false)} />
+              <span className="text-sm font-semibold tracking-wide">
+                Delete
+              </span>
+              <X
+                size={16}
+                className="cursor-pointer hover:text-gray-200"
+                onClick={() => setIsDeleteImageModalOpen(false)}
+              />
             </div>
             <div className="p-5 text-sm text-gray-700">
               Are you sure want to delete this?
             </div>
             <div className="p-4 pt-1 flex justify-center gap-3">
-              <button type="button" onClick={confirmRemoveImage} className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer">Delete</button>
-              <button type="button" onClick={() => setIsDeleteImageModalOpen(false)} className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer">Cancel</button>
+              <button
+                type="button"
+                onClick={confirmRemoveImage}
+                className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer"
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDeleteImageModalOpen(false)}
+                className="bg-[#1565c0] hover:bg-[#0f57a6] text-white px-5 py-2 text-sm rounded transition cursor-pointer"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

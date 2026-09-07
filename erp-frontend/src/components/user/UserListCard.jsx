@@ -1,4 +1,7 @@
 "use client";
+
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
@@ -26,28 +29,29 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                 User
               </p>
               <div className="flex items-center gap-3 min-w-0">
-                  <SharedImageZoom
-                    id={`list-${user.id}`}
-                    src={user.photoUrl}
-                    alt={user.fullName}
-                    placeholderText={user.fullName ? user.fullName.substring(0, 2).toUpperCase() : ""}
-                    thumbnailClassName="w-10 h-10 rounded-full object-cover border border-gray-100 shrink-0"
-                    modalImageClassName="w-64 h-64 rounded-full shadow-2xl"
-                  />
-                  <div className="min-w-0">
-                    {can(CAPABILITIES.USER.VIEW) ? (
-                      <p
-                        className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer truncate"
-                        onClick={() => setSelectedUserForDetails && setSelectedUserForDetails(user)}
-                      >
-                        {user.fullName}
-                      </p>
-                    ) : (
-                      <p className="text-sm font-semibold text-gray-800 truncate">
-                        {user.fullName}
-                      </p>
-                    )}
-                  </div>
+                <SharedImageZoom
+                  id={`list-${user.id}`}
+                  src={user.photoUrl}
+                  alt={user.fullName}
+                  placeholderText={user.fullName ? user.fullName.substring(0, 2).toUpperCase() : ""}
+                  thumbnailClassName="w-10 h-10 rounded-full object-cover border border-gray-100 shrink-0"
+                  modalImageClassName="w-64 h-64 rounded-full shadow-2xl"
+                />
+                <div className="min-w-0">
+                  {can(CAPABILITIES.USER.VIEW) ? (
+                    <ModuleLink
+                      href={buildRoute("user", "detail", { id: user.id })}
+                      onClick={() => setSelectedUserForDetails?.(user)}
+                      className="text-sm truncate block"
+                    >
+                      {user.fullName}
+                    </ModuleLink>
+                  ) : (
+                    <p className="text-sm font-semibold text-gray-800 truncate">
+                      {user.fullName}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -65,12 +69,13 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                 Company Name
               </p>
               {can(CAPABILITIES.COMPANY.VIEW) && setSelectedCompanyForDetails ? (
-                <p
-                  className="text-[13px] font-medium text-[#1565c0] hover:underline cursor-pointer truncate"
+                <ModuleLink
+                  href={user?.companyId ? buildRoute("company", "detail", { id: user.companyId }) : "#"}
                   onClick={() => setSelectedCompanyForDetails(user)}
+                  className="text-[13px] font-medium truncate block"
                 >
                   {user.companyName || "—"}
-                </p>
+                </ModuleLink>
               ) : (
                 <p className="text-[13px] font-medium text-gray-800 truncate">
                   {user.companyName || "—"}
@@ -84,8 +89,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
               </p>
               <div>
                 <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                    }`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
                   {user.status || "—"}
@@ -99,16 +103,14 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <ChevronDown
-              className={`text-[#1565c0] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""
-                }`}
+              className={`text-[#1565c0] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
               size={20}
             />
           </div>
         </div>
 
         <div
-          className={`transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-            }`}
+          className={`transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
         >
           <div className="px-6 py-5 bg-gray-50/50 border-t border-gray-100">
             <div className="grid grid-cols-4 gap-4 items-start pr-[52px]">

@@ -165,7 +165,7 @@ export class ProductionOrderService {
             remark: params.remark?.trim() || null,
             plantId: params.plantId || null,
             customerId: params.customerId || null,
-            status: params.status || ProductionOrderStatus.Draft,
+            status: params.status || ProductionOrderStatus.Pending,
             addedBy: req.user?.sub || null,
             addedDate: new Date(),
           };

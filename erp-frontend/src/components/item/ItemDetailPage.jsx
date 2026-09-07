@@ -9,19 +9,21 @@ import AccessDenied from "@/components/common/AccessDenied";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import { Package } from "lucide-react";
 import SideDrawer from "@/components/common/SideDrawer";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
+import ModuleLink from "@/components/common/ModuleLink";
 
-function DetailRow({ label, value, valueClassName = "", onClick }) {
+function DetailRow({ label, value, href, onClick, valueClassName = "" }) {
   return (
     <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
       <span className="text-sm text-gray-500">{label}</span>
-      {onClick && value ? (
-        <button
-          type="button"
+      {href ? (
+        <ModuleLink
+          href={href}
           onClick={onClick}
-          className={`text-sm font-medium text-right text-[#1565c0] hover:underline cursor-pointer ${valueClassName}`}
+          className={`text-sm font-medium text-right ${valueClassName}`}
         >
-          {String(value)}
-        </button>
+          {value !== null && value !== undefined && value !== "" ? String(value) : "-"}
+        </ModuleLink>
       ) : (
         <span className={`text-sm font-medium text-right ${valueClassName}`}>
           {value !== null && value !== undefined && value !== "" ? String(value) : "-"}
@@ -31,7 +33,7 @@ function DetailRow({ label, value, valueClassName = "", onClick }) {
   );
 }
 
-function UserInfoCard({ title, name, date, onClick }) {
+function UserInfoCard({ title, name, date, href, onClick }) {
   const initial = name ? name.charAt(0).toUpperCase() : "S";
   return (
     <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
@@ -41,16 +43,16 @@ function UserInfoCard({ title, name, date, onClick }) {
           {initial}
         </div>
         <div className="flex flex-col">
-          {onClick && name ? (
-            <button
-              type="button"
+          {href && name ? (
+            <ModuleLink
+              href={href}
               onClick={onClick}
-              className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer text-left"
+              className="text-sm font-semibold text-left"
             >
               {name}
-            </button>
+            </ModuleLink>
           ) : (
-            <span className="text-sm font-semibold text-[#1565c0]">
+            <span className="text-sm font-semibold text-gray-900">
               {name || "System"}
             </span>
           )}
@@ -99,13 +101,13 @@ export default function ItemDetailPage({ data }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "Item Master", href: "/item" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Item Master", href: buildRoute("item", "list") },
         ],
         actionButton: can(CAPABILITIES.ITEM?.UPDATE || "ITEM_UPDATE")
           ? {
               label: "Edit",
-              onClick: () => router.push(`/item/edit/${data.id}`),
+              onClick: () => router.push(buildRoute("item", "edit", { id: data.id })),
             }
           : null,
       },
@@ -198,21 +200,25 @@ export default function ItemDetailPage({ data }) {
                 <DetailRow
                   label="Company"
                   value={data.companyName}
+                  href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
                   onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
                 />
                 <DetailRow
                   label="Category"
                   value={data.categoryName}
+                  href={canViewCategory && data?.categoryId ? buildRoute("itemCategory", "detail", { id: data.categoryId }) : null}
                   onClick={canViewCategory && data?.categoryId ? () => setSelectedCategoryForDetails({ categoryId: data.categoryId }) : null}
                 />
                 <DetailRow
                   label="Manufacturer"
                   value={data.manufacturerName}
+                  href={canViewManufacturer && data?.manufacturerId ? buildRoute("manufacturer", "detail", { id: data.manufacturerId }) : null}
                   onClick={canViewManufacturer && data?.manufacturerId ? () => setSelectedManufacturerForDetails({ manufacturerId: data.manufacturerId }) : null}
                 />
                 <DetailRow
                   label="Brand"
                   value={data.brandName}
+                  href={canViewBrand && data?.brandId ? buildRoute("brand", "detail", { id: data.brandId }) : null}
                   onClick={canViewBrand && data?.brandId ? () => setSelectedBrandForDetails({ brandId: data.brandId }) : null}
                 />
                 <DetailRow label="Usage Type" value={data.usageType} />
@@ -232,11 +238,13 @@ export default function ItemDetailPage({ data }) {
                 <DetailRow
                   label="Item Base UOM"
                   value={data.itemUomName}
+                  href={canViewItemUom && data?.itemUomId ? buildRoute("itemUom", "detail", { id: data.itemUomId }) : null}
                   onClick={canViewItemUom && data?.itemUomId ? () => setSelectedItemUomForDetails({ itemUomId: data.itemUomId }) : null}
                 />
                 <DetailRow
                   label="Package UOM"
                   value={data.packageUomName}
+                  href={canViewPackage && data?.packageUomId ? buildRoute("packageMaster", "detail", { id: data.packageUomId }) : null}
                   onClick={canViewPackage && data?.packageUomId ? () => setSelectedPackageForDetails({ packageId: data.packageUomId }) : null}
                 />
                 <DetailRow label="Units Per Packing" value={data.unitsPerPacking} />
@@ -249,6 +257,7 @@ export default function ItemDetailPage({ data }) {
                 <DetailRow
                   label="Storage"
                   value={data.storageName}
+                  href={canViewStorage && data?.storageId ? buildRoute("storage", "detail", { id: data.storageId }) : null}
                   onClick={canViewStorage && data?.storageId ? () => setSelectedStorageForDetails({ storageId: data.storageId }) : null}
                 />
                 <DetailRow label="Weight" value={weightText} />
@@ -267,12 +276,14 @@ export default function ItemDetailPage({ data }) {
                 title="Added Info"
                 name={data.addedByName}
                 date={data.addedDateFormatted}
+                href={canViewUser && data?.addedBy ? buildRoute("user", "detail", { id: data.addedBy }) : null}
                 onClick={canViewUser && data?.addedBy ? () => setSelectedUserForDetails({ userId: data.addedBy }) : null}
               />
               <UserInfoCard
                 title="Modified Info"
                 name={data.updatedByName}
                 date={data.updatedDateFormatted}
+                href={canViewUser && data?.updatedBy ? buildRoute("user", "detail", { id: data.updatedBy }) : null}
                 onClick={canViewUser && data?.updatedBy ? () => setSelectedUserForDetails({ userId: data.updatedBy }) : null}
               />
 

@@ -62,7 +62,7 @@ export const sitemapData = [
     title: "Process Management",
     menus: [
       {
-        label: "Work Centre Categories",
+        label: "Work Centre Category",
         path: "/work-centre-category",
         permission: "WORK_CENTRE_CATEGORY_LIST",
       },
@@ -80,23 +80,28 @@ export const sitemapData = [
       
     ],
   },
-  // {
-  //   title: "Manufacturing",
-  //   menus: [
-  //     {
-  //       label: "Bill of Materials",
-  //       path: "/bom",
-  //       permission: "BOM_LIST",
-  //     },
-  //     {
-  //       label: "Production Order",
-  //       path: "/production-order",
-  //       permission: "PRODUCTION_ORDER_LIST",
-  //     },
-
-
-  //   ],
-  // }
+  {
+    title: "Manufacturing",
+    menus: [
+      {
+        label: "Bill of Materials",
+        path: "/bom",
+        permission: "BOM_LIST",
+      },
+      {
+        label: "Production Order",
+        path: "/production-order",
+        permission: "PRODUCTION_ORDER_LIST",
+      },
+      // {
+      //   label: "Production Batch",  
+      //   path: "/production-batch",
+      //   permission: "PRODUCTION_BATCH_LIST",
+      // },
+      
+      
+    ],
+  }
 
 
 

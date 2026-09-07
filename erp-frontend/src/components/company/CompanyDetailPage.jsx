@@ -1,7 +1,9 @@
 "use client";
+
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { useRouter } from "next/navigation";
-import { Building2, MapPin, Phone, Mail } from "lucide-react";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { Building2, MapPin } from "lucide-react";
 import DetailRow from "./DetailsRow";
 import { useHeader } from "@/context/HeaderContext";
 import { useEffect, useState } from "react";
@@ -9,11 +11,48 @@ import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import ModuleLink from "@/components/common/ModuleLink";
+
+function UserInfoCard({ title, name, date, userId, onOpenUser }) {
+  const initial = name ? name.charAt(0).toUpperCase() : "S";
+  return (
+    <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+      <h3 className="text-sm font-semibold text-gray-600 mb-5">{title}</h3>
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-[#1565c0] text-white flex items-center justify-center text-lg font-semibold shadow-sm shrink-0">
+          {initial}
+        </div>
+        <div className="flex flex-col">
+          {userId ? (
+            <ModuleLink
+              href={buildRoute("user", "detail", { id: userId })}
+              onClick={onOpenUser}
+              className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer"
+            >
+              {name || "System"}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm font-semibold text-gray-900">
+              {name || "System"}
+            </span>
+          )}
+          {date && (
+            <span className="text-xs text-gray-400 mt-1">
+              {date}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CompanyDetailsPage({ company }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can, user: currentUser } = useAuth();
+  const { can } = useAuth();
+  
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
   useEffect(() => {
@@ -30,8 +69,8 @@ export default function CompanyDetailsPage({ company }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: "Company Master", href: "/company" },
+          { label: "Home", href: "/" },
+          { label: "Company Master", href: buildRoute("company", "list") },
         ],
         actionButton: can(CAPABILITIES.COMPANY.UPDATE)
           ? {
@@ -57,32 +96,67 @@ export default function CompanyDetailsPage({ company }) {
     }
     return <div className="p-6 text-gray-500">Company data could not be loaded.</div>;
   }
+
+  const {
+    id,
+    companyName,
+    shortName,
+    parentCompanyId,
+    parentCompanyName,
+    legalName,
+    website,
+    registrationNumber,
+    taxNumber,
+    zipCode,
+    dialCode,
+    phone,
+    email,
+    contactPersonName,
+    addressLine1,
+    addressLine2,
+    city,
+    state,
+    country,
+    currencies,
+    status,
+    addedBy,
+    addedByName,
+    addedDateFormatted,
+    updatedBy,
+    updatedByName,
+    updatedDateFormatted,
+  } = company;
+
+  const hasAddress = Boolean(addressLine1 || addressLine2 || city || state || country);
+  const hasContactInfo = Boolean(phone || email || contactPersonName);
+  const hasAddedInfo = Boolean(addedByName || addedDateFormatted || addedBy);
+  const hasUpdatedInfo = Boolean(updatedByName || updatedDateFormatted || updatedBy);
+
   return (
-    <div className="p-6">
+    <div className="p-6 bg-[#f8f9fa] min-h-full">
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-2">
-          <div className="bg-white rounded-xl hover:shadow-lg transition     p-5">
-            <div className=" items-center gap-4 mb-4">
+          <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
+            <div className="items-center gap-4 mb-4">
               <SharedImageZoom
-                id={`detail-company-${company.id}`}
+                id={`detail-company-${id}`}
                 src={company.logoUrl}
-                alt={company.companyName}
+                alt={companyName}
                 placeholderText={<Building2 size={24} />}
                 thumbnailClassName="w-16 h-16 rounded-xl object-cover border-2 border-blue-100 shadow mb-2"
                 modalImageClassName="w-72 h-72 rounded-xl shadow-2xl"
               />
               <div>
-                <h2 className="font-semibold text-md">
-                  {company.companyName || ""}
+                <h2 className="font-semibold text-md text-gray-900">
+                  {companyName || ""}
                 </h2>
-
-                <p className="text-gray-500">{company.shortName}</p>
+                {shortName && <p className="text-gray-500 text-sm mt-0.5">{shortName}</p>}
               </div>
             </div>
 
-            <hr className="my-4" />
+            <hr className="my-4 border-gray-100" />
 
-            <button className="w-full bg-blue-600 text-white py-3 rounded-lg">
+            <button className="w-full bg-[#1565c0] text-white py-3 rounded-lg text-sm font-medium transition hover:bg-[#0f57a6]">
               Summary
             </button>
           </div>
@@ -91,137 +165,144 @@ export default function CompanyDetailsPage({ company }) {
         <div className="col-span-12 lg:col-span-10">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-sm">
             <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
-              <h3 className="font-semibold mb-5">Details</h3>
+              <h3 className="font-semibold text-gray-600 mb-5">Details</h3>
 
-              <DetailRow label="Company Name" value={company.companyName} />
+              {companyName && <DetailRow label="Company Name" value={companyName} />}
+              {shortName && <DetailRow label="Short Name" value={shortName} />}
+              {parentCompanyName && (
+                <DetailRow
+                  label="Parent Company"
+                  value={
+                    <ModuleLink
+                      href={buildRoute("company", "detail", { id: parentCompanyId })}
+                      onClick={() => setSelectedCompanyForDetails({ companyId: parentCompanyId })}
+                      className="text-[#1565c0] font-medium hover:underline cursor-pointer"
+                    >
+                      {parentCompanyName}
+                    </ModuleLink>
+                  }
+                />
+              )}
+              {legalName && <DetailRow label="Legal Name" value={legalName} />}
+              {website && <DetailRow label="Website" value={website} />}
+              {registrationNumber && (
+                <DetailRow label="Registration Number" value={registrationNumber} />
+              )}
+              {taxNumber && <DetailRow label="Tax Number" value={taxNumber} />}
+              {zipCode && <DetailRow label="Zip Code" value={zipCode} />}
 
-              <DetailRow label="Short Name" value={company.shortName} />
-
-              <DetailRow
-                label="Parent Company"
-                value={company.parentCompanyName || "-"}
-              />
-
-              <DetailRow label="Legal Name" value={company.legalName || "-"} />
-
-              <DetailRow label="Website" value={company.website || "-"} />
-
-              <DetailRow
-                label="Registration Number"
-                value={company.registrationNumber || "-"}
-              />
-
-              <DetailRow label="Tax Number" value={company.taxNumber || "-"} />
-
-              <DetailRow label="Zip Code" value={company.zipCode || "-"} />
-
-              <DetailRow
-                label="Currency"
-                value={
-                  company?.currencies?.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {company.currencies.map((c, idx) => (
+              {currencies?.length > 0 && (
+                <DetailRow
+                  label="Currency"
+                  value={
+                    <div className="flex flex-wrap gap-1 mt-1 justify-end">
+                      {currencies.map((c, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-0.5  text-gray-700 rounded  font-medium"
+                          className="px-2 py-0.5 text-gray-700 bg-gray-100 rounded text-xs font-medium"
                         >
-                          {c.currencySymbol}
+                          {c.currencySymbol} ({c.currencyCode})
                         </span>
                       ))}
                     </div>
-                  ) : (
-                    "-"
-                  )
-                }
-              />
+                  }
+                />
+              )}
 
-              <DetailRow
-                label="Status"
-                value={
-                  <span
-                    className={`font-medium ${
-                      company.status === "Active"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {company.status}
-                  </span>
-                }
-              />
+              {status && (
+                <DetailRow
+                  label="Status"
+                  value={
+                    <span
+                      className={`font-medium ${
+                        status === "Active" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {status}
+                    </span>
+                  }
+                />
+              )}
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                <h3 className="font-semibold mb-5">Contact Info</h3>
-
-                <DetailRow
-                  label="Phone"
-                  value={company.dialCode + " " + company.phone}
-                />
-
-                <DetailRow label="Email" value={company.email} />
-
-                <DetailRow
-                  label="Contact Person"
-                  value={company.contactPersonName || "-"}
-                />
-              </div>
-
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                <h3 className="font-semibold mb-5">Company Address</h3>
-
-                <div className="flex gap-3 mb-3">
-                  <Building2 size={18} className="text-blue-600 mt-1" />
-
-                  <div>{company.companyName}</div>
-                </div>
-
-                <div className="flex gap-3">
-                  <MapPin size={18} className="text-blue-600 mt-1" />
-
-                  <div>
-                    {[
-                      company.addressLine1,
-                      company.addressLine2,
-                      company.city,
-                      company.state,
-                      company.country,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")}
+            {(hasContactInfo || hasAddress) && (
+              <div className="space-y-6">
+                {hasContactInfo && (
+                  <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+                    <h3 className="font-semibold text-gray-600 mb-5">Contact Info</h3>
+                    {phone && (
+                      <DetailRow
+                        label="Phone"
+                        value={`${dialCode || ""} ${phone}`.trim()}
+                      />
+                    )}
+                    {email && <DetailRow label="Email" value={email} />}
+                    {contactPersonName && (
+                      <DetailRow label="Contact Person" value={contactPersonName} />
+                    )}
                   </div>
-                </div>
-              </div>
-            </div>
+                )}
 
-            <div className="space-y-6">
-              <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                <h3 className="font-semibold mb-5">Audit Info</h3>
-                {company.addedByName && (
-                  <DetailRow label="Added By" value={company.addedByName} />
-                )}
-                {company.addedDateFormatted && (
-                  <DetailRow label="Added Date" value={company.addedDateFormatted} />
-                )}
-                {company.updatedByName && (
-                  <DetailRow label="Updated By" value={company.updatedByName} />
-                )}
-                {company.updatedDateFormatted && (
-                  <DetailRow label="Updated Date" value={company.updatedDateFormatted} />
+                {hasAddress && (
+                  <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+                    <h3 className="font-semibold text-gray-600 mb-5">Company Address</h3>
+                    <div className="flex gap-3 mb-3">
+                      <Building2 size={18} className="text-[#1565c0] mt-1 shrink-0" />
+                      <div className="font-medium text-gray-900">{companyName}</div>
+                    </div>
+                    <div className="flex gap-3">
+                      <MapPin size={18} className="text-[#1565c0] mt-1 shrink-0" />
+                      <div className="text-gray-700 leading-relaxed">
+                        {[addressLine1, addressLine2, city, state, country]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
+            )}
+
+            {(hasAddedInfo || hasUpdatedInfo) && (
+              <div className="space-y-6">
+                {hasAddedInfo && (
+                  <UserInfoCard
+                    title="Added Info"
+                    name={addedByName}
+                    date={addedDateFormatted}
+                    userId={addedBy}
+                    onOpenUser={() => setSelectedUserForDetails({ userId: addedBy })}
+                  />
+                )}
+                {hasUpdatedInfo && (
+                  <UserInfoCard
+                    title="Modified Info"
+                    name={updatedByName}
+                    date={updatedDateFormatted}
+                    userId={updatedBy}
+                    onOpenUser={() => setSelectedUserForDetails({ userId: updatedBy })}
+                  />
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      <SideDrawer
+        open={!!selectedCompanyForDetails}
+        onClose={() => setSelectedCompanyForDetails(null)}
+        moduleName="Company"
+        mode="details"
+        data={selectedCompanyForDetails ? { id: selectedCompanyForDetails.companyId } : null}
+      />
 
       <SideDrawer
         open={!!selectedUserForDetails}
         onClose={() => setSelectedUserForDetails(null)}
         moduleName="User"
         mode="details"
-        data={selectedUserForDetails}
+        data={selectedUserForDetails ? { id: selectedUserForDetails.userId } : null}
       />
     </div>
   );

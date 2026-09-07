@@ -24,7 +24,7 @@ export async function apiClient(path, options = {}) {
 
     const finalHeaders = { ...serverCookieHeader, ...overrideHeaders, ...options.headers };
 
-    
+
     return fetch(url, {
       ...options,
       credentials: "include",

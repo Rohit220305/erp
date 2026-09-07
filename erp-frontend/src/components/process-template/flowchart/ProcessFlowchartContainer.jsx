@@ -34,9 +34,10 @@ export default function ProcessFlowchartContainer({
   onProcessesChange,
   onSaveFlowchart,
   isSaving = false,
+  readOnly = false,
 }) {
   const { can } = useAuth();
-  const canUpdate = can(
+  const canUpdate = !readOnly && can(
     CAPABILITIES.PROCESS_TEMPLATE?.UPDATE || "PROCESS_TEMPLATE_UPDATE"
   );
 
@@ -108,7 +109,7 @@ export default function ProcessFlowchartContainer({
         const pId = Number(p.processId);
         return {
           ...p,
-          dependencies: depMap.get(pId) || [],
+          dependencies: p.dependencies || [],
           nodePosition: nodePosMap.get(String(pId)) || p.nodePosition || null,
           handleConfig: handleMap.get(pId) || p.handleConfig || null,
         };
@@ -147,42 +148,52 @@ export default function ProcessFlowchartContainer({
     reconnectingEdgeRef.current = edge;
   }, []);
 
-  const onReconnectEnd = useCallback((_, edge) => {
-    if (!edgeReconnectSuccessful.current && reconnectingEdgeRef.current) {
-     
-      const originalEdge = reconnectingEdgeRef.current;
-      let restoredEdges = [];
-      setEdges((eds) => {
-        const exists = eds.some((e) => e.id === originalEdge.id);
-        restoredEdges = exists ? eds : [...eds, originalEdge];
-        return restoredEdges;
-      });
-      if (onProcessesChange) {
-        setTimeout(() => {
-          onProcessesChange(extractUpdatedProcesses(nodes, restoredEdges));
-        }, 0);
-      }
-    }
-    reconnectingEdgeRef.current = null;
-    edgeReconnectSuccessful.current = true;
-  }, [setEdges, onProcessesChange, extractUpdatedProcesses, nodes]);
+  const onReconnectEnd = useCallback(
+    (_, edge) => {
+      if (!edgeReconnectSuccessful.current && reconnectingEdgeRef.current) {
+        const originalEdge = reconnectingEdgeRef.current;
+        let restoredEdges = [];
+        setEdges((eds) => {
+          const exists = eds.some((e) => e.id === originalEdge.id);
+          restoredEdges = exists ? eds : [...eds, originalEdge];
+          return restoredEdges;
+        });
+        if (onProcessesChange) {
+          setTimeout(() => {
+            onProcessesChange(extractUpdatedProcesses(nodes, restoredEdges));
+          }, 0);
+        }
 
-  const isValidConnectionHandler = useCallback(
-    (connection) => {
-      const activeEdgeId = reconnectingEdgeRef.current?.id || null;
-      const result = validateConnection(connection, nodes, edges, activeEdgeId);
-      if (!result.isValid) {
-        toast.error(result.reason, { id: "flowchart-val-err" });
-        return false;
       }
-      return true;
+      reconnectingEdgeRef.current = null;
+      edgeReconnectSuccessful.current = true;
     },
-    [nodes, edges]
+    [setEdges, onProcessesChange, extractUpdatedProcesses, nodes]
   );
+
+  const isValidConnectionHandler = useCallback((connection) => {
+    const activeEdge = reconnectingEdgeRef.current;
+    if (activeEdge) {
+      return (
+        String(connection.source) === String(activeEdge.source) &&
+        String(connection.target) === String(activeEdge.target)
+      );
+    }
+    return false;
+  }, []);
 
   const onReconnect = useCallback(
     (oldEdge, newConnection) => {
-      if (!isValidConnectionHandler(newConnection)) return;
+      if (
+        String(oldEdge.source) !== String(newConnection.source) ||
+        String(oldEdge.target) !== String(newConnection.target)
+      ) {
+        toast.error(
+          "Edge dependencies cannot be changed in flowchart. Edit dependencies in Step 2 process grid.",
+          { id: "flowchart-val-err" }
+        );
+        return;
+      }
       edgeReconnectSuccessful.current = true;
       reconnectingEdgeRef.current = null;
       let updatedEdges = [];
@@ -196,49 +207,28 @@ export default function ProcessFlowchartContainer({
         }, 0);
       }
     },
-    [isValidConnectionHandler, setEdges, onProcessesChange, extractUpdatedProcesses, nodes]
-  );
-
-  const onConnect = useCallback(
-    (connection) => {
-      if (!isValidConnectionHandler(connection)) return;
-      let updatedEdges = [];
-      setEdges((eds) => {
-        updatedEdges = addEdge(
-          { ...connection, type: "smoothstep", style: { stroke: "#64748b", strokeWidth: 2 } },
-          eds
-        );
-        return updatedEdges;
-      });
-      if (onProcessesChange) {
-        setTimeout(() => {
-          onProcessesChange(extractUpdatedProcesses(nodes, updatedEdges));
-        }, 0);
-      }
-    },
-    [isValidConnectionHandler, setEdges, onProcessesChange, extractUpdatedProcesses, nodes]
-  );
-
-  const onEdgesDeleteHandler = useCallback(
-    (deletedEdges) => {
-      let remainingEdges = [];
-      setEdges((eds) => {
-        remainingEdges = eds.filter((e) => !deletedEdges.some((d) => d.id === e.id));
-        return remainingEdges;
-      });
-      if (onProcessesChange) {
-        setTimeout(() => {
-          onProcessesChange(extractUpdatedProcesses(nodes, remainingEdges));
-        }, 0);
-      }
-    },
     [setEdges, onProcessesChange, extractUpdatedProcesses, nodes]
   );
+
+  const onConnect = useCallback(() => {
+    toast.error(
+      "New dependencies cannot be created in flowchart. Edit dependencies in Step 2 process grid.",
+      { id: "flowchart-val-err" }
+    );
+  }, []);
+
+  const onEdgesDeleteHandler = useCallback(() => {
+    toast.error(
+      "Edges cannot be deleted in flowchart. Edit dependencies in Step 2 process grid.",
+      { id: "flowchart-val-err" }
+    );
+  }, []);
 
   const handleSaveClick = () => {
     if (onSaveFlowchart) {
       const updatedProcesses = extractUpdatedProcesses(nodes, edges);
       onSaveFlowchart(updatedProcesses);
+      setIsEditMode(false);
     }
   };
 
@@ -254,29 +244,30 @@ export default function ProcessFlowchartContainer({
   return (
     <div className="relative w-full h-[620px] bg-slate-50 rounded-xl border border-gray-200 overflow-hidden shadow-inner">
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-lg border border-gray-200 shadow-md">
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={handleResetLayout}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition cursor-pointer"
+            title="Reset layout to automatic auto-aligned positions"
+          >
+            <RotateCcw size={14} />
+            <span>Reset</span>
+          </button>
+        )}
+        {/* Edit Layout */}
         {canUpdate && (
           <>
-            <button
-              type="button"
-              onClick={() => setIsEditMode(!isEditMode)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
-                isEditMode
-                  ? "bg-amber-500 text-white shadow-sm hover:bg-amber-600"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              {isEditMode ? (
-                <>
-                  <Unlock size={14} />
-                  <span>Lock Flowchart</span>
-                </>
-              ) : (
-                <>
-                  <Lock size={14} />
-                  <span>Edit Layout</span>
-                </>
-              )}
-            </button>
+            {!isEditMode && (
+              <button
+                type="button"
+                onClick={() => setIsEditMode(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition cursor-pointer"
+              >
+                <Lock size={14} />
+                <span>Edit </span>
+              </button>
+            )}
 
             {isEditMode && onSaveFlowchart && (
               <button
@@ -293,23 +284,13 @@ export default function ProcessFlowchartContainer({
                 ) : (
                   <>
                     <Save size={14} />
-                    <span>Save Flowchart</span>
+                    <span>Save </span>
                   </>
                 )}
               </button>
             )}
           </>
         )}
-
-        <button
-          type="button"
-          onClick={handleResetLayout}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition cursor-pointer"
-          title="Reset layout to automatic auto-aligned positions"
-        >
-          <RotateCcw size={14} />
-          <span>Reset Layout</span>
-        </button>
       </div>
 
       <ReactFlow

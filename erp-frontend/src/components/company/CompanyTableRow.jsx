@@ -3,9 +3,9 @@
 import { useAuth } from "@/context/AuthContext";
 import { Building2 } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
-import ActionRenderer from "@/components/core/dynamic-ui/ActionRenderer";
 import companyConfig from "@/config/company.config.json";
-
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 export default function CompanyTableRow({ item, onRowAction, setSelectedItemForDetails }) {
   const { can } = useAuth();
@@ -15,7 +15,6 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
 
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
-
       <td className="px-4 py-3 text-sm">
         <SharedImageZoom
           id={`table-company-${item.id}`}
@@ -29,12 +28,13 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
 
       <td className="px-4 py-3 text-sm">
         {hasViewPerm ? (
-          <span
+          <ModuleLink
+            href={buildRoute("company", "detail", { id: item.id })}
             onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
             className="font-semibold text-[#1565c0] hover:underline cursor-pointer"
           >
             {item.companyName || "—"}
-          </span>
+          </ModuleLink>
         ) : (
           <span className="font-semibold text-gray-800">{item.companyName || "—"}</span>
         )}
@@ -45,7 +45,7 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
       </td>
 
       <td className="px-4 py-3 text-sm">
-        <span className="font-mono text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+        <span className="font-mono text-xs text-gray-600 ">
           {item.companyCode || "—"}
         </span>
       </td>
@@ -74,9 +74,6 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
           {item.status || "—"}
         </span>
       </td>
-
-
-
     </tr>
   );
 }

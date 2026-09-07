@@ -87,6 +87,10 @@ const routes = [
   { path: "/production-order/edit/:id", permission: CAPABILITIES.PRODUCTION_ORDER.UPDATE },
   { path: "/production-order/:id", permission: CAPABILITIES.PRODUCTION_ORDER.VIEW },
 
+  { path: "/production-batch", permission: CAPABILITIES.PRODUCTION_BATCH.LIST },
+  { path: "/production-batch/create/:id", permission: CAPABILITIES.PRODUCTION_BATCH.CREATE },
+  { path: "/production-batch/:id", permission: CAPABILITIES.PRODUCTION_BATCH.VIEW },
+
   { path: "/admin", permission: CAPABILITIES.USER.LIST },
 ];
 

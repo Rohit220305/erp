@@ -1,83 +1,86 @@
-"use client";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { LogIn, RotateCw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 
 export default function UserTableRow({
-  item,
+  user: userRecord,
   currentUser,
   handleLoginAs,
   setSelectedUserForPasswordReset,
-  setSelectedItemForDetails,
+  setSelectedUserForDetails,
   setSelectedCompanyForDetails,
 }) {
   const { can } = useAuth();
   const hasViewPerm = can(CAPABILITIES.USER.VIEW);
-  const isActive = item.status === "Active" || item.status === "active";
+  const isActive = userRecord?.status === "Active" || userRecord?.status === "active";
   
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
       <td className="px-4 py-3 text-sm">
         <div className="flex items-center gap-3">
           <SharedImageZoom
-            id={`table-${item.id}`}
-            src={item.photoUrl}
-            alt={item.fullName}
-            placeholderText={item.fullName ? item.fullName.substring(0, 2).toUpperCase() : ""}
+            id={`table-${userRecord?.id}`}
+            src={userRecord?.photoUrl}
+            alt={userRecord?.fullName}
+            placeholderText={userRecord?.fullName ? userRecord.fullName.substring(0, 2).toUpperCase() : ""}
             thumbnailClassName="w-12 h-12 rounded-full object-cover border border-gray-200"
             modalImageClassName="w-64 h-64 rounded-full"
           />
           <div>
             {hasViewPerm ? (
-              <p
-                className="font-medium text-[#1565c0] hover:underline cursor-pointer text-[15px]"
-                onClick={() => setSelectedItemForDetails(item)}
+              <ModuleLink
+                href={buildRoute("user", "detail", { id: userRecord?.id })}
+                onClick={() => setSelectedUserForDetails?.(userRecord)}
+                className="text-[15px]"
               >
-                {item.fullName}
-              </p>
+                {userRecord?.fullName}
+              </ModuleLink>
             ) : (
               <p className="font-medium text-gray-800 text-[15px]">
-                {item.fullName}
+                {userRecord?.fullName}
               </p>
             )}
-            <p className="text-xs text-gray-400">{item.userName}</p>
+            <p className="text-xs text-gray-400">{userRecord?.userName}</p>
           </div>
         </div>
       </td>
 
       <td className="px-4 py-3 text-sm text-gray-700">
-        {item.email || "—"}
+        {userRecord?.email || "—"}
       </td>
 
       <td className="px-4 py-3 text-sm">
-        {item.isSuperAdmin ? (
+        {userRecord?.isSuperAdmin ? (
           <span className="font-medium text-gray-400 italic">System</span>
         ) : can(CAPABILITIES.COMPANY.VIEW) ? (
-          <span
-            className="font-medium text-[#1565c0] hover:underline cursor-pointer"
-            onClick={() => setSelectedCompanyForDetails(item)}
+          <ModuleLink
+            href={userRecord?.companyId ? buildRoute("company", "detail", { id: userRecord.companyId }) : "#"}
+            onClick={() => setSelectedCompanyForDetails?.(userRecord)}
+            className="font-medium"
           >
-            {item.companyName || "—"}
-          </span>
+            {userRecord?.companyName || "—"}
+          </ModuleLink>
         ) : (
-          <span className="font-medium text-gray-800">{item.companyName || "—"}</span>
+          <span className="font-medium text-gray-800">{userRecord?.companyName || "—"}</span>
         )}
       </td>
 
       <td className="px-4 py-3 text-sm text-gray-700">
-        {item.groupName || "—"}
+        {userRecord?.groupName || "—"}
       </td>
 
       {currentUser?.isSuperAdmin && (<td className="px-4 py-3 text-sm">
-        {item.id !== currentUser?.id ? (
+        {userRecord?.id !== currentUser?.id ? (
           <div className="flex items-center gap-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleLoginAs(item.id);
+                handleLoginAs(userRecord?.id);
               }}
-              className="flex items-center gap-1  p-1.5 cursor-pointer rounded-full text-xs font-medium w-fit transition hover:bg-blue-100 text-blue-600"
+              className="flex items-center gap-1 p-1.5 cursor-pointer rounded-full text-xs font-medium w-fit transition hover:bg-blue-100 text-blue-600"
               title="Login As"
             >
               <LogIn size={16} />
@@ -85,7 +88,7 @@ export default function UserTableRow({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedUserForPasswordReset(item);
+                setSelectedUserForPasswordReset(userRecord);
               }}
               className="flex items-center gap-1 cursor-pointer rounded-full text-xs font-medium w-fit transition hover:bg-gray-200 p-1.5 text-gray-600"
               title="Reset Password"
@@ -99,7 +102,7 @@ export default function UserTableRow({
       </td>)}
 
       <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-        {item.lastLoginDateFormatted || "—"}
+        {userRecord?.lastLoginDateFormatted || "—"}
       </td>
 
       <td className="px-4 py-3 text-sm">

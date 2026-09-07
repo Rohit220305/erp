@@ -14,6 +14,7 @@ import {
   currencyAddSchema,
   currencyEditSchema,
 } from "@/lib/validation/currency.schema";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -30,15 +31,15 @@ const BASE_DEFAULTS = {
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
     ...base,
-    borderColor: error ? "#f87171" : "#e5e7eb",
+    borderColor: error ? "#f87171" : "#d1d5db",
     borderRadius: "0.5rem",
-    minHeight: "42px",
+    minHeight: "56px",
     backgroundColor: disabled ? "#f9fafb" : "#ffffff",
     boxShadow: "none",
     cursor: disabled ? "not-allowed" : "pointer",
     fontSize: "0.875rem",
     "&:hover": {
-      borderColor: error ? "#f87171" : "#d1d5db",
+      borderColor: error ? "#f87171" : "#1565c0",
     },
   }),
   option: (base, state) => ({
@@ -111,8 +112,8 @@ export default function CurrencyForm({
       navbar: {
         title: `${mode === "create" ? "Add" : "Edit"} ${currencyConfig.moduleName}`,
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: currencyConfig.title, href: "/currency" },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: currencyConfig.title, href: buildRoute("currency", "list") },
           {
             label: `${mode === "create" ? "Add" : "Edit"} ${currencyConfig.moduleName}`,
           },
@@ -180,7 +181,7 @@ export default function CurrencyForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/currency");
+      router.push(buildRoute("currency", "list"));
     }
   };
 
@@ -203,7 +204,7 @@ export default function CurrencyForm({
             ? "Currency created successfully!"
             : "Currency updated successfully!"
         );
-        router.push("/currency");
+        router.push(buildRoute("currency", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} currency`);
       }
@@ -214,74 +215,81 @@ export default function CurrencyForm({
   };
 
   return (
-    <div className="pt-6 h-full overflow-y-auto pb-20 mx-6">
-      <form onSubmit={handleFormSubmit} className="space-y-6 text-black">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-100 mb-6">
-            <h2 className="text-sm font-semibold text-gray-800  tracking-wide">
-              Basic Details
-            </h2>
-          </div>
+    <div className="h-full overflow-y-auto mx-10">
+      <form
+        onSubmit={handleFormSubmit}
+        className="bg-white rounded-xl p-6 shadow-sm space-y-6 text-black"
+      >
+        <div className="space-y-6">
+          <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
+            Basic Details
+          </h2>
 
-          <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-
+          <div className="grid md:grid-cols-2 gap-x-16 gap-y-6">
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500  tracking-wide">
-                Currency Name <span className="text-red-400 ml-1">*</span>
+              <label className="block text-sm font-medium text-gray-700">
+                Currency Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.currencyName || ""}
                 onChange={(e) => handleChange("currencyName", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
-                  ${errors.currencyName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
-                  `}
+                placeholder="Enter Currency Name"
+                className={`w-full p-4 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                  ${errors.currencyName ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
+                `}
               />
               {errors.currencyName && (
-                <p className="text-xs text-red-500">{errors.currencyName}</p>
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.currencyName}
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500  tracking-wide">
-                Currency Code <span className="text-red-400 ml-1">*</span>
+              <label className="block text-sm font-medium text-gray-700">
+                Currency Code <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 disabled={mode === "edit"}
                 value={formData.currencyCode || ""}
                 onChange={(e) => handleChange("currencyCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-                        ${errors.currencyCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
-                        ${mode === "edit" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white"}
-                      `}
+                placeholder="Enter Currency Code"
+                className={`w-full p-4 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20
+                  ${errors.currencyCode ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
+                  ${mode === "edit" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white"}
+                `}
               />
               {errors.currencyCode && (
-                <p className="text-xs text-red-500">{errors.currencyCode}</p>
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.currencyCode}
+                </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500  tracking-wide">
-                Currency Symbol <span className="text-red-400 ml-1">*</span>
+              <label className="block text-sm font-medium text-gray-700">
+                Currency Symbol <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.currencySymbol || ""}
                 onChange={(e) => handleChange("currencySymbol", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
-                  ${errors.currencySymbol ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
+                placeholder="Enter Currency Symbol"
+                className={`w-full p-4 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20 bg-white
+                  ${errors.currencySymbol ? "border-red-400" : "border-gray-300 focus:border-[#1565c0]"}
                 `}
               />
               {errors.currencySymbol && (
-                <p className="text-xs text-red-500">
+                <p className="text-xs text-red-500 mt-1">
                   {errors.currencySymbol}
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500  tracking-wide">
-                Status
+              <label className="block text-sm font-medium text-gray-700">
+                Status <span className="text-red-500">*</span>
               </label>
               <Select
                 instanceId="select-status"
@@ -298,7 +306,7 @@ export default function CurrencyForm({
                 styles={customSelectStyles(errors.status)}
               />
               {errors.status && (
-                <p className="text-xs text-red-500">{errors.status}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.status}</p>
               )}
             </div>
           </div>
@@ -318,32 +326,20 @@ export default function CurrencyForm({
             disabled={loading}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm cursor-pointer font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
           >
-            {loading
-              ? "Saving..."
-              : "Submit"}
+            {loading ? "Saving..." : "Submit"}
           </button>
         </div>
       </form>
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
-          confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
-        }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this currency?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        entityName="Currency"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/currency");
+            router.push(buildRoute("currency", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

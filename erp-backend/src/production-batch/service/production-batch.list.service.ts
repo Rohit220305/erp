@@ -1,0 +1,512 @@
+import { Injectable, ForbiddenException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ProductionBatchEntity } from '../entity/production-batch.entity';
+import { ProductionBatchProcessEntity } from '../entity/production-batch-process.entity';
+import { ProductionBatchItemEntity } from '../entity/production-batch-item.entity';
+import { BatchConsumptionLogEntity } from '../entity/batch-consumption-log.entity';
+import { ProductionOrderEntity } from '../../production-order/entity/production-order.entity';
+import { BomEntity } from '../../bom/entity/bom.entity';
+import { BomProcessItemEntity } from '../../bom/entity/bom-process-item.entity';
+import { ProcessTemplateMappingEntity } from '../../process-template/entity/process.template.mapping.entity';
+import { ProcessTemplateEntity } from '../../process-template/entity/process.template.entity';
+import { ItemEntity } from '../../item/entity/item.entity';
+import { GeneralUtilities } from 'src/package/utilities/general.utilities';
+import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
+import { ProductionBatchSuggestDto, ProductionBatchListDto, ProductionBatchDetailsDto } from '../dto/production-batch.dto';
+import { MaterialType } from '../enum/production-batch.enum';
+
+@Injectable()
+export class ProductionBatchListService {
+  constructor(
+    private readonly general: GeneralUtilities,
+    @InjectRepository(ProductionBatchEntity)
+    private readonly pbRepo: Repository<ProductionBatchEntity>,
+    @InjectRepository(ProductionBatchProcessEntity)
+    private readonly pbProcessRepo: Repository<ProductionBatchProcessEntity>,
+    @InjectRepository(ProductionBatchItemEntity)
+    private readonly pbItemRepo: Repository<ProductionBatchItemEntity>,
+    @InjectRepository(ProductionOrderEntity)
+    private readonly poRepo: Repository<ProductionOrderEntity>,
+    @InjectRepository(BomEntity)
+    private readonly bomRepo: Repository<BomEntity>,
+    @InjectRepository(BomProcessItemEntity)
+    private readonly bomProcessItemRepo: Repository<BomProcessItemEntity>,
+    @InjectRepository(ProcessTemplateMappingEntity)
+    private readonly processTemplateMappingRepo: Repository<ProcessTemplateMappingEntity>,
+    @InjectRepository(ItemEntity)
+    private readonly itemRepo: Repository<ItemEntity>,
+  ) { }
+
+  private async finishSuccess(params: any, incomingData?: any) {
+    const output: any = {
+      settings: {
+        success: params?.success || 1,
+        message: params?.message || 'Success',
+        data: params?.data !== undefined ? params.data : [],
+      },
+    };
+    if (incomingData) output.settings.incoming_data = incomingData;
+    return output;
+  }
+
+  private async finishFailure(params: any, incomingData?: any) {
+    const output: any = {
+      settings: {
+        success: params?.success || 0,
+        message: params?.message || 'Something went wrong',
+        data: params?.data !== undefined ? params.data : [],
+      },
+    };
+    if (incomingData) output.settings.incoming_data = incomingData;
+    return output;
+  }
+
+  async startBatchSuggest(req: IAppRequest, query: ProductionBatchSuggestDto) {
+    const response = await this.getBatchSuggest(req, query);
+    if (response.success === 1) {
+      return await this.finishSuccess(response);
+    }
+    return await this.finishFailure(response);
+  }
+
+  async getBatchSuggest(req: IAppRequest, query: ProductionBatchSuggestDto) {
+    let return_data: any = {};
+    try {
+      if (!query.productionOrderId) {
+        throw new Error('Production Order ID is required');
+      }
+
+      const isSuperAdmin = this.general.isSuperAdmin(req);
+      const companyId = req.user?.companyId;
+
+      const poWhere: any = { id: query.productionOrderId, sysRecDeleted: false };
+      if (!isSuperAdmin) poWhere.companyId = companyId;
+
+      const qb = this.poRepo.createQueryBuilder('po');
+      qb.select([
+        'po.id AS id',
+        'po.productionOrderCode AS productionOrderCode',
+        'po.productionQuantity AS productionQuantity',
+        'po.pendingQuantity AS pendingQuantity',
+        'po.productionDate AS productionDate',
+        'po.customerId AS customerId',
+        'po.plantId AS plantId',
+        'po.companyId AS companyId',
+        'po.itemId AS itemId',
+      ]);
+      qb.addSelect('bom.bomName', 'bomName');
+      qb.addSelect('bom.id', 'bomId');
+      qb.addSelect('bom.processTemplateId', 'processTemplateId');
+      qb.leftJoin('bom_master', 'bom', 'bom.id = po.bomId');
+
+      qb.addSelect('item.itemName', 'itemName');
+      qb.addSelect('item.primitiveQuantity', 'primitiveQuantity');
+      qb.leftJoin('item_master', 'item', 'item.id = po.itemId');
+
+      qb.addSelect('uom.uomName', 'uomName');
+      qb.leftJoin('item_uom_master', 'uom', 'uom.id = item.itemUomId');
+
+      qb.addSelect("CONCAT(user.firstName, ' ', user.lastName)", 'addedByName');
+      qb.leftJoin('users', 'user', 'user.id = po.addedBy');
+
+      qb.where('po.id = :id', { id: query.productionOrderId });
+      qb.andWhere('po.sysRecDeleted = 0');
+      if (!isSuperAdmin) {
+        qb.andWhere('po.companyId = :companyId', { companyId });
+      }
+
+      const poDetails = await qb.getRawOne();
+      if (!poDetails) {
+        throw new Error('Production Order not found or access denied');
+      }
+
+      const primitiveQuantity = poDetails.primitiveQuantity || 1;
+
+      const mappings = await this.processTemplateMappingRepo
+        .createQueryBuilder('ptm')
+        .select(['ptm.id', 'ptm.processId', 'ptm.sequenceNo'])
+        .addSelect('pm.processName', 'processName')
+        .leftJoin('process_master', 'pm', 'pm.id = ptm.processId')
+        .where('ptm.templateId = :templateId', { templateId: poDetails.processTemplateId })
+        .orderBy('ptm.sequenceNo', 'ASC')
+        .getRawMany();
+
+      if (!mappings || mappings.length === 0) {
+        throw new Error('Process template has no sequence mappings');
+      }
+
+      const bomProcessItems = await this.bomProcessItemRepo
+        .createQueryBuilder('bpi')
+        .select([
+          'bpi.processTemplateMappingId',
+          'bpi.itemId',
+          'bpi.materialType',
+          'bpi.quantity as baseQty',
+        ])
+        .addSelect(['item.itemName as itemName', 'item.itemCode as itemCode'])
+        .addSelect('itemUom.uomName as itemUomName')
+        .leftJoin('item_master', 'item', 'item.id = bpi.itemId')
+        .leftJoin('item_uom_master', 'itemUom', 'itemUom.id = item.itemUomId')
+        .where('bpi.bomId = :bomId', { bomId: poDetails.bomId })
+        .getRawMany();
+
+      const processes = mappings.map((mapping) => {
+        const stepItems = bomProcessItems
+          .filter((i) => i.bpi_processTemplateMappingId === mapping.ptm_id)
+          .map((i) => ({
+            itemId: i.bpi_itemId,
+            itemName: i.itemName,
+            itemCode: i.itemCode,
+            materialType: i.bpi_materialType,
+            baseQty: parseFloat(i.baseQty || i.bpi_quantity || 0),
+            itemUomName: i.itemUomName || '',
+          }));
+
+        return {
+          processTemplateMappingId: mapping.ptm_id,
+          processId: mapping.ptm_processId,
+          processName: mapping.processName,
+          sequenceNumber: mapping.ptm_sequenceNo,
+          items: stepItems,
+        };
+      });
+
+      return_data = {
+        success: 1,
+        message: 'BOM suggest fetched successfully.',
+        data: {
+          ...poDetails,
+          productionQuantityDisplay: poDetails.productionQuantity ? `${parseFloat(poDetails.productionQuantity).toFixed(2)} ${poDetails.uomName || ''}` : '',
+          pendingQuantityDisplay: poDetails.pendingQuantity ? `${parseFloat(poDetails.pendingQuantity).toFixed(2)} ${poDetails.uomName || ''}` : '',
+          productionDateFormatted: poDetails.productionDate ? await this.general.dateFormat(poDetails.productionDate) : null,
+          primitiveQuantity: parseFloat(String(primitiveQuantity)),
+          processes,
+        },
+      };
+    } catch (err: any) {
+      return_data = {
+        success: 0,
+        message: err.message,
+      };
+    }
+    return return_data;
+  }
+
+  async startProductionBatchList(req: IAppRequest, params: ProductionBatchListDto) {
+    const response = await this.getProductionBatchList(req, params);
+    if (response.success === 1) {
+      return await this.finishSuccess(response);
+    }
+    return await this.finishFailure(response);
+  }
+
+  async getProductionBatchList(req: IAppRequest, params: ProductionBatchListDto) {
+    let return_data: any = {};
+    try {
+      if (!this.general.isSuperAdmin(req)) {
+        params.companyId = req.user?.companyId;
+      }
+
+      const { page, limit, skip } = this.general.parsePagination(params);
+
+      const qb = this.pbRepo.createQueryBuilder('pb');
+      qb.select([
+        'pb.id AS id',
+        'pb.companyId AS companyId',
+        'pb.productionOrderId AS productionOrderId',
+        'pb.bomId AS bomId',
+        'pb.batchCode AS batchCode',
+        'pb.itemId AS itemId',
+        'pb.batchQuantity AS batchQuantity',
+        'pb.status AS status',
+        'pb.materialStatus AS materialStatus',
+        'pb.addedDate AS addedDate',
+      ]);
+
+      qb.addSelect('po.productionOrderCode', 'productionOrderCode');
+      qb.leftJoin('production_order', 'po', 'po.id = pb.productionOrderId');
+
+      qb.addSelect('bom.bomName', 'bomName');
+      qb.addSelect('bom.bomCode', 'bomCode');
+      qb.leftJoin('bom_master', 'bom', 'bom.id = pb.bomId');
+
+      qb.addSelect('item.itemName', 'itemName');
+      qb.addSelect('item.itemCode', 'itemCode');
+      qb.leftJoin('item_master', 'item', 'item.id = pb.itemId');
+
+      qb.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      qb.addSelect('addedByUser.id as addedBy')
+      qb.leftJoin('users', 'addedByUser', 'addedByUser.id = pb.addedBy');
+
+      qb.where('pb.sysRecDeleted = 0');
+
+      if (params.companyId) qb.andWhere('pb.companyId = :companyId', { companyId: params.companyId });
+      if (params.productionOrderId) qb.andWhere('pb.productionOrderId = :poId', { poId: params.productionOrderId });
+      if (params.status) qb.andWhere('pb.status = :status', { status: params.status });
+
+      await this.general.applyListQuery(qb, params, 'pb.id');
+
+      const totalCount = await qb.getCount();
+      qb.offset(skip).limit(limit);
+
+      const rawList = await qb.getRawMany();
+
+      const formattedList = await Promise.all(
+        rawList.map(async (row) => ({
+          ...row,
+          addedDateFormatted: row.addedDate ? await this.general.dateFormat(row.addedDate) : null,
+          updatedDateFormatted: row.updatedDate ? await this.general.dateFormat(row.updatedDate) : null,
+        }))
+      );
+
+      return_data = {
+        success: 1,
+        message: 'Data found successfully.',
+        data: {
+          list: formattedList,
+          pagination: this.general.buildPaginationResponse(totalCount, page, limit, skip),
+        },
+      };
+    } catch (err: any) {
+      return_data = { success: 0, message: err.message };
+    }
+    return return_data;
+  }
+
+  async startProductionBatchDetails(req: IAppRequest, query: ProductionBatchDetailsDto) {
+    const response = await this.getProductionBatchDetails(req, query);
+    if (response.success === 1) {
+      return await this.finishSuccess(response);
+    }
+    return await this.finishFailure(response);
+  }
+
+  async getProductionBatchDetails(req: IAppRequest, query: ProductionBatchDetailsDto) {
+    let return_data: any = {};
+    try {
+      if (!query.id) throw new Error('Production Batch ID is required');
+
+      const companyId = req.user?.companyId;
+
+      const qb = this.pbRepo.createQueryBuilder('pb');
+      qb.select([
+        'pb.id AS id',
+        'pb.batchCode AS batchCode',
+        'pb.batchQuantity AS batchQuantity',
+        'pb.status AS status',
+        'pb.materialStatus AS materialStatus',
+        'pb.addedDate AS addedDate',
+        'pb.itemId AS itemId',
+        'pb.addedBy AS addedBy',
+        'pb.productionOrderId AS productionOrderId',
+        'pb.bomId AS bomId',
+      ]);
+      qb.addSelect('po.productionOrderCode', 'productionOrderCode');
+      qb.addSelect('po.id', 'productionOrderId');
+      qb.leftJoin('production_order', 'po', 'po.id = pb.productionOrderId');
+
+      qb.addSelect('bom.bomName', 'bomName');
+      qb.addSelect('bom.bomCode', 'bomCode');
+      qb.addSelect('bom.id', 'bomId');
+      qb.addSelect('bom.processTemplateId', 'processTemplateId');
+      qb.leftJoin('bom_master', 'bom', 'bom.id = pb.bomId');
+
+      qb.addSelect('pt.templateName', 'processTemplateName');
+      qb.leftJoin('process_template', 'pt', 'pt.id = bom.processTemplateId');
+
+      qb.addSelect('item.itemName', 'itemName');
+      qb.addSelect('item.itemCode', 'itemCode');
+      qb.leftJoin('item_master', 'item', 'item.id = pb.itemId');
+
+      qb.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
+      qb.leftJoin('users', 'addedByUser', 'addedByUser.id = pb.addedBy');
+
+      qb.where('pb.id = :id', { id: query.id });
+      if (companyId) qb.andWhere('pb.companyId = :companyId', { companyId });
+
+      const batchData = await qb.getRawOne();
+      if (!batchData) throw new Error('Production Batch not found');
+      batchData.addedDateFormatted = batchData.addedDate ? await this.general.dateFormat(batchData.addedDate) : null;
+
+      const processes = await this.pbProcessRepo
+        .createQueryBuilder('pbp')
+        .select([
+          'pbp.id as id',
+          'pbp.processTemplateMappingId as processTemplateMappingId',
+          'pbp.processId as processId',
+          'pbp.sequenceNumber as sequenceNumber',
+          'pbp.status as status',
+          'pbp.startTime as startTime',
+          'pbp.endTime as endTime',
+        ])
+        .addSelect('pm.processName', 'processName')
+        .addSelect('pm.processCode', 'processCode')
+        .leftJoin('process_master', 'pm', 'pm.id = pbp.processId')
+        .addSelect(['ptm.nodePosition as nodePosition', 'ptm.dependencies as dependencies', 'ptm.handleConfig as handleConfig'])
+        .leftJoin('process_template_mapping', 'ptm', 'ptm.id = pbp.processTemplateMappingId')
+        .where('pbp.productionBatchId = :batchId', { batchId: query.id })
+        .orderBy('pbp.sequenceNumber', 'ASC')
+        .getRawMany();
+
+      let items: any[] = [];
+      const processIds = processes.map((p) => p.id).filter(Boolean);
+      if (processIds.length > 0) {
+        items = await this.pbItemRepo
+          .createQueryBuilder('pbi')
+          .select([
+            'pbi.id as id',
+            'pbi.productionBatchProcessId as productionBatchProcessId',
+            'pbi.itemId as itemId',
+            'pbi.materialType as materialType',
+            'pbi.requiredQty as requiredQty',
+            'pbi.consumedQty as consumedQty',
+            'pbi.producedQty as producedQty',
+            'pbi.availableStock as availableStock',
+            'pbi.shortage as shortage',
+            'pbi.requestQty as requestQty',
+          ])
+          .addSelect(['item.itemName as itemName', 'item.itemCode as itemCode'])
+          .leftJoin('item_master', 'item', 'item.id = pbi.itemId')
+          .addSelect('uom.uomName', 'uomName')
+          .leftJoin('item_uom_master', 'uom', 'uom.id = item.itemUomId')
+          .where('pbi.productionBatchProcessId IN (:...processIds)', { processIds })
+          .getRawMany();
+      }
+
+      const itemImageMap = new Map<number, string>();
+      const allItemIds = Array.from(new Set(items.map((i) => Number(i.itemId)).filter(Boolean)));
+      if (allItemIds.length > 0) {
+        const rawImages = await this.pbItemRepo.manager
+          .createQueryBuilder()
+          .select(['img.itemId AS itemId', 'img.fileName AS fileName'])
+          .from('item_images', 'img')
+          .where('img.itemId IN (:...allItemIds)', { allItemIds })
+          .andWhere('img.sysRecDeleted = 0')
+          .orderBy('img.isPrimary', 'DESC')
+          .addOrderBy('img.id', 'ASC')
+          .getRawMany();
+
+        await Promise.all(
+          rawImages.map(async (img) => {
+            const id = Number(img.itemId);
+            if (!itemImageMap.has(id)) {
+              try {
+                const url = await this.general.generateUrl('item', `${id}`, img.fileName);
+                itemImageMap.set(id, url);
+              } catch (e) {
+                itemImageMap.set(id, '');
+              }
+            }
+          }),
+        );
+      }
+
+      const structuredProcesses = processes.map((p) => {
+        let parsedNodePosition = p.nodePosition;
+        let parsedDependencies = p.dependencies;
+        let parsedHandleConfig = p.handleConfig;
+
+        try {
+          if (typeof parsedNodePosition === 'string') parsedNodePosition = JSON.parse(parsedNodePosition);
+        } catch (e) {}
+        try {
+          if (typeof parsedDependencies === 'string') parsedDependencies = JSON.parse(parsedDependencies);
+        } catch (e) {}
+        try {
+          if (typeof parsedHandleConfig === 'string') parsedHandleConfig = JSON.parse(parsedHandleConfig);
+        } catch (e) {}
+
+        return {
+          ...p,
+          id: Number(p.id),
+          processId: Number(p.processId),
+          sequenceNumber: Number(p.sequenceNumber),
+          nodePosition: parsedNodePosition,
+          dependencies: parsedDependencies,
+          handleConfig: parsedHandleConfig,
+          items: items
+            .filter((i) => Number(i.productionBatchProcessId) === Number(p.id))
+            .map((i) => ({
+              ...i,
+              id: Number(i.id),
+              productionBatchProcessId: Number(i.productionBatchProcessId),
+              itemId: Number(i.itemId),
+              requiredQty: Number(i.requiredQty || 0),
+              consumedQty: Number(i.consumedQty || 0),
+              producedQty: Number(i.producedQty || 0),
+              availableStock: Number(i.availableStock || 0),
+              shortage: Number(i.shortage || 0),
+              requestQty: Number(i.requestQty || 0),
+              itemImageUrl: itemImageMap.get(Number(i.itemId)) || null,
+            })),
+        };
+      });
+
+      const exitItemIds = new Set(items.filter((i) => i.materialType === 'Exit').map((i) => Number(i.itemId)));
+      const entryItemIds = new Set(items.filter((i) => i.materialType === 'Entry').map((i) => Number(i.itemId)));
+
+      const rawMaterialsMap = new Map<number, any>();
+      const semiFinishedMap = new Map<number, any>();
+      const finishedProductsMap = new Map<number, any>();
+
+      for (const item of items) {
+        const itemId = Number(item.itemId);
+        const isEntry = item.materialType === 'Entry';
+        const isExit = item.materialType === 'Exit';
+        const isInternal = (isEntry && exitItemIds.has(itemId)) || (isExit && entryItemIds.has(itemId));
+
+        const targetMap = isEntry && !isInternal
+          ? rawMaterialsMap
+          : isInternal
+          ? semiFinishedMap
+          : finishedProductsMap;
+
+        if (!targetMap.has(itemId)) {
+          targetMap.set(itemId, {
+            id: Number(item.id),
+            itemId,
+            itemName: item.itemName,
+            itemCode: item.itemCode,
+            uomName: item.uomName || 'gms',
+            materialType: item.materialType,
+            isInternalTransfer: isInternal,
+            requiredQty: Number(item.requiredQty || 0),
+            requestQty: Number(item.requestQty || 0),
+            receivedQty: 0,
+            consumedQty: Number(item.consumedQty || 0),
+            producedQty: Number(item.producedQty || 0),
+            availableStock: Number(item.availableStock || 0),
+            itemImageUrl: itemImageMap.get(itemId) || null,
+          });
+        } else {
+          const existing = targetMap.get(itemId);
+          existing.requiredQty += Number(item.requiredQty || 0);
+          existing.requestQty += Number(item.requestQty || 0);
+          existing.consumedQty += Number(item.consumedQty || 0);
+          existing.producedQty += Number(item.producedQty || 0);
+          existing.availableStock += Number(item.availableStock || 0);
+        }
+      }
+
+      const materialDetails = {
+        rawMaterials: Array.from(rawMaterialsMap.values()),
+        semiFinished: Array.from(semiFinishedMap.values()),
+        finishedProducts: Array.from(finishedProductsMap.values()),
+      };
+
+      return_data = {
+        success: 1,
+        message: 'Batch details fetched successfully.',
+        data: {
+          ...batchData,
+          processes: structuredProcesses,
+          materialDetails,
+        },
+      };
+    } catch (err: any) {
+      return_data = { success: 0, message: err.message };
+    }
+    return return_data;
+  }
+}

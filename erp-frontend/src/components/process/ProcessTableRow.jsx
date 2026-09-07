@@ -3,8 +3,16 @@
 import { useAuth } from "@/context/AuthContext";
 import { Tag } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
-export default function ProcessTableRow({ item, onRowAction, setSelectedItemForDetails }) {
+export default function ProcessTableRow({
+  item,
+  onRowAction,
+  setSelectedItemForDetails,
+  setSelectedCompanyForDetails,
+  setSelectedWorkCentreForDetails,
+}) {
   const { can, user } = useAuth();
   const isActive = item.status === "Active" || item.status === "active";
   const canView = can("PROCESS_VIEW");
@@ -27,12 +35,13 @@ export default function ProcessTableRow({ item, onRowAction, setSelectedItemForD
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         {canView ? (
-          <button
+          <ModuleLink
+            href={buildRoute("process", "detail", { id: item.id })}
             onClick={() => setSelectedItemForDetails(item)}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+            className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
           >
             {item.processName}
-          </button>
+          </ModuleLink>
         ) : (
           <span className="text-sm font-medium text-gray-900">
             {item.processName}
@@ -47,21 +56,33 @@ export default function ProcessTableRow({ item, onRowAction, setSelectedItemForD
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap min-w-[200px] max-w-[200px] truncate">
-        <span
-          className="text-sm font-medium text-gray-900"
-          title={item.workCentreName}
-        >
-          {item.workCentreName || "—"}
-        </span>
+        {item.workCentreName ? (
+          <ModuleLink
+            href={buildRoute("work-centre", "detail", { id: item.workCentreId })}
+            onClick={() => setSelectedWorkCentreForDetails?.({ workCentreId: item.workCentreId })}
+            className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
+            title={item.workCentreName}
+          >
+            {item.workCentreName}
+          </ModuleLink>
+        ) : (
+          <span className="text-sm font-medium text-gray-900">—</span>
+        )}
       </td>
       {user?.isSuperAdmin && (
         <td className="px-6 py-4 whitespace-nowrap min-w-[200px] max-w-[200px] truncate">
-          <span
-            className="text-sm font-medium text-gray-900"
-            title={item.companyName}
-          >
-            {item.companyName || "—"}
-          </span>
+          {item.companyName ? (
+            <ModuleLink
+              href={buildRoute("company", "detail", { id: item.companyId })}
+              onClick={() => setSelectedCompanyForDetails?.({ companyId: item.companyId })}
+              className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
+              title={item.companyName}
+            >
+              {item.companyName}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm font-medium text-gray-900">—</span>
+          )}
         </td>
       )}
       <td className="px-6 py-4 whitespace-nowrap">

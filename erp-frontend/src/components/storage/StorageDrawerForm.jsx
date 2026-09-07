@@ -330,9 +330,10 @@ export default function StorageDrawerForm({
             </label>
             <input
               type="text"
+              placeholder="Enter Storage Name"
               value={formData.storageName || ""}
               onChange={(e) => handleNameChange("storageName", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none text-sm placeholder:text-sm placeholder:text-gray-400 transition focus:bg-white focus:border-[#1565c0]
                 ${errors.storageName ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -376,9 +377,10 @@ export default function StorageDrawerForm({
             <input
               type="text"
               disabled={mode === "edit"}
+              placeholder="Enter Storage Code"
               value={formData.storageCode || ""}
               onChange={(e) => handleChange("storageCode", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none text-sm placeholder:text-sm placeholder:text-gray-400 transition focus:bg-white focus:border-[#1565c0]
                 ${errors.storageCode ? "border-red-500 bg-red-50" : "border-gray-300"}
                 ${mode === "edit" ? "cursor-not-allowed bg-gray-100 text-gray-400" : ""}
               `}
@@ -394,7 +396,10 @@ export default function StorageDrawerForm({
 
             <div
               className="relative border-2 border-dashed border-[#1565c0] rounded-md p-4 flex items-center justify-between cursor-pointer hover:bg-blue-50/50 transition"
-              onClick={() => !isUploading && document.getElementById("storage-drawer-file-input")?.click()}
+              onClick={() =>
+                !isUploading &&
+                document.getElementById("storage-drawer-file-input")?.click()
+              }
             >
               <span className="text-gray-500 text-sm">Choose File</span>
               <div
@@ -473,9 +478,10 @@ export default function StorageDrawerForm({
             </label>
             <textarea
               rows={1}
+              placeholder="Enter Description"
               value={formData.description || ""}
               onChange={(e) => handleChange("description", e.target.value)}
-              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none transition focus:bg-white focus:border-[#1565c0]
+              className={`w-full rounded-md border bg-gray-50 px-4 py-3 outline-none text-sm placeholder:text-sm placeholder:text-gray-400 transition focus:bg-white focus:border-[#1565c0]
                 ${errors.description ? "border-red-500 bg-red-50" : "border-gray-300"}
               `}
             />
@@ -530,18 +536,14 @@ export default function StorageDrawerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this storage?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Storage"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);

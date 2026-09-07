@@ -1,8 +1,8 @@
 const RadialSpinner = ({ sizeClass }) => {
   return (
-    <svg 
+    <svg
       className={sizeClass}
-      viewBox="0 0 320 320" 
+      viewBox="0 0 320 320"
       preserveAspectRatio="xMidYMid"
       xmlns="http://www.w3.org/2000/svg"
     >

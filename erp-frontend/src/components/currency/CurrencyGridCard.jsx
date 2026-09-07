@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 
 export default function CurrencyGridCard({ item, config, setSelectedItemForDetails }) {
@@ -14,24 +16,25 @@ export default function CurrencyGridCard({ item, config, setSelectedItemForDetai
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200 flex flex-col">
 
-      <div
-        className={`flex items-center gap-4 mb-4 ${hasViewPerm ? "cursor-pointer group" : ""}`}
-        onClick={() => hasViewPerm && setSelectedItemForDetails && setSelectedItemForDetails(item)}
-      >
+      <div className="flex items-center gap-4 mb-4">
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shrink-0 shadow-md shadow-blue-200 select-none">
           {item.currencySymbol || item.currencyCode?.[0] || "¤"}
         </div>
 
         <div className="min-w-0">
-          <p
-            className={`font-semibold text-sm leading-tight truncate ${
-              hasViewPerm
-                ? "text-[#1565c0] group-hover:underline"
-                : "text-gray-900"
-            }`}
-          >
-            {item.currencyName || "—"}
-          </p>
+          {hasViewPerm ? (
+            <ModuleLink
+              href={buildRoute("currency", "detail", { id: item.id })}
+              onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
+              className="font-semibold text-sm leading-tight truncate text-[#1565c0] block"
+            >
+              {item.currencyName || "—"}
+            </ModuleLink>
+          ) : (
+            <p className="font-semibold text-sm leading-tight truncate text-gray-900">
+              {item.currencyName || "—"}
+            </p>
+          )}
           <p className="text-gray-400 text-xs mt-1 font-mono tracking-wide">
             {item.currencyCode || "—"}
           </p>

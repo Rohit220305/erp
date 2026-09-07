@@ -14,6 +14,7 @@ import { itemDrawerConfig } from './item.drawer.config';
 import { processTemplateDrawerConfig } from './process-template.drawer.config';
 import { bomDrawerConfig } from './bom.drawer.config';
 import { productionOrderDrawerConfig } from './production-order.drawer.config';
+import { productionBatchDrawerConfig } from './production-batch.drawer.config';
 
 export const drawerRegistry = {
   "User": userDrawerConfig,
@@ -32,5 +33,6 @@ export const drawerRegistry = {
   "ProcessTemplate": processTemplateDrawerConfig,
   "Bom": bomDrawerConfig,
   "ProductionOrder": productionOrderDrawerConfig,
+  "ProductionBatch": productionBatchDrawerConfig,
 };
 

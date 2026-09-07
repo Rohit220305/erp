@@ -3,6 +3,8 @@
 import { useAuth } from "@/context/AuthContext";
 import ActionRenderer from "@/components/core/dynamic-ui/ActionRenderer";
 import currencyConfig from "@/config/currency.config.json";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 
 export default function CurrencyTableRow({ item, onRowAction, setSelectedItemForDetails }) {
@@ -16,12 +18,13 @@ export default function CurrencyTableRow({ item, onRowAction, setSelectedItemFor
 
       <td className="px-4 py-3 text-sm">
         {hasViewPerm ? (
-          <span
+          <ModuleLink
+            href={buildRoute("currency", "detail", { id: item.id })}
             onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
-            className="font-medium text-[#1565c0] hover:underline cursor-pointer"
+            className="font-medium text-[#1565c0]"
           >
             {item.currencyName || "—"}
-          </span>
+          </ModuleLink>
         ) : (
           <span className="font-medium text-gray-800">{item.currencyName || "—"}</span>
         )}

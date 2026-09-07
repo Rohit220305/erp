@@ -4,7 +4,9 @@ import { useEffect, useState, useRef } from "react";
 import Select from "react-select";
 import { PlusCircle, MinusCircle, Star, ChevronDown, ChevronUp, Layers } from "lucide-react";
 import { getItem } from "@/lib/api/item-api";
-import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
+import ConfirmModal from "@/components/common/ConfirmModal";
+import ModuleLink from "@/components/common/ModuleLink";
+import SideDrawer from "@/components/common/SideDrawer";
 
 const selectStyles = {
   control: (base, state) => ({
@@ -92,6 +94,7 @@ export default function BomStep2ProcessMapping({
   const [openStates, setOpenStates] = useState({});
   const [itemPrimitiveQtyDisplay, setItemPrimitiveQtyDisplay] = useState("—");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [sideDrawerState, setSideDrawerState] = useState({ isOpen: false, moduleName: null, id: null });
 
   const isInternalGroupUpdate = useRef(false);
   const hasInitialized = useRef(false);
@@ -370,7 +373,6 @@ export default function BomStep2ProcessMapping({
 
   return (
     <div className="space-y-6">
-      {/* 1. Bill of Materials Details Summary Banner */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <h3 className="text-sm font-semibold text-gray-800 mb-4">
           Bill of Materials Details
@@ -388,9 +390,22 @@ export default function BomStep2ProcessMapping({
 
           <div>
             <span className="text-gray-400 block mb-1">Item</span>
-            <span className="font-medium text-[#1565c0]">
-              {selectedOutputItem ? selectedOutputItem.label : "—"}
-            </span>
+            {formData.itemId ? (
+              <ModuleLink
+                moduleName="Item"
+                id={formData.itemId}
+                className="font-medium text-[#1565c0] hover:underline"
+                onOpenDrawer={(moduleName, id) =>
+                  setSideDrawerState({ isOpen: true, moduleName: "Item", id: formData.itemId })
+                }
+              >
+                {selectedOutputItem ? selectedOutputItem.label : "—"}
+              </ModuleLink>
+            ) : (
+              <span className="font-medium text-gray-800">
+                {selectedOutputItem ? selectedOutputItem.label : "—"}
+              </span>
+            )}
           </div>
 
           <div>
@@ -400,9 +415,26 @@ export default function BomStep2ProcessMapping({
 
           <div>
             <span className="text-gray-400 block mb-1">Process Template</span>
-            <span className="font-medium text-[#1565c0]">
-              {processTemplateNameDisplay}
-            </span>
+            {formData.processTemplateId ? (
+              <ModuleLink
+                moduleName="ProcessTemplate"
+                id={formData.processTemplateId}
+                className="font-medium text-[#1565c0] hover:underline"
+                onOpenDrawer={(moduleName, id) =>
+                  setSideDrawerState({
+                    isOpen: true,
+                    moduleName: "ProcessTemplate",
+                    id: formData.processTemplateId,
+                  })
+                }
+              >
+                {processTemplateNameDisplay}
+              </ModuleLink>
+            ) : (
+              <span className="font-medium text-gray-800">
+                {processTemplateNameDisplay}
+              </span>
+            )}
           </div>
 
           <div>
@@ -414,7 +446,6 @@ export default function BomStep2ProcessMapping({
         </div>
       </div>
 
-      {/* 2. Process List Header */}
       <div className="bg-white rounded-xl border border-gray-200 p-10 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-gray-800">Process List</h3>
@@ -432,7 +463,6 @@ export default function BomStep2ProcessMapping({
           </div>
         </div>
 
-        {/* 3. Process Cards Accordions */}
         <div className="space-y-4">
           {groupedProcesses.length === 0 ? (
             <div className="p-8 text-center text-gray-400 italic text-xs border border-dashed border-gray-200 rounded-lg">
@@ -448,7 +478,6 @@ export default function BomStep2ProcessMapping({
                   key={proc.processTemplateMappingId || pIdx}
                   className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-xs"
                 >
-                  {/* Header Banner */}
                   <div
                     onClick={() => toggleAccordion(pIdx)}
                     className={`px-5 py-3 flex items-center justify-between cursor-pointer select-none transition-colors border-b border-gray-200 ${
@@ -458,7 +487,7 @@ export default function BomStep2ProcessMapping({
                     }`}
                   >
                     <span className="font-semibold text-xs tracking-wide">
-                      {proc.processName.toLowerCase()}                      
+                      {proc.processName}                      
                     </span>
                     <ChevronDown
                       size={18}
@@ -475,7 +504,6 @@ export default function BomStep2ProcessMapping({
                   >
                     <div className="overflow-hidden">
                       <div className="p-5 bg-white grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Left Box: Entry Material */}
                       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-2xs">
                         <div className="bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                           <span className="text-xs font-semibold text-gray-800">
@@ -500,7 +528,7 @@ export default function BomStep2ProcessMapping({
                             <table className="w-full text-left text-xs border-separate border-spacing-y-1">
                               <thead>
                                 <tr className="bg-[#f8fafc] border-b border-gray-200 text-gray-700 font-semibold">
-                                  <th className="py-2.5 px-2 w-8 text-center"></th>
+                                 
                                   <th className="py-2.5 px-3.5 w-50">
                                     Material Name
                                   </th>
@@ -515,24 +543,7 @@ export default function BomStep2ProcessMapping({
                               <tbody className="divide-y divide-gray-100">
                                 {proc.entryItems.map((row, mIdx) => (
                                   <tr key={mIdx}>
-                                    <td className="py-3 px-1 text-center">
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          togglePrimaryStar(pIdx, mIdx)
-                                        }
-                                        className="cursor-pointer"
-                                      >
-                                        <Star
-                                          size={16}
-                                          className={
-                                            row.isPrimary === "Yes"
-                                              ? "fill-amber-400 text-amber-400"
-                                              : "text-gray-300 hover:text-amber-400"
-                                          }
-                                        />
-                                      </button>
-                                    </td>
+                                    
                                     <td className="py-3 px-3">
                                       <Select
                                         instanceId={`select-entry-mat-${pIdx}-${mIdx}`}
@@ -612,7 +623,6 @@ export default function BomStep2ProcessMapping({
                         </div>
                       </div>
 
-                      {/* Right Box: Exit Material */}
                       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-2xs">
                         <div className="bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                           <span className="text-xs font-semibold text-gray-800">
@@ -764,14 +774,22 @@ export default function BomStep2ProcessMapping({
         </div>
       </div>
 
-      <DeleteConfirmModal
+      <ConfirmModal
         isOpen={Boolean(deleteTarget)}
-        title="Delete"
-        message="Are you sure want to delete this?"
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        actionType="delete"
+        entityName="Material Item"
+        title="Confirm Delete"
+        message="Are you sure you want to remove this material item mapping?"
         onConfirm={confirmRemoveRow}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <SideDrawer
+        open={sideDrawerState.isOpen}
+        onClose={() => setSideDrawerState({ isOpen: false, moduleName: null, id: null })}
+        moduleName={sideDrawerState.moduleName}
+        mode="details"
+        data={sideDrawerState.id ? { id: sideDrawerState.id } : null}
       />
     </div>
   );

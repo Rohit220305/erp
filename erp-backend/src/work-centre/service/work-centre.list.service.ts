@@ -124,6 +124,8 @@ export class WorkCentreListService {
         'workCentre.companyId AS companyId',
         'workCentre.addedDate AS addedDate',
         'workCentre.updatedDate AS updatedDate',
+        'workCentre.addedBy AS addedBy',
+        'workCentre.updatedBy AS updatedBy',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');

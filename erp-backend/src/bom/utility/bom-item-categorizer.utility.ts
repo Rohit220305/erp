@@ -6,7 +6,7 @@ export interface BomProcessItemCategorizationInput {
   processTemplateMappingId?: number;
   materialType: MaterialType | string;
   itemId: number;
-  quantity: number | string; // Qty per unit
+  quantity: number | string;
   isInternalTransfer?: boolean;
   sequenceNo?: number;
   processId?: number;
@@ -51,12 +51,6 @@ export interface CategorizedItemsResult {
 }
 
 export class BomItemCategorizerUtility {
-  /**
-   * Categorizes BOM process items into 3 distinct material tabs:
-   * 1. Raw Materials: Entry items where isInternalTransfer = false
-   * 2. Semi-Finished Products: Entry items where isInternalTransfer = true, OR Exit items where isInternalTransfer = true
-   * 3. Finished Products: Exit items where isInternalTransfer = false (terminal output)
-   */
   static categorizeItems(
     items: BomProcessItemCategorizationInput[],
     packageQuantity: number = 1,

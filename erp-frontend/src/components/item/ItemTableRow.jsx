@@ -5,6 +5,8 @@ import SharedImageZoom from "@/components/common/SharedImageZoom";
 import itemConfig from "@/config/item.config.json";
 import { Package } from "lucide-react";
 import { CAPABILITIES } from "@/config/capabilities.config";
+import ModuleLink from "@/components/common/ModuleLink";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 export default function ItemTableRow({
   item,
@@ -65,39 +67,50 @@ export default function ItemTableRow({
         ) {
           let hasPerm = canViewItem;
           let handler = setSelectedItemForDetails;
+          let routeHref = "#";
 
           if (col.key === "categoryName") {
             hasPerm = canViewCategory;
             handler = setSelectedCategoryForDetails;
+            if (item.categoryId) routeHref = buildRoute("item-category", "detail", { id: item.categoryId });
           } else if (col.key === "companyName") {
             hasPerm = canViewCompany;
             handler = setSelectedCompanyForDetails;
+            if (item.companyId) routeHref = buildRoute("company", "detail", { id: item.companyId });
           } else if (col.key === "manufacturerName") {
             hasPerm = canViewManufacturer;
             handler = setSelectedManufacturerForDetails;
+            if (item.manufacturerId) routeHref = buildRoute("manufacturer", "detail", { id: item.manufacturerId });
           } else if (col.key === "brandName") {
             hasPerm = canViewBrand;
             handler = setSelectedBrandForDetails;
+            if (item.brandId) routeHref = buildRoute("brand", "detail", { id: item.brandId });
           } else if (col.key === "storageName") {
             hasPerm = canViewStorage;
             handler = setSelectedStorageForDetails;
+            if (item.storageId) routeHref = buildRoute("storage", "detail", { id: item.storageId });
           } else if (col.key === "itemUomName") {
             hasPerm = canViewItemUom;
             handler = setSelectedItemUomForDetails;
+            if (item.itemUomId) routeHref = buildRoute("item-uom", "detail", { id: item.itemUomId });
           } else if (col.key === "packageUomName") {
             hasPerm = canViewPackage;
             handler = setSelectedPackageForDetails;
+            if (item.packageUomId) routeHref = buildRoute("package-master", "detail", { id: item.packageUomId });
+          } else if (item.id) {
+            routeHref = buildRoute("item", "detail", { id: item.id });
           }
 
           return (
             <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap">
               {hasPerm && handler ? (
-                <button
+                <ModuleLink
+                  href={routeHref}
                   onClick={() => handler(item)}
-                  className="font-medium text-[#1565c0] hover:underline cursor-pointer text-left"
+                  className="font-medium text-[#1565c0]"
                 >
                   {value || "—"}
-                </button>
+                </ModuleLink>
               ) : (
                 <span className="font-medium text-gray-800">{value || "—"}</span>
               )}
@@ -123,7 +136,7 @@ export default function ItemTableRow({
         if (col.key === "itemCode" || col.key === "barcode") {
           return (
             <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap">
-              <span className="font-mono text-xs text-gray-700 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+              <span className="font-mono text-xs text-gray-700 bg-gray-50 ">
                 {value || "—"}
               </span>
             </td>

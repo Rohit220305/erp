@@ -121,6 +121,8 @@ export class ManufacturerListService {
         'manufacturer.companyId AS companyId',
         'manufacturer.addedDate AS addedDate',
         'manufacturer.updatedDate AS updatedDate',
+        'manufacturer.addedBy AS addedBy',
+        'manufacturer.updatedBy AS updatedBy',
       ]);
 
       queryBuilder.addSelect('company.companyName', 'companyName');

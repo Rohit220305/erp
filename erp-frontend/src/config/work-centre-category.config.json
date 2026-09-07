@@ -1,6 +1,6 @@
 {
   "moduleName": "WorkCentreCategory",
-  "title": "Work Centre Categories",
+  "title": "Work Centre Category",
   "permissions": {
     "list": "WORK_CENTRE_CATEGORY_LIST",
     "create": "WORK_CENTRE_CATEGORY_CREATE",

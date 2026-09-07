@@ -31,13 +31,6 @@ export interface BomCostBreakdown {
 }
 
 export class BomCostUtility {
-  /**
-   * Dynamically calculates the live unit cost of a BOM.
-   * - Evaluates ONLY 'Entry' materials.
-   * - Skips internal transfer items (isInternalTransfer = true) to prevent double counting.
-   * - Uses COALESCE(costPrice, purchasePrice, 0) from Item Master.
-   * - Safely parses string numbers to float.
-   */
   static calculateLiveCost(
     processItems: BomCostCalculationItem[],
     itemPriceMap: Map<number, ItemPriceLookup> | Record<number, ItemPriceLookup>,
@@ -63,7 +56,6 @@ export class BomCostUtility {
         : new Map(Object.entries(itemPriceMap).map(([k, v]) => [Number(k), v]));
 
     for (const item of processItems) {
-      // Only Entry items contribute to raw material cost
       if (item.materialType !== MaterialType.Entry && item.materialType !== 'Entry') {
         continue;
       }
@@ -71,7 +63,6 @@ export class BomCostUtility {
       entryItemCount++;
       const numQuantity = typeof item.quantity === 'number' ? item.quantity : parseFloat(String(item.quantity || 0));
 
-      // Skip internal transfer items to prevent double counting upstream costs
       if (item.isInternalTransfer === true) {
         skippedTransferItems.push({
           itemId: item.itemId,

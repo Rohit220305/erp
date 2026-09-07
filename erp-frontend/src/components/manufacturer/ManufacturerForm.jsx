@@ -12,6 +12,7 @@ import AccessDenied from "@/components/common/AccessDenied";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import manufacturerConfig from "@/config/manufacturer.config.json";
 import { getManufacturerSchema } from "@/lib/validation/manufacturer.schema";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -129,8 +130,8 @@ export default function ManufacturerForm({
       navbar: {
         title: `${mode === "create" ? "Add" : "Edit"} Manufacturer`,
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: manufacturerConfig.title, href: "/manufacturer" },
+          { label: "Home", href: buildRoute("home", "list") },
+          { label: manufacturerConfig.title, href: buildRoute("manufacturer", "list") },
           {
             label: `${mode === "create" ? "Add" : "Edit"} Manufacturer`,
           },
@@ -223,7 +224,7 @@ export default function ManufacturerForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/manufacturer");
+      router.push(buildRoute("manufacturer", "list"));
     }
   };
 
@@ -246,7 +247,7 @@ export default function ManufacturerForm({
             ? "Manufacturer created successfully!"
             : "Manufacturer updated successfully!"
         );
-        router.push("/manufacturer");
+        router.push(buildRoute("manufacturer", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} manufacturer`);
       }
@@ -275,9 +276,10 @@ export default function ManufacturerForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Manufacturer Name"
                 value={formData.manufacturerName || ""}
                 onChange={(e) => handleNameChange("manufacturerName", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.manufacturerName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
               />
@@ -320,10 +322,11 @@ export default function ManufacturerForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Manufacturer Code"
                 disabled={mode === "edit"}
                 value={formData.manufacturerCode || ""}
                 onChange={(e) => handleChange("manufacturerCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
                         ${errors.manufacturerCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                         ${mode === "edit" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white"}
                       `}
@@ -339,9 +342,10 @@ export default function ManufacturerForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Reference Code"
                 value={formData.referenceCode || ""}
                 onChange={(e) => handleChange("referenceCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.referenceCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
               />
@@ -399,23 +403,19 @@ export default function ManufacturerForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
+        actionType={
           confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
         }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this manufacturer?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        entityName="Manufacturer"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/manufacturer");
+            router.push(buildRoute("manufacturer", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

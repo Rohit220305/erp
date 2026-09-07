@@ -21,7 +21,9 @@ import {
 import { listCompanies } from "@/lib/api/company-api";
 import { listCurrencies } from "@/lib/api/currency-api";
 import { useAuth } from "@/context/AuthContext";
+import { useHeader } from "@/context/HeaderContext";
 import ConfirmModal from "../common/ConfirmModal";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const SectionHeader = ({
   icon: Icon,
@@ -42,7 +44,13 @@ const SectionHeader = ({
 );
 
 const ALL_COUNTRIES = Country.getAllCountries();
-const findCountryByName = (name) => ALL_COUNTRIES.find((c) => c.name === name);
+const findCountryByName = (name) => {
+  if (!name) return null;
+  const trimmed = String(name).trim().toLowerCase();
+  return ALL_COUNTRIES.find(
+    (c) => c.name.toLowerCase() === trimmed || c.isoCode.toLowerCase() === trimmed
+  );
+};
 
 const COUNTRY_OPTIONS = ALL_COUNTRIES.map((c) => ({
   label: c.name,
@@ -91,18 +99,29 @@ const BASE_DEFAULTS = {
   supportedCurrencies: [],
 };
 
+const sanitizeFormData = (data) => {
+  const merged = { ...BASE_DEFAULTS, ...data };
+  Object.keys(merged).forEach((key) => {
+    if (merged[key] === null || merged[key] === undefined) {
+      merged[key] = BASE_DEFAULTS[key] !== undefined ? BASE_DEFAULTS[key] : "";
+    }
+  });
+  return merged;
+};
+
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
     ...base,
+    pointerEvents: "auto",
     borderColor: error ? "#f87171" : "#e5e7eb",
     borderRadius: "0.5rem",
     minHeight: "42px",
-    backgroundColor: disabled ? "#f9fafb" : "#ffffff",
+    backgroundColor: disabled ? "#f3f4f6" : "#ffffff",
     boxShadow: "none",
     cursor: disabled ? "not-allowed" : "pointer",
     fontSize: "0.875rem",
     "&:hover": {
-      borderColor: error ? "#f87171" : "#d1d5db",
+      borderColor: disabled ? "#e5e7eb" : error ? "#f87171" : "#d1d5db",
     },
   }),
   option: (base, state) => ({
@@ -115,7 +134,7 @@ const customSelectStyles = (error, disabled) => ({
   singleValue: (base) => ({
     ...base,
     fontSize: "0.875rem",
-    color: "#1f2937",
+    color: disabled ? "#9ca3af" : "#1f2937",
   }),
   placeholder: (base) => ({
     ...base,
@@ -138,12 +157,9 @@ export default function CompanyForm({
 }) {
   const router = useRouter();
   const user = useAuth();
+  const { setConfig, resetConfig } = useHeader();
 
-  const initialData = { ...BASE_DEFAULTS, ...externalDefaults };
-  const parentCompanyOptions = (parentCompaniesProp || []).map((c) => ({
-    label: c.companyName,
-    value: c.id,
-  }));
+  const initialData = sanitizeFormData(externalDefaults);
 
   const [formData, setFormData] = useState(initialData);
   const [errors, setErrors] = useState({});
@@ -180,12 +196,32 @@ export default function CompanyForm({
   const [isInitialMount, setIsInitialMount] = useState(true);
 
   const serializedDefaults = externalDefaults ? JSON.stringify(externalDefaults) : null;
+
+  useEffect(() => {
+    setConfig({
+      header: {
+        actionButton: null,
+        icons: [],
+        showBookmark: true,
+        showLanguage: true,
+        showProfile: true,
+        showMenu: true,
+      },
+      navbar: {
+        title: `${mode === "create" ? "Add" : "Edit"} Company`,
+        breadcrumbs: [
+          { label: "Home", href: buildRoute("home", "list") },
+          { label: "Company Master", href: buildRoute("company", "list") },
+          { label: mode === "create" ? "Add" : "Edit" },
+        ],
+      },
+    });
+    return () => resetConfig();
+  }, [mode, setConfig, resetConfig]);
+
   useEffect(() => {
     if (externalDefaults) {
-      setFormData({
-        ...BASE_DEFAULTS,
-        ...externalDefaults,
-      });
+      setFormData(sanitizeFormData(externalDefaults));
       if (externalDefaults.logoUrl) {
         setLogoPreview(externalDefaults.logoUrl);
       }
@@ -238,13 +274,11 @@ export default function CompanyForm({
   useEffect(() => {
     if (!formData.country) {
       setStateOptions([]);
-      setCityOptions([]);
       return;
     }
     const countryObj = findCountryByName(formData.country);
     if (!countryObj) {
       setStateOptions([]);
-      setCityOptions([]);
       return;
     }
 
@@ -254,23 +288,7 @@ export default function CompanyForm({
       isoCode: s.isoCode,
     }));
     setStateOptions(states);
-    setCityOptions([]);
-
-    // if (countryObj.phonecode) {
-    //   setFormData((prev) => ({
-    //     ...prev,
-    //     dialCode: `+${countryObj.phonecode}`,
-    //   }));
-    // }
-
-    if (!isInitialMount) {
-      setFormData((prev) => ({
-        ...prev,
-        state: "",
-        city: "",
-      }));
-    }
-  }, [formData.country, isInitialMount]);
+  }, [formData.country]);
 
   useEffect(() => {
     if (!formData.state || !formData.country) {
@@ -278,8 +296,16 @@ export default function CompanyForm({
       return;
     }
     const countryObj = findCountryByName(formData.country);
-    const stateObj = stateOptions.find((s) => s.value === formData.state);
-    if (!countryObj || !stateObj?.isoCode) {
+    if (!countryObj) {
+      setCityOptions([]);
+      return;
+    }
+    const allStatesOfCountry = State.getStatesOfCountry(countryObj.isoCode);
+    const stateTrimmed = String(formData.state).trim().toLowerCase();
+    const stateObj = allStatesOfCountry.find(
+      (s) => s.name.toLowerCase() === stateTrimmed || s.isoCode.toLowerCase() === stateTrimmed,
+    );
+    if (!stateObj) {
       setCityOptions([]);
       return;
     }
@@ -289,33 +315,31 @@ export default function CompanyForm({
       value: c.name,
     }));
     setCityOptions(cities);
-
-    if (!isInitialMount) {
-      setFormData((prev) => ({
-        ...prev,
-        city: "",
-      }));
-    }
-  }, [formData.state, formData.country, stateOptions, isInitialMount]);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setIsInitialMount(false);
-    }, 300);
-    return () => clearTimeout(t);
-  }, []);
+  }, [formData.state, formData.country]);
 
   const handleChange = (name, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === "country") {
+        updated.state = "";
+        updated.city = "";
+      } else if (name === "state") {
+        updated.city = "";
+      }
+      return updated;
+    });
     setIsDirty(true);
 
     if (errors[name]) {
       setErrors((prevErrors) => {
         const copy = { ...prevErrors };
         delete copy[name];
+        if (name === "country") {
+          delete copy.state;
+          delete copy.city;
+        } else if (name === "state") {
+          delete copy.city;
+        }
         return copy;
       });
     }
@@ -426,7 +450,7 @@ export default function CompanyForm({
           ? "Company created successfully"
           : "Company updated successfully"
       );
-      router.push("/company");
+      router.push(buildRoute("company", "list"));
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
@@ -442,7 +466,7 @@ export default function CompanyForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.back();
+      router.push(buildRoute("company", "list"));
     }
   };
 
@@ -452,10 +476,10 @@ export default function CompanyForm({
   }));
 
   return (
-    <div className="h-full overflow-y-scroll mx-6">
-      <form onSubmit={handleFormSubmit} className="space-y-5 text-black">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-5">
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+    <div className="pt-6 h-full overflow-y-auto pb-20 mx-6">
+      <form onSubmit={handleFormSubmit} className="space-y-6 text-black">
+        <div className="grid lg:grid-cols-[260px_1fr] gap-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <SectionHeader icon={Building2} title="Company Logo" />
 
             <div className="flex flex-col items-center gap-4">
@@ -539,33 +563,30 @@ export default function CompanyForm({
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <SectionHeader icon={Briefcase} title="Company Details" />
 
-            <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
+            <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Company Name <span className="text-red-400">*</span>
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                  Company Name <span className="text-red-400 ml-1">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter company name"
-                  value={formData.companyName}
+                  placeholder="Enter Company Name"
+                  value={formData.companyName || ""}
                   onChange={(e) => handleChange("companyName", e.target.value)}
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.companyName ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                    ${errors.companyName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
                 />
                 {errors.companyName && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.companyName}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.companyName}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Parent Company
                 </label>
                 <Select
@@ -583,7 +604,7 @@ export default function CompanyForm({
                   isDisabled={parentLoading}
                   isClearable={true}
                   isSearchable={true}
-                  placeholder={parentLoading ? "Loading…" : "None (Top-level)"}
+                  placeholder={parentLoading ? "Loading…" : "Select Parent Company"}
                   classNamePrefix="react-select"
                   styles={customSelectStyles(
                     errors.parentCompanyId,
@@ -591,166 +612,143 @@ export default function CompanyForm({
                   )}
                 />
                 {errors.parentCompanyId && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.parentCompanyId}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.parentCompanyId}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Short Name <span className="text-red-400">*</span>
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                  Short Name <span className="text-red-400 ml-1">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. ACME"
-                  value={formData.shortName}
+                  placeholder="Enter Short Name"
+                  value={formData.shortName || ""}
                   onChange={(e) => handleChange("shortName", e.target.value)}
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.shortName ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                    ${errors.shortName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
                 />
                 {errors.shortName && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.shortName}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.shortName}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Company Code
                 </label>
                 <input
                   type="text"
-                  placeholder="Auto-generated or enter custom code"
+                  placeholder="Enter Company Code"
                   disabled={mode === "edit"}
-                  value={formData.companyCode}
+                  value={formData.companyCode || ""}
                   onChange={(e) => handleChange("companyCode", e.target.value)}
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-                    ${mode === "edit" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white hover:border-gray-300"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                    ${mode === "edit" ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white hover:border-gray-300"}
                     ${errors.companyCode ? "border-red-400 bg-red-50" : "border-gray-200"}
                   `}
                 />
                 {errors.companyCode && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.companyCode}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.companyCode}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Legal Name
                 </label>
                 <input
                   type="text"
-                  placeholder="Full legal / registered name"
-                  value={formData.legalName}
+                  placeholder="Enter Legal Name"
+                  value={formData.legalName || ""}
                   onChange={(e) => handleChange("legalName", e.target.value)}
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.legalName ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                    ${errors.legalName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
                 />
                 {errors.legalName && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.legalName}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.legalName}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Registration Number
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter registration number"
-                  value={formData.registrationNumber}
+                  placeholder="Enter Registration Number"
+                  value={formData.registrationNumber || ""}
                   onChange={(e) =>
                     handleChange("registrationNumber", e.target.value)
                   }
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.registrationNumber ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                    ${errors.registrationNumber ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
                 />
                 {errors.registrationNumber && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.registrationNumber}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.registrationNumber}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Tax Number (GST / VAT)
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter tax number"
-                  value={formData.taxNumber}
+                  placeholder="Enter Tax Number"
+                  value={formData.taxNumber || ""}
                   onChange={(e) => handleChange("taxNumber", e.target.value)}
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.taxNumber ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                    ${errors.taxNumber ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
                 />
                 {errors.taxNumber && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.taxNumber}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.taxNumber}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Website
                 </label>
                 <input
                   type="text"
-                  placeholder="https://example.com"
-                  value={formData.website}
+                  placeholder="Enter Website"
+                  value={formData.website || ""}
                   onChange={(e) => handleChange("website", e.target.value)}
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.website ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                    ${errors.website ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
                 />
                 {errors.website && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.website}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.website}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Company Email <span className="text-red-400">*</span>
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                  Company Email <span className="text-red-400 ml-1">*</span>
                 </label>
                 <input
                   type="email"
-                  placeholder="company@example.com"
-                  value={formData.email}
+                  placeholder="Enter Company Email"
+                  value={formData.email || ""}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.email ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                    ${errors.email ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
                 />
                 {errors.email && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.email}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.email}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Status <span className="text-red-400">*</span>
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                  Status <span className="text-red-400 ml-1">*</span>
                 </label>
                 <Select
                   instanceId="select-status"
@@ -769,37 +767,14 @@ export default function CompanyForm({
                   styles={customSelectStyles(errors.status)}
                 />
                 {errors.status && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    {errors.status}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.status}</p>
                 )}
               </div>
 
-              <div className="space-y-1.5 lg:col-span-1 ">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Currency
                 </label>
-                {/* <Select
-                    instanceId="select-currencies"
-                    isMulti
-                    value={currencyOptions.filter((opt) =>
-                      (formData.supportedCurrencies || []).some(
-                        (id) => String(id) === String(opt.value),
-                      ),
-                    )}
-                    onChange={(selected) =>
-                      handleChange(
-                        "supportedCurrencies",
-                        selected ? selected.map((s) => Number(s.value)) : [],
-                      )
-                    }
-                    options={currencyOptions}
-                    isLoading={currencyLoading}
-                    placeholder="Select Supported Currencies"
-                    classNamePrefix="react-select"
-                    styles={customSelectStyles(errors.supportedCurrencies)}
-                  /> */}
-
                 <Select
                   instanceId="select-currencies"
                   isMulti
@@ -820,14 +795,15 @@ export default function CompanyForm({
                   }}
                   options={currencyOptions}
                   isLoading={currencyLoading}
-                  placeholder="Select Supported Currency"
+                  placeholder="Select Currency"
                   classNamePrefix="react-select"
                   styles={customSelectStyles(errors.supportedCurrencies)}
                 />
               </div>
+
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Phone Number <span className="text-red-400">*</span>
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                  Phone Number <span className="text-red-400 ml-1">*</span>
                 </label>
                 <div className="flex gap-2">
                   <div className="w-[130px] shrink-0">
@@ -853,17 +829,16 @@ export default function CompanyForm({
                   </div>
                   <input
                     type="tel"
-                    placeholder="Enter phone number"
-                    value={formData.phone}
+                    placeholder="Enter Phone Number"
+                    value={formData.phone || ""}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className={`flex-1 px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                      ${errors.phone ? "border-red-400 bg-red-50" : "border-gray-200"}
+                    className={`flex-1 px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                      ${errors.phone ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                     `}
                   />
                 </div>
                 {(errors.phone || errors.dialCode) && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
+                  <p className="text-xs text-red-500">
                     {errors.phone || errors.dialCode}
                   </p>
                 )}
@@ -872,8 +847,8 @@ export default function CompanyForm({
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-5">
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <SectionHeader
               icon={MapPin}
               title="Address"
@@ -881,58 +856,57 @@ export default function CompanyForm({
               bg="bg-emerald-50"
             />
 
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Address Line 1 <span className="text-red-400">*</span>
+                  <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                    Address Line 1 <span className="text-red-400 ml-1">*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="Street / building"
-                    value={formData.addressLine1}
+                    placeholder="Enter Address Line 1"
+                    value={formData.addressLine1 || ""}
                     onChange={(e) =>
                       handleChange("addressLine1", e.target.value)
                     }
-                    className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                      ${errors.addressLine1 ? "border-red-400 bg-red-50" : "border-gray-200"}
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                      ${errors.addressLine1 ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                     `}
                   />
                   {errors.addressLine1 && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
+                    <p className="text-xs text-red-500">
                       {errors.addressLine1}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                     Address Line 2
                   </label>
                   <input
                     type="text"
-                    placeholder="Area / landmark (optional)"
-                    value={formData.addressLine2}
+                    placeholder="Enter Address Line 2"
+                    value={formData.addressLine2 || ""}
                     onChange={(e) =>
                       handleChange("addressLine2", e.target.value)
                     }
-                    className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                      ${errors.addressLine2 ? "border-red-400 bg-red-50" : "border-gray-200"}
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                      ${errors.addressLine2 ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                     `}
                   />
                   {errors.addressLine2 && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
+                    <p className="text-xs text-red-500">
                       {errors.addressLine2}
                     </p>
                   )}
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Country <span className="text-red-400">*</span>
+                  <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                    Country <span className="text-red-400 ml-1">*</span>
                   </label>
                   <Select
                     instanceId="select-country"
@@ -952,43 +926,44 @@ export default function CompanyForm({
                     styles={customSelectStyles(errors.country)}
                   />
                   {errors.country && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
+                    <p className="text-xs text-red-500">
                       {errors.country}
                     </p>
                   )}
                 </div>
+
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    State / Province <span className="text-red-400">*</span>
+                  <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                    State / Province <span className="text-red-400 ml-1">*</span>
                   </label>
                   <Select
                     instanceId="select-state"
                     value={
                       stateOptions.find((s) => s.value === formData.state) ||
-                      null
+                      (formData.state ? { label: formData.state, value: formData.state } : null)
                     }
                     onChange={(opt) =>
                       handleChange("state", opt ? opt.value : "")
                     }
                     options={stateOptions}
-                    isDisabled={!formData.country || stateOptions.length === 0}
+                    isDisabled={!formData.country}
                     isClearable={true}
                     isSearchable={true}
                     placeholder={
                       !formData.country
-                        ? "Select country first"
+                        ? "Select Country First"
                         : stateOptions.length === 0
-                          ? "No states"
+                          ? "No States"
                           : "Select State"
                     }
                     classNamePrefix="react-select"
                     styles={customSelectStyles(
                       errors.state,
-                      !formData.country || stateOptions.length === 0,
+                      !formData.country,
                     )}
                   />
                   {errors.state && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
+                    <p className="text-xs text-red-500">
                       {errors.state}
                     </p>
                   )}
@@ -997,56 +972,57 @@ export default function CompanyForm({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    City <span className="text-red-400">*</span>
+                  <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                    City <span className="text-red-400 ml-1">*</span>
                   </label>
                   <Select
                     instanceId="select-city"
                     value={
-                      cityOptions.find((c) => c.value === formData.city) || null
+                      cityOptions.find((c) => c.value === formData.city) ||
+                      (formData.city ? { label: formData.city, value: formData.city } : null)
                     }
                     onChange={(opt) =>
                       handleChange("city", opt ? opt.value : "")
                     }
                     options={cityOptions}
-                    isDisabled={!formData.state || cityOptions.length === 0}
+                    isDisabled={!formData.state}
                     isClearable={true}
                     isSearchable={true}
                     placeholder={
                       !formData.state
-                        ? "Select state first"
+                        ? "Select State First"
                         : cityOptions.length === 0
-                          ? "No cities"
+                          ? "No Cities"
                           : "Select City"
                     }
                     classNamePrefix="react-select"
                     styles={customSelectStyles(
                       errors.city,
-                      !formData.state || cityOptions.length === 0,
+                      !formData.state,
                     )}
                   />
                   {errors.city && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
+                    <p className="text-xs text-red-500">
                       {errors.city}
                     </p>
                   )}
                 </div>
+
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Zip / Postal Code <span className="text-red-400">*</span>
+                  <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                    Zip / Postal Code <span className="text-red-400 ml-1">*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter zip code"
-                    value={formData.zipCode}
+                    placeholder="Enter Zip Code"
+                    value={formData.zipCode || ""}
                     onChange={(e) => handleChange("zipCode", e.target.value)}
-                    className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.zipCode ? "border-red-400 bg-red-50" : "border-gray-200"}
-                  `}
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                      ${errors.zipCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
+                    `}
                   />
                   {errors.zipCode && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
+                    <p className="text-xs text-red-500">
                       {errors.zipCode}
                     </p>
                   )}
@@ -1055,7 +1031,7 @@ export default function CompanyForm({
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <SectionHeader
               icon={User}
               title="Contact Person"
@@ -1063,144 +1039,125 @@ export default function CompanyForm({
               bg="bg-violet-50"
             />
 
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Contact Person Name
                 </label>
                 <input
                   type="text"
-                  placeholder="Full name"
-                  value={formData.contactPersonName}
+                  placeholder="Enter Contact Person Name"
+                  value={formData.contactPersonName || ""}
                   onChange={(e) =>
                     handleChange("contactPersonName", e.target.value)
                   }
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.contactPersonName ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                    ${errors.contactPersonName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
                 />
                 {errors.contactPersonName && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
+                  <p className="text-xs text-red-500">
                     {errors.contactPersonName}
                   </p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Contact Person Email
                 </label>
                 <input
                   type="email"
-                  placeholder="contact@example.com"
-                  value={formData.contactPersonEmail}
+                  placeholder="Enter Contact Person Email"
+                  value={formData.contactPersonEmail || ""}
                   onChange={(e) =>
                     handleChange("contactPersonEmail", e.target.value)
                   }
-                  className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                    focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                    ${errors.contactPersonEmail ? "border-red-400 bg-red-50" : "border-gray-200"}
+                  className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                    ${errors.contactPersonEmail ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
                 />
                 {errors.contactPersonEmail && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
+                  <p className="text-xs text-red-500">
                     {errors.contactPersonEmail}
                   </p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                   Contact Person Phone
                 </label>
-                <div className="space-y-1.5">
-                  <div className="flex gap-2">
-                    <div className="w-[130px] shrink-0">
-                      <Select
-                        instanceId="select-dialCode"
-                        value={
-                          DIAL_CODE_OPTIONS.find(
-                            (d) => d.value === formData.dialCode,
-                          ) || null
-                        }
-                        onChange={(opt) =>
-                          handleChange("dialCode", opt ? opt.value : "")
-                        }
-                        options={DIAL_CODE_OPTIONS}
-                        isClearable={true}
-                        isSearchable={true}
-                        placeholder="Code"
-                        classNamePrefix="react-select"
-                        styles={customSelectStyles(
-                          errors.dialCode || errors.contactPersonPhone,
-                        )}
-                      />
-                    </div>
-                    <input
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={formData.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
-                      className={`flex-1 px-3 py-2.5 border rounded-lg text-sm transition-all outline-none
-                      focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white hover:border-gray-300
-                      ${errors.contactPersonPhone ? "border-red-400 bg-red-50" : "border-gray-200"}
-                    `}
+                <div className="flex gap-2">
+                  <div className="max-w-[180px] shrink-0">
+                    <Select
+                      instanceId="select-dialCode"
+                      value={
+                        DIAL_CODE_OPTIONS.find(
+                          (d) => d.value === formData.dialCode,
+                        ) || null
+                      }
+                      onChange={(opt) =>
+                        handleChange("dialCode", opt ? opt.value : "")
+                      }
+                      options={DIAL_CODE_OPTIONS}
+                      isClearable={true}
+                      isSearchable={true}
+                      placeholder="Code"
+                      classNamePrefix="react-select"
+                      styles={customSelectStyles(
+                        errors.dialCode || errors.contactPersonPhone,
+                      )}
                     />
                   </div>
-
-                  {errors.contactPersonPhone && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
-                      {errors.contactPersonPhone}
-                    </p>
-                  )}
+                  <input
+                    type="tel"
+                    placeholder="Enter Phone Number"
+                    value={formData.contactPersonPhone || ""}
+                    onChange={(e) => handleChange("contactPersonPhone", e.target.value)}
+                    className={`flex-1 px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                      ${errors.contactPersonPhone ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
+                    `}
+                  />
                 </div>
+                {errors.contactPersonPhone && (
+                  <p className="text-xs text-red-500">
+                    {errors.contactPersonPhone}
+                  </p>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="px-6 py-4 flex gap-3 justify-center items-center">
+        <div className="flex justify-center gap-3 pt-4">
           <button
             type="button"
             onClick={handleDiscard}
-            className="px-5 py-2 border bg-white border-gray-300 rounded-lg text-md font-medium
-            text-gray-600 hover:bg-gray-50 transition cursor-pointer"
+            disabled={loading}
+            className="px-4 py-2 border border-gray-300 bg-white rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
           >
             Discard
           </button>
-
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 rounded-lg bg-[#1565c0] text-white text-md font-medium
-            hover:bg-[#0f57a6] disabled:opacity-60 disabled:cursor-not-allowed
-            transition cursor-pointer flex items-center gap-2"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm cursor-pointer font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
           >
-            Submit
+            {loading ? "Saving..." : "Submit"}
           </button>
         </div>
       </form>
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
-          confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
-        }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save these changes?"
-            : "Are you sure you want to discard? Any unsaved changes will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        entityName="Company"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.back();
+            router.push(buildRoute("company", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

@@ -14,6 +14,7 @@ import ConfirmModal from "@/components/common/ConfirmModal";
 import itemCategoryConfig from "@/config/item-category.config.json";
 import { getItemCategorySchema } from "@/lib/validation/item-category.schema";
 import MultiSelectWithToggle from "@/components/common/form/MultiSelectWithToggle";
+import { buildRoute } from "@/lib/navigation/routeBuilder";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -181,8 +182,8 @@ export default function ItemCategoryForm({
       navbar: {
         title: `${mode === "create" ? "Add" : "Edit"} Item Category`,
         breadcrumbs: [
-          { label: "Master", href: "/" },
-          { label: itemCategoryConfig.title, href: "/item-category" },
+          { label: "Home", href: buildRoute("home", "list") },
+          { label: itemCategoryConfig.title, href: buildRoute("item-category", "list") },
           {
             label: `${mode === "create" ? "Add" : "Edit"} Category`,
           },
@@ -261,7 +262,7 @@ export default function ItemCategoryForm({
     if (isDirty) {
       setConfirmState({ isOpen: true, type: "discard", data: null });
     } else {
-      router.push("/item-category");
+      router.push(buildRoute("item-category", "list"));
     }
   };
 
@@ -288,7 +289,7 @@ export default function ItemCategoryForm({
             ? "Category created successfully!"
             : "Category updated successfully!"
         );
-        router.push("/item-category");
+        router.push(buildRoute("item-category", "list"));
       } else {
         toast.error(message || `Failed to ${mode === "create" ? "create" : "update"} category`);
       }
@@ -315,9 +316,10 @@ export default function ItemCategoryForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Category Name"
                 value={formData.categoryName || ""}
                 onChange={(e) => handleChange("categoryName", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.categoryName ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
               />
@@ -361,9 +363,10 @@ export default function ItemCategoryForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Category Code"
                 value={formData.categoryCode || ""}
                 onChange={(e) => handleChange("categoryCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
                         ${errors.categoryCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                         bg-white
                       `}
@@ -379,9 +382,10 @@ export default function ItemCategoryForm({
               </label>
               <input
                 type="text"
+                placeholder="Enter Reference Code"
                 value={formData.referenceCode || ""}
                 onChange={(e) => handleChange("referenceCode", e.target.value)}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm placeholder:text-sm placeholder:text-gray-400 transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                   ${errors.referenceCode ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}
                   `}
               />
@@ -490,23 +494,13 @@ export default function ItemCategoryForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        title={
-          confirmState.type === "submit"
-            ? "Confirm Submission"
-            : "Discard Changes"
-        }
-        message={
-          confirmState.type === "submit"
-            ? "Are you sure you want to save this category?"
-            : "Are you sure you want to discard your changes? Any unsaved data will be lost."
-        }
-        confirmLabel={confirmState.type === "submit" ? "Save" : "Discard"}
-        danger={confirmState.type === "discard"}
+        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        entityName="Item Category"
         onConfirm={() => {
           if (confirmState.type === "submit") {
             handleActualSubmit(confirmState.data);
           } else {
-            router.push("/item-category");
+            router.push(buildRoute("item-category", "list"));
           }
           setConfirmState({ isOpen: false, type: null, data: null });
         }}

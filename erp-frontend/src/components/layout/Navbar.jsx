@@ -46,8 +46,29 @@ export default function Navbar() {
           <h2 className="font-semibold text-xl mt-2">{navbar.title}</h2>
         )}
       </div>
-      <div className="h-px bg-gray-300 mt-4 me-3.5">
-        {navbar.actionButton && (
+      <div className="flex items-center gap-3 mt-4 me-3.5">
+        {navbar.actionButtons ? (
+          navbar.actionButtons.map((btn, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={btn.onClick}
+              className="
+                flex items-center gap-2
+                bg-[#1565c0]
+                text-white
+                px-8
+                py-2
+                rounded-md
+                hover:bg-[#0f57a6]
+                transition
+                cursor-pointer
+              "
+            >
+              <span>{btn.label}</span>
+            </button>
+          ))
+        ) : navbar.actionButton ? (
           <button
             type="button"
             onClick={navbar.actionButton.onClick}
@@ -63,11 +84,9 @@ export default function Navbar() {
                 cursor-pointer
               "
           >
-            
-
             <span>{navbar.actionButton.label}</span>
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   );
