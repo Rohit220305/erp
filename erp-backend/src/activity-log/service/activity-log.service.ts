@@ -38,8 +38,11 @@ export class ActivityLogService {
       }
 
       const renderedMessage = master.messageTemplate
-        .replace('{actor}', actorName)
-        .replace('{entity}', createDto.entityName || '');
+        .replace(/\{actor\}/g, actorName)
+        .replace(/\{actorName\}/g, actorName)
+        .replace(/\{entity\}/g, createDto.entityName || '')
+        .replace(/\{entityName\}/g, createDto.entityName || '')
+        .replace(/\{title\}/g, createDto.entityName || '');
 
       const logEntry = new ActivityLogEntity();
       logEntry.activityMasterId = master.id;

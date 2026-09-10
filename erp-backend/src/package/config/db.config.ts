@@ -32,6 +32,8 @@ import { ProductionBatchEntity } from 'src/production-batch/entity/production-ba
 import { ProductionBatchProcessEntity } from 'src/production-batch/entity/production-batch-process.entity';
 import { ProductionBatchItemEntity } from 'src/production-batch/entity/production-batch-item.entity';
 import { BatchConsumptionLogEntity } from 'src/production-batch/entity/batch-consumption-log.entity';
+import { MaterialRequestEntity } from 'src/material-request/entity/material-request.entity';
+import { MaterialRequestItemEntity } from 'src/material-request/entity/material-request-item.entity';
 dotenv.config();
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -74,6 +76,8 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     ProductionBatchProcessEntity,
     ProductionBatchItemEntity,
     BatchConsumptionLogEntity,
+    MaterialRequestEntity,
+    MaterialRequestItemEntity,
   ],
   synchronize: false,
   migrationsRun: false,

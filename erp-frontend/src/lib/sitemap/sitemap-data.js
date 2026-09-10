@@ -93,11 +93,11 @@ export const sitemapData = [
         path: "/production-order",
         permission: "PRODUCTION_ORDER_LIST",
       },
-      // {
-      //   label: "Production Batch",  
-      //   path: "/production-batch",
-      //   permission: "PRODUCTION_BATCH_LIST",
-      // },
+      {
+        label: "Production Batch",  
+        path: "/production-batch",
+        permission: "PRODUCTION_BATCH_LIST",
+      },
       
       
     ],

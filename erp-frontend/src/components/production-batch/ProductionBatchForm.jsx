@@ -13,6 +13,8 @@ import { getProductionBatchSchema } from "@/lib/validation/production-batch.sche
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 import ProductionBatchProcessTabs from "./ProductionBatchProcessTabs";
 import Loader from "@/components/common/Loader";
+import ModuleLink from "@/components/common/ModuleLink";
+import SideDrawer from "@/components/common/SideDrawer";
 
 export default function ProductionBatchForm({ orderId }) {
   const router = useRouter();
@@ -26,6 +28,13 @@ export default function ProductionBatchForm({ orderId }) {
 
   const [calculatedProcesses, setCalculatedProcesses] = useState([]);
   const [allExitItemIds, setAllExitItemIds] = useState(new Set());
+  const [sideDrawerState, setSideDrawerState] = useState({ isOpen: false, moduleName: null, id: null });
+
+  const handleOpenDrawer = (moduleName, id) => {
+    if (moduleName && id) {
+      setSideDrawerState({ isOpen: true, moduleName, id });
+    }
+  };
 
   const primitiveQty = batchData?.primitiveQuantity || 1;
   const schema = getProductionBatchSchema(primitiveQty);
@@ -191,52 +200,79 @@ export default function ProductionBatchForm({ orderId }) {
     );
   }
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="h-full overflow-y-scroll pb-10 bg-gray-50">
-      <div className="h-full px-8 pt-4 space-y-6">
-        
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Add</h1>
-        </div>
+  const prodOrderId = orderId || batchData.productionOrderId;
+  const customerId = batchData.customerCompanyId || batchData.customerId;
+  const plantId = batchData.companyId || batchData.plantId;
 
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="h-full overflow-y-scroll pb-10 bg-gray-50"
+    >
+      <div className="h-full px-8 pt-4 space-y-6">
         <div className="bg-white rounded-md border border-gray-200 shadow-sm p-6">
-          
           <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
-            <h2 className="text-base font-bold text-gray-800 tracking-wide">
-              {batchData.productionOrderCode || "MPR/----/--/----"}
-            </h2>
-            {/* <div className="flex items-center gap-4">
-              <span className="text-gray-700 font-bold text-sm">
-                Batch No #1
-              </span>
-              <button
-                type="button"
-                onClick={handleViewSuggestedQty}
-                className="bg-[#1565c0] text-white px-4 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition cursor-pointer"
+            {prodOrderId ? (
+              <ModuleLink
+                moduleName="ProductionOrder"
+                id={prodOrderId}
+                className="text-base font-bold text-[#1565c0] tracking-wide hover:underline"
+                onOpenDrawer={handleOpenDrawer}
               >
-                View Suggested Qty
-              </button>
-            </div> */}
+                {batchData.productionOrderCode}
+              </ModuleLink>
+            ) : (
+              <h2 className="text-base font-bold text-gray-800 tracking-wide">
+                {batchData.productionOrderCode}
+              </h2>
+            )}
+
+            <div className="flex items-center gap-4">
+              <span className="text-gray-700 font-bold text-sm">
+                Batch No #{batchData?.batchSeqNo || 1}
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-xs">
-            
             <div className="space-y-4">
               <div>
                 <span className="block text-gray-500 text-[11px] mb-1">
                   Item Name
                 </span>
-                <span className="block font-medium text-[#1565c0] text-sm">
-                  {batchData.itemName || "—"}
-                </span>
+                {batchData.itemId ? (
+                  <ModuleLink
+                    moduleName="Item"
+                    id={batchData.itemId}
+                    className="block font-medium text-[#1565c0] text-sm hover:underline"
+                    onOpenDrawer={handleOpenDrawer}
+                  >
+                    {batchData.itemName || "—"}
+                  </ModuleLink>
+                ) : (
+                  <span className="block font-medium text-gray-800 text-sm">
+                    {batchData.itemName || "—"}
+                  </span>
+                )}
               </div>
               <div>
                 <span className="block text-gray-500 text-[11px] mb-1">
                   Customer
                 </span>
-                <span className="block font-medium text-[#1565c0] text-sm">
-                  {batchData.customerName || "Casa Comfort Enterprise Lmt"}
-                </span>
+                {customerId ? (
+                  <ModuleLink
+                    moduleName="Company"
+                    id={customerId}
+                    className="block font-medium text-[#1565c0] text-sm hover:underline"
+                    onOpenDrawer={handleOpenDrawer}
+                  >
+                    {batchData.customerName || "Casa Comfort Enterprise Lmt"}
+                  </ModuleLink>
+                ) : (
+                  <span className="block font-medium text-gray-800 text-sm">
+                    {batchData.customerName || "Casa Comfort Enterprise Lmt"}
+                  </span>
+                )}
               </div>
               <div>
                 <span className="block text-gray-500 text-[11px] mb-1">
@@ -253,9 +289,20 @@ export default function ProductionBatchForm({ orderId }) {
                 <span className="block text-gray-500 text-[11px] mb-1">
                   BoM Name
                 </span>
-                <span className="block font-medium text-[#1565c0] text-sm">
-                  {batchData.bomName || "—"}
-                </span>
+                {batchData.bomId ? (
+                  <ModuleLink
+                    moduleName="Bom"
+                    id={batchData.bomId}
+                    className="block font-medium text-[#1565c0] text-sm hover:underline"
+                    onOpenDrawer={handleOpenDrawer}
+                  >
+                    {batchData.bomName || "—"}
+                  </ModuleLink>
+                ) : (
+                  <span className="block font-medium text-gray-800 text-sm">
+                    {batchData.bomName || "—"}
+                  </span>
+                )}
               </div>
               <div>
                 <span className="block text-gray-500 text-[11px] mb-1">
@@ -281,17 +328,39 @@ export default function ProductionBatchForm({ orderId }) {
                 <span className="block text-gray-500 text-[11px] mb-1">
                   Process Template Name
                 </span>
-                <span className="block font-medium text-[#1565c0] text-sm">
-                  {batchData.processTemplateName || "Gold Manufacturing"}
-                </span>
+                {batchData.processTemplateId ? (
+                  <ModuleLink
+                    moduleName="ProcessTemplate"
+                    id={batchData.processTemplateId}
+                    className="block font-medium text-[#1565c0] text-sm hover:underline"
+                    onOpenDrawer={handleOpenDrawer}
+                  >
+                    {batchData.processTemplateName || "Gold Manufacturing"}
+                  </ModuleLink>
+                ) : (
+                  <span className="block font-medium text-gray-800 text-sm">
+                    {batchData.processTemplateName || "Gold Manufacturing"}
+                  </span>
+                )}
               </div>
               <div>
                 <span className="block text-gray-500 text-[11px] mb-1">
                   Requested By
                 </span>
-                <span className="block font-medium text-[#1565c0] text-sm">
-                  {batchData.addedByName || "—"}
-                </span>
+                {batchData.addedBy ? (
+                  <ModuleLink
+                    moduleName="User"
+                    id={batchData.addedBy}
+                    className="block font-medium text-[#1565c0] text-sm hover:underline"
+                    onOpenDrawer={handleOpenDrawer}
+                  >
+                    {batchData.addedByName || "—"}
+                  </ModuleLink>
+                ) : (
+                  <span className="block font-medium text-gray-800 text-sm">
+                    {batchData.addedByName || "—"}
+                  </span>
+                )}
               </div>
               <div>
                 <span className="block text-gray-500 text-[11px] mb-1 font-semibold text-gray-700">
@@ -324,28 +393,34 @@ export default function ProductionBatchForm({ orderId }) {
                 <span className="block text-gray-500 text-[11px] mb-1">
                   Plant Name
                 </span>
-                <span className="block font-medium text-[#1565c0] text-sm">
-                  {batchData.plantName || batchData.companyName || "Atlas Tar Plant"}
-                </span>
+                {plantId ? (
+                  <ModuleLink
+                    moduleName="Company"
+                    id={plantId}
+                    className="block font-medium text-[#1565c0] text-sm hover:underline"
+                    onOpenDrawer={handleOpenDrawer}
+                  >
+                    {batchData.plantName ||
+                      batchData.companyName ||
+                      "Atlas Tar Plant"}
+                  </ModuleLink>
+                ) : (
+                  <span className="block font-medium text-gray-800 text-sm">
+                    {batchData.plantName ||
+                      batchData.companyName ||
+                      "Atlas Tar Plant"}
+                  </span>
+                )}
               </div>
               <div>
                 <span className="block text-gray-500 text-[11px] mb-1">
                   Total Qty
                 </span>
                 <span className="block font-bold text-gray-900 text-sm">
-                  {batchData.totalQuantityDisplay || batchData.productionQuantityDisplay || "350.50 gms"}
+                  {batchData.totalQuantityDisplay ||
+                    batchData.productionQuantityDisplay ||
+                    "350.50 gms"}
                 </span>
-              </div>
-              <div>
-                <span className="block text-gray-500 text-[11px] mb-1 font-semibold text-gray-700">
-                  Batch No*
-                </span>
-                <input
-                  type="text"
-                  {...register("batchCode")}
-                  className="w-full border border-gray-300 rounded px-2.5 py-1 text-sm outline-none focus:border-blue-500"
-                  placeholder=""
-                />
               </div>
             </div>
           </div>
@@ -360,6 +435,7 @@ export default function ProductionBatchForm({ orderId }) {
           allExitItemIds={allExitItemIds}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          onOpenDrawer={handleOpenDrawer}
         />
 
         <div className="flex justify-center pt-4 pb-8">
@@ -372,6 +448,17 @@ export default function ProductionBatchForm({ orderId }) {
           </button>
         </div>
       </div>
+
+      <SideDrawer
+        open={sideDrawerState.isOpen}
+        onClose={() =>
+          setSideDrawerState({ isOpen: false, moduleName: null, id: null })
+        }
+        moduleName={sideDrawerState.moduleName}
+        mode="details"
+        data={sideDrawerState.id ? { id: sideDrawerState.id } : null}
+      />
     </form>
   );
 }
+

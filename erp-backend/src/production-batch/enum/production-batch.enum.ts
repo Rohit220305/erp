@@ -28,3 +28,9 @@ export enum MaterialStatus {
   OrderReceived = 'OrderReceived',
   OrderPartiallyReceived = 'OrderPartiallyReceived',
 }
+
+export enum MaterialRequestStatus {
+  Pending = 'Pending',
+  Delivered = 'Delivered',
+  Cancelled = 'Cancelled',
+}

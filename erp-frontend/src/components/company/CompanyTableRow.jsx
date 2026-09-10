@@ -30,13 +30,17 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
         {hasViewPerm ? (
           <ModuleLink
             href={buildRoute("company", "detail", { id: item.id })}
-            onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
+            onClick={() =>
+              setSelectedItemForDetails && setSelectedItemForDetails(item)
+            }
             className="font-semibold text-[#1565c0] hover:underline cursor-pointer"
           >
             {item.companyName || "—"}
           </ModuleLink>
         ) : (
-          <span className="font-semibold text-gray-800">{item.companyName || "—"}</span>
+          <span className="font-semibold text-gray-800">
+            {item.companyName || "—"}
+          </span>
         )}
       </td>
 
@@ -59,7 +63,7 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
       </td>
 
       <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-        {item.phone ? `${item.dialCode || ""} ${item.phone}`.trim() : "—"}
+        {item.fullPhoneNumber || "—"}
       </td>
 
       <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
@@ -67,10 +71,13 @@ export default function CompanyTableRow({ item, onRowAction, setSelectedItemForD
       </td>
       <td className="px-4 py-3 text-sm">
         <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-            }`}
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+            isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          }`}
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`}
+          />
           {item.status || "—"}
         </span>
       </td>

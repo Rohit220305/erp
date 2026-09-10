@@ -6,5 +6,6 @@ export enum AttachmentModule {
   COMPANY = 'COMPANY',
   BOM = 'BOM',
   PRODUCTION_ORDER = 'PRODUCTION_ORDER',
+  MATERIAL_REQUEST = 'MATERIAL_REQUEST',
 }
 

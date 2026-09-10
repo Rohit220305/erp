@@ -14,6 +14,7 @@ import ProductionBatchSidebar from "./details/ProductionBatchSidebar";
 import ProductionBatchSummaryTab from "./details/ProductionBatchSummaryTab";
 import ProductionBatchItemDetailsTab from "./details/ProductionBatchItemDetailsTab";
 import ProductionBatchProcessItemDetailsTab from "./details/ProductionBatchProcessItemDetailsTab";
+import ProductionBatchMaterialRequestTab from "./details/ProductionBatchMaterialRequestTab";
 
 export default function ProductionBatchDetailPage({ batchData, errorMsg }) {
   const { setConfig, resetConfig } = useHeader();
@@ -39,11 +40,16 @@ export default function ProductionBatchDetailPage({ batchData, errorMsg }) {
           { label: "Master", href: buildRoute("home", "list") },
           { label: "Production Batches", href: buildRoute("production-batch", "list") },
         ],
-        actionButton: null,
+        actionButton: batchData?.id && can(CAPABILITIES.MATERIAL_REQUEST?.CREATE || "MATERIAL_REQUEST_CREATE")
+          ? {
+              label: "Request Material",
+              onClick: () => router.push(buildRoute("production-batch", "materialRequestCreate", { id: batchData.id })),
+            }
+          : null,
       },
     });
     return () => resetConfig();
-  }, [setConfig, resetConfig]);
+  }, [setConfig, resetConfig, batchData?.id, can, router]);
 
   if (errorMsg) {
     return (
@@ -72,7 +78,8 @@ export default function ProductionBatchDetailPage({ batchData, errorMsg }) {
     if (moduleName && id) {
       setSideDrawerState({ isOpen: true, moduleName, id });
     }
-  };
+  };  
+  console.log("batchData in ProductionBatchDetailPage:", batchData);
 
   return (
     <div className="h-full">
@@ -107,9 +114,17 @@ export default function ProductionBatchDetailPage({ batchData, errorMsg }) {
             />
           )}
 
+          {activeTab === "MATERIAL_REQUEST" && (
+            <ProductionBatchMaterialRequestTab
+              batchData={batchData}
+              onOpenDrawer={handleOpenDrawer}
+            />
+          )}
+
           {activeTab !== "SUMMARY" &&
             activeTab !== "ITEM_DETAILS" &&
-            activeTab !== "PROCESS_ITEM_DETAILS" && (
+            activeTab !== "PROCESS_ITEM_DETAILS" &&
+            activeTab !== "MATERIAL_REQUEST" && (
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-900 mb-2">
                   {activeTab.replace("_", " ")}

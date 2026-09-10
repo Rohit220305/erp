@@ -78,7 +78,7 @@ export default function ProductionOrderGridCard({
           )}
           <span className="text-[11px]  text-gray-400">{item.itemCode}</span>
         </div>
-        {/* {canCreateBatch && (
+        {canCreateBatch && (
           <div className="ml-2 shrink-0">
             <button
               onClick={() => router.push(`/production-batch/create/${item.id}`)}
@@ -87,7 +87,7 @@ export default function ProductionOrderGridCard({
               Create Batch
             </button>
           </div>
-        )} */}
+        )}
       </div>
 
       <div className="space-y-2.5 text-xs py-4 border-t border-gray-100">

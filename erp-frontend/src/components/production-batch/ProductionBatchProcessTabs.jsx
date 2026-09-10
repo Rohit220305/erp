@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { Edit2 } from "lucide-react";
+import ModuleLink from "@/components/common/ModuleLink";
 
 export default function ProductionBatchProcessTabs({
   calculatedProcesses = [],
   allExitItemIds = new Set(),
   activeTab = "SUMMARY",
   setActiveTab,
+  onOpenDrawer,
 }) {
   const [displayExitItems, setDisplayExitItems] = useState([]);
   const [displayEntryItems, setDisplayEntryItems] = useState([]);
@@ -80,7 +82,6 @@ export default function ProductionBatchProcessTabs({
 
   return (
     <div className="flex flex-col md:flex-row gap-6 items-start">
-      
       <div className="w-full md:w-64 bg-white rounded-md border border-gray-200 shadow-sm flex flex-col justify-between self-stretch min-h-[400px] overflow-hidden">
         <div className="p-5">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
@@ -124,13 +125,11 @@ export default function ProductionBatchProcessTabs({
       </div>
 
       <div className="flex-1 w-full bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
-        
         <div className="bg-gray-100/80 border-b border-gray-200 px-6 py-3 font-semibold text-xs text-gray-700 uppercase tracking-wider">
           {activeProcessName}
         </div>
 
         <div className="p-6 space-y-8">
-          
           {displayExitItems.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold text-gray-700 mb-3 block">
@@ -158,11 +157,22 @@ export default function ProductionBatchProcessTabs({
                           {idx + 1}
                         </td>
                         <td className="px-4 py-3.5">
-                          <div className="font-bold text-[#1565c0]">
-                            {item.itemName}
-                          </div>
+                          {item.itemId ? (
+                            <ModuleLink
+                              moduleName="Item"
+                              id={item.itemId}
+                              className="font-bold text-[#1565c0] hover:underline"
+                              onOpenDrawer={onOpenDrawer}
+                            >
+                              {item.itemName}
+                            </ModuleLink>
+                          ) : (
+                            <div className="font-bold text-gray-900">
+                              {item.itemName}
+                            </div>
+                          )}
                           <div className="text-[11px] text-gray-500 font-mono mt-0.5">
-                            ({item.itemCode || item.itemId} / {item.itemName?.replace(/\s+/g, '').toUpperCase()})
+                            ({item.itemCode })
                           </div>
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
@@ -217,11 +227,22 @@ export default function ProductionBatchProcessTabs({
                             {idx + 1}
                           </td>
                           <td className="px-4 py-3.5">
-                            <div className="font-bold text-[#1565c0]">
-                              {item.itemName}
-                            </div>
+                            {item.itemId ? (
+                              <ModuleLink
+                                moduleName="Item"
+                                id={item.itemId}
+                                className="font-bold text-[#1565c0] hover:underline"
+                                onOpenDrawer={onOpenDrawer}
+                              >
+                                {item.itemName}
+                              </ModuleLink>
+                            ) : (
+                              <div className="font-bold text-gray-900">
+                                {item.itemName}
+                              </div>
+                            )}
                             <div className="text-[11px] text-gray-500 font-mono mt-0.5">
-                              ({item.itemCode || item.itemId} / {item.itemName?.replace(/\s+/g, '').toUpperCase()})
+                              ({item.itemCode } )
                             </div>
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
@@ -252,3 +273,4 @@ export default function ProductionBatchProcessTabs({
     </div>
   );
 }
+

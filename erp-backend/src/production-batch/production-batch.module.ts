@@ -12,6 +12,8 @@ import { BomProcessItemEntity } from '../bom/entity/bom-process-item.entity';
 import { ProcessTemplateMappingEntity } from '../process-template/entity/process.template.mapping.entity';
 import { ProcessTemplateEntity } from '../process-template/entity/process.template.entity';
 import { ItemEntity } from '../item/entity/item.entity';
+import { CompanyEntity } from '../company/entity/company.entity';
+import { UserEntity } from '../user/entity/user.entity';
 import { AttachmentMasterModule } from '../attachment-master/attachment-master.module';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
@@ -31,6 +33,8 @@ import { ProductionBatchListService } from './service/production-batch.list.serv
       ProcessTemplateMappingEntity,
       ProcessTemplateEntity,
       ItemEntity,
+      CompanyEntity,
+      UserEntity,
     ]),
     AttachmentMasterModule,
     ActivityLogModule,

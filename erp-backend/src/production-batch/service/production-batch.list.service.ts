@@ -5,27 +5,33 @@ import { ProductionBatchEntity } from '../entity/production-batch.entity';
 import { ProductionBatchProcessEntity } from '../entity/production-batch-process.entity';
 import { ProductionBatchItemEntity } from '../entity/production-batch-item.entity';
 import { BatchConsumptionLogEntity } from '../entity/batch-consumption-log.entity';
+import { MaterialType } from '../enum/production-batch.enum';
 import { ProductionOrderEntity } from '../../production-order/entity/production-order.entity';
 import { BomEntity } from '../../bom/entity/bom.entity';
 import { BomProcessItemEntity } from '../../bom/entity/bom-process-item.entity';
 import { ProcessTemplateMappingEntity } from '../../process-template/entity/process.template.mapping.entity';
 import { ProcessTemplateEntity } from '../../process-template/entity/process.template.entity';
 import { ItemEntity } from '../../item/entity/item.entity';
+import { UserEntity } from '../../user/entity/user.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
+import { AttachmentMasterService } from 'src/attachment-master/service/attachment-master.service';
+import { AttachmentModule } from 'src/attachment-master/enums/attachment-module.enum';
 import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { ProductionBatchSuggestDto, ProductionBatchListDto, ProductionBatchDetailsDto } from '../dto/production-batch.dto';
-import { MaterialType } from '../enum/production-batch.enum';
 
 @Injectable()
 export class ProductionBatchListService {
   constructor(
     private readonly general: GeneralUtilities,
+    private readonly attachmentMasterService: AttachmentMasterService,
     @InjectRepository(ProductionBatchEntity)
     private readonly pbRepo: Repository<ProductionBatchEntity>,
     @InjectRepository(ProductionBatchProcessEntity)
     private readonly pbProcessRepo: Repository<ProductionBatchProcessEntity>,
     @InjectRepository(ProductionBatchItemEntity)
     private readonly pbItemRepo: Repository<ProductionBatchItemEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
     @InjectRepository(ProductionOrderEntity)
     private readonly poRepo: Repository<ProductionOrderEntity>,
     @InjectRepository(BomEntity)
@@ -172,6 +178,15 @@ export class ProductionBatchListService {
         };
       });
 
+      const existingBatchCount = await this.pbRepo.count({
+        where: {
+          productionOrderId: query.productionOrderId,
+          sysRecDeleted: false,
+        },
+      });
+      const batchSeqNo = existingBatchCount + 1;
+      const suggestedBatchCode = `${poDetails.productionOrderCode}/${batchSeqNo}`;
+
       return_data = {
         success: 1,
         message: 'BOM suggest fetched successfully.',
@@ -181,6 +196,8 @@ export class ProductionBatchListService {
           pendingQuantityDisplay: poDetails.pendingQuantity ? `${parseFloat(poDetails.pendingQuantity).toFixed(2)} ${poDetails.uomName || ''}` : '',
           productionDateFormatted: poDetails.productionDate ? await this.general.dateFormat(poDetails.productionDate) : null,
           primitiveQuantity: parseFloat(String(primitiveQuantity)),
+          batchSeqNo,
+          suggestedBatchCode,
           processes,
         },
       };
@@ -318,6 +335,8 @@ export class ProductionBatchListService {
       qb.addSelect('item.itemName', 'itemName');
       qb.addSelect('item.itemCode', 'itemCode');
       qb.leftJoin('item_master', 'item', 'item.id = pb.itemId');
+      qb.addSelect('uom.uomName', 'uomName');
+      qb.leftJoin('item_uom_master', 'uom', 'uom.id = item.itemUomId');
 
       qb.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
       qb.leftJoin('users', 'addedByUser', 'addedByUser.id = pb.addedBy');
@@ -328,6 +347,14 @@ export class ProductionBatchListService {
       const batchData = await qb.getRawOne();
       if (!batchData) throw new Error('Production Batch not found');
       batchData.addedDateFormatted = batchData.addedDate ? await this.general.dateFormat(batchData.addedDate) : null;
+
+      const batchSeqNo = await this.pbRepo
+        .createQueryBuilder('pb')
+        .where('pb.productionOrderId = :poId', { poId: batchData.productionOrderId })
+        .andWhere('pb.id <= :id', { id: batchData.id })
+        .andWhere('pb.sysRecDeleted = 0')
+        .getCount();
+      batchData.batchSeqNo = batchSeqNo || 1;
 
       const processes = await this.pbProcessRepo
         .createQueryBuilder('pbp')
@@ -375,7 +402,11 @@ export class ProductionBatchListService {
       }
 
       const itemImageMap = new Map<number, string>();
-      const allItemIds = Array.from(new Set(items.map((i) => Number(i.itemId)).filter(Boolean)));
+      const itemIdsSet = new Set(items.map((i) => Number(i.itemId)).filter(Boolean));
+      if (batchData?.itemId) {
+        itemIdsSet.add(Number(batchData.itemId));
+      }
+      const allItemIds = Array.from(itemIdsSet);
       if (allItemIds.length > 0) {
         const rawImages = await this.pbItemRepo.manager
           .createQueryBuilder()
@@ -409,13 +440,13 @@ export class ProductionBatchListService {
 
         try {
           if (typeof parsedNodePosition === 'string') parsedNodePosition = JSON.parse(parsedNodePosition);
-        } catch (e) {}
+        } catch (e) { }
         try {
           if (typeof parsedDependencies === 'string') parsedDependencies = JSON.parse(parsedDependencies);
-        } catch (e) {}
+        } catch (e) { }
         try {
           if (typeof parsedHandleConfig === 'string') parsedHandleConfig = JSON.parse(parsedHandleConfig);
-        } catch (e) {}
+        } catch (e) { }
 
         return {
           ...p,
@@ -450,13 +481,17 @@ export class ProductionBatchListService {
       const semiFinishedMap = new Map<number, any>();
       const finishedProductsMap = new Map<number, any>();
 
+      const mainItemId = Number(batchData.itemId);
+
       for (const item of items) {
         const itemId = Number(item.itemId);
         const isEntry = item.materialType === 'Entry';
         const isExit = item.materialType === 'Exit';
         const isInternal = (isEntry && exitItemIds.has(itemId)) || (isExit && entryItemIds.has(itemId));
 
-        const targetMap = isEntry && !isInternal
+        const targetMap = (itemId === mainItemId)
+          ? finishedProductsMap
+          : isEntry && !isInternal
           ? rawMaterialsMap
           : isInternal
           ? semiFinishedMap
@@ -487,6 +522,25 @@ export class ProductionBatchListService {
           existing.producedQty += Number(item.producedQty || 0);
           existing.availableStock += Number(item.availableStock || 0);
         }
+      }
+
+      if (mainItemId && !finishedProductsMap.has(mainItemId)) {
+        finishedProductsMap.set(mainItemId, {
+          id: null,
+          itemId: mainItemId,
+          itemName: batchData.itemName,
+          itemCode: batchData.itemCode,
+          uomName: batchData.uomName || 'gms',
+          materialType: 'Exit',
+          isInternalTransfer: false,
+          requiredQty: Number(batchData.batchQuantity || 0),
+          requestQty: Number(batchData.batchQuantity || 0),
+          receivedQty: 0,
+          consumedQty: 0,
+          producedQty: 0,
+          availableStock: 0,
+          itemImageUrl: itemImageMap.get(mainItemId) || null,
+        });
       }
 
       const materialDetails = {

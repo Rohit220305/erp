@@ -79,6 +79,8 @@ export class CompanyListService {
       queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
       queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
 
+      queryBuilder.addSelect("CONCAT(company.dialCode, ' ', company.phone)", 'fullPhoneNumber');
+
       queryBuilder.where('company.id = :id', { id: params.id });
       queryBuilder.andWhere('company.sysRecDeleted = 0');
 
@@ -196,6 +198,8 @@ export class CompanyListService {
 
       queryBuilder.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
       queryBuilder.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
+
+      queryBuilder.addSelect("CONCAT(company.dialCode, ' ', company.phone)", 'fullPhoneNumber');
 
       queryBuilder.andWhere('company.sysRecDeleted = 0');
 

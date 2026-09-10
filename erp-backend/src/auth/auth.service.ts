@@ -593,7 +593,7 @@ export class AuthService {
 
     return {
       success: 1,
-      message: `Now acting as ${target.userName}`,
+      message: `Logged in as ${target.userName}`,
       data: {
         ...data,
         token: accessToken,

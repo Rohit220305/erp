@@ -7,6 +7,7 @@ import { useHeader } from "@/context/HeaderContext";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import SideDrawer from "@/components/common/SideDrawer";
 import ProductionOrderMaterialTabs from "./ProductionOrderMaterialTabs";
+import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
@@ -16,6 +17,7 @@ import {
   Download,
   Paperclip,
   MessageSquare,
+  ExternalLink,
 } from "lucide-react";
 
 export default function ProductionOrderDetailPage({ data }) {
@@ -96,6 +98,7 @@ export default function ProductionOrderDetailPage({ data }) {
   const userId = orderData.addedBy || orderData.addedById || orderData.added_by || orderData.createdBy;
   const userInitial = orderData.addedByName ? orderData.addedByName.charAt(0).toUpperCase() : "U";
 
+  console.log(orderData);
   return (
     <div className="py-6 px-10 max-h-full overflow-y-auto">
       <div className="grid grid-cols-12 gap-6">
@@ -124,16 +127,21 @@ export default function ProductionOrderDetailPage({ data }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-xl hover:shadow-lg transition p-6 space-y-4">
               <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-                <div className="w-12 h-12 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                  <Package className="w-6 h-6 text-[#1565c0]" />
-                </div>
+                <SharedImageZoom
+                  id={`po-item-${orderData?.id}`}
+                  src={orderData?.itemImageUrl}
+                  alt={orderData?.itemName || "Item Image"}
+                  thumbnailClassName="w-12 h-12 rounded-lg border border-gray-200 object-cover"
+                />
                 <div className="min-w-0">
                   <h3 className="font-semibold text-sm text-gray-900 truncate">
                     {orderData.productionOrderCode}
                   </h3>
                   {canViewItem && orderData.itemId ? (
                     <ModuleLink
-                      href={buildRoute("item", "detail", { id: orderData.itemId })}
+                      href={buildRoute("item", "detail", {
+                        id: orderData.itemId,
+                      })}
                       onClick={() => handleOpenDrawer("Item", orderData.itemId)}
                       className="text-xs font-medium text-[#1565c0] hover:underline cursor-pointer truncate block"
                     >
@@ -150,25 +158,33 @@ export default function ProductionOrderDetailPage({ data }) {
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Item Code</span>
-                  <span className="font-mono font-medium text-gray-800">{orderData.itemCode || "—"}</span>
+                  <span className="font-mono font-medium text-gray-800">
+                    {orderData.itemCode || "—"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">BOM Code</span>
                   {canViewBom && orderData.bomId ? (
                     <ModuleLink
-                      href={buildRoute("bom", "detail", { id: orderData.bomId })}
+                      href={buildRoute("bom", "detail", {
+                        id: orderData.bomId,
+                      })}
                       onClick={() => handleOpenDrawer("Bom", orderData.bomId)}
                       className="font-mono font-medium text-[#1565c0] hover:underline cursor-pointer"
                     >
                       {orderData.bomCode || orderData.bomName || "—"}
                     </ModuleLink>
                   ) : (
-                    <span className="font-mono font-medium text-gray-800">{orderData.bomCode || orderData.bomName || "—"}</span>
+                    <span className="font-mono font-medium text-gray-800">
+                      {orderData.bomCode || orderData.bomName || "—"}
+                    </span>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Production Date</span>
-                  <span className="font-medium text-gray-800">{orderData.productionDateFormatted || "—"}</span>
+                  <span className="font-medium text-gray-800">
+                    {orderData.productionDateFormatted || "—"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -181,29 +197,38 @@ export default function ProductionOrderDetailPage({ data }) {
                 <table className="w-full text-left text-xs font-mono">
                   <tbody className="divide-y divide-gray-100">
                     <tr>
-                      <td className="py-1.5 text-gray-500 font-sans">Produced Qty</td>
+                      <td className="py-1.5 text-gray-500 font-sans">
+                        Produced Qty
+                      </td>
                       <td className="py-1.5 text-right font-bold text-gray-900">
                         {orderData.productionQuantityDisplay}
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-1.5 text-gray-500 font-sans">Package Qty</td>
+                      <td className="py-1.5 text-gray-500 font-sans">
+                        Package Qty
+                      </td>
                       <td className="py-1.5 text-right font-bold text-[#1565c0]">
                         {orderData.packageQuantityDisplay}
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-1.5 text-gray-500 font-sans">Pending Qty</td>
+                      <td className="py-1.5 text-gray-500 font-sans">
+                        Pending Qty
+                      </td>
                       <td className="py-1.5 text-right font-bold text-orange-600">
-                        {orderData.pendingQuantityDisplay || orderData.productionQuantityDisplay}
+                        {orderData.pendingQuantityDisplay ||
+                          orderData.productionQuantityDisplay}
                       </td>
                     </tr>
-                    {/* <tr>
-                      <td className="py-1.5 text-gray-500 font-sans">No. of Batches</td>
+                    <tr>
+                      <td className="py-1.5 text-gray-500 font-sans">
+                        No. of Batches
+                      </td>
                       <td className="py-1.5 text-right font-semibold text-purple-600">
                         {orderData.batchCount || 0}
                       </td>
-                    </tr> */}
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -216,13 +241,16 @@ export default function ProductionOrderDetailPage({ data }) {
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Unit Cost</span>
-                  <span className="font-bold text-gray-900">{orderData.itemCostPerUnitFormatted || "₦ 0.00"}</span>
+                  <span className="font-bold text-gray-900">
+                    {orderData.itemCostPerUnitFormatted || "₦ 0.00"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Estimated Total</span>
-                  <span className="font-bold text-gray-900">{orderData.estimatedTotalCostFormatted || "₦ 0.00"}</span>
+                  <span className="font-bold text-gray-900">
+                    {orderData.estimatedTotalCostFormatted || "₦ 0.00"}
+                  </span>
                 </div>
-                
               </div>
             </div>
 
@@ -237,8 +265,14 @@ export default function ProductionOrderDetailPage({ data }) {
                 <div className="min-w-0">
                   {canViewUser ? (
                     <ModuleLink
-                      href={userId ? buildRoute("user", "detail", { id: userId }) : buildRoute("user", "list")}
-                      onClick={userId ? () => handleOpenDrawer("User", userId) : null}
+                      href={
+                        userId
+                          ? buildRoute("user", "detail", { id: userId })
+                          : buildRoute("user", "list")
+                      }
+                      onClick={
+                        userId ? () => handleOpenDrawer("User", userId) : null
+                      }
                       className="text-xs font-bold text-[#1565c0] hover:underline cursor-pointer block truncate"
                     >
                       {orderData.addedByName || "System"}
@@ -257,7 +291,13 @@ export default function ProductionOrderDetailPage({ data }) {
           </div>
 
           <ProductionOrderMaterialTabs
-            materialDetails={orderData.materialDetails || { rawMaterials: [], semiFinished: [], finishedProducts: [] }}
+            materialDetails={
+              orderData.materialDetails || {
+                rawMaterials: [],
+                semiFinished: [],
+                finishedProducts: [],
+              }
+            }
             packageQuantity={orderData.packageQuantity || 1}
             currencySymbol={orderData.currencySymbol || "₦"}
             showToggle={true}
@@ -280,29 +320,31 @@ export default function ProductionOrderDetailPage({ data }) {
               </h3>
 
               {!orderData.attachments || orderData.attachments.length === 0 ? (
-                <p className="text-xs text-gray-400 italic">No Attachments found.</p>
+                <p className="text-xs text-gray-400 italic">
+                  No Attachments found.
+                </p>
               ) : (
-                <div className="space-y-2">
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                   {orderData.attachments.map((file, idx) => (
-                    <div
+                    <a
                       key={file.id || idx}
-                      className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-xs"
+                      href={file.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between p-2.5 bg-gray-50 hover:bg-blue-50/60 rounded-lg border border-gray-200 hover:border-blue-200 text-xs group transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-2 truncate">
-                        <FileText className="w-4 h-4 text-[#1565c0]" />
-                        <span className="font-medium text-gray-800 truncate">
-                          {file.originalName || file.filename || `Attachment-${idx + 1}`}
+                      <div className="flex items-center gap-2 truncate min-w-0">
+                        <FileText className="w-4 h-4 text-[#1565c0] shrink-0" />
+                        <span className="font-medium text-gray-800 group-hover:text-[#1565c0] truncate transition-colors">
+                          {file.originalName ||
+                            file.filename ||
+                            `Attachment-${idx + 1}`}
                         </span>
                       </div>
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1 text-gray-500 hover:text-[#1565c0] transition-colors"
-                      >
-                        <Download className="w-4 h-4" />
-                      </a>
-                    </div>
+                      <span className="p-1 text-gray-400 group-hover:text-[#1565c0] transition-colors shrink-0">
+                        <ExternalLink size={15} />
+                      </span>
+                    </a>
                   ))}
                 </div>
               )}
@@ -313,7 +355,9 @@ export default function ProductionOrderDetailPage({ data }) {
 
       <SideDrawer
         open={drawerState.isOpen}
-        onClose={() => setDrawerState({ isOpen: false, moduleName: null, id: null })}
+        onClose={() =>
+          setDrawerState({ isOpen: false, moduleName: null, id: null })
+        }
         moduleName={drawerState.moduleName}
         mode="details"
         data={drawerState.id ? { id: drawerState.id } : null}

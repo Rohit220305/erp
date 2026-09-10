@@ -21,7 +21,7 @@ export default function ProductionBatchGridCard({
       
       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <Copy className="w-4 h-4 text-[#1565c0]" />
+          {/* <Copy className="w-4 h-4 text-[#1565c0]" /> */}
           <ModuleLink
             moduleName="ProductionBatch"
             id={item.id || item.productionBatchId || item.batchId}

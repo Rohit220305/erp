@@ -168,43 +168,11 @@ export function buildFlowchartGraph(processes = []) {
     };
   });
 
-  const formattedEdges = rawEdges.map((edge) => {
-    const targetProc = processMap.get(edge.target);
-    const savedHandleConfig = targetProc?.handleConfig?.[edge.source];
-
-    let sourceHandle = "bottom";
-    let targetHandle = "top";
-
-    if (savedHandleConfig?.sourceHandle && savedHandleConfig?.targetHandle) {
-      sourceHandle = savedHandleConfig.sourceHandle;
-      targetHandle = savedHandleConfig.targetHandle;
-    } else if (edge.source !== "start" && edge.target !== "finish") {
-      const sPos = nodePosMap.get(edge.source);
-      const tPos = nodePosMap.get(edge.target);
-
-      if (sPos && tPos) {
-        const dx = tPos.x - sPos.x;
-        const dy = tPos.y - sPos.y;
-
-        if (dx > 70) {
-          sourceHandle = "right";
-          targetHandle = Math.abs(dy) < 40 ? "target-left" : "top";
-        } else if (dx < -70) {
-          sourceHandle = "left";
-          targetHandle = Math.abs(dy) < 40 ? "target-right" : "top";
-        } else {
-          sourceHandle = "bottom";
-          targetHandle = "top";
-        }
-      }
-    }
-
-    return {
-      ...edge,
-      sourceHandle,
-      targetHandle,
-    };
-  });
+  const formattedEdges = rawEdges.map((edge) => ({
+    ...edge,
+    sourceHandle: "bottom",
+    targetHandle: "top",
+  }));
 
   return { nodes, edges: formattedEdges };
 }

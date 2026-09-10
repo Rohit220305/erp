@@ -1,6 +1,9 @@
-import { Controller, Get, Post, Body, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Query, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductionBatchService } from './service/production-batch.service';
 import { ProductionBatchListService } from './service/production-batch.list.service';
+import { CommonFileService } from 'src/package/service/common-file.service';
+import { documentMulterConfig } from 'src/package/config/multer.config';
 import { CAPABILITIES } from 'src/package/config/capabilities.config';
 import { RequirePermission } from 'src/package/decorator/require-permission.decorator';
 import { AppRequest } from 'src/package/decorator/app-request.decorator';
@@ -19,6 +22,7 @@ export class ProductionBatchController {
   constructor(
     private readonly service: ProductionBatchService,
     private readonly listService: ProductionBatchListService,
+    private readonly commonFileService: CommonFileService,
   ) {}
 
   @Get('suggest-batch')
@@ -51,3 +55,4 @@ export class ProductionBatchController {
     return await this.service.startDeleteProductionBatch(req, params);
   }
 }
+

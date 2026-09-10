@@ -40,21 +40,16 @@ export default function ProductionBatchSummaryTab({
             <FileText size={16} className="text-gray-400" />
             <span>Details</span>
             <span className="text-gray-300">|</span>
-            <span>Request Code :</span>
-            <ModuleLink
-              moduleName="ProductionOrder"
-              id={batchData?.productionOrderId}
-              className="text-[#1565c0] font-semibold hover:underline"
-              onOpenDrawer={onOpenDrawer}
-            >
-              {batchData?.productionOrderCode || "—"}
-            </ModuleLink>
+            <span>Batch Code :</span>
+            <span className=" text-gray-900">
+              {batchData?.batchCode || "—"}
+            </span>
             <span className="text-gray-300">|</span>
             <span>Item Name :</span>
             <ModuleLink
               moduleName="Item"
               id={batchData?.itemId}
-              className="text-[#1565c0] font-semibold hover:underline"
+              className="text-[#1565c0]   hover:underline"
               onOpenDrawer={onOpenDrawer}
             >
               {batchData?.itemName || "—"}
@@ -71,7 +66,7 @@ export default function ProductionBatchSummaryTab({
               <ModuleLink
                 moduleName="ProductionOrder"
                 id={batchData?.productionOrderId}
-                className="text-[#1565c0] font-semibold hover:underline"
+                className="text-[#1565c0]  hover:underline"
                 onOpenDrawer={onOpenDrawer}
               >
                 {batchData?.productionOrderCode || "—"}
@@ -80,7 +75,7 @@ export default function ProductionBatchSummaryTab({
 
             <div>
               <span className="text-gray-400 block mb-1">Production Qty</span>
-              <span className="font-bold text-gray-900 text-[14px]">
+              <span className="  text-gray-900 text-[14px]">
                 {batchData?.batchQuantity
                   ? `${Number(batchData.batchQuantity).toLocaleString()} gms`
                   : "0 gms"}
@@ -101,7 +96,7 @@ export default function ProductionBatchSummaryTab({
               <ModuleLink
                 moduleName="Bom"
                 id={batchData?.bomId}
-                className="text-[#1565c0] font-semibold hover:underline"
+                className="text-[#1565c0]hover:underline"
                 onOpenDrawer={onOpenDrawer}
               >
                 {batchData?.bomName || batchData?.bomCode || "—"}
@@ -110,7 +105,7 @@ export default function ProductionBatchSummaryTab({
 
             <div>
               <span className="text-gray-400 block mb-1">Qty To Be Packaged</span>
-              <span className="font-bold text-gray-900 text-[14px]">
+              <span className="  text-gray-900 text-[14px]">
                 {batchData?.batchQuantity
                   ? `${Number(batchData.batchQuantity).toLocaleString()} gms`
                   : "0 gms"}
@@ -119,8 +114,8 @@ export default function ProductionBatchSummaryTab({
 
             <div>
               <span className="text-gray-400 block mb-1">Batch No</span>
-              <span className="font-medium text-gray-800">
-                {batchData?.batchCode || "—"}
+              <span className=" text-xs">
+                {batchData?.batchSeqNo || 1}
               </span>
             </div>
           </div>
@@ -131,7 +126,7 @@ export default function ProductionBatchSummaryTab({
               <ModuleLink
                 moduleName="ProcessTemplate"
                 id={batchData?.processTemplateId}
-                className="text-[#1565c0] font-semibold hover:underline"
+                className="text-[#1565c0]   hover:underline"
                 onOpenDrawer={onOpenDrawer}
               >
                 {batchData?.processTemplateName || "—"}
@@ -143,7 +138,7 @@ export default function ProductionBatchSummaryTab({
               <ModuleLink
                 moduleName="User"
                 id={batchData?.addedBy}
-                className="text-[#1565c0] font-semibold hover:underline"
+                className="text-[#1565c0]   hover:underline"
                 onOpenDrawer={onOpenDrawer}
               >
                 {batchData?.addedByName || "—"}
@@ -160,7 +155,7 @@ export default function ProductionBatchSummaryTab({
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-gray-100 text-[14px]">
-          <div className="flex items-center gap-2 font-bold text-gray-900">
+          <div className="flex items-center gap-2   text-gray-900">
             <Workflow size={16} className="text-gray-500" />
             <span>Process Details</span>
           </div>
@@ -209,6 +204,7 @@ export default function ProductionBatchSummaryTab({
             readOnly={true}
             disableScrollZoom={true}
             containerClassName="h-[600px]"
+            mode="batch"
           />
         </div>
       </div>
@@ -217,7 +213,7 @@ export default function ProductionBatchSummaryTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden border border-gray-200">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50/80">
-              <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
+              <div className="flex items-center gap-2   text-gray-900 text-sm">
                 <Workflow size={18} className="text-[#1565c0]" />
                 <span>Process Flowchart - {batchData?.batchCode || "Full View"}</span>
               </div>
@@ -240,6 +236,7 @@ export default function ProductionBatchSummaryTab({
                 readOnly={true}
                 disableScrollZoom={false}
                 containerClassName="h-full"
+                mode="batch"
               />
             </div>
           </div>

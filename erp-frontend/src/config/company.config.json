@@ -60,7 +60,7 @@
     },
     {
       "label": "Phone",
-      "key": "phone",
+      "key": "fullPhoneNumber",
       "type": "phone",
       "searchable": true,
       "sortable": true,
@@ -154,7 +154,7 @@
     },
     {
       "label": "Phone",
-      "value": "phone",
+      "value": "fullPhoneNumber",
       "type": "text"
     },
     {
@@ -202,7 +202,7 @@
     },
     {
       "label": "Phone",
-      "value": "phone",
+      "value": "fullPhoneNumber",
       "type": "text"
     },
     {
@@ -231,7 +231,7 @@
     "shortName": "",
     "companyCode": "",
     "email": "",
-    "phone": "",
+    "fullPhoneNumber": "",
     "contactPersonName": "",
     "status": ""
   },
@@ -259,7 +259,7 @@
       },
       {
         "label": "Phone",
-        "key": "phone",
+        "key": "fullPhoneNumber",
         "type": "phone"
       },
       {
@@ -318,7 +318,7 @@
       {
         "label": "Phone",
         "icon": "Phone",
-        "key": "phone",
+        "key": "fullPhoneNumber",
         "type": "phone"
       }
     ],

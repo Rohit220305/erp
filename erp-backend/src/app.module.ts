@@ -28,6 +28,7 @@ import { AttachmentMasterModule } from './attachment-master/attachment-master.mo
 import { BomModule } from './bom/bom.module';
 import { ProductionOrderModule } from './production-order/production-order.module';
 import { ProductionBatchModule } from './production-batch/production-batch.module';
+import { MaterialRequestModule } from './material-request/material-request.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { ProductionBatchModule } from './production-batch/production-batch.modul
     BomModule,
     ProductionOrderModule,
     ProductionBatchModule,
+    MaterialRequestModule,
   ],
 
   controllers: [AppController],

@@ -35,6 +35,9 @@ export default function ProcessFlowchartContainer({
   onSaveFlowchart,
   isSaving = false,
   readOnly = false,
+  disableScrollZoom = false,
+  containerClassName = "",
+  mode = "template",
 }) {
   const { can } = useAuth();
   const canUpdate = !readOnly && can(
@@ -60,13 +63,14 @@ export default function ProcessFlowchartContainer({
             data: {
               ...node.data,
               onProcessClick: onOpenProcessDrawer,
+              mode,
             },
           };
         }
         return node;
       });
     },
-    [onOpenProcessDrawer]
+    [onOpenProcessDrawer, mode]
   );
 
   useEffect(() => {
@@ -242,7 +246,7 @@ export default function ProcessFlowchartContainer({
   }
 
   return (
-    <div className="relative w-full h-[620px] bg-slate-50 rounded-xl border border-gray-200 overflow-hidden shadow-inner">
+    <div className={`relative w-full bg-slate-50 rounded-xl border border-gray-200 overflow-hidden shadow-inner ${containerClassName || "h-[620px]"}`}>
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-lg border border-gray-200 shadow-md">
         {isEditMode && (
           <button
@@ -310,10 +314,10 @@ export default function ProcessFlowchartContainer({
         nodesConnectable={isEditMode}
         edgesReconnectable={isEditMode}
         elementsSelectable={isEditMode}
-        panOnScroll={true}
+        panOnScroll={!disableScrollZoom}
         panOnDrag={true}
-        zoomOnScroll={true}
-        zoomOnPinch={true}
+        zoomOnScroll={!disableScrollZoom}
+        zoomOnPinch={!disableScrollZoom}
         preventScrolling={false}
         fitView
         fitViewOptions={{ padding: 0.2 }}

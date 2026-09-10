@@ -296,4 +296,39 @@ export class GeneralUtilities {
     }
     return null;
   }
+
+  getCompanyInitials(companyName: string): string {
+    if (!companyName) return 'ERP';
+    const words = companyName.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/);
+    if (words.length >= 2) {
+      return words.map(w => w[0].toUpperCase()).join('').substring(0, 4);
+    }
+    return companyName.substring(0, 3).toUpperCase();
+  }
+
+  getCodePrefix(companyName: string, modulePrefix: string): string {
+    const initials = this.getCompanyInitials(companyName);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    return `${initials}${modulePrefix}/${year}/${month}/`;
+  }
+
+  generateCode(
+    companyName: string,
+    modulePrefix: string,
+    lastCode: string | null,
+    digits: number = 5,
+  ): string {
+    const prefix = this.getCodePrefix(companyName, modulePrefix);
+    let nextSeq = 1;
+    if (lastCode) {
+      const parts = lastCode.split('/');
+      const lastNum = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(lastNum)) {
+        nextSeq = lastNum + 1;
+      }
+    }
+    return `${prefix}${String(nextSeq).padStart(digits, '0')}`;
+  }
 }

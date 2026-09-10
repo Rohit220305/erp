@@ -150,11 +150,11 @@ export const menuCategories = [
             path: buildRoute("production-order", "list"),
             permission: "PRODUCTION_ORDER_LIST",
           },
-          // {
-          //   label: "Production Batch",
-          //   path: buildRoute("production-batch", "list"),
-          //   permission: "PRODUCTION_BATCH_LIST",
-          // },
+          {
+            label: "Production Batch",
+            path: buildRoute("production-batch", "list"),
+            permission: "PRODUCTION_BATCH_LIST",
+          },
         ],
       },
     ],

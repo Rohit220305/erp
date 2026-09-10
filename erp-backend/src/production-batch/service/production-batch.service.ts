@@ -1,24 +1,28 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ProductionBatchEntity } from '../entity/production-batch.entity';
 import { ProductionBatchProcessEntity } from '../entity/production-batch-process.entity';
 import { ProductionBatchItemEntity } from '../entity/production-batch-item.entity';
 import { BatchConsumptionLogEntity } from '../entity/batch-consumption-log.entity';
+import { ProductionBatchAddDto, ProductionBatchDeleteDto } from '../dto/production-batch.dto';
+import { ProductionBatchStatus, ProductionBatchProcessStatus, MaterialStatus } from '../enum/production-batch.enum';
+import { CompanyEntity } from '../../company/entity/company.entity';
 import { ProductionOrderEntity } from '../../production-order/entity/production-order.entity';
 import { BomEntity } from '../../bom/entity/bom.entity';
 import { ItemEntity } from '../../item/entity/item.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
+import { AttachmentMasterService } from 'src/attachment-master/service/attachment-master.service';
+import { AttachmentModule } from 'src/attachment-master/enums/attachment-module.enum';
 import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
-import { ProductionBatchAddDto, ProductionBatchDeleteDto } from '../dto/production-batch.dto';
-import { ProductionBatchStatus, ProductionBatchProcessStatus, MaterialStatus } from '../enum/production-batch.enum';
 
 @Injectable()
 export class ProductionBatchService {
   constructor(
     private readonly general: GeneralUtilities,
     private readonly activityLogService: ActivityLogService,
+    private readonly attachmentMasterService: AttachmentMasterService,
     @InjectRepository(ProductionBatchEntity)
     private readonly pbRepo: Repository<ProductionBatchEntity>,
     @InjectRepository(ProductionBatchProcessEntity)
@@ -27,6 +31,8 @@ export class ProductionBatchService {
     private readonly pbItemRepo: Repository<ProductionBatchItemEntity>,
     @InjectRepository(BatchConsumptionLogEntity)
     private readonly batchConsumptionLogRepo: Repository<BatchConsumptionLogEntity>,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepo: Repository<CompanyEntity>,
     @InjectRepository(ProductionOrderEntity)
     private readonly poRepo: Repository<ProductionOrderEntity>,
     @InjectRepository(BomEntity)
@@ -59,30 +65,27 @@ export class ProductionBatchService {
     return output;
   }
 
-  private async generateUniqueBatchCode(companyId: number): Promise<string> {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const prefix = `PB/${year}/${month}/`;
-
-    const lastRecord = await this.pbRepo
-      .createQueryBuilder('pb')
-      .select('pb.batchCode', 'code')
-      .where('pb.companyId = :companyId', { companyId })
-      .andWhere('pb.batchCode LIKE :prefix', { prefix: `${prefix}%` })
-      .orderBy('pb.id', 'DESC')
-      .getRawOne();
-
-    let nextSeq = 1;
-    if (lastRecord && lastRecord.code) {
-      const parts = lastRecord.code.split('/');
-      const lastNum = parseInt(parts[parts.length - 1], 10);
-      if (!isNaN(lastNum)) {
-        nextSeq = lastNum + 1;
-      }
+  private async generateUniqueBatchCode(
+    companyId: number,
+    productionOrderId: number,
+  ): Promise<string> {
+    const po = await this.poRepo.findOne({
+      where: { id: productionOrderId, companyId, sysRecDeleted: false },
+    });
+    if (!po || !po.productionOrderCode) {
+      throw new Error(`Production Order (ID: ${productionOrderId}) not found.`);
     }
 
-    return `${prefix}${String(nextSeq).padStart(5, '0')}`;
+    const existingCount = await this.pbRepo.count({
+      where: {
+        productionOrderId,
+        companyId,
+        sysRecDeleted: false,
+      },
+    });
+
+    const nextBatchNo = existingCount + 1;
+    return `${po.productionOrderCode}/${nextBatchNo}`;
   }
 
   private async validateCrossTenant(
@@ -115,6 +118,7 @@ export class ProductionBatchService {
     }
   }
 
+
   async startInsertProductionBatch(req: IAppRequest, params: ProductionBatchAddDto) {
     const response = await this.insertProductionBatch(req, params);
     if (response.success === 1) {
@@ -144,7 +148,10 @@ export class ProductionBatchService {
       let finalBatchCode = params.batchCode ? params.batchCode.trim() : '';
 
       if (!finalBatchCode) {
-        finalBatchCode = await this.generateUniqueBatchCode(params.companyId);
+        finalBatchCode = await this.generateUniqueBatchCode(
+          params.companyId,
+          params.productionOrderId,
+        );
       } else {
         const codeExists = await this.pbRepo.findOne({
           where: {
@@ -209,7 +216,7 @@ export class ProductionBatchService {
               materialType: item.materialType,
               requiredQty: item.requiredQty,
               shortage: item.shortage,
-              requestQty: item.requestQty,
+              requestQty: item.requestQty ? Number(item.requestQty) : 0,
               consumedQty: 0,
               producedQty: 0,
               availableStock: 0,
@@ -295,3 +302,4 @@ export class ProductionBatchService {
     return return_data;
   }
 }
+
