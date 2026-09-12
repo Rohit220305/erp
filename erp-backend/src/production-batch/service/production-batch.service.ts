@@ -4,7 +4,7 @@ import { In, Repository } from 'typeorm';
 import { ProductionBatchEntity } from '../entity/production-batch.entity';
 import { ProductionBatchProcessEntity } from '../entity/production-batch-process.entity';
 import { ProductionBatchItemEntity } from '../entity/production-batch-item.entity';
-import { BatchConsumptionLogEntity } from '../entity/batch-consumption-log.entity';
+
 import { ProductionBatchAddDto, ProductionBatchDeleteDto } from '../dto/production-batch.dto';
 import { ProductionBatchStatus, ProductionBatchProcessStatus, MaterialStatus } from '../enum/production-batch.enum';
 import { CompanyEntity } from '../../company/entity/company.entity';
@@ -29,8 +29,7 @@ export class ProductionBatchService {
     private readonly pbProcessRepo: Repository<ProductionBatchProcessEntity>,
     @InjectRepository(ProductionBatchItemEntity)
     private readonly pbItemRepo: Repository<ProductionBatchItemEntity>,
-    @InjectRepository(BatchConsumptionLogEntity)
-    private readonly batchConsumptionLogRepo: Repository<BatchConsumptionLogEntity>,
+
     @InjectRepository(CompanyEntity)
     private readonly companyRepo: Repository<CompanyEntity>,
     @InjectRepository(ProductionOrderEntity)
@@ -39,7 +38,7 @@ export class ProductionBatchService {
     private readonly bomRepo: Repository<BomEntity>,
     @InjectRepository(ItemEntity)
     private readonly itemRepo: Repository<ItemEntity>,
-  ) {}
+  ) { }
 
   private async finishSuccess(params: any, incomingData?: any) {
     const output: any = {
@@ -128,6 +127,7 @@ export class ProductionBatchService {
   }
 
   async insertProductionBatch(req: IAppRequest, params: ProductionBatchAddDto) {
+    console.log(params, 'params');
     let return_data: any = {};
     try {
       if (!this.general.isSuperAdmin(req)) {
@@ -207,16 +207,17 @@ export class ProductionBatchService {
 
           const processRes = await this.pbProcessRepo.insert(processData);
           const processInsertId = processRes?.raw?.insertId;
-
+          console.log(process.items, 'process.items');
           if (processInsertId && process.items && Array.isArray(process.items) && process.items.length > 0) {
             const processItemsData = process.items.map((item) => ({
+
               companyId: params.companyId,
               productionBatchProcessId: processInsertId,
               itemId: item.itemId,
               materialType: item.materialType,
               requiredQty: item.requiredQty,
               shortage: item.shortage,
-              requestQty: item.requestQty ? Number(item.requestQty) : 0,
+              requestedQty: 0,
               consumedQty: 0,
               producedQty: 0,
               availableStock: 0,

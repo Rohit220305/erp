@@ -147,7 +147,7 @@ export class ProductionOrderListService {
         qb.andWhere('po.status = :status', { status: params.status });
       }
 
-      await this.general.applyListQuery(qb, params, 'po.id');
+      await this.general.applyListQuery(qb, params, 'po.id', 'DESC');
 
       const totalCount = await qb.getCount();
       qb.offset(skip).limit(limit);

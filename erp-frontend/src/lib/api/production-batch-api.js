@@ -31,3 +31,16 @@ export async function deleteProductionBatch({ id }) {
     method: "DELETE",
   });
 }
+
+export async function getProcessDetails(batchId, processExecutionId) {
+  return apiClient(`/production-batch/get-process-details?batchId=${batchId}&processExecutionId=${processExecutionId}`, {
+    method: "GET",
+  });
+}
+
+export async function addProcessLog(data) {
+  return apiClient("/production-batch/add-process-log", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}

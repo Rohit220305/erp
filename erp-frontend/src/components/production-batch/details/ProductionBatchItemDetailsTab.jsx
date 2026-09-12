@@ -83,8 +83,8 @@ export default function ProductionBatchItemDetailsTab({
               <th className="py-3 px-4 w-24 text-center">Item Image</th>
               <th className="py-3 px-4 min-w-[220px]">Item Name</th>
               <th className="py-3 px-4 text-center">Item UOM</th>
-              <th className="py-3 px-4 text-right">BOM Qty</th>
-              <th className="py-3 px-4 text-right">Requested Qty</th>
+              {/* <th className="py-3 px-4 text-right">BOM Qty</th> */}
+              <th className="py-3 px-4 text-right">Required Qty</th>
               <th className="py-3 px-4 text-right">Received Qty</th>
               <th className="py-3 px-4 text-right">Consumed Qty</th>
               <th className="py-3 px-4 text-right">Available Qty</th>
@@ -135,12 +135,12 @@ export default function ProductionBatchItemDetailsTab({
                     {item.uomName || "gms"}
                   </td>
 
-                  <td className="py-3 px-4 text-right font-mono font-semibold text-gray-900">
-                    {formatDecimal(item.requiredQty)}
-                  </td>
+                  {/* <td className="py-3 px-4 text-right font-mono font-semibold text-gray-900">
+                    {formatDecimal(item.bomQty)}
+                  </td> */}
 
                   <td className="py-3 px-4 text-right font-mono font-semibold text-gray-900">
-                    {formatDecimal(item.requestQty)}
+                    {formatDecimal(item.requiredQty)}
                   </td>
 
                   <td className="py-3 px-4 text-right font-mono text-gray-800">

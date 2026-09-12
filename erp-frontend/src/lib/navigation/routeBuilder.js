@@ -22,7 +22,7 @@ const ROUTES = {
   "process-template": { list: "/process-template", add: "/process-template/add", edit: "/process-template/edit/{id}", detail: "/process-template/{id}" },
   bom: { list: "/bom", add: "/bom/add", edit: "/bom/edit/{id}", detail: "/bom/{id}" },
   "production-order": { list: "/production-order", add: "/production-order/add", edit: "/production-order/edit/{id}", detail: "/production-order/{id}" },
-  "production-batch": { list: "/production-batch", add: "/production-batch/create/{orderId}", edit: "/production-batch/edit/{id}", detail: "/production-batch/{id}" },
+  "production-batch": { list: "/production-batch", add: "/production-batch/create/{orderId}", edit: "/production-batch/edit/{id}", detail: "/production-batch/{id}", materialRequestCreate: "/production-batch/{id}/material-request/create" },
 };
 
 

@@ -117,7 +117,6 @@ export default function ProductionBatchForm({ orderId }) {
     const newProcesses = batchData.processes.map((proc) => {
       const updatedItems = (proc.items || []).map((item) => ({
         ...item,
-        requestQty: parseFloat((item.baseQty * factor).toFixed(2)),
         shortage: Math.max(0, parseFloat((item.baseQty * factor).toFixed(2))),
         totalRequirement: parseFloat((item.baseQty * factor).toFixed(2)),
       }));
@@ -155,7 +154,7 @@ export default function ProductionBatchForm({ orderId }) {
             itemId: item.itemId,
             materialType: item.materialType,
             requiredQty: item.baseQty,
-            requestQty: item.requestQty,
+            requestedQty: 0,
             shortage: item.shortage,
           })),
         })),

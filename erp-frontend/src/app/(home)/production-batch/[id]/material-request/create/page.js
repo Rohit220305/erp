@@ -1,4 +1,3 @@
-import { getProductionBatchDetails } from "@/lib/api/production-batch-api";
 import { suggestMaterialRequest } from "@/lib/api/material-request-api";
 import ProductionMaterialRequestForm from "@/components/production-batch/details/ProductionMaterialRequestForm";
 import { notFound } from "next/navigation";
@@ -6,8 +5,9 @@ import { notFound } from "next/navigation";
 export async function generateMetadata({ params }) {
   const { id } = await params;
   try {
-    const res = await getProductionBatchDetails({ id });
-    const code = res?.data?.batchCode || res?.settings?.data?.batchCode;
+    const res = await suggestMaterialRequest({ productionBatchId: id });
+    const payload = res?.data || res?.settings?.data;
+    const code = payload?.batchData?.batchCode;
     if (code) {
       return { title: `Request Material - ${code}` };
     }
@@ -18,21 +18,20 @@ export async function generateMetadata({ params }) {
 export default async function Page({ params }) {
   const { id } = await params;
   try {
-    const batchRes = await getProductionBatchDetails({ id });
-    if (batchRes?.accessDenied) {
-      return <ProductionMaterialRequestForm batchData={{ accessDenied: true, requiredPermission: batchRes.requiredPermission }} />;
+    const suggestRes = await suggestMaterialRequest({ productionBatchId: id });
+    if (suggestRes?.accessDenied) {
+      return <ProductionMaterialRequestForm batchData={{ accessDenied: true, requiredPermission: suggestRes.requiredPermission }} />;
     }
-    if (batchRes?.success === 0 || batchRes?.settings?.success === 0) {
+    if (suggestRes?.success === 0 || suggestRes?.settings?.success === 0) {
       return notFound();
     }
 
-    const batchData = batchRes?.data || batchRes?.settings?.data;
-    if (!batchData || (Array.isArray(batchData) && batchData.length === 0)) return notFound();
+    const payload = suggestRes?.data || suggestRes?.settings?.data;
+    if (!payload || !payload.batchData) return notFound();
 
-    const suggestRes = await suggestMaterialRequest({ productionBatchId: id });
-    const initialSuggestions = suggestRes?.data || suggestRes?.settings?.data || [];
+    const { batchData, suggestions } = payload;
 
-    return <ProductionMaterialRequestForm batchData={batchData} initialSuggestions={initialSuggestions} />;
+    return <ProductionMaterialRequestForm batchData={batchData} initialSuggestions={suggestions || []} />;
   } catch (error) {
     return notFound();
   }

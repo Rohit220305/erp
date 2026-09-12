@@ -49,43 +49,42 @@ export default function Navbar() {
       <div className="flex items-center gap-3 mt-4 me-3.5">
         {navbar.actionButtons ? (
           navbar.actionButtons.map((btn, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={btn.onClick}
-              className="
-                flex items-center gap-2
-                bg-[#1565c0]
-                text-white
-                px-8
-                py-2
-                rounded-md
-                hover:bg-[#0f57a6]
-                transition
-                cursor-pointer
-              "
-            >
-              <span>{btn.label}</span>
-            </button>
+            btn.href ? (
+              <Link
+                key={index}
+                href={btn.href}
+                className="flex items-center gap-2 bg-[#1565c0] text-white px-8 py-2 rounded-md hover:bg-[#0f57a6] transition cursor-pointer"
+              >
+                <span>{btn.label}</span>
+              </Link>
+            ) : (
+              <button
+                key={index}
+                type="button"
+                onClick={btn.onClick}
+                className="flex items-center gap-2 bg-[#1565c0] text-white px-8 py-2 rounded-md hover:bg-[#0f57a6] transition cursor-pointer"
+              >
+                <span>{btn.label}</span>
+              </button>
+            )
           ))
         ) : navbar.actionButton ? (
-          <button
-            type="button"
-            onClick={navbar.actionButton.onClick}
-            className="
-                flex items-center gap-2
-                bg-[#1565c0]
-                text-white
-                px-8
-                py-2
-                rounded-md
-                hover:bg-[#0f57a6]
-                transition
-                cursor-pointer
-              "
-          >
-            <span>{navbar.actionButton.label}</span>
-          </button>
+          navbar.actionButton.href ? (
+            <Link
+              href={navbar.actionButton.href}
+              className="flex items-center gap-2 bg-[#1565c0] text-white px-8 py-2 rounded-md hover:bg-[#0f57a6] transition cursor-pointer"
+            >
+              <span>{navbar.actionButton.label}</span>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={navbar.actionButton.onClick}
+              className="flex items-center gap-2 bg-[#1565c0] text-white px-8 py-2 rounded-md hover:bg-[#0f57a6] transition cursor-pointer"
+            >
+              <span>{navbar.actionButton.label}</span>
+            </button>
+          )
         ) : null}
       </div>
     </div>

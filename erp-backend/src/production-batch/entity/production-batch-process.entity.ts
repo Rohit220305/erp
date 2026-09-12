@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { ProductionBatchEntity } from './production-batch.entity';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { ProductionBatchProcessStatus } from '../enum/production-batch.enum';
 
 @Entity('production_batch_process')
@@ -35,7 +34,4 @@ export class ProductionBatchProcessEntity {
   @Column({ type: 'datetime', nullable: true })
   endTime: Date | null;
 
-  @ManyToOne(() => ProductionBatchEntity)
-  @JoinColumn({ name: 'productionBatchId' })
-  productionBatch: ProductionBatchEntity;
 }

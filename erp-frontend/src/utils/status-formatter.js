@@ -1,7 +1,7 @@
 
 export const STATUS_CONFIG = {
-  // ProductionBatchStatus
-  Pending: { label: "Pending", color: "text-amber-600 font-semibold", bg: "bg-amber-50" },
+
+  Pending: { label: "Waiting For Stock", color: "text-amber-600 font-semibold", bg: "bg-amber-50" },
   StockReceived: { label: "Stock Received", color: "text-blue-600 font-semibold", bg: "bg-blue-50" },
   "Stock Received": { label: "Stock Received", color: "text-blue-600 font-semibold", bg: "bg-blue-50" },
   InProgress: { label: "In Progress", color: "text-purple-600 font-semibold", bg: "bg-purple-50" },

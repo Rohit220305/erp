@@ -11,7 +11,11 @@ import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { ProductionBatchItemEntity } from '../../production-batch/entity/production-batch-item.entity';
 import { ProductionBatchProcessEntity } from '../../production-batch/entity/production-batch-process.entity';
 import { ProductionBatchEntity } from '../../production-batch/entity/production-batch.entity';
-import { MaterialStatus } from '../../production-batch/enum/production-batch.enum';
+import {
+  MaterialStatus,
+  MaterialType,
+  ProductionBatchStatus,
+} from '../../production-batch/enum/production-batch.enum';
 import {
   CancelMaterialRequestDto,
   CreateMaterialRequestDto,
@@ -107,7 +111,11 @@ export class MaterialRequestService {
         throw new Error('Company ID is required');
       }
 
-      await this.validateMrCrossTenant(activeCompanyId, params.productionBatchId, params.items);
+      await this.validateMrCrossTenant(
+        activeCompanyId,
+        params.productionBatchId,
+        params.items,
+      );
 
       const company = await this.companyRepo.findOne({
         where: { id: activeCompanyId, sysRecDeleted: false },
@@ -120,13 +128,19 @@ export class MaterialRequestService {
       const lastRecord = await this.materialRequestRepo
         .createQueryBuilder('materialRequest')
         .select('materialRequest.code', 'code')
-        .where('materialRequest.companyId = :companyId', { companyId: activeCompanyId })
+        .where('materialRequest.companyId = :companyId', {
+          companyId: activeCompanyId,
+        })
         .andWhere('materialRequest.code LIKE :prefix', { prefix: `${prefix}%` })
         .andWhere('materialRequest.sysRecDeleted = 0')
         .orderBy('materialRequest.id', 'DESC')
         .getRawOne();
 
-      const code = this.general.generateCode(company.companyName, 'MR', lastRecord?.code);
+      const code = this.general.generateCode(
+        company.companyName,
+        'MR',
+        lastRecord?.code,
+      );
 
       const materialRequestInsert = await this.materialRequestRepo.insert({
         companyId: activeCompanyId,
@@ -153,26 +167,84 @@ export class MaterialRequestService {
           receivedQty: 0,
         });
 
-        const pbItems = await this.pbItemRepo
+        const allPbItems = await this.pbItemRepo
           .createQueryBuilder('pbi')
-          .innerJoin(ProductionBatchProcessEntity, 'pbp', 'pbp.id = pbi.productionBatchProcessId')
-          .where('pbp.productionBatchId = :pbId', { pbId: params.productionBatchId })
+          .innerJoin(
+            ProductionBatchProcessEntity,
+            'pbp',
+            'pbp.id = pbi.productionBatchProcessId',
+          )
+          .where('pbp.productionBatchId = :pbId', {
+            pbId: params.productionBatchId,
+          })
           .andWhere('pbi.itemId = :itemId', { itemId: item.itemId })
           .getMany();
+        const batchExitItems = await this.pbItemRepo
+          .createQueryBuilder('pbi')
+          .innerJoin(
+            ProductionBatchProcessEntity,
+            'pbp',
+            'pbp.id = pbi.productionBatchProcessId',
+          )
+          .where('pbp.productionBatchId = :pbId', {
+            pbId: params.productionBatchId,
+          })
+          .andWhere('pbi.materialType = :exitType', {
+            exitType: MaterialType.Exit,
+          })
+          .select(['pbi.itemId'])
+          .getMany();
 
-        for (const pbItem of pbItems) {
-          const currentReqQty = Number(pbItem.requestQty) || 0;
-          await this.pbItemRepo.update(pbItem.id, {
-            requestQty: currentReqQty + requestedQty,
-          });
+        const batchExitItemIds = new Set(
+          batchExitItems.map((i) => Number(i.itemId)),
+        );
+
+        const pbItems = allPbItems.filter((i) => {
+          const isEntry = String(i.materialType) === 'Entry';
+          return isEntry && !batchExitItemIds.has(Number(i.itemId));
+        });
+
+        let remainingRequestedQty = requestedQty;
+        for (let i = 0; i < pbItems.length; i++) {
+          const pbItem = pbItems[i];
+          if (remainingRequestedQty <= 0) break;
+
+          const requiredQty = Number(pbItem.requiredQty) || 0;
+          const currentReqQty = Number(pbItem.requestedQty) || 0;
+          const currentAvail = Number(pbItem.availableStock) || 0;
+
+          let allocateQty = 0;
+          const pendingShortage = Math.max(
+            0,
+            requiredQty - currentAvail - currentReqQty,
+          );
+
+          if (pendingShortage > 0) {
+            allocateQty = Math.min(pendingShortage, remainingRequestedQty);
+          } else if (i === pbItems.length - 1 && remainingRequestedQty > 0) {
+            allocateQty = remainingRequestedQty;
+          }
+
+          if (allocateQty > 0) {
+            await this.pbItemRepo.update(pbItem.id, {
+              requestedQty: currentReqQty + allocateQty,
+            });
+            remainingRequestedQty -= allocateQty;
+          }
         }
       }
 
-      await this.pbRepo.update(params.productionBatchId, {
-        materialStatus: MaterialStatus.OrderPlaced,
-        updatedBy: req.user?.sub || null,
-        updatedDate: new Date(),
-      });
+      await this.pbRepo.update(
+        {
+          id: Number(params.productionBatchId),
+          materialStatus: MaterialStatus.YetToOrder,
+        },
+        {
+          materialStatus: MaterialStatus.OrderPlaced,
+          updatedBy: req.user?.sub || null,
+          updatedDate: new Date(),
+        },
+      );
 
       if (files && files.length > 0) {
         try {
@@ -250,23 +322,77 @@ export class MaterialRequestService {
       for (const materialRequestItem of materialRequestItems) {
         const requestedQty = Number(materialRequestItem.requestedQty) || 0;
 
-        const pbItems = await this.pbItemRepo
+        const allPbItems = await this.pbItemRepo
           .createQueryBuilder('pbi')
-          .innerJoin(ProductionBatchProcessEntity, 'pbp', 'pbp.id = pbi.productionBatchProcessId')
-          .where('pbp.productionBatchId = :pbId', { pbId: materialRequest.productionBatchId })
-          .andWhere('pbi.itemId = :itemId', { itemId: materialRequestItem.itemId })
+          .innerJoin(
+            ProductionBatchProcessEntity,
+            'pbp',
+            'pbp.id = pbi.productionBatchProcessId',
+          )
+          .where('pbp.productionBatchId = :pbId', {
+            pbId: materialRequest.productionBatchId,
+          })
+          .andWhere('pbi.itemId = :itemId', {
+            itemId: materialRequestItem.itemId,
+          })
           .getMany();
 
-        for (const pbItem of pbItems) {
-          const currentAvail = Number(pbItem.availableStock) || 0;
-          const requiredQty = Number(pbItem.requiredQty) || 0;
-          const newAvail = currentAvail + requestedQty;
-          const newShortage = Math.max(0, requiredQty - newAvail);
+        const batchExitItems = await this.pbItemRepo
+          .createQueryBuilder('pbi')
+          .innerJoin(
+            ProductionBatchProcessEntity,
+            'pbp',
+            'pbp.id = pbi.productionBatchProcessId',
+          )
+          .where('pbp.productionBatchId = :pbId', {
+            pbId: materialRequest.productionBatchId,
+          })
+          .andWhere('pbi.materialType = :exitType', {
+            exitType: MaterialType.Exit,
+          })
+          .select(['pbi.itemId'])
+          .getMany();
 
-          await this.pbItemRepo.update(pbItem.id, {
-            availableStock: newAvail,
-            shortage: newShortage,
-          });
+        const batchExitItemIds = new Set(
+          batchExitItems.map((i) => Number(i.itemId)),
+        );
+
+        const pbItems = allPbItems.filter((i) => {
+          const isEntry = String(i.materialType) === 'Entry';
+          return isEntry && !batchExitItemIds.has(Number(i.itemId));
+        });
+
+        let remainingToDeliver = requestedQty;
+        for (let i = 0; i < pbItems.length; i++) {
+          const pbItem = pbItems[i];
+          if (remainingToDeliver <= 0) break;
+
+          const currentAvail = Number(pbItem.availableStock) || 0;
+          const currentReceived = Number(pbItem.receivedQty) || 0;
+          const requiredQty = Number(pbItem.requiredQty) || 0;
+          const currentReqQty = Number(pbItem.requestedQty) || 0;
+
+          let allocateQty = 0;
+          if (currentReqQty > 0) {
+            allocateQty = Math.min(currentReqQty, remainingToDeliver);
+          } else if (i === pbItems.length - 1 && remainingToDeliver > 0) {
+            allocateQty = remainingToDeliver;
+          }
+
+          if (allocateQty > 0) {
+            const newAvail = currentAvail + allocateQty;
+            const newReceived = currentReceived + allocateQty;
+            const newShortage = Math.max(0, requiredQty - newAvail);
+            const newReqQty = Math.max(0, currentReqQty - allocateQty);
+
+            await this.pbItemRepo.update(pbItem.id, {
+              availableStock: newAvail,
+              receivedQty: newReceived,
+              shortage: newShortage,
+              requestedQty: newReqQty,
+            });
+            remainingToDeliver -= allocateQty;
+          }
         }
 
         await this.materialRequestItemRepo.update(materialRequestItem.id, {
@@ -278,22 +404,69 @@ export class MaterialRequestService {
         status: MaterialRequestStatus.Delivered,
         deliveredDate: new Date(),
       });
-
-      const allPbItems = await this.pbItemRepo
+      // await this.pbRepo.update(materialRequest.productionBatchId, {
+      //   materialStatus: MaterialStatus.OrderReceived,
+      //   updatedBy: req.user?.sub || null,
+      //   updatedDate: new Date(),
+      // });
+      const allPbItemsForStatus = await this.pbItemRepo
         .createQueryBuilder('pbi')
-        .innerJoin(ProductionBatchProcessEntity, 'pbp', 'pbp.id = pbi.productionBatchProcessId')
-        .where('pbp.productionBatchId = :pbId', { pbId: materialRequest.productionBatchId })
+        .innerJoin(
+          ProductionBatchProcessEntity,
+          'pbp',
+          'pbp.id = pbi.productionBatchProcessId',
+        )
+        .where('pbp.productionBatchId = :pbId', {
+          pbId: materialRequest.productionBatchId,
+        })
         .getMany();
 
-      const totalShortage = allPbItems.reduce((acc, item) => acc + (Number(item.shortage) || 0), 0);
+      const exitItemsForStatus = await this.pbItemRepo
+        .createQueryBuilder('pbi')
+        .innerJoin(
+          ProductionBatchProcessEntity,
+          'pbp',
+          'pbp.id = pbi.productionBatchProcessId',
+        )
+        .where('pbp.productionBatchId = :pbId', {
+          pbId: materialRequest.productionBatchId,
+        })
+        .andWhere('pbi.materialType = :exitType', {
+          exitType: MaterialType.Exit,
+        })
+        .select(['pbi.itemId'])
+        .getMany();
+
+      const exitItemIdsForStatus = new Set(
+        exitItemsForStatus.map((i) => Number(i.itemId)),
+      );
+
+      const rawMaterialItems = allPbItemsForStatus.filter((i) => {
+        return (
+          String(i.materialType) === 'Entry' &&
+          !exitItemIdsForStatus.has(Number(i.itemId))
+        );
+      });
+
+      const totalShortage = rawMaterialItems.reduce(
+        (acc, item) => acc + (Number(item.shortage) || 0),
+        0,
+      );
       const updatedMaterialStatus = totalShortage === 0 ? MaterialStatus.OrderReceived : MaterialStatus.OrderPartiallyReceived;
 
-      await this.pbRepo.update(materialRequest.productionBatchId, {
+      const updatePayload: any = {
         materialStatus: updatedMaterialStatus,
         updatedBy: req.user?.sub || null,
         updatedDate: new Date(),
-      });
+      };
 
+      if (updatedMaterialStatus === MaterialStatus.OrderReceived) {
+        updatePayload.status = ProductionBatchStatus.StockReceived;
+      }
+
+      await this.pbRepo.update(materialRequest.productionBatchId, updatePayload);
+
+      
       const logPayload = this.general.buildActivityLogPayload(
         req,
         'MATERIAL_REQUEST_DELIVERED',
@@ -350,33 +523,28 @@ export class MaterialRequestService {
         throw new Error('Cannot cancel a Delivered Material Request.');
       }
 
-      const materialRequestItems = await this.materialRequestItemRepo.find({
-        where: { materialRequestId: materialRequest.id },
-      });
-
-      for (const materialRequestItem of materialRequestItems) {
-        const requestedQty = Number(materialRequestItem.requestedQty) || 0;
-
-        const pbItems = await this.pbItemRepo
-          .createQueryBuilder('pbi')
-          .innerJoin(ProductionBatchProcessEntity, 'pbp', 'pbp.id = pbi.productionBatchProcessId')
-          .where('pbp.productionBatchId = :pbId', { pbId: materialRequest.productionBatchId })
-          .andWhere('pbi.itemId = :itemId', { itemId: materialRequestItem.itemId })
-          .getMany();
-
-        for (const pbItem of pbItems) {
-          const currentReqQty = Number(pbItem.requestQty) || 0;
-          const newReqQty = Math.max(0, currentReqQty - requestedQty);
-
-          await this.pbItemRepo.update(pbItem.id, {
-            requestQty: newReqQty,
-          });
-        }
-      }
-
       await this.materialRequestRepo.update(materialRequest.id, {
         status: MaterialRequestStatus.Cancelled,
       });
+
+      const remainingActiveRequests = await this.materialRequestRepo.count({
+        where: {
+          productionBatchId: materialRequest.productionBatchId,
+          status: In([
+            MaterialRequestStatus.Pending,
+            MaterialRequestStatus.Delivered,
+          ]),
+          sysRecDeleted: false,
+        },
+      });
+
+      if (remainingActiveRequests === 0) {
+        await this.pbRepo.update(materialRequest.productionBatchId, {
+          materialStatus: MaterialStatus.YetToOrder,
+          updatedBy: req.user?.sub || null,
+          updatedDate: new Date(),
+        });
+      }
 
       const logPayload = this.general.buildActivityLogPayload(
         req,

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Delete, Query, UploadedFiles, UseIntercept
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductionBatchService } from './service/production-batch.service';
 import { ProductionBatchListService } from './service/production-batch.list.service';
+import { BatchProcessLogService } from './service/batch-process-log.service';
 import { CommonFileService } from 'src/package/service/common-file.service';
 import { documentMulterConfig } from 'src/package/config/multer.config';
 import { CAPABILITIES } from 'src/package/config/capabilities.config';
@@ -15,6 +16,8 @@ import {
   ProductionBatchDetailsDto,
   ProductionBatchListDto,
   ProductionBatchSuggestDto,
+  ProcessDetailsDto,
+  CreateProcessLogDto,
 } from './dto/production-batch.dto';
 
 @Controller('production-batch')
@@ -22,6 +25,7 @@ export class ProductionBatchController {
   constructor(
     private readonly service: ProductionBatchService,
     private readonly listService: ProductionBatchListService,
+    private readonly logService: BatchProcessLogService,
     private readonly commonFileService: CommonFileService,
   ) {}
 
@@ -51,8 +55,19 @@ export class ProductionBatchController {
 
   @Delete('delete-production-batch')
   @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.DELETE)
-  async startDeleteProductionBatch(@AppRequest() req: IAppRequest, @Query() params: ProductionBatchDeleteDto) {
+  async startDeleteProductionBatch(@AppRequest() req: IAppRequest, @Body() params: ProductionBatchDeleteDto) {
     return await this.service.startDeleteProductionBatch(req, params);
   }
-}
 
+  @Post('add-process-log')
+  @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.UPDATE)
+  async addProcessLog(@AppRequest() req: IAppRequest, @Body() params: CreateProcessLogDto) {
+    return await this.logService.createLog(req, params);
+  }
+
+  @Get('get-process-details')
+  @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.VIEW)
+  async startProductionBatchProcessDetails(@AppRequest() req: IAppRequest, @Query() query: ProcessDetailsDto) {
+    return await this.listService.startProductionBatchProcessDetails(req, query);
+  }
+}

@@ -2,10 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductionBatchController } from './production-batch.controller';
 import { ProductionBatchService } from './service/production-batch.service';
+import { BatchProcessLogService } from './service/batch-process-log.service';
 import { ProductionBatchEntity } from './entity/production-batch.entity';
 import { ProductionBatchProcessEntity } from './entity/production-batch-process.entity';
 import { ProductionBatchItemEntity } from './entity/production-batch-item.entity';
-import { BatchConsumptionLogEntity } from './entity/batch-consumption-log.entity';
+import { BatchProcessLogEntity } from './entity/batch-process-log.entity';
+import { BatchProcessLogItemEntity } from './entity/batch-process-log-item.entity';
+
 import { ProductionOrderEntity } from '../production-order/entity/production-order.entity';
 import { BomEntity } from '../bom/entity/bom.entity';
 import { BomProcessItemEntity } from '../bom/entity/bom-process-item.entity';
@@ -26,7 +29,9 @@ import { ProductionBatchListService } from './service/production-batch.list.serv
       ProductionBatchEntity,
       ProductionBatchProcessEntity,
       ProductionBatchItemEntity,
-      BatchConsumptionLogEntity,
+      BatchProcessLogEntity,
+      BatchProcessLogItemEntity,
+
       ProductionOrderEntity,
       BomEntity,
       BomProcessItemEntity,
@@ -43,6 +48,7 @@ import { ProductionBatchListService } from './service/production-batch.list.serv
   providers: [
     ProductionBatchService,
     ProductionBatchListService,
+    BatchProcessLogService,
     GeneralUtilities,
     CommonFileService,
   ],

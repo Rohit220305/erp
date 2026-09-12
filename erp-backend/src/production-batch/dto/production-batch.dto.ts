@@ -7,11 +7,12 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsDateString,
   Min,
   ValidateNested,
 } from 'class-validator';
 import { Status } from '../../package/common/enums/enum';
-import { MaterialType, ProductionBatchStatus } from '../enum/production-batch.enum';
+import { MaterialType, ProductionBatchStatus, LogType } from '../enum/production-batch.enum';
 
 export class ProductionBatchProcessItemDto {
   @IsOptional()
@@ -39,10 +40,10 @@ export class ProductionBatchProcessItemDto {
   @IsNotEmpty()
   shortage: number;
 
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  @IsNotEmpty()
-  requestQty: number;
+  requestedQty?: number;
 }
 
 export class ProductionBatchProcessDto {
@@ -206,4 +207,50 @@ export class ProductionBatchListDto {
   @IsOptional()
   @IsString()
   logicalOperator?: string;
+}
+
+export class ProcessDetailsDto {
+  @IsInt()
+  @Transform(({ value }) => Number(value))
+  @IsNotEmpty()
+  batchId: number;
+
+  @IsInt()
+  @Transform(({ value }) => Number(value))
+  @IsNotEmpty()
+  processExecutionId: number;
+}
+
+export class CreateProcessLogItemDto {
+  @IsInt()
+  @IsNotEmpty()
+  itemId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  loggedQty: number;
+}
+
+export class CreateProcessLogDto {
+  @IsInt()
+  @IsNotEmpty()
+  productionBatchId: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  productionBatchProcessId: number;
+
+  @IsEnum(LogType)
+  @IsNotEmpty()
+  logType: LogType;
+
+  @IsDateString()
+  @IsNotEmpty()
+  logDate: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateProcessLogItemDto)
+  @IsNotEmpty()
+  items: CreateProcessLogItemDto[];
 }

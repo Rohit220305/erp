@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { ProductionBatchProcessEntity } from './production-batch-process.entity';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { MaterialType } from '../enum/production-batch.enum';
 
 export const numericColumnTransformer = {
@@ -76,9 +75,15 @@ export class ProductionBatchItemEntity {
     scale: 4,
     transformer: numericColumnTransformer,
   })
-  requestQty: number;
+  requestedQty: number;
 
-  @ManyToOne(() => ProductionBatchProcessEntity)
-  @JoinColumn({ name: 'productionBatchProcessId' })
-  productionBatchProcess: ProductionBatchProcessEntity;
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    default: 0,
+    transformer: numericColumnTransformer,
+  })
+  receivedQty: number;
+
 }

@@ -41,7 +41,7 @@ export default function ProductionBatchSidebar({
     { id: "SUMMARY", label: "Summary", icon: FileText },
     { id: "ITEM_DETAILS", label: "Item Details", icon: Package },
     { id: "PROCESS_ITEM_DETAILS", label: "Process Item Details", icon: Workflow },
-    // { id: "MATERIAL_REQUEST", label: "Material Request", icon: ShoppingCart },
+    { id: "MATERIAL_REQUEST", label: "Material Request", icon: ShoppingCart },
     // { id: "OUT_BOUND", label: "Production Out-Bound", icon: Truck },
     // { id: "COST_REPORT", label: "Batch Cost Report", icon: BarChart3 },
     // { id: "CONSUMPTION_LOG", label: "Consumption Log", icon: ListFilter },

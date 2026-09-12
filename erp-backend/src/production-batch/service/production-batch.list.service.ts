@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { ProductionBatchEntity } from '../entity/production-batch.entity';
 import { ProductionBatchProcessEntity } from '../entity/production-batch-process.entity';
 import { ProductionBatchItemEntity } from '../entity/production-batch-item.entity';
-import { BatchConsumptionLogEntity } from '../entity/batch-consumption-log.entity';
+
 import { MaterialType } from '../enum/production-batch.enum';
 import { ProductionOrderEntity } from '../../production-order/entity/production-order.entity';
 import { BomEntity } from '../../bom/entity/bom.entity';
@@ -17,7 +17,7 @@ import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { AttachmentMasterService } from 'src/attachment-master/service/attachment-master.service';
 import { AttachmentModule } from 'src/attachment-master/enums/attachment-module.enum';
 import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
-import { ProductionBatchSuggestDto, ProductionBatchListDto, ProductionBatchDetailsDto } from '../dto/production-batch.dto';
+import { ProductionBatchSuggestDto, ProductionBatchListDto, ProductionBatchDetailsDto, ProcessDetailsDto } from '../dto/production-batch.dto';
 
 @Injectable()
 export class ProductionBatchListService {
@@ -262,7 +262,7 @@ export class ProductionBatchListService {
       if (params.productionOrderId) qb.andWhere('pb.productionOrderId = :poId', { poId: params.productionOrderId });
       if (params.status) qb.andWhere('pb.status = :status', { status: params.status });
 
-      await this.general.applyListQuery(qb, params, 'pb.id');
+      await this.general.applyListQuery(qb, params, 'pb.id', 'DESC');
 
       const totalCount = await qb.getCount();
       qb.offset(skip).limit(limit);
@@ -288,6 +288,136 @@ export class ProductionBatchListService {
     } catch (err: any) {
       return_data = { success: 0, message: err.message };
     }
+    return return_data;
+  }
+
+  async startProductionBatchProcessDetails(req: IAppRequest, query: ProcessDetailsDto) {
+    const response = await this.getProductionBatchProcessDetails(req, query);
+    if (response.success === 1) {
+      return await this.finishSuccess(response);
+    }
+    return await this.finishFailure(response);
+  }
+
+  async getProductionBatchProcessDetails(req: IAppRequest, query: ProcessDetailsDto) {
+    let return_data: any = {};
+    try {
+      if (!query.batchId) throw new Error('Production Batch ID is required');
+      if (!query.processExecutionId) throw new Error('Process Execution ID is required');
+
+      const companyId = req.user?.companyId;
+
+      const qb = this.pbProcessRepo.createQueryBuilder('pbp');
+      qb.select([
+        'pbp.id as id',
+        'pbp.processTemplateMappingId as processTemplateMappingId',
+        'pbp.processId as processId',
+        'pbp.sequenceNumber as sequenceNumber',
+        'pbp.status as status',
+        'pbp.startTime as startTime',
+        'pbp.endTime as endTime',
+        'pbp.productionBatchId as productionBatchId',
+      ]);
+      qb.addSelect('pm.processName', 'processName');
+      qb.addSelect('pm.processCode', 'processCode');
+      qb.leftJoin('process_master', 'pm', 'pm.id = pbp.processId');
+      qb.addSelect(['ptm.nodePosition as nodePosition', 'ptm.dependencies as dependencies', 'ptm.handleConfig as handleConfig']);
+      qb.leftJoin('process_template_mapping', 'ptm', 'ptm.id = pbp.processTemplateMappingId');
+      
+      qb.innerJoin('production_batch', 'pb', 'pb.id = pbp.productionBatchId');
+      
+      qb.where('pbp.id = :processExecutionId', { processExecutionId: query.processExecutionId });
+      qb.andWhere('pb.id = :batchId', { batchId: query.batchId });
+      if (companyId) qb.andWhere('pb.companyId = :companyId', { companyId });
+
+      const processData = await qb.getRawOne();
+      if (!processData) throw new Error('Production Batch Process not found or access denied');
+
+      const items = await this.pbItemRepo
+        .createQueryBuilder('pbi')
+        .select([
+          'pbi.id as id',
+          'pbi.productionBatchProcessId as productionBatchProcessId',
+          'pbi.itemId as itemId',
+          'pbi.materialType as materialType',
+          'pbi.requiredQty as requiredQty',
+          'pbi.consumedQty as consumedQty',
+          'pbi.producedQty as producedQty',
+          'pbi.availableStock as availableStock',
+          'pbi.shortage as shortage',
+          'pbi.requestedQty as requestedQty',
+          'pbi.receivedQty as receivedQty',
+        ])
+        .addSelect(['item.itemName as itemName', 'item.itemCode as itemCode'])
+        .leftJoin('item_master', 'item', 'item.id = pbi.itemId')
+        .addSelect('uom.uomName', 'uomName')
+        .leftJoin('item_uom_master', 'uom', 'uom.id = item.itemUomId')
+        .addSelect('primaryImage.fileName', 'primaryImageFileName')
+        .leftJoin(
+          'item_images',
+          'primaryImage',
+          "primaryImage.itemId = pbi.itemId AND primaryImage.isPrimary = 'Yes' AND primaryImage.sysRecDeleted = 0",
+        )
+        .where('pbi.productionBatchProcessId = :processExecutionId', { processExecutionId: query.processExecutionId })
+        .getRawMany();
+
+      let parsedNodePosition = processData.nodePosition;
+      let parsedDependencies = processData.dependencies;
+      let parsedHandleConfig = processData.handleConfig;
+
+      try {
+        if (typeof parsedNodePosition === 'string') parsedNodePosition = JSON.parse(parsedNodePosition);
+      } catch (e) { }
+      try {
+        if (typeof parsedDependencies === 'string') parsedDependencies = JSON.parse(parsedDependencies);
+      } catch (e) { }
+      try {
+        if (typeof parsedHandleConfig === 'string') parsedHandleConfig = JSON.parse(parsedHandleConfig);
+      } catch (e) { }
+
+      // Generate image URLs for each item
+      const formattedItems: any[] = [];
+      for (const i of items) {
+        let imageUrl: string | null = null;
+        if (i.primaryImageFileName) {
+          imageUrl = await this.general.generateUrl('item', `${i.itemId}`, i.primaryImageFileName);
+        }
+        formattedItems.push({
+          ...i,
+          id: Number(i.id),
+          productionBatchProcessId: Number(i.productionBatchProcessId),
+          itemId: Number(i.itemId),
+          requiredQty: Number(i.requiredQty || 0),
+          consumedQty: Number(i.consumedQty || 0),
+          producedQty: Number(i.producedQty || 0),
+          availableStock: Number(i.availableStock || 0),
+          shortage: Number(i.shortage || 0),
+          requestedQty: Number(i.requestedQty || i.requestQty || 0),
+          receivedQty: Number(i.receivedQty || 0),
+          imageUrl,
+        });
+      }
+
+      const formattedProcessData = {
+        ...processData,
+        id: Number(processData.id),
+        processId: Number(processData.processId),
+        sequenceNumber: Number(processData.sequenceNumber),
+        nodePosition: parsedNodePosition,
+        dependencies: parsedDependencies,
+        handleConfig: parsedHandleConfig,
+        items: formattedItems,
+      };
+
+      return_data = {
+        success: 1,
+        message: 'Process details fetched successfully.',
+        data: formattedProcessData,
+      };
+    } catch (err: any) {
+      return_data = { success: 0, message: err.message };
+    }
+    
     return return_data;
   }
 
@@ -391,7 +521,8 @@ export class ProductionBatchListService {
             'pbi.producedQty as producedQty',
             'pbi.availableStock as availableStock',
             'pbi.shortage as shortage',
-            'pbi.requestQty as requestQty',
+            'pbi.requestedQty as requestedQty',
+            'pbi.receivedQty as receivedQty',
           ])
           .addSelect(['item.itemName as itemName', 'item.itemCode as itemCode'])
           .leftJoin('item_master', 'item', 'item.id = pbi.itemId')
@@ -468,7 +599,8 @@ export class ProductionBatchListService {
               producedQty: Number(i.producedQty || 0),
               availableStock: Number(i.availableStock || 0),
               shortage: Number(i.shortage || 0),
-              requestQty: Number(i.requestQty || 0),
+              requestedQty: Number(i.requestedQty || i.requestQty || 0),
+              receivedQty: Number(i.receivedQty || 0),
               itemImageUrl: itemImageMap.get(Number(i.itemId)) || null,
             })),
         };
@@ -492,10 +624,10 @@ export class ProductionBatchListService {
         const targetMap = (itemId === mainItemId)
           ? finishedProductsMap
           : isEntry && !isInternal
-          ? rawMaterialsMap
-          : isInternal
-          ? semiFinishedMap
-          : finishedProductsMap;
+            ? rawMaterialsMap
+            : isInternal
+              ? semiFinishedMap
+              : finishedProductsMap;
 
         if (!targetMap.has(itemId)) {
           targetMap.set(itemId, {
@@ -507,8 +639,8 @@ export class ProductionBatchListService {
             materialType: item.materialType,
             isInternalTransfer: isInternal,
             requiredQty: Number(item.requiredQty || 0),
-            requestQty: Number(item.requestQty || 0),
-            receivedQty: 0,
+            requestedQty: Number(item.requestedQty || item.requestQty || 0),
+            receivedQty: Number(item.receivedQty || 0),
             consumedQty: Number(item.consumedQty || 0),
             producedQty: Number(item.producedQty || 0),
             availableStock: Number(item.availableStock || 0),
@@ -517,7 +649,7 @@ export class ProductionBatchListService {
         } else {
           const existing = targetMap.get(itemId);
           existing.requiredQty += Number(item.requiredQty || 0);
-          existing.requestQty += Number(item.requestQty || 0);
+          existing.requestedQty += Number(item.requestedQty || item.requestQty || 0);
           existing.consumedQty += Number(item.consumedQty || 0);
           existing.producedQty += Number(item.producedQty || 0);
           existing.availableStock += Number(item.availableStock || 0);
@@ -534,7 +666,7 @@ export class ProductionBatchListService {
           materialType: 'Exit',
           isInternalTransfer: false,
           requiredQty: Number(batchData.batchQuantity || 0),
-          requestQty: Number(batchData.batchQuantity || 0),
+          requestedQty: Number(batchData.batchQuantity || 0),
           receivedQty: 0,
           consumedQty: 0,
           producedQty: 0,

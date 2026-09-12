@@ -21,7 +21,7 @@ export default function ProductionBatchDetailPage({ batchData, errorMsg }) {
   const router = useRouter();
   const { can } = useAuth();
   const [activeTab, setActiveTab] = useState("SUMMARY");
-  const [processDrawerState, setProcessDrawerState] = useState({ isOpen: false, processData: null });
+  const [processDrawerState, setProcessDrawerState] = useState({ isOpen: false, processExecutionId: null });
   const [sideDrawerState, setSideDrawerState] = useState({ isOpen: false, moduleName: null, id: null });
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function ProductionBatchDetailPage({ batchData, errorMsg }) {
         actionButton: batchData?.id && can(CAPABILITIES.MATERIAL_REQUEST?.CREATE || "MATERIAL_REQUEST_CREATE")
           ? {
               label: "Request Material",
-              onClick: () => router.push(buildRoute("production-batch", "materialRequestCreate", { id: batchData.id })),
+              href: buildRoute("production-batch", "materialRequestCreate", { id: batchData.id }),
             }
           : null,
       },
@@ -70,7 +70,7 @@ export default function ProductionBatchDetailPage({ batchData, errorMsg }) {
       (p) => Number(p.processId) === Number(processId) || Number(p.id) === Number(processId)
     );
     if (processData) {
-      setProcessDrawerState({ isOpen: true, processData });
+      setProcessDrawerState({ isOpen: true, processExecutionId: processData.id });
     }
   };
 
@@ -139,8 +139,10 @@ export default function ProductionBatchDetailPage({ batchData, errorMsg }) {
 
       <ProductionBatchProcessDrawer
         open={processDrawerState.isOpen}
-        onClose={() => setProcessDrawerState({ isOpen: false, processData: null })}
-        processData={processDrawerState.processData}
+        onClose={() => setProcessDrawerState({ isOpen: false, processExecutionId: null })}
+        batchId={batchData?.id}
+        batchData={batchData}
+        processExecutionId={processDrawerState.processExecutionId}
       />
 
       <SideDrawer

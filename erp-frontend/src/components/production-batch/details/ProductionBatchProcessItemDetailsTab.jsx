@@ -55,9 +55,9 @@ export default function ProductionBatchProcessItemDetailsTab({
                   <th className="py-3 px-4 min-w-[150px]">Process</th>
                   <th className="py-3 px-4 w-24 text-center">Item Image</th>
                   <th className="py-3 px-4 min-w-[220px]">Item Name</th>
-                  <th className="py-3 px-4 text-right">Planned Qty</th>
+                  {/* <th className="py-3 px-4 text-right">BOM Qty</th> */}
                   <th className="py-3 px-4 text-right">Utilize Qty</th>
-                  <th className="py-3 px-4 text-right">Requested Qty</th>
+                  <th className="py-3 px-4 text-right">Required Qty</th>
                   <th className="py-3 px-4 text-right">Consumption Qty</th>
                 </tr>
               </thead>
@@ -116,16 +116,16 @@ export default function ProductionBatchProcessItemDetailsTab({
                         </p>
                       </td>
 
-                      <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
+                      {/* <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
                         {formatQty(item.requiredQty, item.uomName)}
-                      </td>
+                      </td> */}
 
                       <td className="py-3.5 px-4 text-right font-mono text-gray-800">
                         {formatQty(0, item.uomName)}
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
-                        {formatQty(item.requestQty, item.uomName)}
+                        {formatQty(item.requiredQty, item.uomName)}
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono text-gray-800">
@@ -149,10 +149,10 @@ export default function ProductionBatchProcessItemDetailsTab({
                   <th className="py-3 px-4 min-w-[150px]">Process</th>
                   <th className="py-3 px-4 w-24 text-center">Item Image</th>
                   <th className="py-3 px-4 min-w-[220px]">Item Name</th>
-                  <th className="py-3 px-4 text-right">Planned Qty</th>
+                  {/* <th className="py-3 px-4 text-right">BOM Qty</th> */}
                   <th className="py-3 px-4 text-right">Utilize Qty</th>
                   <th className="py-3 px-4 text-right">Qty To Produce</th>
-                  <th className="py-3 px-4 text-right">Actual Produced Qty</th>
+                  <th className="py-3 px-4 text-right">Produced Qty</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -210,9 +210,9 @@ export default function ProductionBatchProcessItemDetailsTab({
                         </p>
                       </td>
 
-                      <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
+                      {/* <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
                         {formatQty(item.requiredQty, item.uomName)}
-                      </td>
+                      </td> */}
 
                       <td className="py-3.5 px-4 text-right font-mono text-gray-800">
                         {formatQty(0, item.uomName)}
@@ -220,7 +220,7 @@ export default function ProductionBatchProcessItemDetailsTab({
 
                       <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
                         {formatQty(
-                          item.requestQty || item.requiredQty,
+                          item.requestedQty || item.requestQty || item.requiredQty,
                           item.uomName,
                         )}
                       </td>

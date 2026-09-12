@@ -29,7 +29,7 @@ export const getProductionBatchSchema = (primitiveQuantity = 0) => {
                 materialType: z.enum(["Raw", "SemiFinished", "Finished"]),
                 requiredQty: z.coerce.number(),
                 shortage: z.coerce.number(),
-                requestQty: z.coerce.number(),
+                requestedQty: z.coerce.number().optional(),
               })
             )
             .optional(),

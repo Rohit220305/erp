@@ -34,3 +34,8 @@ export enum MaterialRequestStatus {
   Delivered = 'Delivered',
   Cancelled = 'Cancelled',
 }
+
+export enum LogType {
+  Consumption = 'Consumption',
+  Production = 'Production',
+}

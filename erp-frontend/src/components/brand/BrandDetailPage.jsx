@@ -135,7 +135,7 @@ export default function BrandDetailPage({ data }) {
   const updatedByUserId = data?.updatedBy || data?.updatedById || data?.updated_by;
 
   return (
-    <div className="p-6 bg-[#f8f9fa] min-h-full">
+    <div className="p-6  min-h-full">
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-2">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5">

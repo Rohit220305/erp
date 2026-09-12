@@ -131,14 +131,24 @@ export default function Header() {
 
         <div className="flex items-center gap-5">
           {header.actionButton && (
-            <button
-              type="button"
-              onClick={header.actionButton.onClick}
-              className="flex items-center gap-2 cursor-pointer bg-[#1565c0] text-white px-4 py-2.5 rounded-md hover:bg-[#0f57a6] transition"
-            >
-              <Plus size={18} />
-              <span>{header.actionButton.label}</span>
-            </button>
+            header.actionButton.href ? (
+              <Link
+                href={header.actionButton.href}
+                className="flex items-center gap-2 cursor-pointer bg-[#1565c0] text-white px-4 py-2.5 rounded-md hover:bg-[#0f57a6] transition"
+              >
+                <Plus size={18} />
+                <span>{header.actionButton.label}</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={header.actionButton.onClick}
+                className="flex items-center gap-2 cursor-pointer bg-[#1565c0] text-white px-4 py-2.5 rounded-md hover:bg-[#0f57a6] transition"
+              >
+                <Plus size={18} />
+                <span>{header.actionButton.label}</span>
+              </button>
+            )
           )}
 
           {header.icons?.map((icon) => {

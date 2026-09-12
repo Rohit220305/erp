@@ -247,6 +247,7 @@ export class GeneralUtilities {
     qb: SelectQueryBuilder<any>,
     params: any,
     defaultSort: string,
+    defaultSortOrder: 'ASC' | 'DESC' = 'ASC',
   ) {
     const columnMap = this.buildColumnMapFromSelects(qb);
 
@@ -269,7 +270,7 @@ export class GeneralUtilities {
       const order = params.sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
       qb.orderBy(columnMap[params.sortField], order);
     } else {
-      qb.orderBy(defaultSort, 'ASC');
+      qb.orderBy(defaultSort, defaultSortOrder);
     }
   }
 

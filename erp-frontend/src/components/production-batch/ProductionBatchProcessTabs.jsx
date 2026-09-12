@@ -31,8 +31,10 @@ export default function ProductionBatchProcessTabs({
         if (!acc[item.itemId]) {
           acc[item.itemId] = { ...item };
         } else {
-          acc[item.itemId].requestQty = parseFloat(
-            (acc[item.itemId].requestQty + item.requestQty).toFixed(2)
+          const itemQty = item.requestedQty ?? item.requestQty ?? 0;
+          const existingQty = acc[item.itemId].requestedQty ?? acc[item.itemId].requestQty ?? 0;
+          acc[item.itemId].requestedQty = parseFloat(
+            (existingQty + itemQty).toFixed(2)
           );
           acc[item.itemId].shortage = parseFloat(
             (acc[item.itemId].shortage + item.shortage).toFixed(2)
@@ -50,8 +52,10 @@ export default function ProductionBatchProcessTabs({
         if (!acc[item.itemId]) {
           acc[item.itemId] = { ...item };
         } else {
-          acc[item.itemId].requestQty = parseFloat(
-            (acc[item.itemId].requestQty + item.requestQty).toFixed(2)
+          const itemQty = item.requestedQty ?? item.requestQty ?? 0;
+          const existingQty = acc[item.itemId].requestedQty ?? acc[item.itemId].requestQty ?? 0;
+          acc[item.itemId].requestedQty = parseFloat(
+            (existingQty + itemQty).toFixed(2)
           );
           acc[item.itemId].shortage = parseFloat(
             (acc[item.itemId].shortage + item.shortage).toFixed(2)
@@ -176,7 +180,7 @@ export default function ProductionBatchProcessTabs({
                           </div>
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                          {item.totalRequirement || item.requestQty} {item.uomName || "gms"}
+                          {item.totalRequirement || item.requestedQty || item.requestQty} {item.uomName || "gms"}
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-600">
                           0.00 {item.uomName || "gms"}
@@ -185,7 +189,7 @@ export default function ProductionBatchProcessTabs({
                           {item.shortage} {item.uomName || "gms"}
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono font-bold text-gray-900">
-                          {item.requestQty} {item.uomName || "gms"}
+                          {item.requestedQty ?? item.requestQty} {item.uomName || "gms"}
                         </td>
                       </tr>
                     ))}
@@ -246,7 +250,7 @@ export default function ProductionBatchProcessTabs({
                             </div>
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                            {item.totalRequirement || item.requestQty} {item.uomName || "gms"}
+                            {item.totalRequirement || item.requestedQty || item.requestQty} {item.uomName || "gms"}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-600">
                             {item.availableStock ?? "0.00"} {item.uomName || "gms"}
@@ -258,7 +262,7 @@ export default function ProductionBatchProcessTabs({
                             {item.shortage} {item.uomName || "gms"}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono font-bold text-gray-900">
-                            {item.requestQty} {item.uomName || "gms"}
+                            {item.requestedQty ?? item.requestQty} {item.uomName || "gms"}
                           </td>
                         </tr>
                       );

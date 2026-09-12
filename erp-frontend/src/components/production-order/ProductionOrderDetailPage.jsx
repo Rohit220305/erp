@@ -196,14 +196,14 @@ export default function ProductionOrderDetailPage({ data }) {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs font-mono">
                   <tbody className="divide-y divide-gray-100">
-                    <tr>
+                    {/* <tr>
                       <td className="py-1.5 text-gray-500 font-sans">
                         Produced Qty
                       </td>
                       <td className="py-1.5 text-right font-bold text-gray-900">
                         {orderData.productionQuantityDisplay}
                       </td>
-                    </tr>
+                    </tr> */}
                     <tr>
                       <td className="py-1.5 text-gray-500 font-sans">
                         Package Qty
