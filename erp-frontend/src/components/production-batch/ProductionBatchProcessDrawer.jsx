@@ -14,9 +14,18 @@ import {
 } from "lucide-react";
 import { getStatusDisplay } from "@/utils/status-formatter";
 import StatusBadge from "@/components/common/StatusBadge";
-import { getProcessDetails } from "@/lib/api/production-batch-api";
+import {
+  getProcessDetails,
+  startProcess,
+  pauseProcess,
+  resumeProcess,
+  finishProcess,
+} from "@/lib/api/production-batch-api";
 import Loader from "@/components/common/Loader";
+import ConfirmModal from "@/components/common/ConfirmModal";
 import ProcessLogModal from "./ProcessLogModal";
+import { formatNumber } from "@/utils/number-formatter";
+import NumericInput from "@/components/common/NumericInput";
 
 function CircularProgressGauge({ percentage = 0, label, color = "#22c55e", subText }) {
   const [animatedPercentage, setAnimatedPercentage] = useState(0);
@@ -25,7 +34,6 @@ function CircularProgressGauge({ percentage = 0, label, color = "#22c55e", subTe
   const strokeDashoffset = circumference - (animatedPercentage / 100) * circumference;
 
   useEffect(() => {
-    // Animate from 0 to target percentage shortly after mount
     const timer = setTimeout(() => {
       setAnimatedPercentage(percentage);
     }, 100);
@@ -71,21 +79,23 @@ function CircularProgressGauge({ percentage = 0, label, color = "#22c55e", subTe
   );
 }
 
-export default function ProductionBatchProcessDrawer({ open, onClose, batchId, batchData, processExecutionId }) {
+export default function ProductionBatchProcessDrawer({ open, onClose, batchId, batchData, processExecutionId, onProcessUpdated }) {
   const [processData, setProcessData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Modal State
   const [logModalState, setLogModalState] = useState({
     isOpen: false,
     logType: "",
     items: [],
   });
   const [error, setError] = useState(null);
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [actionError, setActionError] = useState(null);
 
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [shouldRender, setShouldRender] = useState(open);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [finalProcessConfirm, setFinalProcessConfirm] = useState({ isOpen: false, producedQty: 0 });
 
   const fetchProcessDetails = async () => {
     if (!batchId || !processExecutionId || !open) return;
@@ -103,6 +113,158 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleStartProcess = async () => {
+    if (!batchId || !processExecutionId) return;
+    setIsActionLoading(true);
+    setActionError(null);
+    try {
+      const res = await startProcess({ batchId, processExecutionId });
+      if (res?.settings?.success === 1) {
+        await fetchProcessDetails();
+        onProcessUpdated?.();
+      } else {
+        setActionError(res?.settings?.message || "Failed to start process");
+      }
+    } catch (err) {
+      setActionError("Error starting process");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handlePauseProcess = async () => {
+    if (!batchId || !processExecutionId) return;
+    setIsActionLoading(true);
+    setActionError(null);
+    try {
+      const res = await pauseProcess({ batchId, processExecutionId });
+      if (res?.settings?.success === 1) {
+        await fetchProcessDetails();
+        onProcessUpdated?.();
+      } else {
+        setActionError(res?.settings?.message || "Failed to pause process");
+      }
+    } catch (err) {
+      setActionError("Error pausing process");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleResumeProcess = async () => {
+    if (!batchId || !processExecutionId) return;
+    setIsActionLoading(true);
+    setActionError(null);
+    try {
+      const res = await resumeProcess({ batchId, processExecutionId });
+      if (res?.settings?.success === 1) {
+        await fetchProcessDetails();
+        onProcessUpdated?.();
+      } else {
+        setActionError(res?.settings?.message || "Failed to resume process");
+      }
+    } catch (err) {
+      setActionError("Error resuming process");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleFinishProcess = async (producedQty = undefined) => {
+    if (!batchId || !processExecutionId) return;
+    setIsActionLoading(true);
+    setActionError(null);
+    try {
+      const payload = { batchId, processExecutionId };
+      if (producedQty !== undefined) {
+        payload.producedQty = Number(producedQty);
+      }
+      const res = await finishProcess(payload);
+      if (res?.settings?.success === 1) {
+        await fetchProcessDetails();
+        onProcessUpdated?.();
+        if (exitItems.length > 0) {
+          setLogModalState({ isOpen: true, logType: "Production", items: exitItems });
+        }
+      } else {
+        setActionError(res?.settings?.message || "Failed to finish process");
+      }
+    } catch (err) {
+      setActionError("Error finishing process");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmLabel: "Confirm",
+    danger: false,
+    action: null,
+  });
+
+  const requestStartProcess = () => {
+    setConfirmState({
+      isOpen: true,
+      title: "Start Process",
+      message: "Are you sure you want to start this process step?",
+      confirmLabel: "Start Process",
+      danger: false,
+      action: handleStartProcess,
+    });
+  };
+
+  const requestPauseProcess = () => {
+    setConfirmState({
+      isOpen: true,
+      title: "Pause Process",
+      message: "Are you sure you want to pause this process step?",
+      confirmLabel: "Pause Process",
+      danger: false,
+      action: handlePauseProcess,
+    });
+  };
+
+  const requestResumeProcess = () => {
+    setConfirmState({
+      isOpen: true,
+      title: "Resume Process",
+      message: "Are you sure you want to resume this process step?",
+      confirmLabel: "Resume Process",
+      danger: false,
+      action: handleResumeProcess,
+    });
+  };
+
+  const requestFinishProcess = () => {
+    if (isLastProcess) {
+      setFinalProcessConfirm({ isOpen: true, producedQty: batchData?.batchQuantity || 0 });
+    } else {
+      setConfirmState({
+        isOpen: true,
+        title: "Finish Process",
+        message: "Are you sure you want to finish this process step?",
+        confirmLabel: "Finish Process",
+        danger: true,
+        action: () => handleFinishProcess(),
+      });
+    }
+  };
+
+  const handleConfirmAction = async () => {
+    const actionToRun = confirmState.action;
+    setConfirmState({ isOpen: false, title: "", message: "", confirmLabel: "Confirm", danger: false, action: null });
+    if (actionToRun) {
+      await actionToRun();
+    }
+  };
+
+  const handleCancelConfirm = () => {
+    setConfirmState({ isOpen: false, title: "", message: "", confirmLabel: "Confirm", danger: false, action: null });
   };
 
   useEffect(() => {
@@ -145,12 +307,14 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
   };
 
   const status = processData?.status || processData?.processState || "YetToStart";
+  
+  const maxSeq = Math.max(...(batchData?.processes?.map(p => p.sequenceNumber) || [0]));
+  const isLastProcess = processData?.sequenceNumber === maxSeq;
 
   const entryItems = (processData?.items || []).filter(
     (item) => item.materialType === "Entry"
   );
   
-  // Filter out the final finished item (batchData?.itemId) from exitItems
   const exitItems = (processData?.items || []).filter(
     (item) => item.materialType === "Exit" && Number(item.itemId) !== Number(batchData?.itemId)
   );
@@ -159,17 +323,26 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
   const totalConsumed = entryItems.reduce((sum, item) => sum + (Number(item.consumedQty) || 0), 0);
   const totalRequiredEntry = entryItems.reduce((sum, item) => sum + (Number(item.requiredQty) || 0), 0);
   const consumedPercent = totalRequiredEntry > 0 ? Math.min(100, Math.round((totalConsumed / totalRequiredEntry) * 100)) : 0;
-  const consumedText = `${totalConsumed.toFixed(2)} / ${totalRequiredEntry.toFixed(2)}`;
+  const consumedText = `${formatNumber(totalConsumed)} / ${formatNumber(totalRequiredEntry)}`;
 
   const totalProduced = exitItems.reduce((sum, item) => sum + (Number(item.producedQty) || 0), 0);
   const totalRequiredExit = exitItems.reduce((sum, item) => sum + (Number(item.requiredQty) || 0), 0);
   const producedPercent = totalRequiredExit > 0 ? Math.min(100, Math.round((totalProduced / totalRequiredExit) * 100)) : 0;
-  const producedText = `${totalProduced.toFixed(2)} / ${totalRequiredExit.toFixed(2)}`;
+  const producedText = `${formatNumber(totalProduced)} / ${formatNumber(totalRequiredExit)}`;
 
-  const hasApplicableActions = true; // Temporarily show actions for all statuses
+  const hasApplicableActions = true;
   
-  console.log("processData in ProductionBatchProcessDrawer:", processData);
+  const isBatchCompleted =
+    batchData?.status === "Completed" ||
+    batchData?.status === "Finished" ||
+    Boolean(batchData?.markCompleted);
 
+  const isYetToStart =
+    status === "YetToStart" ||
+    status === "Yet To Start" ||
+    status === "Yet-to-start";
+
+  const showActionSection = !isBatchCompleted && !isYetToStart;
   return (
     <div className="fixed top-[74px] bottom-0 left-0 right-0 z-[60] overflow-hidden pointer-events-auto">
       <div
@@ -196,9 +369,12 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
           </button>
         </div>
 
-        {isLoading ? (
-          <div className="flex-1 flex items-center justify-center">
+        {isLoading || isActionLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-3">
             <Loader />
+            <p className="text-xs font-semibold text-gray-500">
+              {isActionLoading ? "Updating process status..." : "Loading process details..."}
+            </p>
           </div>
         ) : error ? (
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-red-500">
@@ -241,77 +417,87 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
             </div>
           </div>
 
-          {hasApplicableActions && (
-            <div className="bg-white border-gray-200 py-4 pb-0">
+          {showActionSection && (
+            <div className="bg-white ">
               <h3 className="text-[14px] font-semibold bg-gray-100 text-gray-800 tracking-wider p-4">
                 Action
               </h3>
-              <div className="p-4 space-y-3">
-                {(status === "ReadytoStart" ||
-                  status === "ReadyToStart" ||
-                  status === "Ready to Start") && (
+              <div className="p-4 space-y-3.5">
+                {actionError && (
+                  <div className="p-2 mb-2 text-xs text-red-600 bg-red-50 rounded border border-red-200">
+                    {actionError}
+                  </div>
+                )}
+
+                {(status === "ReadytoStart" || status === "ReadyToStart" || status === "Ready to Start") && (
                   <button
                     type="button"
-                    onClick={() => {}}
-                    className="flex items-center gap-2.5 text-gray-700 hover:text-green-700 cursor-pointer transition"
+                    disabled={isActionLoading}
+                    onClick={requestStartProcess}
+                    className="flex items-center gap-2.5 text-gray-700 hover:text-green-700 font-medium text-xs cursor-pointer transition disabled:opacity-50"
                   >
                     <PlusCircle size={18} className="text-green-500" />
-                    <span className="text-sm">Start Process</span>
+                    <span>Start Process</span>
                   </button>
                 )}
 
-                <div className="space-y-4">
-                  {entryItems.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setLogModalState({ isOpen: true, logType: 'Consumption', items: entryItems })}
-                      className="flex items-center gap-2 text-gray-700 hover:text-red-600 font-medium cursor-pointer transition w-full text-left"
-                    >
-                      <PlusCircle size={18} className="text-red-500" />
-                      <span className="text-[13px]">Add Consumption Log</span>
-                    </button>
-                  )}
-                  {exitItems.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setLogModalState({ isOpen: true, logType: 'Production', items: exitItems })}
-                      className="flex items-center gap-2 text-gray-700 hover:text-green-600 font-medium cursor-pointer transition w-full text-left"
-                    >
-                      <PlusCircle size={18} className="text-green-500" />
-                      <span className="text-[13px]">Add Production Log</span>
-                    </button>
-                  )}
+                {status === "InProgress" && (
+                  <button
+                    type="button"
+                    disabled={isActionLoading}
+                    onClick={requestPauseProcess}
+                    className="flex items-center gap-2.5 text-gray-700 hover:text-amber-600 font-medium text-xs cursor-pointer transition disabled:opacity-50"
+                  >
+                    <PauseCircle size={18} className="text-amber-500" />
+                    <span>Pause Process</span>
+                  </button>
+                )}
 
-                  {/* <div className="flex gap-2 pt-3 border-t border-gray-100">
-                    {status === "Paused" ? (
-                      <button
-                        type="button"
-                        onClick={() => {}}
-                        className="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
-                      >
-                        <PlayCircle size={14} />
-                        <span>Resume Process</span>
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {}}
-                        className="flex-1 border border-amber-500 text-amber-600 hover:bg-amber-50 py-2 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
-                      >
-                        <PauseCircle size={14} />
-                        <span>Pause Process</span>
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => {}}
-                      className="flex-1 bg-[#1565c0] hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <CheckCircle2 size={14} />
-                      <span>Finish Process</span>
-                    </button>
-                  </div> */}
-                </div>
+                {status === "Paused" && (
+                  <button
+                    type="button"
+                    disabled={isActionLoading}
+                    onClick={requestResumeProcess}
+                    className="flex items-center gap-2.5 text-gray-700 hover:text-amber-600 font-medium text-xs cursor-pointer transition disabled:opacity-50"
+                  >
+                    <PlayCircle size={18} className="text-amber-500" />
+                    <span>Resume Process</span>
+                  </button>
+                )}
+
+                {entryItems.length > 0 && (status === "InProgress" || status === "Paused" || status === "Completed") && (
+                  <button
+                    type="button"
+                    onClick={() => setLogModalState({ isOpen: true, logType: "Consumption", items: entryItems })}
+                    className="flex items-center gap-2.5 text-gray-700 hover:text-red-600 font-medium text-xs cursor-pointer transition w-full text-left"
+                  >
+                    <PlusCircle size={18} className="text-red-500" />
+                    <span>Add Consumption Log</span>
+                  </button>
+                )}
+
+                {exitItems.length > 0 && status === "Completed" && (
+                  <button
+                    type="button"
+                    onClick={() => setLogModalState({ isOpen: true, logType: "Production", items: exitItems })}
+                    className="flex items-center gap-2.5 text-gray-700 hover:text-green-600 font-medium text-xs cursor-pointer transition w-full text-left"
+                  >
+                    <PlusCircle size={18} className="text-green-500" />
+                    <span>Add Production Log</span>
+                  </button>
+                )}
+
+                {(status === "InProgress" || status === "Paused") && (
+                  <button
+                    type="button"
+                    disabled={isActionLoading}
+                    onClick={requestFinishProcess}
+                    className="flex items-center gap-2.5 text-gray-700 hover:text-red-600 font-medium text-xs cursor-pointer transition disabled:opacity-50"
+                  >
+                    <PauseCircle size={18} className="text-red-500" />
+                    <span>Finish Process</span>
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -328,12 +514,14 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
                 color="#ef4444"
                 subText={consumedText}
               />
-              <CircularProgressGauge
-                percentage={producedPercent}
-                label="Produced"
-                color="#22c55e"
-                subText={producedText}
-              />
+              {!isLastProcess && (
+                <CircularProgressGauge
+                  percentage={producedPercent}
+                  label="Produced"
+                  color="#22c55e"
+                  subText={producedText}
+                />
+              )}
             </div>
           </div>
 
@@ -390,11 +578,10 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
                                   {item.itemName}
                                 </td>
                                 <td className="py-2.5 px-3 text-right font-mono">
-                                  {item.requiredQty ||
-                                    "0 gms"}
+                                  {formatNumber(item.requiredQty)} {item.uomName || item.itemUomName || ""}
                                 </td>
                                 <td className="py-2.5 px-3 text-right font-mono text-[#c01515]">
-                                  {item.consumedQty || "0 gms"}
+                                  {formatNumber(item.consumedQty)} {item.uomName || item.itemUomName || ""}
                                 </td>
                               </tr>
                             ))}
@@ -412,49 +599,43 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
               </div>
             </div>
 
-            <div className=" overflow-hidden ">
-              <button
-                type="button"
-                onClick={() => toggleAccordion("exit")}
-                className="w-full flex items-center justify-between p-4 text-[14px] font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 transition cursor-pointer text-left"
-              >
-                <span>Exit Items</span>
-                {activeAccordion === "exit" ? (
-                  <MinusCircle
-                    size={18}
-                    className="text-gray-700 transition-colors"
-                  />
-                ) : (
-                  <PlusCircle
-                    size={18}
-                    className="text-gray-700 transition-colors"
-                  />
-                )}
-              </button>
+            {exitItems.length > 0 && (
+              <div className=" overflow-hidden ">
+                <button
+                  type="button"
+                  onClick={() => toggleAccordion("exit")}
+                  className="w-full flex items-center justify-between p-4 text-[14px] font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 transition cursor-pointer text-left"
+                >
+                  <span>Exit Items</span>
+                  {activeAccordion === "exit" ? (
+                    <MinusCircle
+                      size={18}
+                      className="text-gray-700 transition-colors"
+                    />
+                  ) : (
+                    <PlusCircle
+                      size={18}
+                      className="text-gray-700 transition-colors"
+                    />
+                  )}
+                </button>
 
-              <div
-                className={`grid transition-all duration-300 ease-in-out ${
-                  activeAccordion === "exit"
-                    ? "grid-rows-[1fr] opacity-100"
-                    : "grid-rows-[0fr] opacity-0"
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                    {exitItems.length > 0 ? (
-                      <>
-
-                        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                          <table className="w-full text-left text-xs">
-                            <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
+                <div
+                  className={`grid transition-all duration-300 ease-in-out ${
+                    activeAccordion === "exit"
+                      ? "grid-rows-[1fr] opacity-100"
+                      : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+                      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
                             <tr>
                               <th className="py-2.5 px-3">Item Name</th>
-                              <th className="py-2.5 px-3 text-right">
-                                Required Qty
-                              </th>
-                              <th className="py-2.5 px-3 text-right">
-                                Produced Qty
-                              </th>
+                              <th className="py-2.5 px-3 text-right">Required Qty</th>
+                              <th className="py-2.5 px-3 text-right">Produced Qty</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100">
@@ -464,29 +645,21 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
                                   {item.itemName}
                                 </td>
                                 <td className="py-2.5 px-3 text-right font-mono">
-                                  {item.requestedQty ||
-                                    item.requestQty ||
-                                    item.requiredQty ||
-                                    "0 gms"}
+                                  {formatNumber(item.requestedQty || item.requestQty || item.requiredQty)} {item.uomName || item.itemUomName || ""}
                                 </td>
                                 <td className="py-2.5 px-3 text-right font-mono text-green-600 font-semibold">
-                                  {item.producedQty || "0 gms"}
+                                  {formatNumber(item.producedQty)} {item.uomName || item.itemUomName || ""}
                                 </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
-                      </>
-                    ) : (
-                      <p className="text-xs text-gray-400 italic text-center py-3">
-                        No exit material items for this process step.
-                      </p>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
           </div>
         ) : null}
@@ -499,8 +672,70 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
         items={logModalState.items}
         processData={processData}
         batchId={batchId}
-        onSuccess={fetchProcessDetails}
+        onSuccess={() => {
+          fetchProcessDetails();
+          onProcessUpdated?.();
+        }}
       />
+
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmLabel={confirmState.confirmLabel}
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelConfirm}
+        danger={confirmState.danger}
+      />
+
+      {finalProcessConfirm.isOpen && (
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setFinalProcessConfirm({ isOpen: false, producedQty: 0 })}
+          />
+          <div className="relative z-10 bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-6 animate-in fade-in-0 zoom-in-95 text-center">
+            <h3 className="text-[17px] font-medium text-gray-900 mb-1">
+              Enter Produced Qty in {batchData?.uomName || batchData?.uom || ""}?
+            </h3>
+            <p className="text-sm font-normal text-gray-600 mb-5">
+              Quantity To Be Produced : {batchData?.batchQuantity || 0}
+            </p>
+            
+            <NumericInput
+              min={0}
+              maxDecimals={4}
+              value={finalProcessConfirm.producedQty}
+              onChange={(val) => setFinalProcessConfirm(prev => ({ ...prev, producedQty: val }))}
+              className="w-full text-left border border-[#1bbdcc] rounded-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#1bbdcc] mb-6 text-gray-800 text-sm"
+            />
+
+            <div className="flex justify-center gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  const qty = finalProcessConfirm.producedQty;
+                  setFinalProcessConfirm(prev => ({ ...prev, isOpen: false }));
+                  await handleFinishProcess(qty);
+                }}
+                className="bg-[#1565c0] hover:bg-[#11529c] text-white font-medium py-1.5 px-5 rounded text-sm transition-colors"
+                disabled={isActionLoading}
+              >
+                Submit
+              </button>
+              <button
+                type="button"
+                onClick={() => setFinalProcessConfirm({ isOpen: false, producedQty: 0 })}
+                className="bg-white border border-[#1565c0] text-[#1565c0] font-medium py-1.5 px-5 rounded text-sm hover:bg-gray-50 transition-colors"
+                disabled={isActionLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

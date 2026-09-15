@@ -5,6 +5,8 @@ import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 import productionBatchConfig from "@/config/production-batch.config.json";
 
+import { formatNumber } from "@/utils/number-formatter";
+
 export default function ProductionBatchTableRow({
   item,
   onRowAction,
@@ -103,14 +105,18 @@ export default function ProductionBatchTableRow({
         if (col.type === "statusBadge" || col.key === "status") {
           return (
             <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap">
-              <StatusBadge status={value} />
+              <StatusBadge status={value} module="production-batch" />
             </td>
           );
         }
 
         return (
           <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap text-gray-700 font-mono">
-            {value !== null && value !== undefined && value !== "" ? value : "—"}
+            {col.key === "batchQuantity"
+              ? formatNumber(value)
+              : value !== null && value !== undefined && value !== ""
+              ? value
+              : "—"}
           </td>
         );
       })}

@@ -44,3 +44,39 @@ export async function addProcessLog(data) {
     body: JSON.stringify(data),
   });
 }
+
+export async function startProcess(data) {
+  return apiClient("/production-batch/start-process", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function pauseProcess(data) {
+  return apiClient("/production-batch/pause-process", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function resumeProcess(data) {
+  return apiClient("/production-batch/resume-process", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function finishProcess(data) {
+  return apiClient("/production-batch/finish-process", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function markBatchCompleted(data) {
+  return apiClient("/production-batch/mark-batch-completed", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+

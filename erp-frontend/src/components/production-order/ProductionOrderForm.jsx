@@ -19,8 +19,11 @@ import ConfirmModal from "@/components/common/ConfirmModal";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import AccessDenied from "@/components/common/AccessDenied";
 import Loader from "@/components/common/Loader";
+import { formatNumber } from "@/utils/number-formatter";
+import { formatCurrency } from "@/utils/number-formatter";
 import productionOrderConfig from "@/config/production-order.config.json";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import NumericInput from "@/components/common/NumericInput";
 
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
@@ -462,7 +465,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
 
           setItemCostPerUnit(Number(liveCost) || 0);
           setItemCostPerUnitFormatted(
-            bomData.costPerUnitFormatted || (liveCost > 0 ? `${currencySymbol ? currencySymbol + " " : ""}${Number(liveCost).toFixed(2)}` : "NA")
+            bomData.costPerUnitFormatted || (liveCost > 0 ? formatCurrency(liveCost, currencySymbol) : "NA")
           );
 
           if (bomData.materialDetails) {
@@ -489,8 +492,15 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
   }, [selectedItemDetails]);
 
   const handleProductionQtyChange = (e) => {
-    setValue("productionQuantity", e.target.value);
+    const rawVal = e.target.value;
+    setValue("productionQuantity", rawVal);
     setIsDirty(true);
+
+    const val = parseFloat(rawVal) || 0;
+    const primitiveQty = selectedItemDetails?.primitiveQuantity || 1;
+    const calculatedPkgQty = parseFloat((val / primitiveQty).toFixed(4));
+    setPackageQuantity(calculatedPkgQty);
+    setDisplayPackageQuantity(calculatedPkgQty);
   };
 
   const handleProductionQtyBlur = (e) => {
@@ -512,8 +522,16 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
   };
 
   const handlePackageQtyChange = (e) => {
-    setDisplayPackageQuantity(e.target.value);
+    const rawVal = e.target.value;
+    setDisplayPackageQuantity(rawVal);
     setIsDirty(true);
+
+    const pkgVal = parseFloat(rawVal) || 0;
+    setPackageQuantity(pkgVal);
+
+    const primitiveQty = selectedItemDetails?.primitiveQuantity || 1;
+    const calculatedProdQty = parseFloat((pkgVal * primitiveQty).toFixed(4));
+    setValue("productionQuantity", calculatedProdQty);
   };
 
   const handlePackageQtyBlur = (e) => {
@@ -534,7 +552,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
     const symbol = selectedBomDetails?.currencySymbol || "";
     setEstimatedTotalCostFormatted(
       totalCost > 0
-        ? `${symbol ? symbol + " " : ""}${totalCost.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+        ? formatCurrency(totalCost, symbol)
         : "NA"
     );
   }, [packageQuantity, itemCostPerUnit, selectedBomDetails?.currencySymbol]);
@@ -648,61 +666,96 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
     subtext = null,
     onChangeCustom = null,
     valueCustom = undefined,
+    onBlur = null,
     ...props
-  }) => (
-    <div className="space-y-1.5" id={`field-${name}`}>
-      <label className="block text-xs font-semibold text-gray-500 tracking-wide">
-        {label} {required && <span className="text-red-400 ml-1">*</span>}
-      </label>
-      <div className="relative w-full">
-        <input
-          type={type}
-          disabled={disabled}
-          readOnly={readOnly}
-          value={
-            valueCustom !== undefined
-              ? valueCustom
-              : watch(name) === null || watch(name) === undefined
-                ? ""
-                : watch(name)
-          }
-          onChange={(e) => {
-            if (onChangeCustom) {
-              onChangeCustom(e);
-            } else {
-              setValue(name, e.target.value);
-              setIsDirty(true);
-              if (errors[name]) clearErrors(name);
+  }) => {
+    if (type === "number") {
+      return (
+        <div className="space-y-1.5" id={`field-${name}`}>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+            {label} {required && <span className="text-red-400 ml-1">*</span>}
+          </label>
+          <NumericInput
+            value={valueCustom !== undefined ? valueCustom : watch(name)}
+            onChange={(val) => {
+              if (onChangeCustom) {
+                onChangeCustom({ target: { value: val } });
+              } else {
+                setValue(name, val);
+                setIsDirty(true);
+                if (errors[name]) clearErrors(name);
+              }
+            }}
+            onBlur={(e) => {
+              if (onBlur) onBlur(e);
+            }}
+            disabled={disabled || readOnly}
+            className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+              ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200 font-semibold" : "bg-white border-gray-200 hover:border-gray-300"}
+              ${errors[name] ? "border-red-400 bg-red-50" : ""}`}
+            placeholder={props.placeholder || `Enter ${label}`}
+          />
+          {subtext && <p className="text-xs text-gray-400 italic">{subtext}</p>}
+          {errors[name] && <p className="text-xs text-red-500">{errors[name]?.message || errors[name]}</p>}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-1.5" id={`field-${name}`}>
+        <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+          {label} {required && <span className="text-red-400 ml-1">*</span>}
+        </label>
+        <div className="relative w-full">
+          <input
+            type={type}
+            disabled={disabled}
+            readOnly={readOnly}
+            value={
+              valueCustom !== undefined
+                ? valueCustom
+                : watch(name) === null || watch(name) === undefined
+                  ? ""
+                  : watch(name)
             }
-          }}
-          className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-            ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200 font-semibold" : "bg-white border-gray-200 hover:border-gray-300"}
-            ${errors[name] ? "border-red-400 bg-red-50" : ""}
-            ${props.className || ""} ${type === "date" && !disabled && !readOnly ? "cursor-pointer" : ""}
-            ${type === "date" && !(valueCustom !== undefined ? valueCustom : watch(name)) ? "[&::-webkit-datetime-edit]:text-transparent" : ""}`}
-          placeholder={props.placeholder || `Enter ${label}`}
-          onClick={(e) => {
-            if (type === "date" && !disabled && !readOnly && e.target.showPicker) {
-              try { e.target.showPicker(); } catch (err) {}
-            }
-            if (props.onClick) props.onClick(e);
-          }}
-          onKeyDown={(e) => {
-            if (type === "date") e.preventDefault();
-            if (props.onKeyDown) props.onKeyDown(e);
-          }}
-          {...props}
-        />
-        {type === "date" && !(valueCustom !== undefined ? valueCustom : watch(name)) && (
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af] pointer-events-none">
-            {props.placeholder || `Select ${label}`}
-          </span>
-        )}
+            onChange={(e) => {
+              if (onChangeCustom) {
+                onChangeCustom(e);
+              } else {
+                setValue(name, e.target.value);
+                setIsDirty(true);
+                if (errors[name]) clearErrors(name);
+              }
+            }}
+            className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+              ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200 font-semibold" : "bg-white border-gray-200 hover:border-gray-300"}
+              ${errors[name] ? "border-red-400 bg-red-50" : ""}
+              ${props.className || ""} ${type === "date" && !disabled && !readOnly ? "cursor-pointer" : ""}
+              ${type === "date" && !(valueCustom !== undefined ? valueCustom : watch(name)) ? "[&::-webkit-datetime-edit]:text-transparent" : ""}`}
+            placeholder={props.placeholder || `Enter ${label}`}
+            onClick={(e) => {
+              if (type === "date" && !disabled && !readOnly && e.target.showPicker) {
+                try { e.target.showPicker(); } catch (err) {}
+              }
+              if (props.onClick) props.onClick(e);
+            }}
+            onKeyDown={(e) => {
+              if (type === "date") e.preventDefault();
+              if (props.onKeyDown) props.onKeyDown(e);
+            }}
+            {...props}
+          />
+          {type === "date" && !(valueCustom !== undefined ? valueCustom : watch(name)) && (
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af] pointer-events-none">
+              {props.placeholder || `Select ${label}`}
+            </span>
+          )}
+        </div>
+        {subtext && <p className="text-xs text-gray-400 italic">{subtext}</p>}
+        {errors[name] && <p className="text-xs text-red-500">{errors[name]?.message || errors[name]}</p>}
       </div>
-      {subtext && <p className="text-xs text-gray-400 italic">{subtext}</p>}
-      {errors[name] && <p className="text-xs text-red-500">{errors[name]?.message || errors[name]}</p>}
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="pt-6 h-full overflow-y-auto pb-20 px-10 relative">

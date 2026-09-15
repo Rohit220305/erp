@@ -97,10 +97,10 @@ export default function ProductionOrderListCard({
                 Produced Qty
               </p>
               <div className="text-[13px] text-gray-900 font-bold font-mono truncate">
-                {item.productionQuantityDisplay || "—"}
+                {formatNumber(item.productionQuantity ?? item.productionQuantityDisplay)}
               </div>
               <p className="text-[11px] font-mono text-gray-500 mt-0.5 truncate">
-                {item.packageQuantityDisplay || "—"}
+                {formatNumber(item.packageQuantity ?? item.packageQuantityDisplay)}
               </p>
             </div>
 

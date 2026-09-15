@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-hot-toast";
 import { Info } from "lucide-react";
@@ -15,6 +15,8 @@ import ProductionBatchProcessTabs from "./ProductionBatchProcessTabs";
 import Loader from "@/components/common/Loader";
 import ModuleLink from "@/components/common/ModuleLink";
 import SideDrawer from "@/components/common/SideDrawer";
+import { formatNumber } from "@/utils/number-formatter";
+import NumericInput from "@/components/common/NumericInput";
 
 export default function ProductionBatchForm({ orderId }) {
   const router = useRouter();
@@ -37,13 +39,15 @@ export default function ProductionBatchForm({ orderId }) {
   };
 
   const primitiveQty = batchData?.primitiveQuantity || 1;
-  const schema = getProductionBatchSchema(primitiveQty);
+  const pendingQuantity = batchData?.pendingQuantity || null;
+  const schema = getProductionBatchSchema(primitiveQty, pendingQuantity);
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -117,8 +121,8 @@ export default function ProductionBatchForm({ orderId }) {
     const newProcesses = batchData.processes.map((proc) => {
       const updatedItems = (proc.items || []).map((item) => ({
         ...item,
-        shortage: Math.max(0, parseFloat((item.baseQty * factor).toFixed(2))),
-        totalRequirement: parseFloat((item.baseQty * factor).toFixed(2)),
+        shortage: Math.max(0, parseFloat((item.baseQty * factor).toFixed(4))),
+        totalRequirement: parseFloat((item.baseQty * factor).toFixed(4)),
       }));
       return { ...proc, items: updatedItems };
     });
@@ -153,7 +157,7 @@ export default function ProductionBatchForm({ orderId }) {
           items: proc.items.map((item) => ({
             itemId: item.itemId,
             materialType: item.materialType,
-            requiredQty: item.baseQty,
+            requiredQty: item.totalRequirement,
             requestedQty: 0,
             shortage: item.shortage,
           })),
@@ -167,7 +171,7 @@ export default function ProductionBatchForm({ orderId }) {
         toast.success(
           res?.settings?.message || res?.message || "Batch created successfully!"
         );
-        router.push(buildRoute("production-batch", "list"));
+        router.push(buildRoute("production-order", "detail", { id: orderId }));
       } else {
         const errorMsg = Array.isArray(res?.message)
           ? res.message.join(", ")
@@ -278,7 +282,7 @@ export default function ProductionBatchForm({ orderId }) {
                   Pending Qty
                 </span>
                 <span className="block font-bold text-gray-900 text-sm">
-                  {batchData.pendingQuantityDisplay || "350.50 gms"}
+                  {batchData.pendingQuantityDisplay }
                 </span>
               </div>
             </div>
@@ -316,8 +320,8 @@ export default function ProductionBatchForm({ orderId }) {
                   Primitive Qty
                 </span>
                 <span className="block font-medium text-gray-800 text-sm">
-                  {parseFloat(batchData.primitiveQuantity).toFixed(2) || "1.00"}{" "}
-                  {batchData.uomName || "gms"}
+                  {formatNumber(batchData.primitiveQuantity)}{" "}
+                  {batchData.uomName || ""}
                 </span>
               </div>
             </div>
@@ -366,18 +370,29 @@ export default function ProductionBatchForm({ orderId }) {
                   Batch Qty
                 </span>
                 <div className="flex items-center gap-2">
-                  <div className="flex border border-gray-300 rounded overflow-hidden w-36 bg-white">
-                    <input
-                      type="number"
-                      step="0.01"
-                      {...register("batchQuantity")}
-                      className="w-full px-2 py-1 text-sm outline-none text-gray-800"
-                    />
+                    <div className="flex border border-gray-300 rounded overflow-hidden w-36 bg-white">
+                      <Controller
+                        name="batchQuantity"
+                        control={control}
+                        render={({ field }) => (
+                          <NumericInput
+                            maxDecimals={4}
+                            min={0}
+                            value={field.value}
+                            onChange={(val) => field.onChange(val)}
+                            onBlur={field.onBlur}
+                            className="w-full px-2 py-1 text-sm outline-none text-gray-800"
+                          />
+                        )}
+                      />
                     <span className="bg-gray-100 border-l border-gray-200 px-2 py-1 text-xs text-gray-500 flex items-center">
-                      {batchData.uomName || "gms"}
+                      {batchData.uomName || ""}
                     </span>
                   </div>
-                  <Info size={16} className="text-gray-400 cursor-pointer" />
+                  {/* <div className="flex items-center text-xs text-gray-500 bg-blue-50 px-2 py-1 rounded border border-blue-100">
+                    <Info size={14} className="text-blue-500 mr-1" />
+                    <span>Max Available: <strong className="text-blue-700">{batchData.pendingQuantityDisplay || "0.00"}</strong></span>
+                  </div> */}
                 </div>
                 {errors.batchQuantity && (
                   <span className="text-xs text-red-500 font-medium mt-1 block">
@@ -417,8 +432,7 @@ export default function ProductionBatchForm({ orderId }) {
                 </span>
                 <span className="block font-bold text-gray-900 text-sm">
                   {batchData.totalQuantityDisplay ||
-                    batchData.productionQuantityDisplay ||
-                    "350.50 gms"}
+                    batchData.productionQuantityDisplay }
                 </span>
               </div>
             </div>

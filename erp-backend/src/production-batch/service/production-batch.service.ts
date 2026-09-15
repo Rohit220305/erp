@@ -9,6 +9,7 @@ import { ProductionBatchAddDto, ProductionBatchDeleteDto } from '../dto/producti
 import { ProductionBatchStatus, ProductionBatchProcessStatus, MaterialStatus } from '../enum/production-batch.enum';
 import { CompanyEntity } from '../../company/entity/company.entity';
 import { ProductionOrderEntity } from '../../production-order/entity/production-order.entity';
+import { ProductionOrderStatus } from '../../production-order/enum/production-order.enum';
 import { BomEntity } from '../../bom/entity/bom.entity';
 import { ItemEntity } from '../../item/entity/item.entity';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
@@ -180,10 +181,25 @@ export class ProductionBatchService {
       dbInsertData.materialStatus = MaterialStatus.YetToOrder;
       dbInsertData.markCompleted = false;
 
+      let po: ProductionOrderEntity | null = null;
       if (!dbInsertData.itemId && params.productionOrderId) {
-        const po = await this.poRepo.findOne({ where: { id: params.productionOrderId } });
-        if (po && po.itemId) {
+        po = await this.poRepo.findOne({ where: { id: params.productionOrderId } });
+        if (!po) {
+          throw new Error('Production Order not found.');
+        }
+        if (params.batchQuantity > po.pendingQuantity) {
+          throw new Error(`Batch quantity (${params.batchQuantity}) cannot exceed pending quantity (${po.pendingQuantity}).`);
+        }
+        if (po.itemId) {
           dbInsertData.itemId = po.itemId;
+        }
+      } else if (params.productionOrderId) {
+        po = await this.poRepo.findOne({ where: { id: params.productionOrderId } });
+        if (!po) {
+          throw new Error('Production Order not found.');
+        }
+        if (params.batchQuantity > po.pendingQuantity) {
+          throw new Error(`Batch quantity (${params.batchQuantity}) cannot exceed pending quantity (${po.pendingQuantity}).`);
         }
       }
 
@@ -192,6 +208,12 @@ export class ProductionBatchService {
 
       if (!batchInsertId) {
         throw new Error('Failed to insert master production batch record.');
+      }
+
+      if (po) {
+        po.pendingQuantity = parseFloat((po.pendingQuantity - params.batchQuantity).toFixed(4));
+        po.status = ProductionOrderStatus.InProgress;
+        await this.poRepo.save(po);
       }
 
       if (processes && Array.isArray(processes) && processes.length > 0) {
@@ -278,6 +300,23 @@ export class ProductionBatchService {
       this.general.assertCompanyAccess(req, existingBatch.companyId, 'delete', 'Production Batch');
 
       await this.pbRepo.update({ id: params.id }, { sysRecDeleted: true });
+
+      const po = await this.poRepo.findOne({ where: { id: existingBatch.productionOrderId } });
+      if (po) {
+        po.pendingQuantity = parseFloat((po.pendingQuantity + existingBatch.batchQuantity).toFixed(4));
+        
+        const activeBatchesCount = await this.pbRepo.count({
+          where: {
+            productionOrderId: existingBatch.productionOrderId,
+            sysRecDeleted: false,
+          }
+        });
+
+        if (activeBatchesCount === 0) {
+          po.status = ProductionOrderStatus.Pending;
+        }
+        await this.poRepo.save(po);
+      }
 
       const logPayload = this.general.buildActivityLogPayload(
         req,

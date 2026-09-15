@@ -1,80 +1,45 @@
-
-export function formatNumber(val, options = {}) {
-  const {
-    decimals = 2,
-    fallback = "0",
-    allowDecimal = true,
-    useGrouping = true,
-  } = options;
-
+export function formatNumber(val, decimals = 4) {
   if (val === null || val === undefined || val === "" || isNaN(Number(val))) {
-    return fallback;
+    return "0";
   }
-
   const num = Number(val);
-  const fixedDecimals = allowDecimal ? decimals : 0;
-
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: fixedDecimals,
-    maximumFractionDigits: fixedDecimals,
-    useGrouping,
-  }).format(num);
+  const isFloat = num % 1 !== 0;
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: isFloat ? decimals : 0,
+  });
 }
 
+export function formatQuantityWithUom(val, uom = "", decimals = 4) {
+  const formatted = formatNumber(val, decimals);
+  return uom ? `${formatted} ${uom}` : formatted;
+}
 
 export function formatCurrency(val, currencySymbol = "₦", options = {}) {
-  const { decimals = 2, fallback = "0.00" } = options;
-  if (val === null || val === undefined || val === "" || isNaN(Number(val))) {
-    return currencySymbol ? `${currencySymbol} ${fallback}` : fallback;
-  }
-  const formatted = formatNumber(val, { decimals, fallback, useGrouping: true });
+  const { decimals = 2 } = options;
+  const formatted = formatNumber(val, decimals);
   return currencySymbol ? `${currencySymbol} ${formatted}` : formatted;
 }
 
-
-export function formatQuantityWithUom(val, uomName = "", options = {}) {
-  const formatted = formatNumber(val, options);
-  return uomName ? `${formatted} ${uomName}` : formatted;
-}
-
 export function formatPercent(val, options = {}) {
-  const { decimals = 2, fallback = "0%" } = options;
+  const { decimals = 2 } = options;
   if (val === null || val === undefined || val === "" || isNaN(Number(val))) {
-    return fallback;
+    return "0%";
   }
-  const formatted = formatNumber(val, { decimals });
-  return `${formatted}%`;
+  return `${formatNumber(val, decimals)}%`;
 }
 
-
-export function parseNumberInput(val, options = {}) {
-  const { min, max, decimals = 2, allowDecimal = true } = options;
-
-  if (val === "" || val === null || val === undefined) return "";
-  const clean = String(val).replace(/[^0-9.-]/g, "");
-
-  let num = parseFloat(clean);
-  if (isNaN(num)) return "";
-
-  if (min !== undefined && num < min) num = min;
-  if (max !== undefined && num > max) num = max;
-
-  if (!allowDecimal) return String(Math.floor(num));
-  return num.toFixed(decimals);
+export function addCommas(raw) {
+  if (!raw && raw !== "0") return "";
+  const str = String(raw);
+  const [intPart, ...decParts] = str.split(".");
+  const hasDecimal = str.includes(".");
+  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  if (!hasDecimal) return formattedInt;
+  return `${formattedInt}.${decParts.join("")}`;
 }
 
-
-export function sanitizeNumericString(inputVal, allowDecimal = true) {
-  if (!inputVal) return "";
-  let val = String(inputVal);
-  if (allowDecimal) {
-    val = val.replace(/[^0-9.]/g, "");
-    const parts = val.split(".");
-    if (parts.length > 2) {
-      val = `${parts[0]}.${parts.slice(1).join("")}`;
-    }
-  } else {
-    val = val.replace(/[^0-9]/g, "");
-  }
-  return val;
+export function stripCommas(formatted) {
+  if (!formatted && formatted !== "0") return "";
+  return String(formatted).replace(/,/g, "");
 }

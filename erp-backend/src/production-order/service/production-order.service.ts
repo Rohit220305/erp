@@ -240,6 +240,14 @@ export class ProductionOrderService {
       });
       if (!existingPO) throw new Error('Production Order not found');
 
+      const [batchRes] = await this.poRepo.manager.query(
+        `SELECT COUNT(id) as cnt FROM erp_production_batch WHERE production_order_id = ? AND sys_rec_deleted = 0 AND status != 'Cancelled'`,
+        [params.id],
+      );
+      if (parseInt(batchRes?.cnt || '0', 10) > 0) {
+        throw new Error('Cannot edit Production Order once a batch has been created.');
+      }
+
       this.general.assertCompanyAccess(req, existingPO.companyId, 'update', 'Production Order');
 
       const targetCompanyId = this.general.isSuperAdmin(req)

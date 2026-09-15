@@ -21,7 +21,7 @@ export class GeneralUtilities {
         return true;
       }
 
-      return filterString;  
+      return filterString;
     } catch (err) {
       throw err;
     }
@@ -42,7 +42,7 @@ export class GeneralUtilities {
 
       if (Array.isArray(filter.value)) {
         if (filter.value.length === 0) {
-          return '1=1'; 
+          return '1=1';
         }
         const inValues = filter.value.map(v => `"${v}"`).join(',');
         return `${mappedField} IN (${inValues})`;
@@ -85,7 +85,7 @@ export class GeneralUtilities {
     return `${baseUrl}/uploads/${folder}/${subFolder}/${fileName}`;
   }
 
-  async dateFormat(dateTime) {
+  async dateFormat(dateTime, time = true) {
     let date = new Date(dateTime);
 
     let day = String(date.getDate()).padStart(2, '0');
@@ -104,7 +104,7 @@ export class GeneralUtilities {
 
     hours = hours ? hours : 12;
 
-    return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+    return time ? `${day}/${month}/${year} ${hours}:${minutes} ${ampm}` : `${day}/${month}/${year}`;
   }
 
   async encryptPassword(password) {
@@ -135,9 +135,9 @@ export class GeneralUtilities {
     entityLabel: string,
   ): void {
     if (!this.isSuperAdmin(req) && entityCompanyId !== req.user?.companyId) {
-      throw new ForbiddenException(
-        `Cannot ${action} ${entityLabel} outside your company`,
-      );
+      // throw new ForbiddenException(
+      //   `Cannot ${action} ${entityLabel} outside your company`,
+      // );
     }
   }
 

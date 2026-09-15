@@ -1,21 +1,30 @@
 import { z } from "zod";
 
-export const getProductionBatchSchema = (primitiveQuantity = 0) => {
+export const getProductionBatchSchema = (primitiveQuantity = 0, pendingQuantity = null) => {
   const minQty = Number(primitiveQuantity) > 0 ? Number(primitiveQuantity) : 0.0001;
+
+  let batchQtySchema = z.coerce
+    .number({ invalid_type_error: "Please enter a valid batch quantity" })
+    .min(
+      minQty,
+      Number(primitiveQuantity) > 0
+        ? `Batch Quantity must be greater than or equal to Base Qty (${primitiveQuantity})`
+        : "Batch Quantity must be greater than 0"
+    );
+
+  if (pendingQuantity !== null && pendingQuantity !== undefined) {
+    batchQtySchema = batchQtySchema.max(
+      Number(pendingQuantity),
+      `Batch Quantity cannot exceed pending quantity (${pendingQuantity})`
+    );
+  }
 
   return z.object({
     companyId: z.coerce.number().optional().nullable(),
     productionOrderId: z.coerce.number().min(1, "Please select Production Order"),
     bomId: z.coerce.number().min(1, "Please select BOM"),
     itemId: z.coerce.number().optional().nullable(),
-    batchQuantity: z.coerce
-      .number({ invalid_type_error: "Please enter a valid batch quantity" })
-      .min(
-        minQty,
-        Number(primitiveQuantity) > 0
-          ? `Batch Quantity must be greater than or equal to Base Qty (${primitiveQuantity})`
-          : "Batch Quantity must be greater than 0"
-      ),
+    batchQuantity: batchQtySchema,
     processes: z
       .array(
         z.object({

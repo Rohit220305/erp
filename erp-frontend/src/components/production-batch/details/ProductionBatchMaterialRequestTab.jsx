@@ -9,6 +9,7 @@ import {
 import Loader from "@/components/common/Loader";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { toast } from "react-hot-toast";
+import { formatNumber } from "@/utils/number-formatter";
 
 export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDrawer }) {
   const router = useRouter();
@@ -183,22 +184,8 @@ export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDra
                     </div>
                   )}
                 </div>
-
-                {/* <div className="grid grid-cols-2 gap-4 mt-2">
-                  <div>
-                     <p className="text-xs text-gray-400 mb-1">Warehouse Name</p>
-                     <p className="text-sm text-[#1565c0] font-medium cursor-pointer hover:underline">
-                        BLUESTAR Warehouse
-                     </p> 
-                  </div>
-                  <div>
-                     <p className="text-xs text-gray-400 mb-1">Reference Code</p>
-                     <p className="text-sm text-gray-900 font-medium">{batchData?.code || "-"}</p>
-                  </div>
-                </div> */}
               </div>
 
-              {/* Card Footer (Stats) */}
               <div className="p-5 pt-0">
                 <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center justify-between">
                   <div>
@@ -207,7 +194,7 @@ export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDra
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-bold text-gray-900 leading-none mb-1">
-                      {req.requestedQtySum ? req.requestedQtySum.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "0.00"} <span className="text-sm font-medium">Unit(s)</span>
+                      {formatNumber(req.requestedQtySum)} <span className="text-sm font-medium">Unit(s)</span>
                     </p>
                     <p className="text-xs text-gray-500">Total Qty</p>
                   </div>
@@ -219,7 +206,6 @@ export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDra
         </div>
       )}
 
-      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={modalState.isOpen}
         title={modalState.type === "DELIVER" ? "Confirm Delivery" : "Cancel Request"}

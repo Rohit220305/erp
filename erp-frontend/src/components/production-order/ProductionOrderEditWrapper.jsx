@@ -24,6 +24,11 @@ export default function ProductionOrderEditWrapper() {
         const res = await getProductionOrder({ id });
         const data = res?.settings?.data || res?.data;
         if (data) {
+          if (Number(data.batchCount || 0) > 0) {
+            toast.error("Cannot edit Production Order once a batch has been created.");
+            router.push(`/production-order/${id}`);
+            return;
+          }
           setOrderData(data);
         } else {
           toast.error("Production Order not found");

@@ -111,7 +111,7 @@
     { "label": "Batch Code", "value": "batchCode", "type": "text" },
     { "label": "Production Order Code", "value": "productionOrderCode", "type": "text" },
     { "label": "Item Name", "value": "itemName", "type": "text" },
-    { "label": "BOM Code", "value": "bomCode", "type": "text" },
+    { "label": "BOM Name", "value": "bomName", "type": "text" },
     {
       "label": "Status",
       "value": "status",
@@ -130,7 +130,7 @@
     { "label": "Batch Code", "value": "batchCode", "type": "text" },
     { "label": "Production Order Code", "value": "productionOrderCode", "type": "text" },
     { "label": "Item Name", "value": "itemName", "type": "text" },
-    { "label": "BOM Code", "value": "bomCode", "type": "text" },
+    { "label": "BOM Name", "value": "bomName", "type": "text" },
     {
       "label": "Status",
       "value": "status",

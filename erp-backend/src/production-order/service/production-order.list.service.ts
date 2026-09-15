@@ -114,14 +114,6 @@ export class ProductionOrderListService {
       qb.leftJoin('users', 'addedByUser', 'addedByUser.id = po.addedBy');
       qb.leftJoin('users', 'updatedByUser', 'updatedByUser.id = po.updatedBy');
 
-      qb.addSelect('currency.currencySymbol', 'currencySymbol');
-      qb.leftJoin('company_currency_mapping', 'cc', 'cc.companyId = po.companyId');
-      qb.leftJoin(
-        'currency_master',
-        'currency',
-        "currency.currencyCode = cc.currencyCode AND currency.status = 'Active' AND currency.sysRecDeleted = 0",
-      );
-
       qb.addSelect(
         '(SELECT COUNT(1) FROM production_batch pb WHERE pb.productionOrderId = po.id AND pb.sysRecDeleted = 0 AND pb.status != \'Cancelled\')',
         'batchCount',
@@ -177,10 +169,9 @@ export class ProductionOrderListService {
             productionQuantityDisplay: `${numProdQty.toFixed(2)}${uomSuffix}`,
             pendingQuantityDisplay: `${numPendingQty.toFixed(2)}${uomSuffix}`,
             packageQuantityDisplay: `${numPackageQty.toFixed(2)}${pkgSuffix}`,
-            currencySymbol: row.currencySymbol || '',
             addedDateFormatted: row.addedDate ? await this.general.dateFormat(row.addedDate) : null,
             updatedDateFormatted: row.updatedDate ? await this.general.dateFormat(row.updatedDate) : null,
-            productionDateFormatted: row.productionDate ? await this.general.dateFormat(row.productionDate) : null,
+            productionDateFormatted: row.productionDate ? await this.general.dateFormat(row.productionDate, false) : null,
           };
         }),
       );
@@ -272,6 +263,14 @@ export class ProductionOrderListService {
         '(SELECT COUNT(1) FROM production_batch pb WHERE pb.productionOrderId = po.id AND pb.sysRecDeleted = 0 AND pb.status != \'Cancelled\')',
         'batchCount',
       );
+      qb.addSelect(
+        '(SELECT IFNULL(SUM(pb.batchQuantity), 0) FROM production_batch pb WHERE pb.productionOrderId = po.id AND pb.sysRecDeleted = 0 AND pb.status IN (\'Pending\', \'StockReceived\', \'InProgress\'))',
+        'inProgressQuantity',
+      );
+      qb.addSelect(
+        '(SELECT IFNULL(SUM(pb.batchQuantity), 0) FROM production_batch pb WHERE pb.productionOrderId = po.id AND pb.sysRecDeleted = 0 AND pb.status IN (\'Completed\', \'Finished\'))',
+        'producedQuantity',
+      );
 
       qb.where('po.id = :id', { id: query.id });
       qb.andWhere('po.sysRecDeleted = 0');
@@ -283,6 +282,8 @@ export class ProductionOrderListService {
 
       const numProdQty = parseFloat(String(poDetails.productionQuantity || 0));
       const numPendingQty = parseFloat(String(poDetails.pendingQuantity || 0));
+      const numInProgressQty = parseFloat(String(poDetails.inProgressQuantity || 0));
+      const numProducedQty = parseFloat(String(poDetails.producedQuantity || 0));
       const numPrimitiveQty = parseFloat(String(poDetails.primitiveQuantity || 1)) || 1;
 
       const numPackageQty = parseFloat((numProdQty / numPrimitiveQty).toFixed(4));
@@ -296,24 +297,28 @@ export class ProductionOrderListService {
       poDetails.batchCount = parseInt(String(poDetails.batchCount || 0), 10);
       poDetails.productionQuantity = numProdQty;
       poDetails.pendingQuantity = numPendingQty;
+      poDetails.inProgressQuantity = numInProgressQty;
+      poDetails.producedQuantity = numProducedQty;
       poDetails.primitiveQuantity = numPrimitiveQty;
       poDetails.packageQuantity = numPackageQty;
       poDetails.pendingPackageQuantity = numPendingPackageQty;
 
       poDetails.productionQuantityDisplay = `${numProdQty.toFixed(2)}${uomSuffix}`;
       poDetails.pendingQuantityDisplay = `${numPendingQty.toFixed(2)}${uomSuffix}`;
+      poDetails.inProgressQuantityDisplay = `${numInProgressQty.toFixed(2)}${uomSuffix}`;
+      poDetails.producedQuantityDisplay = `${numProducedQty.toFixed(2)}${uomSuffix}`;
       poDetails.packageQuantityDisplay = `${numPackageQty.toFixed(2)}${pkgSuffix}`;
 
       poDetails.addedDateFormatted = poDetails.addedDate ? await this.general.dateFormat(poDetails.addedDate) : null;
       poDetails.updatedDateFormatted = poDetails.updatedDate ? await this.general.dateFormat(poDetails.updatedDate) : null;
-      poDetails.productionDateFormatted = poDetails.productionDate ? await this.general.dateFormat(poDetails.productionDate) : null;
+      poDetails.productionDateFormatted = poDetails.productionDate ? await this.general.dateFormat(poDetails.productionDate, false) : null;
 
       const itemQb = this.bomProcessItemRepo.createQueryBuilder('bpi');
       itemQb.select([
         'bpi.id AS id',
         'bpi.bomId AS bomId',
         'bpi.processTemplateMappingId AS processTemplateMappingId',
-        'bpi.materialType AS materialType',
+        'bpi.materialType AS materialType', 
         'bpi.itemId AS itemId',
         'bpi.quantity AS quantity',
         'bpi.isPrimary AS isPrimary',

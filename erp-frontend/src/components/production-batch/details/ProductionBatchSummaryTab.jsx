@@ -12,6 +12,7 @@ import Loader from "@/components/common/Loader";
 import ModuleLink from "@/components/common/ModuleLink";
 import { getStatusDisplay } from "@/utils/status-formatter";
 import StatusBadge from "@/components/common/StatusBadge";
+import { formatQuantityWithUom } from "@/utils/number-formatter";
 
 const ProcessFlowchartContainer = dynamic(
   () => import("@/components/process-template/flowchart/ProcessFlowchartContainer"),
@@ -56,7 +57,7 @@ export default function ProductionBatchSummaryTab({
             </ModuleLink>
           </div>
 
-          <StatusBadge status={batchData?.status} />
+          <StatusBadge status={batchData?.status} module="production-batch" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8 text-[14px]">
@@ -76,9 +77,7 @@ export default function ProductionBatchSummaryTab({
             <div>
               <span className="text-gray-400 block mb-1">Production Qty</span>
               <span className="  text-gray-900 text-[14px]">
-                {batchData?.batchQuantity
-                  ? `${Number(batchData.batchQuantity).toLocaleString()} gms`
-                  : "0 gms"}
+                {formatQuantityWithUom(batchData?.batchQuantity || 0, batchData?.uomName || "")}
               </span>
             </div>
 
@@ -106,9 +105,7 @@ export default function ProductionBatchSummaryTab({
             <div>
               <span className="text-gray-400 block mb-1">Qty To Be Packaged</span>
               <span className="  text-gray-900 text-[14px]">
-                {batchData?.batchQuantity
-                  ? `${Number(batchData.batchQuantity).toLocaleString()} gms`
-                  : "0 gms"}
+                {formatQuantityWithUom(batchData?.batchQuantity || 0, batchData?.uomName || "")}
               </span>
             </div>
 

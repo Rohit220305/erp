@@ -180,9 +180,9 @@ export class MaterialRequestListService {
         if (!consolidatedMap.has(itemId)) {
           consolidatedMap.set(itemId, {
             itemId,
-            itemName: row.itemName || '',
-            itemCode: row.itemCode || '',
-            uomName: row.uomName || 'gms',
+            itemName: row.itemName,
+            itemCode: row.itemCode,
+            uomName: row.uomName,
             itemImageUrl: itemImageMap.get(itemId) || null,
             requiredQty: reqQty,
             availableStock: availStock,
@@ -207,7 +207,7 @@ export class MaterialRequestListService {
           suggestedQty,
         };
       });
-      console.log('Material request suggestions:', suggestions);
+      // console.log('Material request suggestions:', suggestions);
       return_data = {
         success: 1,
         message: 'Material request suggestions fetched successfully.',

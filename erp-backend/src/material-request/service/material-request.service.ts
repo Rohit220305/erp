@@ -24,6 +24,7 @@ import {
 import { MaterialRequestItemEntity } from '../entity/material-request-item.entity';
 import { MaterialRequestEntity } from '../entity/material-request.entity';
 import { MaterialRequestStatus } from '../enum/material-request.enum';
+import { ProcessExecutionService } from '../../production-batch/service/process-execution.service';
 
 @Injectable()
 export class MaterialRequestService {
@@ -43,6 +44,7 @@ export class MaterialRequestService {
     private readonly general: GeneralUtilities,
     private readonly activityLogService: ActivityLogService,
     private readonly attachmentMasterService: AttachmentMasterService,
+    private readonly processExecutionService: ProcessExecutionService,
   ) {}
 
   private async finishSuccess(params: any, incomingData?: any) {
@@ -465,6 +467,8 @@ export class MaterialRequestService {
       }
 
       await this.pbRepo.update(materialRequest.productionBatchId, updatePayload);
+
+      await this.processExecutionService.evaluateReadiness(materialRequest.productionBatchId);
 
       
       const logPayload = this.general.buildActivityLogPayload(

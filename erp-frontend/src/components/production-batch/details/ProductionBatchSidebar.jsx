@@ -5,66 +5,35 @@ import {
   Package,
   Workflow,
   ShoppingCart,
-  Truck,
-  BarChart3,
-  ListFilter,
-  History,
-  Receipt,
-  ShieldCheck,
-  StickyNote,
-  Activity,
-  Menu,
+  ClipboardList,
 } from "lucide-react";
-import { getStatusDisplay } from "@/utils/status-formatter";
 
 export default function ProductionBatchSidebar({
   batchData,
   activeTab = "SUMMARY",
   setActiveTab,
 }) {
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Waiting for Stock":
-        return "text-orange-600";
-      case "Pending":
-        return "text-orange-600";
-      case "In Progress":
-        return "text-purple-600";
-      case "Completed":
-        return "text-green-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
   const navItems = [
     { id: "SUMMARY", label: "Summary", icon: FileText },
     { id: "ITEM_DETAILS", label: "Item Details", icon: Package },
     { id: "PROCESS_ITEM_DETAILS", label: "Process Item Details", icon: Workflow },
     { id: "MATERIAL_REQUEST", label: "Material Request", icon: ShoppingCart },
-    // { id: "OUT_BOUND", label: "Production Out-Bound", icon: Truck },
-    // { id: "COST_REPORT", label: "Batch Cost Report", icon: BarChart3 },
-    // { id: "CONSUMPTION_LOG", label: "Consumption Log", icon: ListFilter },
-    // { id: "TIMELINE", label: "Timeline", icon: History },
-    // { id: "FINANCE_VOUCHERS", label: "Finance Vouchers", icon: Receipt },
-    // { id: "QUALITY_AUDIT", label: "Quality Audit", icon: ShieldCheck },
+    { id: "CONSUMPTION_LOG", label: "Consumption Log", icon: ClipboardList },
   ];
 
   return (
-    <div className="w-64 shrink-0 space-y-3">
-      <div className="bg-white rounded-md border border-gray-200 p-4 shadow-sm">
+    <div className="w-64 shrink-0 space-y-3 h-full pb-4">
+      <div className="bg-white rounded-md border border-gray-200 p-4 shadow-sm space-y-3">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="font-bold text-[14px] text-gray-900 leading-snug">
-              {batchData?.batchCode || "HPR/----/--/-----"}
+              {batchData?.batchCode }
             </h2>
-            
           </div>
-          
         </div>
       </div>
 
-      <div className="bg-white rounded-md border border-gray-200 p-2 shadow-sm space-y-1">
+      <div className="bg-white rounded-md border border-gray-200 p-2 shadow-sm space-y-1 h-full  ">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -84,27 +53,6 @@ export default function ProductionBatchSidebar({
             </button>
           );
         })}
-      {/* <div className="space-y-2">
-        <div className="bg-gray-100/80 rounded-md p-2.5 flex items-center justify-between text-[14px] text-gray-700 font-medium border border-gray-200/60">
-          <div className="flex items-center gap-2">
-            <StickyNote size={15} className="text-gray-500" />
-            <span>Notes</span>
-          </div>
-          <span className="bg-white px-2 py-0.5 rounded text-[11px] font-bold text-gray-700 shadow-xs border border-gray-200">
-            0
-          </span>
-        </div>
-
-        <div className="bg-gray-100/80 rounded-md p-2.5 flex items-center justify-between text-[14px] text-gray-700 font-medium border border-gray-200/60">
-          <div className="flex items-center gap-2">
-            <Activity size={15} className="text-gray-500" />
-            <span>Activities</span>
-          </div>
-          <span className="bg-white px-2 py-0.5 rounded text-[11px] font-bold text-gray-700 shadow-xs border border-gray-200">
-            1
-          </span>
-        </div>
-      </div> */}
       </div>
     </div>
   );

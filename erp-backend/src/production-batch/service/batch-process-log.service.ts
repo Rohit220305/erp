@@ -10,11 +10,13 @@ import { CompanyEntity } from '../../company/entity/company.entity';
 import { GeneralUtilities } from '../../package/utilities/general.utilities';
 import { CreateProcessLogDto } from '../dto/production-batch.dto';
 import { LogType, MaterialType } from '../enum/production-batch.enum';
+import { ProcessExecutionService } from './process-execution.service';
 
 @Injectable()
 export class BatchProcessLogService {
   constructor(
     private readonly general: GeneralUtilities,
+    private readonly processExecutionService: ProcessExecutionService,
     @InjectRepository(CompanyEntity)
     private readonly companyRepo: Repository<CompanyEntity>,
     @InjectRepository(BatchProcessLogEntity)
@@ -61,10 +63,10 @@ export class BatchProcessLogService {
 
   async createLog(req: any, dto: CreateProcessLogDto) {
     let return_data: any = {};
+    console.log("dto", dto);
     try {
       const companyId = req.user?.companyId;
 
-      // 1. Validate the process exists and belongs to company
       const processQb = this.pbpRepo
         .createQueryBuilder('pbp')
         .select([
@@ -85,7 +87,6 @@ export class BatchProcessLogService {
         return return_data;
       }
 
-      // 2. Validate the batch exists
       const batch = await this.pbRepo
         .createQueryBuilder('pb')
         .select(['pb.id as id', 'pb.productionOrderId as productionOrderId'])
@@ -97,10 +98,8 @@ export class BatchProcessLogService {
         return return_data;
       }
 
-      // 3. Generate Log Code
       const logCode = await this.generateLogCode(companyId);
 
-      // 4. Fetch all production_batch_items for this process step
       const batchItemsQb = this.pbItemRepo
         .createQueryBuilder('pbi')
         .select([
@@ -124,7 +123,6 @@ export class BatchProcessLogService {
         return return_data;
       }
 
-      // 5. Fetch WIP totals for semi-finished goods validation (Consumption only)
       let allBatchItems: any[] = [];
       if (dto.logType === LogType.Consumption) {
         const allBatchItemsQb = this.pbItemRepo
@@ -146,7 +144,6 @@ export class BatchProcessLogService {
         allBatchItems = await allBatchItemsQb.getRawMany();
       }
 
-      // 6. Validate each submitted item and build insert list
       const logItemsToInsert: { itemId: number; loggedQty: number }[] = [];
 
       for (const reqItem of dto.items) {
@@ -159,7 +156,6 @@ export class BatchProcessLogService {
           return return_data;
         }
 
-        // Validate Material Type matches Log Type
         const expectedType = dto.logType === LogType.Consumption ? MaterialType.Entry : MaterialType.Exit;
         if (targetBatchItem.materialType !== expectedType) {
           return_data = { success: 0, message: `Item ID ${reqItem.itemId} must be of type ${expectedType} for a ${dto.logType} log.` };
@@ -167,7 +163,6 @@ export class BatchProcessLogService {
         }
 
         if (dto.logType === LogType.Consumption) {
-          // Rule A: Cannot consume more than required
           const newTotal = Number(targetBatchItem.consumedQty) + Number(reqItem.loggedQty);
           if (newTotal > Number(targetBatchItem.requiredQty)) {
             return_data = {
@@ -177,7 +172,6 @@ export class BatchProcessLogService {
             return return_data;
           }
 
-          // Rule B: WIP Validation for semi-finished goods
           const isSemiFinishedItem = allBatchItems.some(
             (bi) =>
               Number(bi.itemId) === Number(reqItem.itemId) &&
@@ -213,19 +207,23 @@ export class BatchProcessLogService {
             }
           }
 
-          // Update consumedQty using raw increment
           await this.pbItemRepo
             .createQueryBuilder()
             .update(ProductionBatchItemEntity)
-            .set({ consumedQty: () => `consumedQty + ${Number(reqItem.loggedQty)}` })
+            .set({
+              consumedQty: () => `consumedQty + ${Number(reqItem.loggedQty)}`,
+              availableStock: () => `GREATEST(receivedQty - (consumedQty + ${Number(reqItem.loggedQty)}), 0)`,
+            })
             .where('id = :id', { id: targetBatchItem.id })
             .execute();
         } else {
-          // Production log: increment producedQty
           await this.pbItemRepo
             .createQueryBuilder()
             .update(ProductionBatchItemEntity)
-            .set({ producedQty: () => `producedQty + ${Number(reqItem.loggedQty)}` })
+            .set({
+              producedQty: () => `producedQty + ${Number(reqItem.loggedQty)}`,
+              availableStock: () => `producedQty + ${Number(reqItem.loggedQty)}`,
+            })
             .where('id = :id', { id: targetBatchItem.id })
             .execute();
         }
@@ -241,7 +239,6 @@ export class BatchProcessLogService {
         return return_data;
       }
 
-      // 7. Insert parent log record
       const insertResult = await this.logRepo
         .createQueryBuilder()
         .insert()
@@ -261,7 +258,6 @@ export class BatchProcessLogService {
 
       const logId = insertResult.raw.insertId;
 
-      // 8. Insert child log items
       await this.logItemRepo
         .createQueryBuilder()
         .insert()
@@ -273,6 +269,8 @@ export class BatchProcessLogService {
           })),
         )
         .execute();
+
+      await this.processExecutionService.evaluateReadiness(process.productionBatchId);
 
       return_data = {
         success: 1,

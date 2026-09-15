@@ -254,3 +254,28 @@ export class CreateProcessLogDto {
   @IsNotEmpty()
   items: CreateProcessLogItemDto[];
 }
+
+export class ProcessExecutionDto {
+  @IsInt()
+  @Type(() => Number)
+  @IsNotEmpty()
+  batchId: number;
+
+  @IsInt()
+  @Type(() => Number)
+  @IsNotEmpty()
+  processExecutionId: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  producedQty?: number;
+}
+
+export class MarkBatchCompletedDto {
+  @IsInt()
+  @Type(() => Number)
+  @IsNotEmpty()
+  batchId: number;
+}
+

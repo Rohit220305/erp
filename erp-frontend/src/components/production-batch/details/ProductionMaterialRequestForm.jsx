@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { Trash2, Upload, Package, Info, X, FileText } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
-import { CAPABILITIES } from "@/config/capabilities.config";
 import { createMaterialRequest } from "@/lib/api/material-request-api";
+import { CAPABILITIES } from "@/config/capabilities.config";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 import AccessDenied from "@/components/common/AccessDenied";
+import { formatNumber } from "@/utils/number-formatter";
+import NumericInput from "@/components/common/NumericInput";
 import ModuleLink from "@/components/common/ModuleLink";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import SideDrawer from "@/components/common/SideDrawer";
@@ -194,12 +196,6 @@ export default function ProductionMaterialRequestForm({
               id: batchData.id,
             }),
           },
-          // {
-          //   label: code,
-          //   href: buildRoute("production-batch", "detail", {
-          //     id: batchData.id,
-          //   }),
-          // },
         ],
         actionButton: null,
       },
@@ -217,7 +213,7 @@ export default function ProductionMaterialRequestForm({
         uomName: item.uomName || "Unit(s)",
         availableQty: Number(item.availableStock || 0),
         suggestedQty: item.shortage,
-        requestedQty: item.requestedQty ?? item.requestQty,
+        requestedQty: item.shortage ?? 0,
       }));
 
       console.log("Formatted initial suggestions:", formatted);
@@ -244,7 +240,7 @@ export default function ProductionMaterialRequestForm({
   const handleQuantityChange = (itemId, val) => {
     setItems((prev) =>
       prev.map((item) =>
-        item.itemId === itemId ? { ...item, suggestedQty: val } : item,
+        item.itemId === itemId ? { ...item, requestedQty: val } : item,
       ),
     );
   };
@@ -290,7 +286,7 @@ export default function ProductionMaterialRequestForm({
     const payloadItems = items
       .map((item) => ({
         itemId: item.itemId,
-        requestedQty: Number(item.suggestedQty) ,
+        requestedQty: Number(item.requestedQty) ,
       }))
       .filter((i) => i.requestedQty > 0);
 
@@ -366,11 +362,7 @@ export default function ProductionMaterialRequestForm({
   };
 
   const formatDecimal = (num) => {
-    const val = Number(num || 0);
-    return val.toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    return formatNumber(num);
   };
 
   return (
@@ -618,18 +610,17 @@ export default function ProductionMaterialRequestForm({
                     </td>
 
                     <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
-                      {formatDecimal(item.suggestedQty)} {item.uomName}
+                      {formatDecimal(item.suggestedQty) } {item.uomName}
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
                       <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#1565c0]/20 focus-within:border-[#1565c0]">
-                        <input
-                          type="number"
-                          step="any"
-                          min="0"
-                          value={item.suggestedQty}
-                          onChange={(e) =>
-                            handleQuantityChange(item.itemId, e.target.value)
+                        <NumericInput
+                          maxDecimals={4}
+                          min={0}
+                          value={item.requestedQty}
+                          onChange={(val) =>
+                            handleQuantityChange(item.itemId, val)
                           }
                           className="w-full py-1.5 px-3 text-right font-mono text-[14px] font-semibold text-gray-900 focus:outline-none"
                         />

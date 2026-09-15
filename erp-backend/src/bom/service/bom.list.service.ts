@@ -262,7 +262,17 @@ export class BomListService {
 
       qb.addSelect('item.itemName', 'itemName');
       qb.addSelect('item.itemCode', 'itemCode');
+      qb.addSelect('item.primitiveQuantity', 'primitiveQuantity');
+      qb.addSelect('item.itemUomId', 'itemUomId');
+      qb.addSelect('uom.uomName', 'uomName');
+      qb.addSelect('uom.itemUomCode', 'itemUomCode');
+      qb.addSelect('item.packageUomId', 'packageUomId');
+      qb.addSelect('p_uom.packageName', 'packageUomName');
+
       qb.leftJoin('item_master', 'item', 'item.id = bom.itemId');
+      qb.leftJoin('item_uom_master', 'uom', 'uom.id = item.itemUomId');
+      qb.leftJoin('package_master', 'p_uom', 'p_uom.id = item.packageUomId');
+
 
       qb.addSelect('template.templateName', 'processTemplateName');
       qb.addSelect('template.templateCode', 'processTemplateCode');
@@ -285,8 +295,8 @@ export class BomListService {
       qb.where('bom.id = :id', { id: params.id });
       qb.andWhere('bom.sysRecDeleted = 0');
 
+      console.log()
       const bomDetails = await qb.getRawOne();
-
       if (!bomDetails) {
         throw new Error('BOM not found');
       }
@@ -313,10 +323,13 @@ export class BomListService {
         'im.itemCode AS itemCode',
         'im.costPrice AS costPrice',
         'im.purchasePrice AS purchasePrice',
+        'im.primitiveQuantity AS primitiveQuantity',
+        'uom.uomName AS uomName',
       ]);
       itemQb.leftJoin('process_template_mapping', 'ptm', 'ptm.id = bpi.processTemplateMappingId');
       itemQb.leftJoin('process_master', 'pm', 'pm.id = ptm.processId');
       itemQb.leftJoin('item_master', 'im', 'im.id = bpi.itemId');
+      itemQb.leftJoin('item_uom_master', 'uom', 'uom.id = im.itemUomId');
       itemQb.where('bpi.bomId = :bomId', { bomId: params.id });
       itemQb.orderBy('ptm.sequenceNo', 'ASC');
 
@@ -441,6 +454,8 @@ export class BomListService {
           purchasePrice: r.purchasePrice ? parseFloat(String(r.purchasePrice)) : 0,
           itemImageUrl: itemImageMap.get(Number(r.itemId)) || null,
           isInternalTransfer: r.materialType === 'Entry' && exitItemIds.has(Number(r.itemId)),
+          uomName: r.uomName || '',
+          primitiveQuantity: r.primitiveQuantity ? parseFloat(String(r.primitiveQuantity)) : 1,
         };
 
         if (r.materialType === 'Entry') {
@@ -516,7 +531,7 @@ export class BomListService {
         AttachmentModule.BOM,
         bomDetails.id,
       );
-
+      
       return_data = {
         success: 1,
         message: 'BOM details retrieved successfully.',

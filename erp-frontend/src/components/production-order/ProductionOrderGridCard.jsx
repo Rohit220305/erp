@@ -131,7 +131,7 @@ export default function ProductionOrderGridCard({
             Produced Qty
           </span>
           <span className="font-bold text-gray-900">
-            {item.productionQuantityDisplay}
+            {formatNumber(item.productionQuantity ?? item.productionQuantityDisplay)}
           </span>
         </div>
 
@@ -140,7 +140,7 @@ export default function ProductionOrderGridCard({
             Package Qty
           </span>
           <span className="font-bold text-gray-900">
-            {item.packageQuantityDisplay}
+            {formatNumber(item.packageQuantity ?? item.packageQuantityDisplay)}
           </span>
         </div>
       </div>

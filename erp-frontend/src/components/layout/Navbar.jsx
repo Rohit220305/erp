@@ -53,7 +53,7 @@ export default function Navbar() {
               <Link
                 key={index}
                 href={btn.href}
-                className="flex items-center gap-2 bg-[#1565c0] text-white px-8 py-2 rounded-md hover:bg-[#0f57a6] transition cursor-pointer"
+                className={btn.className || "flex items-center gap-2 bg-[#1565c0] text-white px-8 py-2 rounded-md hover:bg-[#0f57a6] transition cursor-pointer"}
               >
                 <span>{btn.label}</span>
               </Link>
@@ -62,7 +62,8 @@ export default function Navbar() {
                 key={index}
                 type="button"
                 onClick={btn.onClick}
-                className="flex items-center gap-2 bg-[#1565c0] text-white px-8 py-2 rounded-md hover:bg-[#0f57a6] transition cursor-pointer"
+                disabled={btn.disabled}
+                className={btn.className || "flex items-center gap-2 bg-[#1565c0] text-white px-8 py-2 rounded-md hover:bg-[#0f57a6] transition cursor-pointer"}
               >
                 <span>{btn.label}</span>
               </button>

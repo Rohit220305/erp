@@ -16,6 +16,8 @@ import { MaterialRequestController } from './material-request.controller';
 import { MaterialRequestListService } from './service/material-request.list.service';
 import { MaterialRequestService } from './service/material-request.service';
 
+import { ProductionBatchModule } from '../production-batch/production-batch.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -30,6 +32,7 @@ import { MaterialRequestService } from './service/material-request.service';
     ]),
     ActivityLogModule,
     AttachmentMasterModule,
+    ProductionBatchModule,
   ],
   controllers: [MaterialRequestController],
   providers: [

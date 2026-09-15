@@ -57,17 +57,14 @@ export default function ProcessFlowchartContainer({
   const enrichNodes = useCallback(
     (rawNodes) => {
       return rawNodes.map((node) => {
-        if (node.type === "processCardNode") {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              onProcessClick: onOpenProcessDrawer,
-              mode,
-            },
-          };
-        }
-        return node;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            ...(node.type === "processCardNode" ? { onProcessClick: onOpenProcessDrawer } : {}),
+            mode,
+          },
+        };
       });
     },
     [onOpenProcessDrawer, mode]

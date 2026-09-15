@@ -5,6 +5,7 @@ import { Package } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { formatNumber, formatCurrency } from "@/utils/number-formatter";
 
 export default function ProductionOrderMaterialTabs({
   materialDetails = { rawMaterials: [], semiFinished: [], finishedProducts: [] },
@@ -42,6 +43,7 @@ export default function ProductionOrderMaterialTabs({
   };
 
   const activeItems = getActiveItems();
+  console.log("Active Items:", activeItems);
   const isFinishedTab = activeTab === "finishedProducts";
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6">
@@ -49,7 +51,7 @@ export default function ProductionOrderMaterialTabs({
         <h3 className="text-base font-semibold text-gray-900">Material Details</h3>
 
         <div className="flex items-center gap-6">
-          {showToggle && (
+          {/* {showToggle && (
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-gray-600">Package Quantity</span>
               <button
@@ -66,7 +68,7 @@ export default function ProductionOrderMaterialTabs({
                 />
               </button>
             </div>
-          )}
+          )} */}
 
           <div className="flex items-center gap-1 border-b border-gray-200">
             <button
@@ -132,7 +134,7 @@ export default function ProductionOrderMaterialTabs({
               activeItems.map((item, idx) => {
                 const pkgQtyVal = Number(packageQuantity) || 1;
                 const dualQtyText = internalPackageToggle
-                  ? item.packageQuantityDisplay || `${(item.totalRequiredQty ? item.totalRequiredQty / (item.primitiveQuantity || 1) : pkgQtyVal).toFixed(2)} PKG`
+                  ? item.packageQuantityDisplay 
                   : null;
 
                 return (
@@ -169,17 +171,19 @@ export default function ProductionOrderMaterialTabs({
                     </td>
 
                     <td className="py-3 px-4 text-center font-mono">
-                      {isFinishedTab ? "NA" : item.qtyPerUnitDisplay || `${item.qtyPerUnit}`}
+                      {isFinishedTab ? "NA" : formatNumber(item.qtyPerUnit ?? item.qtyPerUnitDisplay)}
                     </td>
 
                     <td className="py-3 px-4 text-right font-mono">
-                      {item.unitPriceFormatted || (item.unitPrice > 0 ? `${currencySymbol} ${item.unitPrice}` : "NA")}
+                      {item.unitPrice !== undefined && item.unitPrice !== null && Number(item.unitPrice) > 0
+                        ? formatCurrency(item.unitPrice, currencySymbol)
+                        : item.unitPriceFormatted || "NA"}
                     </td>
 
                     <td className="py-3 px-4 text-center font-mono">
                       <div>
                         <span className="font-semibold text-gray-900">
-                          {item.totalRequiredQtyDisplay || `${item.totalRequiredQty}`}
+                          {formatNumber(item.totalRequiredQty ?? item.totalRequiredQtyDisplay)}
                         </span>
                         {dualQtyText && (
                           <p className="text-[11px] text-[#1565c0] font-semibold mt-0.5">{dualQtyText}</p>
@@ -188,7 +192,9 @@ export default function ProductionOrderMaterialTabs({
                     </td>
 
                     <td className="py-3 px-4 text-start font-mono font-semibold text-gray-900">
-                      {item.totalCostFormatted || (item.totalCost > 0 ? `${currencySymbol} ${item.totalCost}` : "NA")}
+                      {item.totalCost !== undefined && item.totalCost !== null && Number(item.totalCost) > 0
+                        ? formatCurrency(item.totalCost, currencySymbol)
+                        : item.totalCostFormatted || "NA"}
                     </td>
                   </tr>
                 );

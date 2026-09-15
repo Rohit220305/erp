@@ -22,6 +22,8 @@ import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { CommonFileService } from 'src/package/service/common-file.service';
 import { ProductionBatchListService } from './service/production-batch.list.service';
+import { ProcessExecutionService } from './service/process-execution.service';
+import { BatchItemCategorizerUtility } from './utility/batch-item-categorizer.utility';
 
 @Module({
   imports: [
@@ -49,9 +51,11 @@ import { ProductionBatchListService } from './service/production-batch.list.serv
     ProductionBatchService,
     ProductionBatchListService,
     BatchProcessLogService,
+    ProcessExecutionService,
+    BatchItemCategorizerUtility,
     GeneralUtilities,
     CommonFileService,
   ],
-  exports: [ProductionBatchService, ProductionBatchListService],
+  exports: [ProductionBatchService, ProductionBatchListService, ProcessExecutionService, BatchItemCategorizerUtility],
 })
 export class ProductionBatchModule {}

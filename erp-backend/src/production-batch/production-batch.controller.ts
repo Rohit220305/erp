@@ -3,6 +3,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductionBatchService } from './service/production-batch.service';
 import { ProductionBatchListService } from './service/production-batch.list.service';
 import { BatchProcessLogService } from './service/batch-process-log.service';
+import { ProcessExecutionService } from './service/process-execution.service';
 import { CommonFileService } from 'src/package/service/common-file.service';
 import { documentMulterConfig } from 'src/package/config/multer.config';
 import { CAPABILITIES } from 'src/package/config/capabilities.config';
@@ -18,6 +19,8 @@ import {
   ProductionBatchSuggestDto,
   ProcessDetailsDto,
   CreateProcessLogDto,
+  ProcessExecutionDto,
+  MarkBatchCompletedDto,
 } from './dto/production-batch.dto';
 
 @Controller('production-batch')
@@ -26,6 +29,7 @@ export class ProductionBatchController {
     private readonly service: ProductionBatchService,
     private readonly listService: ProductionBatchListService,
     private readonly logService: BatchProcessLogService,
+    private readonly processExecutionService: ProcessExecutionService,
     private readonly commonFileService: CommonFileService,
   ) {}
 
@@ -70,4 +74,35 @@ export class ProductionBatchController {
   async startProductionBatchProcessDetails(@AppRequest() req: IAppRequest, @Query() query: ProcessDetailsDto) {
     return await this.listService.startProductionBatchProcessDetails(req, query);
   }
+
+  @Post('start-process')
+  @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.UPDATE)
+  async startProcess(@AppRequest() req: IAppRequest, @Body() params: ProcessExecutionDto) {
+    return await this.processExecutionService.startProcess(params, req);
+  }
+
+  @Post('pause-process')
+  @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.UPDATE)
+  async pauseProcess(@AppRequest() req: IAppRequest, @Body() params: ProcessExecutionDto) {
+    return await this.processExecutionService.pauseProcess(params, req);
+  }
+
+  @Post('resume-process')
+  @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.UPDATE)
+  async resumeProcess(@AppRequest() req: IAppRequest, @Body() params: ProcessExecutionDto) {
+    return await this.processExecutionService.resumeProcess(params, req);
+  }
+
+  @Post('finish-process')
+  @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.UPDATE)
+  async finishProcess(@AppRequest() req: IAppRequest, @Body() params: ProcessExecutionDto) {
+    return await this.processExecutionService.finishProcess(params, req);
+  }
+
+  @Post('mark-batch-completed')
+  @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.UPDATE)
+  async markBatchCompleted(@AppRequest() req: IAppRequest, @Body() params: MarkBatchCompletedDto) {
+    return await this.processExecutionService.markBatchCompleted(params, req);
+  }
 }
+

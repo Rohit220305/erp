@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Edit2 } from "lucide-react";
 import ModuleLink from "@/components/common/ModuleLink";
+import { formatNumber } from "@/utils/number-formatter";
 
 export default function ProductionBatchProcessTabs({
   calculatedProcesses = [],
@@ -34,13 +35,13 @@ export default function ProductionBatchProcessTabs({
           const itemQty = item.requestedQty ?? item.requestQty ?? 0;
           const existingQty = acc[item.itemId].requestedQty ?? acc[item.itemId].requestQty ?? 0;
           acc[item.itemId].requestedQty = parseFloat(
-            (existingQty + itemQty).toFixed(2)
+            (existingQty + itemQty).toFixed(4)
           );
           acc[item.itemId].shortage = parseFloat(
-            (acc[item.itemId].shortage + item.shortage).toFixed(2)
+            (acc[item.itemId].shortage + item.shortage).toFixed(4)
           );
           acc[item.itemId].totalRequirement = parseFloat(
-            (acc[item.itemId].totalRequirement + item.totalRequirement).toFixed(2)
+            (acc[item.itemId].totalRequirement + item.totalRequirement).toFixed(4)
           );
         }
         return acc;
@@ -55,13 +56,13 @@ export default function ProductionBatchProcessTabs({
           const itemQty = item.requestedQty ?? item.requestQty ?? 0;
           const existingQty = acc[item.itemId].requestedQty ?? acc[item.itemId].requestQty ?? 0;
           acc[item.itemId].requestedQty = parseFloat(
-            (existingQty + itemQty).toFixed(2)
+            (existingQty + itemQty).toFixed(4)
           );
           acc[item.itemId].shortage = parseFloat(
-            (acc[item.itemId].shortage + item.shortage).toFixed(2)
+            (acc[item.itemId].shortage + item.shortage).toFixed(4)
           );
           acc[item.itemId].totalRequirement = parseFloat(
-            (acc[item.itemId].totalRequirement + item.totalRequirement).toFixed(2)
+            (acc[item.itemId].totalRequirement + item.totalRequirement).toFixed(4)
           );
         }
         return acc;
@@ -180,16 +181,16 @@ export default function ProductionBatchProcessTabs({
                           </div>
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                          {item.totalRequirement || item.requestedQty || item.requestQty} {item.uomName || "gms"}
+                          {formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} {item.uomName || item.itemUomName || ""}
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-600">
-                          0.00 {item.uomName || "gms"}
+                          {formatNumber(0)} {item.uomName || item.itemUomName || ""}
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                          {item.shortage} {item.uomName || "gms"}
+                          {formatNumber(item.shortage)} {item.uomName || item.itemUomName || ""}
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono font-bold text-gray-900">
-                          {item.requestedQty ?? item.requestQty} {item.uomName || "gms"}
+                          {formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} {item.uomName || item.itemUomName || ""}
                         </td>
                       </tr>
                     ))}
@@ -250,19 +251,19 @@ export default function ProductionBatchProcessTabs({
                             </div>
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                            {item.totalRequirement || item.requestedQty || item.requestQty} {item.uomName || "gms"}
+                            {formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} {item.uomName || item.itemUomName || ""}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-600">
-                            {item.availableStock ?? "0.00"} {item.uomName || "gms"}
+                            {formatNumber(item.availableStock)} {item.uomName || item.itemUomName || ""}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-600">
-                            0.00 {item.uomName || "gms"}
+                            {formatNumber(0)} {item.uomName || item.itemUomName || ""}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                            {item.shortage} {item.uomName || "gms"}
+                            {formatNumber(item.shortage)} {item.uomName || item.itemUomName || ""}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono font-bold text-gray-900">
-                            {item.requestedQty ?? item.requestQty} {item.uomName || "gms"}
+                            {formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} {item.uomName || item.itemUomName || ""}
                           </td>
                         </tr>
                       );

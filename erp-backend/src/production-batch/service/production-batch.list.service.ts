@@ -18,12 +18,14 @@ import { AttachmentMasterService } from 'src/attachment-master/service/attachmen
 import { AttachmentModule } from 'src/attachment-master/enums/attachment-module.enum';
 import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
 import { ProductionBatchSuggestDto, ProductionBatchListDto, ProductionBatchDetailsDto, ProcessDetailsDto } from '../dto/production-batch.dto';
+import { BatchItemCategorizerUtility } from '../utility/batch-item-categorizer.utility';
 
 @Injectable()
 export class ProductionBatchListService {
   constructor(
     private readonly general: GeneralUtilities,
     private readonly attachmentMasterService: AttachmentMasterService,
+    private readonly itemCategorizer: BatchItemCategorizerUtility,
     @InjectRepository(ProductionBatchEntity)
     private readonly pbRepo: Repository<ProductionBatchEntity>,
     @InjectRepository(ProductionBatchProcessEntity)
@@ -323,9 +325,9 @@ export class ProductionBatchListService {
       qb.leftJoin('process_master', 'pm', 'pm.id = pbp.processId');
       qb.addSelect(['ptm.nodePosition as nodePosition', 'ptm.dependencies as dependencies', 'ptm.handleConfig as handleConfig']);
       qb.leftJoin('process_template_mapping', 'ptm', 'ptm.id = pbp.processTemplateMappingId');
-      
+
       qb.innerJoin('production_batch', 'pb', 'pb.id = pbp.productionBatchId');
-      
+
       qb.where('pbp.id = :processExecutionId', { processExecutionId: query.processExecutionId });
       qb.andWhere('pb.id = :batchId', { batchId: query.batchId });
       if (companyId) qb.andWhere('pb.companyId = :companyId', { companyId });
@@ -375,7 +377,6 @@ export class ProductionBatchListService {
         if (typeof parsedHandleConfig === 'string') parsedHandleConfig = JSON.parse(parsedHandleConfig);
       } catch (e) { }
 
-      // Generate image URLs for each item
       const formattedItems: any[] = [];
       for (const i of items) {
         let imageUrl: string | null = null;
@@ -403,6 +404,8 @@ export class ProductionBatchListService {
         id: Number(processData.id),
         processId: Number(processData.processId),
         sequenceNumber: Number(processData.sequenceNumber),
+        startTime: processData.startTime ? await this.general.dateFormat(processData.startTime) : null,
+        endTime: processData.endTime ? await this.general.dateFormat(processData.endTime) : null,
         nodePosition: parsedNodePosition,
         dependencies: parsedDependencies,
         handleConfig: parsedHandleConfig,
@@ -417,7 +420,7 @@ export class ProductionBatchListService {
     } catch (err: any) {
       return_data = { success: 0, message: err.message };
     }
-    
+
     return return_data;
   }
 
@@ -441,6 +444,7 @@ export class ProductionBatchListService {
         'pb.id AS id',
         'pb.batchCode AS batchCode',
         'pb.batchQuantity AS batchQuantity',
+        'pb.producedQuantity AS producedQuantity',
         'pb.status AS status',
         'pb.materialStatus AS materialStatus',
         'pb.addedDate AS addedDate',
@@ -606,80 +610,49 @@ export class ProductionBatchListService {
         };
       });
 
-      const exitItemIds = new Set(items.filter((i) => i.materialType === 'Exit').map((i) => Number(i.itemId)));
-      const entryItemIds = new Set(items.filter((i) => i.materialType === 'Entry').map((i) => Number(i.itemId)));
+      const materialDetails = this.itemCategorizer.categorizeBatchItems(
+        items,
+        batchData.itemId,
+        itemImageMap,
+        batchData,
+      );
 
-      const rawMaterialsMap = new Map<number, any>();
-      const semiFinishedMap = new Map<number, any>();
-      const finishedProductsMap = new Map<number, any>();
+      const processLogs = await this.pbRepo.manager.createQueryBuilder()
+        .select([
+          'bpl.id AS id',
+          'bpl.logType AS logType',
+          'bpl.logDate AS logDate',
+          'bpl.addedDate AS addedDate',
+          'bpl.addedBy AS addedBy',
+          'pbp.processId AS processId',
+          'bpli.itemId AS itemId',
+          'bpli.loggedQty AS loggedQty',
+          'pm.processName AS processName',
+          'pm.processCode AS processCode',
+          'im.itemName AS itemName',
+          'im.itemCode AS itemCode',
+          'uom.uomName AS uomName',
+          "CONCAT(u.firstName, ' ', u.lastName) AS addedByName",
+        ])
+        .from('batch_process_log', 'bpl')
+        .innerJoin('batch_process_log_item', 'bpli', 'bpli.batchProcessLogId = bpl.id')
+        .innerJoin('production_batch_process', 'pbp', 'pbp.id = bpl.productionBatchProcessId')
+        .innerJoin('process_master', 'pm', 'pm.id = pbp.processId')
+        .innerJoin('item_master', 'im', 'im.id = bpli.itemId')
+        .leftJoin('item_uom_master', 'uom', 'uom.id = im.itemUomId')
+        .leftJoin('users', 'u', 'u.id = bpl.addedBy')
+        .where('bpl.productionBatchId = :batchId', { batchId: query.id })
+        .orderBy('bpl.addedDate', 'ASC')
+        .getRawMany();
 
-      const mainItemId = Number(batchData.itemId);
-
-      for (const item of items) {
-        const itemId = Number(item.itemId);
-        const isEntry = item.materialType === 'Entry';
-        const isExit = item.materialType === 'Exit';
-        const isInternal = (isEntry && exitItemIds.has(itemId)) || (isExit && entryItemIds.has(itemId));
-
-        const targetMap = (itemId === mainItemId)
-          ? finishedProductsMap
-          : isEntry && !isInternal
-            ? rawMaterialsMap
-            : isInternal
-              ? semiFinishedMap
-              : finishedProductsMap;
-
-        if (!targetMap.has(itemId)) {
-          targetMap.set(itemId, {
-            id: Number(item.id),
-            itemId,
-            itemName: item.itemName,
-            itemCode: item.itemCode,
-            uomName: item.uomName || 'gms',
-            materialType: item.materialType,
-            isInternalTransfer: isInternal,
-            requiredQty: Number(item.requiredQty || 0),
-            requestedQty: Number(item.requestedQty || item.requestQty || 0),
-            receivedQty: Number(item.receivedQty || 0),
-            consumedQty: Number(item.consumedQty || 0),
-            producedQty: Number(item.producedQty || 0),
-            availableStock: Number(item.availableStock || 0),
-            itemImageUrl: itemImageMap.get(itemId) || null,
-          });
-        } else {
-          const existing = targetMap.get(itemId);
-          existing.requiredQty += Number(item.requiredQty || 0);
-          existing.requestedQty += Number(item.requestedQty || item.requestQty || 0);
-          existing.consumedQty += Number(item.consumedQty || 0);
-          existing.producedQty += Number(item.producedQty || 0);
-          existing.availableStock += Number(item.availableStock || 0);
-        }
-      }
-
-      if (mainItemId && !finishedProductsMap.has(mainItemId)) {
-        finishedProductsMap.set(mainItemId, {
-          id: null,
-          itemId: mainItemId,
-          itemName: batchData.itemName,
-          itemCode: batchData.itemCode,
-          uomName: batchData.uomName || 'gms',
-          materialType: 'Exit',
-          isInternalTransfer: false,
-          requiredQty: Number(batchData.batchQuantity || 0),
-          requestedQty: Number(batchData.batchQuantity || 0),
-          receivedQty: 0,
-          consumedQty: 0,
-          producedQty: 0,
-          availableStock: 0,
-          itemImageUrl: itemImageMap.get(mainItemId) || null,
-        });
-      }
-
-      const materialDetails = {
-        rawMaterials: Array.from(rawMaterialsMap.values()),
-        semiFinished: Array.from(semiFinishedMap.values()),
-        finishedProducts: Array.from(finishedProductsMap.values()),
-      };
+      const formattedProcessLogs = await Promise.all(
+        processLogs.map(async (log) => ({
+          ...log,
+          addedDateFormatted: log.addedDate ? await this.general.dateFormat(log.addedDate) : null,
+          logDateFormatted: log.logDate ? await this.general.dateFormat(log.logDate, false) : null,
+          loggedQty: Number(log.loggedQty || 0),
+        })),
+      );
 
       return_data = {
         success: 1,
@@ -688,6 +661,7 @@ export class ProductionBatchListService {
           ...batchData,
           processes: structuredProcesses,
           materialDetails,
+          processLogs: formattedProcessLogs,
         },
       };
     } catch (err: any) {

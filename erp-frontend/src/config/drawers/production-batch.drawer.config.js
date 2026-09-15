@@ -3,7 +3,6 @@ import { Layers } from "lucide-react";
 export const productionBatchDrawerConfig = {
   title: "Production Batch Details",
   header: {
-    
     title: {
       type: "text",
       key: "batchCode",
@@ -38,8 +37,8 @@ export const productionBatchDrawerConfig = {
           drawerIdKey: "itemId",
         },
         {
-          label: "BOM Code",
-          key: "bomCode",
+          label: "BOM Name",
+          key: "bomName",
           type: "drawerLink",
           drawerModule: "Bom",
           drawerIdKey: "bomId",

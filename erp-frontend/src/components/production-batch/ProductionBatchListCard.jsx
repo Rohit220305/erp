@@ -5,6 +5,8 @@ import { ChevronDown } from "lucide-react";
 import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 
+import { formatNumber } from "@/utils/number-formatter";
+
 export default function ProductionBatchListCard({
   item,
   config,
@@ -24,10 +26,8 @@ export default function ProductionBatchListCard({
   return (
     <div className="mx-2 my-2">
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-400 shadow-sm hover:shadow-md">
-        
         <div className="flex items-center px-6 py-4">
           <div className="grid grid-cols-5 gap-4 items-center flex-1 min-w-0">
-            
             <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                 Batch Code
@@ -36,7 +36,11 @@ export default function ProductionBatchListCard({
                 moduleName="ProductionBatch"
                 id={item.id || item.productionBatchId || item.batchId}
                 className="font-bold text-sm text-[#1565c0] hover:underline block truncate"
-                onOpenDrawer={setSelectedBatchForDetails ? () => setSelectedBatchForDetails(item) : null}
+                onOpenDrawer={
+                  setSelectedBatchForDetails
+                    ? () => setSelectedBatchForDetails(item)
+                    : null
+                }
               >
                 {item.batchCode || "—"}
               </ModuleLink>
@@ -50,7 +54,14 @@ export default function ProductionBatchListCard({
                 moduleName="ProductionOrder"
                 id={item.productionOrderId}
                 className="font-medium text-[13px] text-[#1565c0] hover:underline block truncate"
-                onOpenDrawer={setSelectedOrderForDetails ? () => setSelectedOrderForDetails({ productionOrderId: item.productionOrderId }) : null}
+                onOpenDrawer={
+                  setSelectedOrderForDetails
+                    ? () =>
+                        setSelectedOrderForDetails({
+                          productionOrderId: item.productionOrderId,
+                        })
+                    : null
+                }
               >
                 {item.productionOrderCode || "—"}
               </ModuleLink>
@@ -64,7 +75,11 @@ export default function ProductionBatchListCard({
                 moduleName="Item"
                 id={item.itemId}
                 className="font-medium text-[13px] text-[#1565c0] hover:underline block truncate"
-                onOpenDrawer={setSelectedItemForDetails ? () => setSelectedItemForDetails({ itemId: item.itemId }) : null}
+                onOpenDrawer={
+                  setSelectedItemForDetails
+                    ? () => setSelectedItemForDetails({ itemId: item.itemId })
+                    : null
+                }
               >
                 {item.itemName || "—"}
               </ModuleLink>
@@ -75,7 +90,7 @@ export default function ProductionBatchListCard({
                 Batch Qty
               </p>
               <div className="text-[13px] text-gray-900 font-bold font-mono truncate">
-                {item.batchQuantity || "—"}
+                {formatNumber(item.batchQuantity)}
               </div>
             </div>
 
@@ -83,7 +98,10 @@ export default function ProductionBatchListCard({
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                 Status
               </p>
-              <StatusBadge status={item.status || "—"} />
+              <StatusBadge
+                status={item.status || "—"}
+                module="production-batch"
+              />
             </div>
           </div>
 
@@ -107,18 +125,21 @@ export default function ProductionBatchListCard({
         >
           <div className="px-6 py-5 bg-gray-50/50 border-t border-gray-100">
             <div className="grid grid-cols-5 gap-4 items-start pr-[52px]">
-              
               <div className="min-w-0">
                 <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
-                  BOM Code
+                  BOM Name
                 </p>
                 <ModuleLink
                   moduleName="Bom"
                   id={item.bomId}
                   className="font-medium text-[13px] text-[#1565c0] hover:underline font-mono block truncate"
-                  onOpenDrawer={setSelectedBomForDetails ? () => setSelectedBomForDetails({ bomId: item.bomId }) : null}
+                  onOpenDrawer={
+                    setSelectedBomForDetails
+                      ? () => setSelectedBomForDetails({ bomId: item.bomId })
+                      : null
+                  }
                 >
-                  {item.bomCode || "—"}
+                  {item.bomName || "—"}
                 </ModuleLink>
               </div>
 
@@ -139,7 +160,12 @@ export default function ProductionBatchListCard({
                   moduleName="User"
                   id={item.addedBy}
                   className="font-medium text-[13px] text-[#1565c0] hover:underline block truncate"
-                  onOpenDrawer={setSelectedUserForDetails ? () => setSelectedUserForDetails({ addedBy: item.addedBy }) : null}
+                  onOpenDrawer={
+                    setSelectedUserForDetails
+                      ? () =>
+                          setSelectedUserForDetails({ addedBy: item.addedBy })
+                      : null
+                  }
                 >
                   {item.addedByName || "—"}
                 </ModuleLink>

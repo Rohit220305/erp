@@ -7,6 +7,8 @@ import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 
+import { formatNumber } from "@/utils/number-formatter";
+
 export default function ProductionOrderTableRow({
   item,
   onRowAction,
@@ -123,7 +125,11 @@ export default function ProductionOrderTableRow({
 
         return (
           <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap text-gray-700 font-mono">
-            {value !== null && value !== undefined && value !== "" ? value : "—"}
+            {col.key === "productionQuantity" || col.key === "packageQuantity" || col.key === "pendingQuantity"
+              ? formatNumber(value)
+              : value !== null && value !== undefined && value !== ""
+              ? value
+              : "—"}
           </td>
         );
       })}

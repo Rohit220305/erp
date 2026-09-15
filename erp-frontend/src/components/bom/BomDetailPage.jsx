@@ -13,6 +13,7 @@ import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { formatNumber } from "@/utils/number-formatter";
 import {
   Layers,
   FileText,
@@ -278,6 +279,8 @@ export default function BomDetailPage({ data }) {
         maximumFractionDigits: 2,
       },
     )}`;
+  
+    console.log(processList, "processList");
   return (
     <div className="h-full overflow-hidden ">
       <div className="flex gap-8 ps-10 h-full">
@@ -469,7 +472,7 @@ export default function BomDetailPage({ data }) {
                         Primitive Qty
                       </span>
                       <span className="font-semibold text-gray-800">
-                        1.00 gms
+                        {formatNumber(bomData?.primitiveQuantity || 1)} {bomData?.uomName || ""}
                       </span>
                     </div>
                   </div>
@@ -731,7 +734,7 @@ export default function BomDetailPage({ data }) {
                                                   </p>
                                                 </td>
                                                 <td className="py-2.5 px-3 text-right font-medium text-gray-800">
-                                                  {eItem.quantity} gms
+                                                  {eItem.quantity} 
                                                 </td>
                                                 <td className="py-2.5 px-3 text-right font-semibold text-gray-900">
                                                   {eItem.isInternalTransfer ? (
@@ -840,7 +843,7 @@ export default function BomDetailPage({ data }) {
                                                   </p>
                                                 </td>
                                                 <td className="py-2.5 px-3 text-right font-medium text-gray-800">
-                                                  {exItem.quantity} gms
+                                                  {formatNumber(exItem.quantity)} {exItem.uomName || bomData?.uomName || ""}
                                                 </td>
                                               </tr>
                                             ),
