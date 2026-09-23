@@ -7,7 +7,7 @@ export default function StatusBadge({ status, module = null, className = '' }) {
   const display = getStatusDisplay(status, module);
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${display.bg} ${display.color} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold ${display.bg} ${display.color} ${className}`}
     >
       {display.dot && (
         <span className={`w-1.5 h-1.5 rounded-full ${display.dot}`} />

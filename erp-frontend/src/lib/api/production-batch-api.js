@@ -80,3 +80,11 @@ export async function markBatchCompleted(data) {
   });
 }
 
+export async function cancelProductionBatch(data) {
+  return apiClient("/production-batch/cancel-batch", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+

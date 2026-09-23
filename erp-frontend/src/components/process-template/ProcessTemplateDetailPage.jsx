@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import useTabNavigation from "@/hooks/useTabNavigation";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
@@ -11,10 +13,19 @@ import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
-import { GitBranch, Workflow, FileText, CheckCircle2 } from "lucide-react";
+import {
+  GitBranch,
+  Workflow,
+  FileText,
+  CheckCircle2,
+  Download,
+} from "lucide-react";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
+import Loader from "@/components/common/Loader";
 
 import dynamic from "next/dynamic";
-import Loader from "@/components/common/Loader";
+import NoDataMessage from "../common/NoDataMessage";
 
 const ProcessFlowchartContainer = dynamic(
   () => import("./flowchart/ProcessFlowchartContainer"),
@@ -28,14 +39,18 @@ const ProcessFlowchartContainer = dynamic(
   }
 );
 
-function DetailRow({ label, value, valueClassName = "" }) {
-  if (!value && value !== 0) return null;
+function DetailRow({ label, value, valueClassName = "", valueNode }) {
+  if (!value && !valueNode) return null;
   return (
     <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className={`text-sm font-medium text-right ${valueClassName}`}>
-        {value}
-      </span>
+      {valueNode ? (
+        valueNode
+      ) : (
+        <span className={`text-sm font-medium text-right ${valueClassName}`}>
+          {displayFormat(value)}
+        </span>
+      )}
     </div>
   );
 }
@@ -61,23 +76,37 @@ function UserInfoCard({ title, name, date, userId, onOpenUser }) {
             </ModuleLink>
           ) : (
             <span className="text-sm font-semibold text-gray-900">
-              {name || "User"}
+              {displayFormat(name)}
             </span>
           )}
-          {date && <span className="text-xs text-gray-400 mt-1">{date}</span>}
+          {date && (
+            <span className="text-xs text-gray-400 mt-1">
+              {displayFormat(date, "DATE")}
+            </span>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
+const VALID_TABS = ["summary", "flowchart"];
+
 export default function ProcessTemplateDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
   const { can } = useAuth();
-  const [activeTab, setActiveTab] = useState("summary");
+  
+  const { activeTab, getTabHref } = useTabNavigation({
+    moduleKey: "process-template",
+    entityId: data?.id,
+    defaultTab: "summary",
+    validTabs: VALID_TABS,
+  });
+
   const [drawerState, setDrawerState] = useState({ isOpen: false, processId: null });
-  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] =
+    useState(null);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
   const initialProcesses = data?.processes || [];
@@ -149,14 +178,22 @@ export default function ProcessTemplateDetailPage({ data }) {
         title: "Details",
         breadcrumbs: [
           { label: "Master", href: buildRoute("home", "list") },
-          { label: "Process Template", href: buildRoute("process-template", "list") },
+          {
+            label: "Process Template",
+            href: buildRoute("process-template", "list"),
+          },
         ],
         actionButton:
-          can(CAPABILITIES.PROCESS_TEMPLATE?.UPDATE || "PROCESS_TEMPLATE_UPDATE") && !data?.isTemplateInUse
+          can(
+            CAPABILITIES.PROCESS_TEMPLATE?.UPDATE || "PROCESS_TEMPLATE_UPDATE",
+          ) && !data?.isTemplateInUse
             ? {
-              label: "Edit",
-              onClick: () => router.push(buildRoute("process-template", "edit", { id: data?.id })),
-            }
+                label: "Edit",
+                onClick: () =>
+                  router.push(
+                    buildRoute("process-template", "edit", { id: data?.id }),
+                  ),
+              }
             : null,
       },
     });
@@ -212,21 +249,19 @@ export default function ProcessTemplateDetailPage({ data }) {
         <div className="col-span-2 h-full ms-10">
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5 border border-gray-100 space-y-4 h-full">
             <div>
-              
               <h2 className="font-semibold text-base text-gray-900 leading-tight">
-                {templateName}
+                {displayFormat(templateName)}
               </h2>
               <p className="text-gray-400 text-xs font-mono mt-1 uppercase">
-                {templateCode}
+                {displayFormat(templateCode)}
               </p>
             </div>
 
             <hr className="border-gray-100" />
 
             <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab("summary")}
+              <Link
+                href={getTabHref("summary")}
                 className={`w-full text-left py-2.5 px-4 rounded-lg text-sm font-medium transition flex items-center justify-between cursor-pointer ${
                   activeTab === "summary"
                     ? "bg-[#1565c0] text-white shadow-sm"
@@ -238,11 +273,10 @@ export default function ProcessTemplateDetailPage({ data }) {
                   <span>Summary</span>
                 </div>
                 {activeTab === "summary" && <CheckCircle2 size={16} />}
-              </button>
+              </Link>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab("flowchart")}
+              <Link
+                href={getTabHref("flowchart")}
                 className={`w-full text-left py-2.5 px-4 rounded-lg text-sm font-medium transition flex items-center justify-between cursor-pointer ${
                   activeTab === "flowchart"
                     ? "bg-[#1565c0] text-white shadow-sm"
@@ -254,7 +288,7 @@ export default function ProcessTemplateDetailPage({ data }) {
                   <span>Process Flowchart</span>
                 </div>
                 {activeTab === "flowchart" && <CheckCircle2 size={16} />}
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -279,35 +313,34 @@ export default function ProcessTemplateDetailPage({ data }) {
                       <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
                         <span className="text-sm text-gray-500">Company</span>
                         <ModuleLink
-                          href={buildRoute("company", "detail", { id: companyId })}
-                          onClick={() => setSelectedCompanyForDetails({ companyId })}
+                          href={buildRoute("company", "detail", {
+                            id: companyId,
+                          })}
+                          onClick={() =>
+                            setSelectedCompanyForDetails({ companyId })
+                          }
                           className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
                         >
-                          {companyName}
+                          {displayFormat(companyName)}
                         </ModuleLink>
                       </div>
                     )}
                     <DetailRow
                       label="Status"
-                      value={status}
-                      valueClassName={
-                        isActive
-                          ? "text-green-600 font-semibold"
-                          : "text-red-600 font-semibold"
-                      }
+                      valueNode={<StatusBadge status={status} />}
                     />
                   </div>
                 </div>
 
                 <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6 border border-gray-100 flex flex-col">
                   <h3 className="text-sm font-semibold text-gray-600 mb-4">
-                    Remark / Description
+                    Remark
                   </h3>
                   <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap flex-1">
-                    {remark || (
-                      <span className="text-gray-400 italic">
-                        No remark provided for this template.
-                      </span>
+                    {remark ? (
+                      displayFormat(remark)
+                    ) : (
+                      <NoDataMessage moduleName="Remark" />
                     )}
                   </div>
                 </div>
@@ -319,7 +352,11 @@ export default function ProcessTemplateDetailPage({ data }) {
                       name={addedByName}
                       date={addedDateFormatted}
                       userId={addedById || addedBy}
-                      onOpenUser={() => setSelectedUserForDetails({ userId: addedById || addedBy })}
+                      onOpenUser={() =>
+                        setSelectedUserForDetails({
+                          userId: addedById || addedBy,
+                        })
+                      }
                     />
                   )}
                   {(updatedByName || updatedDateFormatted) && (
@@ -328,7 +365,11 @@ export default function ProcessTemplateDetailPage({ data }) {
                       name={updatedByName}
                       date={updatedDateFormatted}
                       userId={updatedById || updatedBy}
-                      onOpenUser={() => setSelectedUserForDetails({ userId: updatedById || updatedBy })}
+                      onOpenUser={() =>
+                        setSelectedUserForDetails({
+                          userId: updatedById || updatedBy,
+                        })
+                      }
                     />
                   )}
                 </div>
@@ -395,10 +436,10 @@ export default function ProcessTemplateDetailPage({ data }) {
                                     }
                                     className="text-[#1565c0] hover:underline font-semibold cursor-pointer transition"
                                   >
-                                    {proc.processName || "—"}
+                                    {displayFormat(proc.processName)}
                                   </button>
                                 ) : (
-                                  <span>{proc.processName || "—"}</span>
+                                  <span>{displayFormat(proc.processName)}</span>
                                 )}
                               </td>
 
@@ -470,7 +511,11 @@ export default function ProcessTemplateDetailPage({ data }) {
         onClose={() => setSelectedCompanyForDetails(null)}
         moduleName="Company"
         mode="details"
-        data={selectedCompanyForDetails ? { id: selectedCompanyForDetails.companyId } : null}
+        data={
+          selectedCompanyForDetails
+            ? { id: selectedCompanyForDetails.companyId }
+            : null
+        }
       />
 
       <SideDrawer
@@ -478,7 +523,9 @@ export default function ProcessTemplateDetailPage({ data }) {
         onClose={() => setSelectedUserForDetails(null)}
         moduleName="User"
         mode="details"
-        data={selectedUserForDetails ? { id: selectedUserForDetails.userId } : null}
+        data={
+          selectedUserForDetails ? { id: selectedUserForDetails.userId } : null
+        }
       />
     </div>
   );

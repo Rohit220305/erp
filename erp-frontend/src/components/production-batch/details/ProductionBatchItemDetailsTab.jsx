@@ -4,7 +4,9 @@ import { useState } from "react";
 import { Package } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
+import NoDataMessage from "@/components/common/NoDataMessage";
 import { formatNumber } from "@/utils/number-formatter";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ProductionBatchItemDetailsTab({
   materialDetails = {
@@ -82,7 +84,9 @@ export default function ProductionBatchItemDetailsTab({
               <th className="py-3 px-4 text-right">Required Qty</th>
               <th className="py-3 px-4 text-right">Received Qty</th>
               <th className="py-3 px-4 text-right">
-                {activeTab === "finishedProducts" ? "Produced Qty" : "Consumed Qty"}
+                {activeTab === "finishedProducts"
+                  ? "Produced Qty"
+                  : "Consumed Qty"}
               </th>
               <th className="py-3 px-4 text-right">Available Qty</th>
             </tr>
@@ -90,8 +94,8 @@ export default function ProductionBatchItemDetailsTab({
           <tbody className="divide-y divide-gray-100">
             {activeItems.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-12 text-center text-gray-400">
-                  No items found in this category.
+                <td colSpan={9} className="py-4">
+                  <NoDataMessage moduleName="Items" />
                 </td>
               </tr>
             ) : (
@@ -124,7 +128,7 @@ export default function ProductionBatchItemDetailsTab({
                       {item.itemName}
                     </ModuleLink>
                     <p className="text-[11px] text-gray-400 font-mono mt-0.5">
-                      ({item.itemCode || "N/A"})
+                      ({displayFormat(item.itemCode)})
                     </p>
                   </td>
 
@@ -141,7 +145,9 @@ export default function ProductionBatchItemDetailsTab({
                   </td>
 
                   <td className="py-3 px-4 text-right font-mono text-gray-800">
-                    {formatNumber(activeTab === "finishedProducts" ? (item.producedQty ?? item.consumedQty) : item.consumedQty)}
+                    {activeTab === "finishedProducts"
+                      ? formatNumber(item.producedQty)
+                      : formatNumber(item.consumedQty)}
                   </td>
 
                   <td className="py-3 px-4 text-right font-mono text-gray-800">

@@ -7,6 +7,7 @@ import { Package } from "lucide-react";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ItemTableRow({
   item,
@@ -109,10 +110,10 @@ export default function ItemTableRow({
                   onClick={() => handler(item)}
                   className="font-medium text-[#1565c0]"
                 >
-                  {value || "—"}
+                  {displayFormat(value)}
                 </ModuleLink>
               ) : (
-                <span className="font-medium text-gray-800">{value || "—"}</span>
+                <span className="font-medium text-gray-800">{displayFormat(value)}</span>
               )}
             </td>
           );
@@ -127,7 +128,7 @@ export default function ItemTableRow({
                 }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
-                {value || "—"}
+                {displayFormat(value)}
               </span>
             </td>
           );
@@ -137,7 +138,7 @@ export default function ItemTableRow({
           return (
             <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap">
               <span className="font-mono text-xs text-gray-700 bg-gray-50 ">
-                {value || "—"}
+                {displayFormat(value)}
               </span>
             </td>
           );
@@ -146,14 +147,14 @@ export default function ItemTableRow({
         if (col.key === "addedDateFormatted") {
           return (
             <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap text-gray-500 text-xs">
-              {value || "—"}
+              {displayFormat(value, "DATE")}
             </td>
           );
         }
 
         return (
           <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap text-gray-700">
-            {value !== null && value !== undefined && value !== "" ? value : "—"}
+            {displayFormat(value)}
           </td>
         );
       })}

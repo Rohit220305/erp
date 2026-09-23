@@ -11,19 +11,21 @@ import SharedImageZoom from "@/components/common/SharedImageZoom";
 import { Warehouse, SearchX } from "lucide-react";
 import SideDrawer from "@/components/common/SideDrawer";
 import ModuleLink from "@/components/common/ModuleLink";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
-function DetailRow({ label, value, valueClassName = "", href, onClick }) {
-  if (!value) return null;
+function DetailRow({ label, value, valueClassName = "", href, onClick, valueNode }) {
+  if (!value && !valueNode) return null;
   return (
     <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
       <span className="text-sm text-gray-500">{label}</span>
-      {href ? (
+      {valueNode ? valueNode : href ? (
         <ModuleLink href={href} onClick={onClick} className="text-[#1565c0] font-medium text-sm text-right">
-          {value}
+          {displayFormat(value)}
         </ModuleLink>
       ) : (
         <span className={`text-sm font-medium text-right ${valueClassName}`}>
-          {value}
+          {displayFormat(value)}
         </span>
       )}
     </div>
@@ -39,16 +41,16 @@ function UserInfoCard({ title, name, date, href, onClick }) {
         <div className="flex flex-col">
           {href ? (
             <ModuleLink href={href} onClick={onClick} className="text-sm font-semibold text-[#1565c0]">
-              {name || "System"}
+              {displayFormat(name)}
             </ModuleLink>
           ) : (
             <span className="text-sm font-semibold text-gray-900">
-              {name || "System"}
+              {displayFormat(name)}
             </span>
           )}
           {date && (
             <span className="text-xs text-gray-400 mt-1">
-              {date}
+              {displayFormat(date, "DATE")}
             </span>
           )}
         </div>
@@ -137,10 +139,10 @@ export default function StorageDetailPage({ data }) {
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
             <div className="mb-4">
               <h2 className="font-semibold text-base text-gray-900">
-                {storageName}
+                {displayFormat(storageName)}
               </h2>
               <p className="text-gray-400 text-sm mt-0.5 uppercase">
-                {storageCode}
+                {displayFormat(storageCode)}
               </p>
             </div>
             
@@ -169,10 +171,10 @@ export default function StorageDetailPage({ data }) {
                 />
                 <div className="flex flex-col">
                   <h2 className="font-semibold text-base text-gray-900">
-                    {storageName}
+                    {displayFormat(storageName)}
                   </h2>
                   <span className="text-xs text-gray-400 uppercase mt-0.5">
-                    {storageCode}
+                    {displayFormat(storageCode)}
                   </span>
                 </div>
               </div>
@@ -188,8 +190,7 @@ export default function StorageDetailPage({ data }) {
                 />
                 <DetailRow 
                   label="Status" 
-                  value={status} 
-                  valueClassName={isActive ? "text-green-500" : "text-red-500"} 
+                  valueNode={<StatusBadge status={status} />} 
                 />
               </div>
             </div>
@@ -198,7 +199,7 @@ export default function StorageDetailPage({ data }) {
               <h3 className="text-sm font-semibold text-gray-600 mb-6">Description</h3>
               {description ? (
                 <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                  {description}
+                  {displayFormat(description)}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-40 text-gray-400 opacity-60">

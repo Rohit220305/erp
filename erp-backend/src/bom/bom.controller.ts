@@ -23,6 +23,7 @@ import {
   BomDetailsDto,
   BomListDto,
   BomUpdateDto,
+  BomCloneDto,
 } from './dto/bom.dto';
 
 import { BomService } from './service/bom.service';
@@ -61,7 +62,6 @@ export class BomController {
 
 
     try {
-      console.log(body, files);
       const validFiles: any[] = [];
       if (files && files.length > 0) {
         for (const file of files) {
@@ -116,5 +116,20 @@ export class BomController {
         message: error.message,
       };
     }
+  }
+
+  @Post('clone-bom')
+  @RequirePermission(CAPABILITIES.BOM.CREATE)
+  async cloneBom(@AppRequest() req: IAppRequest, @Body() body: BomCloneDto) { 
+
+    try {
+      return await this.bomService.startCLoneBom(req, body);
+    } catch (error: any) {
+      return {
+        success: 0,
+        message: error.message,
+      };
+    }
+
   }
 }

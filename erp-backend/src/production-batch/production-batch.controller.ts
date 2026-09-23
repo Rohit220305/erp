@@ -21,6 +21,7 @@ import {
   CreateProcessLogDto,
   ProcessExecutionDto,
   MarkBatchCompletedDto,
+  CancelProductionBatchDto,
 } from './dto/production-batch.dto';
 
 @Controller('production-batch')
@@ -31,7 +32,7 @@ export class ProductionBatchController {
     private readonly logService: BatchProcessLogService,
     private readonly processExecutionService: ProcessExecutionService,
     private readonly commonFileService: CommonFileService,
-  ) {}
+  ) { }
 
   @Get('suggest-batch')
   @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.CREATE)
@@ -61,6 +62,12 @@ export class ProductionBatchController {
   @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.DELETE)
   async startDeleteProductionBatch(@AppRequest() req: IAppRequest, @Body() params: ProductionBatchDeleteDto) {
     return await this.service.startDeleteProductionBatch(req, params);
+  }
+
+  @Post('cancel-batch')
+  @RequirePermission(CAPABILITIES.PRODUCTION_BATCH.DELETE)
+  async cancelBatch(@AppRequest() req: IAppRequest, @Body() params: CancelProductionBatchDto) {
+    return await this.service.startCancelProductionBatch(req, params);
   }
 
   @Post('add-process-log')

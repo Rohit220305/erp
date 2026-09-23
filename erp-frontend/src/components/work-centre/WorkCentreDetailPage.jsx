@@ -11,15 +11,19 @@ import SharedImageZoom from "@/components/common/SharedImageZoom";
 import { Factory } from "lucide-react";
 import SideDrawer from "@/components/common/SideDrawer";
 import ModuleLink from "@/components/common/ModuleLink";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
-function DetailRow({ label, value, valueClassName = "" }) {
-  if (!value) return null;
+function DetailRow({ label, value, valueClassName = "", valueNode }) {
+  if (!value && !valueNode) return null;
   return (
     <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className={`text-sm font-medium text-right ${valueClassName}`}>
-        {value}
-      </span>
+      {valueNode ? valueNode : (
+        <span className={`text-sm font-medium text-right ${valueClassName}`}>
+          {displayFormat(value)}
+        </span>
+      )}
     </div>
   );
 }
@@ -44,10 +48,10 @@ function UserInfoCard({ title, name, date, userId, onOpenUser }) {
             </ModuleLink>
           ) : (
             <span className="text-sm font-semibold text-gray-900">
-              {name || "System"}
+              {displayFormat(name)}
             </span>
           )}
-          {date && <span className="text-xs text-gray-400 mt-1">{date}</span>}
+          {date && <span className="text-xs text-gray-400 mt-1">{displayFormat(date, "DATE")}</span>}
         </div>
       </div>
     </div>
@@ -156,11 +160,11 @@ export default function WorkCentreDetailPage({ data }) {
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5">
             <div className="mb-4">
               <h2 className="font-semibold text-base text-gray-900">
-                {workCentreName}
+                {displayFormat(workCentreName)}
               </h2>
               {workCentreCode && (
                 <p className="text-gray-400 text-sm mt-0.5 uppercase">
-                  {workCentreCode}
+                  {displayFormat(workCentreCode)}
                 </p>
               )}
             </div>
@@ -193,11 +197,11 @@ export default function WorkCentreDetailPage({ data }) {
                 />
                 <div className="flex flex-col">
                   <h2 className="font-semibold text-base text-gray-900">
-                    {workCentreName}
+                    {displayFormat(workCentreName)}
                   </h2>
                   {workCentreCode && (
                     <span className="text-xs text-gray-400 uppercase mt-0.5">
-                      {workCentreCode}
+                      {displayFormat(workCentreCode)}
                     </span>
                   )}
                 </div>
@@ -219,7 +223,7 @@ export default function WorkCentreDetailPage({ data }) {
                         }
                         className="text-[#1565c0] font-medium hover:underline cursor-pointer"
                       >
-                        {companyName}
+                        {displayFormat(companyName)}
                       </ModuleLink>
                     }
                   />
@@ -239,7 +243,7 @@ export default function WorkCentreDetailPage({ data }) {
                         }
                         className="text-[#1565c0] font-medium hover:underline cursor-pointer"
                       >
-                        {categoryName}
+                        {displayFormat(categoryName)}
                       </ModuleLink>
                     }
                   />
@@ -251,8 +255,7 @@ export default function WorkCentreDetailPage({ data }) {
                 />
                 <DetailRow
                   label="Status"
-                  value={status}
-                  valueClassName={isActive ? "text-green-500" : "text-red-500"}
+                  valueNode={<StatusBadge status={status} />}
                 />
               </div>
             </div>

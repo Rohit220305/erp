@@ -11,6 +11,7 @@ import { Package } from "lucide-react";
 import SideDrawer from "@/components/common/SideDrawer";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 import ModuleLink from "@/components/common/ModuleLink";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 function DetailRow({ label, value, href, onClick, valueClassName = "" }) {
   return (
@@ -22,11 +23,11 @@ function DetailRow({ label, value, href, onClick, valueClassName = "" }) {
           onClick={onClick}
           className={`text-sm font-medium text-right ${valueClassName}`}
         >
-          {value !== null && value !== undefined && value !== "" ? String(value) : "-"}
+          {displayFormat(value)}
         </ModuleLink>
       ) : (
         <span className={`text-sm font-medium text-right ${valueClassName}`}>
-          {value !== null && value !== undefined && value !== "" ? String(value) : "-"}
+          {displayFormat(value)}
         </span>
       )}
     </div>
@@ -53,11 +54,11 @@ function UserInfoCard({ title, name, date, href, onClick }) {
             </ModuleLink>
           ) : (
             <span className="text-sm font-semibold text-gray-900">
-              {name || "System"}
+              {displayFormat(name)}
             </span>
           )}
           <span className="text-xs text-gray-400 mt-1">
-            {date || "-"}
+            {displayFormat(date, "DATE")}
           </span>
         </div>
       </div>
@@ -102,13 +103,13 @@ export default function ItemDetailPage({ data }) {
         title: "Details",
         breadcrumbs: [
           { label: "Master", href: buildRoute("home", "list") },
-          { label: "Item Master", href: buildRoute("item", "list") },
+          { label: "Item", href: buildRoute("item", "list") },
         ],
         actionButton: can(CAPABILITIES.ITEM?.UPDATE || "ITEM_UPDATE")
           ? {
-              label: "Edit",
-              onClick: () => router.push(buildRoute("item", "edit", { id: data.id })),
-            }
+            label: "Edit",
+            onClick: () => router.push(buildRoute("item", "edit", { id: data.id })),
+          }
           : null,
       },
     });
@@ -134,13 +135,11 @@ export default function ItemDetailPage({ data }) {
 
   const isActive = data.status === "Active" || data.status === "active";
 
-  const weightText = data.weightDisplay || (data.weight ? `${data.weight} ${data.weightUomName || ''}`.trim() : null);
-  const volumeText = data.volumeDisplay || (data.volume ? `${data.volume} ${data.volumeUomName || ''}`.trim() : null);
-  const dimensionsText = (data.length || data.width || data.height)
-    ? `${data.length || 0} × ${data.width || 0} × ${data.height || 0} ${data.dimensionUomName || ''}`.trim()
-    : null;
-  const shelfLifeText = data.shelfLifeDisplay || (data.shelfLife ? `${data.shelfLife} ${data.shelfLifeUnit || ''}`.trim() : null);
-  const primitiveQuantityText = data.primitiveQuantityDisplay || (data.primitiveQuantity !== null && data.primitiveQuantity !== undefined ? (data.itemUomName ? `${data.primitiveQuantity} ${data.itemUomName}` : data.primitiveQuantity) : null);
+  const weightText = data.weightDisplay;
+  const volumeText = data.volumeDisplay;
+  const dimensionsText = data.dimensionsDisplay;
+  const shelfLifeText = data.shelfLifeDisplay;
+  const primitiveQuantityText = data.primitiveQuantityDisplay;
 
   return (
     <div className=" py-6 mx-6     max-h-full overflow-y-auto">
@@ -155,9 +154,9 @@ export default function ItemDetailPage({ data }) {
                 {data.itemCode}
               </p>
             </div>
-            
+
             <hr className="my-4 border-gray-100" />
-            
+
             <button className="w-full bg-[#1565c0] text-white py-2.5 px-4 rounded-lg text-sm font-medium transition hover:bg-[#0f57a6]">
               Summary
             </button>
@@ -166,10 +165,10 @@ export default function ItemDetailPage({ data }) {
 
         <div className="col-span-12 lg:col-span-10">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            
+
             <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
               <h3 className="text-sm font-semibold text-gray-600 mb-6">Basic Info & Classification</h3>
-              
+
               <div className="flex items-center gap-4 mb-8">
                 <SharedImageZoom
                   id={`detail-item-${data.id}`}
@@ -223,17 +222,18 @@ export default function ItemDetailPage({ data }) {
                 />
                 <DetailRow label="Usage Type" value={data.usageType} />
                 <DetailRow label="Inventory Type" value={data.inventoryType} />
-                <DetailRow 
-                  label="Status" 
-                  value={data.status} 
-                  valueClassName={isActive ? "text-green-500 font-semibold" : "text-red-500 font-semibold"} 
+                <DetailRow
+                  label="Status"
+                  value={data.status}
+                  valueClassName={isActive ? "text-green-500 font-semibold" : "text-red-500 font-semibold"}
                 />
+
               </div>
             </div>
 
             <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
               <h3 className="text-sm font-semibold text-gray-600 mb-6">Units, Pricing & Attributes</h3>
-              
+
               <div className="space-y-1">
                 <DetailRow
                   label="Item Base UOM"
@@ -251,9 +251,9 @@ export default function ItemDetailPage({ data }) {
                 <DetailRow label="Primitive Quantity" value={primitiveQuantityText} />
                 <DetailRow label="Decimal Allowed" value={data.isDecimalAllowed} />
                 <DetailRow label="Currency" value={data.currencyCode ? `${data.currencyCode} (${data.currencyName || ''})`.trim() : null} />
-                <DetailRow label="Purchase Price" value={data.purchasePrice} />
-                <DetailRow label="Cost Price" value={data.costPrice} />
-                <DetailRow label="Cost Per Unit" value={data.costPerUnit} />
+                <DetailRow label="Purchase Price" value={data.purchasePriceFormatted} />
+                <DetailRow label="Cost Price" value={data.costPriceFormatted} />
+                <DetailRow label="Cost Per Unit" value={data.costPerUnitFormatted} />
                 <DetailRow
                   label="Storage"
                   value={data.storageName}
@@ -279,13 +279,13 @@ export default function ItemDetailPage({ data }) {
                 href={canViewUser && data?.addedBy ? buildRoute("user", "detail", { id: data.addedBy }) : null}
                 onClick={canViewUser && data?.addedBy ? () => setSelectedUserForDetails({ userId: data.addedBy }) : null}
               />
-              <UserInfoCard
+              {data?.updatedBy && (<UserInfoCard
                 title="Modified Info"
                 name={data.updatedByName}
                 date={data.updatedDateFormatted}
                 href={canViewUser && data?.updatedBy ? buildRoute("user", "detail", { id: data.updatedBy }) : null}
                 onClick={canViewUser && data?.updatedBy ? () => setSelectedUserForDetails({ userId: data.updatedBy }) : null}
-              />
+              />)}
 
               {data.images && data.images.length > 0 && (
                 <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
@@ -294,9 +294,8 @@ export default function ItemDetailPage({ data }) {
                     {data.images.map((img, idx) => (
                       <div
                         key={idx}
-                        className={`relative rounded-lg overflow-hidden border bg-gray-50 shrink-0 ${
-                          img.isPrimary === 'Yes' ? 'border-blue-500 border-2 shadow-sm' : 'border-gray-200'
-                        }`}
+                        className={`relative rounded-lg overflow-hidden border bg-gray-50 shrink-0 ${img.isPrimary === 'Yes' ? 'border-blue-500 border-2 shadow-sm' : 'border-gray-200'
+                          }`}
                       >
                         <SharedImageZoom
                           id={`item-gallery-${img.id || idx}`}

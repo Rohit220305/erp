@@ -15,7 +15,7 @@ export function formatQuantityWithUom(val, uom = "", decimals = 4) {
   return uom ? `${formatted} ${uom}` : formatted;
 }
 
-export function formatCurrency(val, currencySymbol = "₦", options = {}) {
+export function formatCurrency(val, currencySymbol = "", options = {}) {
   const { decimals = 2 } = options;
   const formatted = formatNumber(val, decimals);
   return currencySymbol ? `${currencySymbol} ${formatted}` : formatted;
@@ -32,9 +32,17 @@ export function formatPercent(val, options = {}) {
 export function addCommas(raw) {
   if (!raw && raw !== "0") return "";
   const str = String(raw);
+  
+  if (str === "-") return "-";
+
   const [intPart, ...decParts] = str.split(".");
   const hasDecimal = str.includes(".");
-  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  
+  let formattedInt = intPart;
+  if (intPart && intPart !== "-") {
+    formattedInt = Number(intPart).toLocaleString("en-US");
+  }
+
   if (!hasDecimal) return formattedInt;
   return `${formattedInt}.${decParts.join("")}`;
 }

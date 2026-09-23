@@ -5,6 +5,8 @@ import { BomEntity } from '../bom/entity/bom.entity';
 import { BomProcessItemEntity } from '../bom/entity/bom-process-item.entity';
 import { ItemEntity } from '../item/entity/item.entity';
 import { ItemImageEntity } from '../item/entity/item-image.entity';
+import { ProductionBatchEntity } from '../production-batch/entity/production-batch.entity';
+import { MaterialRequestEntity } from '../material-request/entity/material-request.entity';
 import { ProductionOrderController } from './production-order.controller';
 import { ProductionOrderService } from './service/production-order.service';
 import { ProductionOrderListService } from './service/production-order.list.service';
@@ -21,6 +23,8 @@ import { CommonFileService } from '../package/service/common-file.service';
       BomProcessItemEntity,
       ItemEntity,
       ItemImageEntity,
+      ProductionBatchEntity,
+      MaterialRequestEntity,
     ]),
     AttachmentMasterModule,
     ActivityLogModule,

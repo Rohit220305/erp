@@ -5,7 +5,9 @@ import { Package } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
-import { formatNumber, formatCurrency } from "@/utils/number-formatter";
+import { formatCurrency } from "@/utils/number-formatter";
+import NoDataMessage from "@/components/common/NoDataMessage";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ProductionOrderMaterialTabs({
   materialDetails = { rawMaterials: [], semiFinished: [], finishedProducts: [] },
@@ -30,7 +32,6 @@ export default function ProductionOrderMaterialTabs({
       onPackageToggleChange(nextValue);
     }
   };
-
   const rawMaterials = materialDetails?.rawMaterials || [];
   const semiFinished = materialDetails?.semiFinished || [];
   const finishedProducts = materialDetails?.finishedProducts || [];
@@ -41,9 +42,7 @@ export default function ProductionOrderMaterialTabs({
     if (activeTab === "finishedProducts") return finishedProducts;
     return [];
   };
-
   const activeItems = getActiveItems();
-  console.log("Active Items:", activeItems);
   const isFinishedTab = activeTab === "finishedProducts";
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6">
@@ -115,6 +114,7 @@ export default function ProductionOrderMaterialTabs({
               <th className="py-3 px-4 w-16 text-center">Sr. No.</th>
               <th className="py-3 px-4 w-24 text-center">Item Image</th>
               <th className="py-3 px-4 min-w-[220px]">Item Name*</th>
+              <th className="py-3 px-4 text-center">Unit</th>
               <th className="py-3 px-4 text-center">Qty Per Unit*</th>
               <th className="py-3 px-4 text-right">Cost Per Unit*</th>
               <th className="py-3 px-4 text-center">
@@ -126,8 +126,8 @@ export default function ProductionOrderMaterialTabs({
           <tbody className="divide-y divide-gray-100">
             {activeItems.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-gray-400">
-                  No items in this category.
+                <td colSpan={8} className="p-0">
+                  <NoDataMessage />
                 </td>
               </tr>
             ) : (
@@ -147,7 +147,7 @@ export default function ProductionOrderMaterialTabs({
                       <SharedImageZoom
                         id={`po-material-item-${item.itemId || item.id || idx}`}
                         src={item.itemImageUrl}
-                        alt={item.itemName}
+                        alt={displayFormat(item.itemName)}
                         placeholderText={<Package size={18} />}
                         thumbnailClassName="w-10 h-10 rounded-lg border border-gray-200 shrink-0 mx-auto cursor-pointer"
                       />
@@ -160,41 +160,37 @@ export default function ProductionOrderMaterialTabs({
                           onClick={onOpenDrawer ? () => onOpenDrawer("Item", item.itemId) : null}
                           className="font-medium text-[#1565c0] hover:underline text-left cursor-pointer"
                         >
-                          {item.itemName}
+                          {displayFormat(item.itemName)}
                         </ModuleLink>
                       ) : (
-                        <span className="font-medium text-gray-900">{item.itemName}</span>
+                        <span className="font-medium text-gray-900">{displayFormat(item.itemName)}</span>
                       )}
                       <p className="text-[11px] text-gray-400 font-mono mt-0.5">
-                        ({item.itemCode || "N/A"})
+                        ({displayFormat(item.itemCode)})
                       </p>
                     </td>
-
+                      <td className="py-3 px-4 text-center font-mono">
+                        {displayFormat(item.uomName)}
+                      </td>
                     <td className="py-3 px-4 text-center font-mono">
-                      {isFinishedTab ? "NA" : formatNumber(item.qtyPerUnit ?? item.qtyPerUnitDisplay)}
+                      {displayFormat(isFinishedTab ? "NA" : item.qtyPerUnit)}
                     </td>
 
                     <td className="py-3 px-4 text-right font-mono">
-                      {item.unitPrice !== undefined && item.unitPrice !== null && Number(item.unitPrice) > 0
-                        ? formatCurrency(item.unitPrice, currencySymbol)
-                        : item.unitPriceFormatted || "NA"}
+                      {displayFormat(item.unitPriceFormatted)}
                     </td>
 
                     <td className="py-3 px-4 text-center font-mono">
                       <div>
-                        <span className="font-semibold text-gray-900">
-                          {formatNumber(item.totalRequiredQty ?? item.totalRequiredQtyDisplay)}
+                        <span className=" text-gray-900">
+                          {displayFormat(item.totalRequiredQty)}
                         </span>
-                        {dualQtyText && (
-                          <p className="text-[11px] text-[#1565c0] font-semibold mt-0.5">{dualQtyText}</p>
-                        )}
+                        
                       </div>
                     </td>
 
-                    <td className="py-3 px-4 text-start font-mono font-semibold text-gray-900">
-                      {item.totalCost !== undefined && item.totalCost !== null && Number(item.totalCost) > 0
-                        ? formatCurrency(item.totalCost, currencySymbol)
-                        : item.totalCostFormatted || "NA"}
+                    <td className="py-3 px-4 text-start font-mono  text-gray-950">
+                      {displayFormat(item.totalCostFormatted)}
                     </td>
                   </tr>
                 );

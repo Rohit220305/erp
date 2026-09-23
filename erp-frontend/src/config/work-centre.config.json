@@ -1,5 +1,6 @@
 {
   "moduleName": "WorkCentre",
+  "parentModule": "Master",
   "title": "Work Centre",
   "permissions": {
     "list": "WORK_CENTRE_LIST",

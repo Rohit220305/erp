@@ -23,7 +23,7 @@ export default function AdminAddPage() {
       navbar: {
         title: "Add User",
         breadcrumbs: [
-          { label: "Master", href: "/" },
+          { label: "User",  },
           { label: "User Management", href: "/admin" },
           { label: "Add User" },
         ],

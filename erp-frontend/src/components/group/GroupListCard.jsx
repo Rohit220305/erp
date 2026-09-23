@@ -4,6 +4,8 @@ import { CAPABILITIES } from "@/config/capabilities.config";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 export default function GroupListCard({ group, can }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -28,11 +30,11 @@ export default function GroupListCard({ group, can }) {
                     href={buildRoute("group", "edit", { id: group.id })}
                     className="text-sm truncate block"
                   >
-                    {group.groupName || "—"}
+                    {displayFormat(group.groupName)}
                   </ModuleLink>
                 ) : (
                   <p className="text-sm font-semibold text-gray-800 truncate">
-                    {group.groupName || "—"}
+                    {displayFormat(group.groupName)}
                   </p>
                 )}
               </div>
@@ -43,7 +45,7 @@ export default function GroupListCard({ group, can }) {
                 Group Code
               </p>
               <p className="text-[13px] text-gray-800 font-medium truncate">
-                {group.groupCode || "—"}
+                {displayFormat(group.groupCode)}
               </p>
             </div>
 
@@ -52,7 +54,7 @@ export default function GroupListCard({ group, can }) {
                 Added Date
               </p>
               <p className="text-[13px] font-medium text-gray-800 truncate">
-                {group.addedDateFormatted || "—"}
+                {displayFormat(group.addedDateFormatted, "DATE")}
               </p>
             </div>
 
@@ -61,14 +63,7 @@ export default function GroupListCard({ group, can }) {
                 Status
               </p>
               <div>
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                    isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
-                  {isActive ? "Active" : "Inactive"}
-                </span>
+                <StatusBadge status={group.status} />
               </div>
             </div>
           </div>

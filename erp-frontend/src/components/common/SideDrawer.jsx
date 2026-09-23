@@ -10,7 +10,7 @@ export default function SideDrawer({
   open,
   onClose,
   title: customTitle,
-  width = "380px",
+  width = "400px",
   children,
   moduleName,
   mode,
@@ -25,7 +25,7 @@ export default function SideDrawer({
 
   const formattedModuleName = moduleName ? moduleName.replace(/([A-Z])/g, ' $1').trim() : "";
 
-  const drawerTitle = formattedModuleName;
+  const drawerTitle = customTitle || formattedModuleName;
 
   const FormComponent = moduleName && (mode === "add" || mode === "edit") ? formRegistry[moduleName] : null;
 

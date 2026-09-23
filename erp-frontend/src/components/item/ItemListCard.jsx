@@ -7,6 +7,7 @@ import SharedImageZoom from "@/components/common/SharedImageZoom";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ItemListCard({
   item,
@@ -52,15 +53,15 @@ export default function ItemListCard({
                       }
                       className="block font-semibold text-sm truncate text-[#1565c0]"
                     >
-                      {item.itemName || "—"}
+                      {displayFormat(item.itemName)}
                     </ModuleLink>
                   ) : (
                     <p className="text-sm font-semibold text-gray-800 truncate">
-                      {item.itemName || "—"}
+                      {displayFormat(item.itemName)}
                     </p>
                   )}
                   <p className="text-[11px] font-mono text-gray-400 mt-0.5 no-underline truncate">
-                    {item.itemCode || "—"}
+                    {displayFormat(item.itemCode)}
                   </p>
                 </div>
               </div>
@@ -76,11 +77,11 @@ export default function ItemListCard({
                   onClick={() => setSelectedCategoryForDetails(item)}
                   className="block font-medium text-[13px] truncate text-[#1565c0]"
                 >
-                  {item.categoryName || "—"}
+                  {displayFormat(item.categoryName)}
                 </ModuleLink>
               ) : (
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.categoryName || "—"}
+                  {displayFormat(item.categoryName)}
                 </div>
               )}
             </div>
@@ -90,7 +91,7 @@ export default function ItemListCard({
                 Brand
               </p>
               <div className="text-[13px] text-gray-800 font-medium truncate">
-                {item.brandName || "—"}
+                {displayFormat(item.brandName)}
               </div>
             </div>
 
@@ -99,7 +100,7 @@ export default function ItemListCard({
                 Usage Type
               </p>
               <div className="text-[13px] text-gray-800 font-medium truncate">
-                {item.usageType || "—"}
+                {displayFormat(item.usageType)}
               </div>
             </div>
 
@@ -118,7 +119,7 @@ export default function ItemListCard({
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`}
                   />
-                  {item.status || "—"}
+                  {displayFormat(item.status)}
                 </span>
               </div>
             </div>
@@ -149,7 +150,7 @@ export default function ItemListCard({
                   Manufacturer
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.manufacturerName || "—"}
+                  {displayFormat(item.manufacturerName)}
                 </div>
               </div>
 
@@ -158,7 +159,7 @@ export default function ItemListCard({
                   Barcode
                 </p>
                 <div className="text-[13px] font-mono text-gray-800 font-medium truncate">
-                  {item.barcode || "—"}
+                  {displayFormat(item.barcode)}
                 </div>
               </div>
 
@@ -167,7 +168,7 @@ export default function ItemListCard({
                   Item UOM
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.itemUomName || "—"}
+                  {displayFormat(item.itemUomName)}
                 </div>
               </div>
 
@@ -176,9 +177,7 @@ export default function ItemListCard({
                   Purchase Price
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.purchasePrice !== null && item.purchasePrice !== undefined && item.purchasePrice !== ""
-                    ? item.purchasePrice
-                    : "—"}
+                  {displayFormat(item.purchasePriceFormatted)}
                 </div>
               </div>
 
@@ -187,7 +186,7 @@ export default function ItemListCard({
                   Added Date
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.addedDateFormatted || "—"}
+                  {displayFormat(item.addedDateFormatted, "DATE")}
                 </div>
               </div>
             </div>

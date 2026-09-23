@@ -11,6 +11,7 @@ export default function ModuleLink({
   action = "detail",
   params,
   id,
+  tab,
   onOpenDrawer,
   children,
   className = "",
@@ -26,6 +27,7 @@ export default function ModuleLink({
       const mergedParams = {
         ...(id !== undefined && id !== null ? { id } : {}),
         ...(params || {}),
+        ...(tab ? { tab } : {}),
       };
       computedHref = buildRoute(moduleName, action, mergedParams);
     } catch (err) {

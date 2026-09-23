@@ -4,10 +4,7 @@ import { HeaderProvider } from "@/context/HeaderContext";
 import ToastProvider from "@/components/common/ToastProvider";
 
 export const metadata = {
-  title: {
-    default: "Production Planning ERP",
-    template: "%s | Production Planning ERP",
-  },
+  title: "Production Management",
   icons: {
     icon: "/images/production-logo.png",
   },

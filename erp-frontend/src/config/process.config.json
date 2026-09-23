@@ -1,5 +1,6 @@
 {
   "moduleName": "Process",
+  "parentModule": "Master",
   "title": "Process Master",
   "permissions": {
     "list": "PROCESS_LIST",

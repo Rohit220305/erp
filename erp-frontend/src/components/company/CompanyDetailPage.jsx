@@ -12,6 +12,8 @@ import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 function UserInfoCard({ title, name, date, userId, onOpenUser }) {
   const initial = name ? name.charAt(0).toUpperCase() : "S";
@@ -29,16 +31,16 @@ function UserInfoCard({ title, name, date, userId, onOpenUser }) {
               onClick={onOpenUser}
               className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer"
             >
-              {name || "System"}
+              {displayFormat(name)}
             </ModuleLink>
           ) : (
             <span className="text-sm font-semibold text-gray-900">
-              {name || "System"}
+              {displayFormat(name)}
             </span>
           )}
           {date && (
             <span className="text-xs text-gray-400 mt-1">
-              {date}
+              {displayFormat(date, "DATE")}
             </span>
           )}
         </div>
@@ -69,7 +71,7 @@ export default function CompanyDetailsPage({ company }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Home", href: "/" },
+          { label: "Master", href: "/" },
           { label: "Company Master", href: buildRoute("company", "list") },
         ],
         actionButton: can(CAPABILITIES.COMPANY.UPDATE)
@@ -148,9 +150,9 @@ export default function CompanyDetailsPage({ company }) {
               />
               <div>
                 <h2 className="font-semibold text-md text-gray-900">
-                  {companyName || ""}
+                  {displayFormat(companyName)}
                 </h2>
-                {shortName && <p className="text-gray-500 text-sm mt-0.5">{shortName}</p>}
+                {shortName && <p className="text-gray-500 text-sm mt-0.5">{displayFormat(shortName)}</p>}
               </div>
             </div>
 
@@ -199,7 +201,7 @@ export default function CompanyDetailsPage({ company }) {
                       {currencies.map((c, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-0.5 text-gray-700 bg-gray-100 rounded text-xs font-medium"
+                          className="px-2 py-0.5 text-gray-700 text-xs font-medium"
                         >
                           {c.currencySymbol} ({c.currencyCode})
                         </span>
@@ -212,15 +214,7 @@ export default function CompanyDetailsPage({ company }) {
               {status && (
                 <DetailRow
                   label="Status"
-                  value={
-                    <span
-                      className={`font-medium ${
-                        status === "Active" ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {status}
-                    </span>
-                  }
+                  valueNode={<StatusBadge status={status} />}
                 />
               )}
             </div>

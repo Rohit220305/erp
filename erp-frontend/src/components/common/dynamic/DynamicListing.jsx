@@ -30,6 +30,7 @@ export default function DynamicListing({
   renderListCard,
   renderGridCard,
   extraApiParams,
+  extraNavButtons,
 }) {
   const router = useRouter();
   const { can, user } = useAuth();
@@ -247,6 +248,28 @@ export default function DynamicListing({
       ? ["refresh", "search", "filter", "filterDrawer", "view"]
       : ["refresh", "search", "filter", "view"];
 
+    const mainActionButton = canDoAction
+      ? {
+          label: headerAction.label,
+          onClick: () => {
+            if (
+              (headerAction.type === "redirect" ||
+                headerAction.type === "addRedirect") &&
+              headerAction.path
+            ) {
+              router.push(headerAction.path);
+            } else if (headerAction.type === "addDrawer") {
+              setDrawerState({ mode: "add", data: null });
+            }
+          },
+        }
+      : null;
+
+    const navActionButtons = [
+      ...(mainActionButton ? [mainActionButton] : []),
+      ...(extraNavButtons || []),
+    ];
+
     setConfig({
       header: {
         icons: activeSchema.headerIcons || defaultIcons,
@@ -259,29 +282,30 @@ export default function DynamicListing({
         onFilterDrawerClick: () => setIsFilterDrawerOpen(true),
         onFilterClick: () => setIsFilterDrawerOpen(true),
         onSearchClick: handleOpenSearch,
-        actionButton: canDoAction
-          ? {
-            label: headerAction.label,
-            onClick: () => {
-              if ((headerAction.type === "redirect" || headerAction.type === "addRedirect") && headerAction.path) {
-                router.push(headerAction.path);
-              } else if (headerAction.type === "addDrawer") {
-                setDrawerState({ mode: "add", data: null });
-              }
-            },
-          }
-          : null,
+        actionButton: mainActionButton,
       },
       navbar: {
         title: "Listing",
         breadcrumbs: [
-          { label: "Master", href: buildRoute("home", "list") },
-          { label: activeSchema.title, href: activeSchema.modulePath || (activeSchema.moduleName ? buildRoute(activeSchema.moduleName, "list") : "#") },
+          {
+            label: activeSchema.parentModule || "Master"
+          },
+          {
+            label: activeSchema.title,
+            href:
+              activeSchema.modulePath ||
+              (activeSchema.moduleName
+                ? buildRoute(activeSchema.moduleName, "list")
+                : "#"),
+          },
         ],
+        ...(extraNavButtons && extraNavButtons.length > 0
+          ? { actionButtons: extraNavButtons }
+          : {}),
       },
     });
     return () => resetConfig();
-  }, [setConfig, can, router, activeSchema, toggleColumnSearch, setIsFilterDrawerOpen]);
+  }, [setConfig, can, router, activeSchema, toggleColumnSearch, setIsFilterDrawerOpen, extraNavButtons]);
 
   useEffect(() => {
     loadData();

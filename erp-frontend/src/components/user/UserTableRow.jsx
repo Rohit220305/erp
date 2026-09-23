@@ -4,6 +4,8 @@ import { CAPABILITIES } from "@/config/capabilities.config";
 import { LogIn, RotateCw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 export default function UserTableRow({
   user: userRecord,
@@ -36,20 +38,20 @@ export default function UserTableRow({
                 onClick={() => setSelectedUserForDetails?.(userRecord)}
                 className="text-[15px]"
               >
-                {userRecord?.fullName}
+                {displayFormat(userRecord?.fullName)}
               </ModuleLink>
             ) : (
               <p className="font-medium text-gray-800 text-[15px]">
-                {userRecord?.fullName}
+                {displayFormat(userRecord?.fullName)}
               </p>
             )}
-            <p className="text-xs text-gray-400">{userRecord?.userName}</p>
+            <p className="text-xs text-gray-400">{displayFormat(userRecord?.userName)}</p>
           </div>
         </div>
       </td>
 
       <td className="px-4 py-3 text-sm text-gray-700">
-        {userRecord?.email || "—"}
+        {displayFormat(userRecord?.email)}
       </td>
 
       <td className="px-4 py-3 text-sm">
@@ -61,15 +63,15 @@ export default function UserTableRow({
             onClick={() => setSelectedCompanyForDetails?.(userRecord)}
             className="font-medium"
           >
-            {userRecord?.companyName || "—"}
+            {displayFormat(userRecord?.companyName)}
           </ModuleLink>
         ) : (
-          <span className="font-medium text-gray-800">{userRecord?.companyName || "—"}</span>
+          <span className="font-medium text-gray-800">{displayFormat(userRecord?.companyName)}</span>
         )}
       </td>
 
       <td className="px-4 py-3 text-sm text-gray-700">
-        {userRecord?.groupName || "—"}
+        {displayFormat(userRecord?.groupName)}
       </td>
 
       {currentUser?.isSuperAdmin && (<td className="px-4 py-3 text-sm">
@@ -102,16 +104,11 @@ export default function UserTableRow({
       </td>)}
 
       <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-        {userRecord?.lastLoginDateFormatted || "—"}
+        {displayFormat(userRecord?.lastLoginDateFormatted, "DATE")}
       </td>
 
       <td className="px-4 py-3 text-sm">
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-          isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-        }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
-          {isActive ? "Active" : "Inactive"}
-        </span>
+        <StatusBadge status={userRecord?.status} />
       </td>
     </tr>
   );

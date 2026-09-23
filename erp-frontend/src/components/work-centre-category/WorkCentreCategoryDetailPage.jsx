@@ -9,18 +9,20 @@ import { useAuth } from "@/context/AuthContext";
 import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
 import ModuleLink from "@/components/common/ModuleLink";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
-const DetailRow = ({ label, value, href, onClick, valueClassName = "" }) => {
-  if (!value) return null;
+const DetailRow = ({ label, value, href, onClick, valueClassName = "", valueNode }) => {
+  if (!value && !valueNode) return null;
   return (
     <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
       <span className="text-gray-500 font-medium">{label}</span>
-      {href ? (
+      {valueNode ? valueNode : href ? (
         <ModuleLink href={href} onClick={onClick} className="text-[#1565c0] font-medium text-sm">
-          {value}
+          {displayFormat(value)}
         </ModuleLink>
       ) : (
-        <span className={`text-gray-900 ${valueClassName}`}>{value}</span>
+        <span className={`text-gray-900 ${valueClassName}`}>{displayFormat(value)}</span>
       )}
     </div>
   );
@@ -54,7 +56,7 @@ export default function WorkCentreCategoryDetailPage({ category: categoryProp, d
         title: "Details",
         breadcrumbs: [
           { label: "Home", href: buildRoute("home", "list") },
-          { label: "Work Centre Category Master", href: buildRoute("work-centre-category", "list") },
+          { label: "Work Centre Category", href: buildRoute("work-centre-category", "list") },
         ],
         actionButton: can(CAPABILITIES.WORK_CENTRE_CATEGORY?.UPDATE || "WORK_CENTRE_CATEGORY_UPDATE")
           ? {
@@ -90,28 +92,23 @@ export default function WorkCentreCategoryDetailPage({ category: categoryProp, d
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-3">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center justify-between gap-4 mb-4">
               
               <div>
                 <h2 className="font-semibold text-lg text-gray-900 leading-tight">
-                  {category.categoryName}
+                  {displayFormat(category.categoryName)}
                 </h2>
                 <p className="text-gray-500 text-sm mt-0.5">
-                  {category.categoryCode}
+                  {displayFormat(category.categoryCode)}
                 </p>
               </div>
+                <StatusBadge status={category.status} />
             </div>
 
             <hr className="my-4 border-gray-100" />
 
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Status</span>
-                <span
-                  className={`font-semibold ${category.status === "Active" ? "text-green-600" : "text-red-500"}`}
-                >
-                  {category.status}
-                </span>
               </div>
             </div>
           </div>
@@ -133,20 +130,7 @@ export default function WorkCentreCategoryDetailPage({ category: categoryProp, d
                   onClick={canViewCompany && category?.companyId ? () => setSelectedCompanyForDetails({ companyId: category.companyId }) : null}
                 />
               )}
-              <DetailRow
-                label="Status"
-                value={
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      category.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {category.status}
-                  </span>
-                }
-              />
+              
             </div>
 
             {(category.addedByName || category.addedDateFormatted || addedByUserId || category.updatedByName || category.updatedDateFormatted || updatedByUserId) && (

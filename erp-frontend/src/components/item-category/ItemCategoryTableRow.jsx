@@ -4,6 +4,8 @@ import { useAuth } from "@/context/AuthContext";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 export default function ItemCategoryTableRow({
   item,
@@ -42,11 +44,11 @@ export default function ItemCategoryTableRow({
               onClick={setSelectedCompanyForDetails ? () => setSelectedCompanyForDetails({ companyId: item.companyId }) : null}
               className="text-[#1565c0] font-medium text-sm"
             >
-              {item.companyName || "—"}
+              {displayFormat(item.companyName)}
             </ModuleLink>
           ) : (
             <span className="text-sm font-medium text-gray-900" title={item.companyName}>
-              {item.companyName || "—"}
+              {displayFormat(item.companyName)}
             </span>
           )}
         </td>
@@ -54,27 +56,18 @@ export default function ItemCategoryTableRow({
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           <span className="text-sm font-mono text-gray-900 px-2 py-1 ">
-            {item.categoryCode || "—"}
+            {displayFormat(item.categoryCode)}
           </span>
         </div>
       </td>
      
       <td className="px-6 py-4 whitespace-nowrap">
         <span className="text-sm text-gray-500">
-          {item.addedDateFormatted || "—"}
+          {displayFormat(item.addedDateFormatted, "DATE")}
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-            isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-          }`}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`}
-          />
-          {isActive ? "Active" : "Inactive"}
-        </span>
+        <StatusBadge status={item.status} />
       </td>
     </tr>
   );

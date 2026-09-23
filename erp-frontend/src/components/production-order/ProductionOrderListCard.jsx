@@ -7,6 +7,7 @@ import { CAPABILITIES } from "@/config/capabilities.config";
 import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ProductionOrderListCard({
   item,
@@ -42,11 +43,11 @@ export default function ProductionOrderListCard({
                   onClick={setSelectedItemForDetails ? () => setSelectedItemForDetails(item) : null}
                   className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-bold text-sm truncate"
                 >
-                  {item.productionOrderCode || "—"}
+                  {displayFormat(item.productionOrderCode)}
                 </ModuleLink>
               ) : (
                 <p className="text-sm font-bold text-gray-800 truncate">
-                  {item.productionOrderCode || "—"}
+                  {displayFormat(item.productionOrderCode)}
                 </p>
               )}
             </div>
@@ -61,15 +62,15 @@ export default function ProductionOrderListCard({
                   onClick={setSelectedOutputItemForDetails ? () => setSelectedOutputItemForDetails({ itemId: item.itemId, id: item.itemId }) : null}
                   className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-medium text-[13px] truncate"
                 >
-                  {item.itemName || "—"}
+                  {displayFormat(item.itemName)}
                 </ModuleLink>
               ) : (
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.itemName || "—"}
+                  {displayFormat(item.itemName)}
                 </div>
               )}
               <p className="text-[11px] font-mono text-gray-400 mt-0.5 truncate">
-                {item.itemCode || "—"}
+                {displayFormat(item.itemCode)}
               </p>
             </div>
 
@@ -83,24 +84,24 @@ export default function ProductionOrderListCard({
                   onClick={setSelectedBomForDetails ? () => setSelectedBomForDetails({ bomId: item.bomId, id: item.bomId }) : null}
                   className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-medium text-[13px] font-mono truncate"
                 >
-                  {item.bomCode || item.bomName || "—"}
+                  {displayFormat(item.bomName)}
                 </ModuleLink>
               ) : (
                 <div className="text-[13px] text-gray-800 font-medium font-mono truncate">
-                  {item.bomCode || item.bomName || "—"}
+                  {displayFormat(item.bomName)}
                 </div>
               )}
             </div>
 
             <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
-                Produced Qty
+                Production Qty
               </p>
               <div className="text-[13px] text-gray-900 font-bold font-mono truncate">
-                {formatNumber(item.productionQuantity ?? item.productionQuantityDisplay)}
+                {displayFormat(item.productionQuantityDisplay)}
               </div>
               <p className="text-[11px] font-mono text-gray-500 mt-0.5 truncate">
-                {formatNumber(item.packageQuantity ?? item.packageQuantityDisplay)}
+                {displayFormat(item.packageQuantityDisplay)}
               </p>
             </div>
 
@@ -108,7 +109,7 @@ export default function ProductionOrderListCard({
               <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
                 Status
               </p>
-              <StatusBadge status={item.status || "—"} />
+              <StatusBadge status={item.status} />
             </div>
           </div>
 
@@ -137,7 +138,7 @@ export default function ProductionOrderListCard({
                   No. of Batches
                 </p>
                 <div className="text-[13px] font-mono text-gray-800 font-medium truncate">
-                  {item.batchCount || 0}
+                  {displayFormat(item.batchCount)}
                 </div> */}
               </div>
 
@@ -146,7 +147,7 @@ export default function ProductionOrderListCard({
                   Production Date
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.productionDateFormatted || "—"}
+                  {displayFormat(item.productionDateFormatted, "DATE")}
                 </div>
               </div>
 
@@ -162,11 +163,11 @@ export default function ProductionOrderListCard({
                       onClick={setSelectedUserForDetails && userId ? () => setSelectedUserForDetails({ addedBy: userId, userId, id: userId }) : null}
                       className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-medium text-[13px] truncate"
                     >
-                      {item.addedByName || "—"}
+                      {displayFormat(item.addedByName)}
                     </ModuleLink>
                   ) : (
                     <div className="text-[13px] text-gray-800 font-medium truncate">
-                      {item.addedByName || "—"}
+                      {displayFormat(item.addedByName)}
                     </div>
                   );
                 })()}
@@ -177,7 +178,7 @@ export default function ProductionOrderListCard({
                   Added Date
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.addedDateFormatted || "—"}
+                  {displayFormat(item.addedDateFormatted, "DATE")}
                 </div>
               </div>
 
@@ -186,7 +187,7 @@ export default function ProductionOrderListCard({
                   Reference No.
                 </p>
                 <div className="text-[13px] font-mono text-gray-800 font-medium truncate">
-                  {item.referenceNumber || "—"}
+                  {displayFormat(item.referenceNumber)}
                 </div>
               </div>
             </div>

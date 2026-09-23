@@ -14,7 +14,9 @@ import NumericInput from "@/components/common/NumericInput";
 import ModuleLink from "@/components/common/ModuleLink";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import SideDrawer from "@/components/common/SideDrawer";
+import NoDataMessage from "@/components/common/NoDataMessage";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import { displayFormat } from "@/utils/no-data-formatter";
 import Loader from "@/components/common/Loader";
 import toast from "react-hot-toast";
 
@@ -94,10 +96,7 @@ export default function ProductionMaterialRequestForm({
   batchData,
   initialSuggestions = [],
 }) {
-  console.log(
-    "initialSuggestions in ProductionMaterialRequestForm:",
-    initialSuggestions,
-  );
+ 
 
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
@@ -189,9 +188,9 @@ export default function ProductionMaterialRequestForm({
       navbar: {
         title: "Request Material",
         breadcrumbs: [
-          { label: "Master", href: buildRoute("home", "list") },
+          {label: "Production", },
           {
-            label: "Production Batche",
+            label: "Production Batch",
             href: buildRoute("production-batch", "detail", {
               id: batchData.id,
             }),
@@ -216,7 +215,6 @@ export default function ProductionMaterialRequestForm({
         requestedQty: item.shortage ?? 0,
       }));
 
-      console.log("Formatted initial suggestions:", formatted);
       setItems(formatted);
     }
   }, [initialSuggestions]);
@@ -387,7 +385,7 @@ export default function ProductionMaterialRequestForm({
                   {batchData?.itemName}
                 </ModuleLink>
               ) : (
-                "N/A"
+                displayFormat(batchData?.itemName)
               )}
             </p>
           </div>
@@ -407,14 +405,14 @@ export default function ProductionMaterialRequestForm({
                   {batchData?.bomName}
                 </ModuleLink>
               ) : (
-                "N/A"
+                displayFormat(batchData?.bomName)
               )}
             </p>
           </div>
 
           <div>
             <p className="text-[12px] font-medium text-gray-400">
-              Process Template Name
+              Process Template
             </p>
             <p className="text-[14px] font-semibold text-[#1565c0] mt-0.5">
               {batchData?.processTemplateId ? (
@@ -427,7 +425,7 @@ export default function ProductionMaterialRequestForm({
                   {batchData?.processTemplateName}
                 </ModuleLink>
               ) : (
-                "N/A"
+                displayFormat(batchData?.processTemplateName)
               )}
             </p>
           </div>
@@ -566,8 +564,8 @@ export default function ProductionMaterialRequestForm({
             <tbody className="divide-y divide-gray-100">
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-400">
-                    No items available for material request.
+                  <td colSpan={7} className="py-4">
+                    <NoDataMessage moduleName="Material Request Items" />
                   </td>
                 </tr>
               ) : (
@@ -595,22 +593,22 @@ export default function ProductionMaterialRequestForm({
                             {item.itemName}
                           </ModuleLink>
                           <p className="text-[11px] text-gray-400 font-mono">
-                            ({item.itemCode || "N/A"})
+                            ({displayFormat(item.itemCode)})
                           </p>
                         </div>
                       </div>
                     </td>
 
                     <td className="py-3.5 px-4 text-right font-mono text-gray-800">
-                      {formatDecimal(item.availableQty)} {item.uomName}
+                      {item.availableStockFormatted || `${formatDecimal(item.availableQty)} ${item.uomName}`}
                     </td>
 
                     <td className="py-3.5 px-4 text-right font-mono text-gray-800">
-                      {formatDecimal(item.availableQty)} Unit(s)
+                      {item.availableStockFormatted || `${formatDecimal(item.availableQty)} Unit(s)`}
                     </td>
 
                     <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
-                      {formatDecimal(item.suggestedQty) } {item.uomName}
+                      {item.suggestedQtyFormatted || `${formatDecimal(item.suggestedQty)} ${item.uomName}`}
                     </td>
 
                     <td className="py-3.5 px-4 text-center">

@@ -3,6 +3,8 @@
 import { Package } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
+import NoDataMessage from "@/components/common/NoDataMessage";
+import { displayFormat } from "@/utils/no-data-formatter";
 import { formatQuantityWithUom } from "@/utils/number-formatter";
 
 export default function ProductionBatchProcessItemDetailsTab({
@@ -29,7 +31,6 @@ export default function ProductionBatchProcessItemDetailsTab({
     });
   });
 
-
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
@@ -51,14 +52,14 @@ export default function ProductionBatchProcessItemDetailsTab({
                   <th className="py-3 px-4 min-w-[220px]">Item Name</th>
                   <th className="py-3 px-4 text-right">Utilize Qty</th>
                   <th className="py-3 px-4 text-right">Required Qty</th>
-                  <th className="py-3 px-4 text-right">Consumption Qty</th>
+                  <th className="py-3 px-4 text-right">Consumed Qty</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {entryMaterials.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-gray-400">
-                      No entry materials found.
+                    <td colSpan={8} className="py-4">
+                      <NoDataMessage moduleName="Entry Materials" />
                     </td>
                   </tr>
                 ) : (
@@ -105,7 +106,7 @@ export default function ProductionBatchProcessItemDetailsTab({
                           {item.itemName}
                         </ModuleLink>
                         <p className="text-[11px] text-gray-400 font-mono mt-0.5">
-                          ({item.itemCode || "N/A"})
+                          ({displayFormat(item.itemCode)})
                         </p>
                       </td>
 
@@ -114,11 +115,13 @@ export default function ProductionBatchProcessItemDetailsTab({
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
-                        {formatQuantityWithUom(item.requiredQty, item.uomName)}
+                        {item.requiredQtyFormatted ||
+                          formatQuantityWithUom(item.requiredQty, item.uomName)}
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono text-gray-800">
-                        {formatQuantityWithUom(item.consumedQty, item.uomName)}
+                        {item.consumedQtyFormatted ||
+                          formatQuantityWithUom(item.consumedQty, item.uomName)}
                       </td>
                     </tr>
                   ))
@@ -146,8 +149,8 @@ export default function ProductionBatchProcessItemDetailsTab({
               <tbody className="divide-y divide-gray-100">
                 {exitMaterials.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-gray-400">
-                      No exit materials found.
+                    <td colSpan={8} className="py-4">
+                      <NoDataMessage moduleName="Exit Materials" />
                     </td>
                   </tr>
                 ) : (
@@ -194,7 +197,7 @@ export default function ProductionBatchProcessItemDetailsTab({
                           {item.itemName}
                         </ModuleLink>
                         <p className="text-[11px] text-gray-400 font-mono mt-0.5">
-                          ({item.itemCode || "N/A"})
+                          ({displayFormat(item.itemCode)})
                         </p>
                       </td>
 
@@ -203,14 +206,12 @@ export default function ProductionBatchProcessItemDetailsTab({
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono font-semibold text-gray-900">
-                        {formatQuantityWithUom(
-                          item.requestedQty || item.requestQty || item.requiredQty,
-                          item.uomName,
-                        )}
+                        {item.requiredQtyFormatted ||formatQuantityWithUom(item.requiredQty, item.uomName)}
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono text-gray-800">
-                        {formatQuantityWithUom(item.producedQty, item.uomName)}
+                        {item.producedQtyFormatted ||
+                          formatQuantityWithUom(item.producedQty, item.uomName)}
                       </td>
                     </tr>
                   ))

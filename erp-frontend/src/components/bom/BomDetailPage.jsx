@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import useTabNavigation from "@/hooks/useTabNavigation";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
@@ -13,7 +15,9 @@ import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
-import { formatNumber } from "@/utils/number-formatter";
+import { formatCurrency, formatNumber, formatQuantityWithUom } from "@/utils/number-formatter";
+import { displayFormat } from "@/utils/no-data-formatter";
+import NoDataMessage from "@/components/common/NoDataMessage";
 import {
   Layers,
   FileText,
@@ -45,7 +49,7 @@ function UserInfoCard({ title, name, date, href, onClick }) {
   const initial = name ? name.charAt(0).toUpperCase() : "U";
   return (
     <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-      <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">
+      <h3 className="  text-sm font-semibold text-gray-600    tracking-wider mb-3">
         {title}
       </h3>
       <div className="flex items-center gap-3">
@@ -57,15 +61,15 @@ function UserInfoCard({ title, name, date, href, onClick }) {
             <ModuleLink
               href={href}
               onClick={onClick}
-              className="text-xs font-bold text-[#1565c0] hover:underline cursor-pointer"
+              className="  text-sm font-bold text-[#1565c0] hover:underline cursor-pointer"
             >
-              {name || "User"}
+              {displayFormat(name)}
             </ModuleLink>
           ) : (
-            <p className="text-xs font-bold text-gray-900">{name || "—"}</p>
+            <p className="  text-sm font-bold text-gray-900">{displayFormat(name)}</p>
           )}
           <p className="text-[11px] text-gray-400 font-medium mt-0.5">
-            {date || "—"}
+            {displayFormat(date, "DATE")}
           </p>
         </div>
       </div>
@@ -73,12 +77,22 @@ function UserInfoCard({ title, name, date, href, onClick }) {
   );
 }
 
+const VALID_TABS = ["summary"];
+
 export default function BomDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
   const { can } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("summary");
+  const bomData = data?.settings?.data || data?.data || data;
+
+  const { activeTab, getTabHref } = useTabNavigation({
+    moduleKey: "bom",
+    entityId: bomData?.id,
+    defaultTab: "summary",
+    validTabs: VALID_TABS,
+  });
+
   const [openAccordionStates, setOpenAccordionStates] = useState({});
   const [drawerState, setDrawerState] = useState({
     isOpen: false,
@@ -93,7 +107,6 @@ export default function BomDetailPage({ data }) {
     setDrawerState({ isOpen: true, moduleName, id });
   };
 
-  const bomData = data?.settings?.data || data?.data || data;
   const targetId = bomData?.id;
 
   const {
@@ -128,7 +141,6 @@ export default function BomDetailPage({ data }) {
     attachments = [],
     files = [],
   } = bomData || {};
-  console.log(data, "data")
   const isActive = status === "Active" || status === "active";
   const allAttachments = attachments.length > 0 ? attachments : files;
 
@@ -199,11 +211,11 @@ export default function BomDetailPage({ data }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Production" },
           { label: "Bill of Materials", href: buildRoute("bom", "list") },
         ],
         actionButton:
-          targetId && can(CAPABILITIES.BOM?.UPDATE || "BOM_UPDATE")
+          targetId && can(CAPABILITIES.BOM?.UPDATE || "BOM_UPDATE") && !(Number(bomData?.productionOrderCount) > 0)
             ? {
               label: "Edit",
               onClick: () => router.push(buildRoute("bom", "edit", { id: targetId })),
@@ -280,7 +292,7 @@ export default function BomDetailPage({ data }) {
       },
     )}`;
   
-    console.log(processList, "processList");
+
   return (
     <div className="h-full overflow-hidden ">
       <div className="flex gap-8 ps-10 h-full">
@@ -289,10 +301,10 @@ export default function BomDetailPage({ data }) {
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-base font-bold text-gray-900 leading-tight">
-                  {bomName || "BOM Title"}
+                  {displayFormat(bomName)}
                 </h2>
-                <p className="text-xs text-gray-500 font-medium mt-0.5">
-                  {bomCode || "—"}
+                <p className="  text-sm text-gray-500 font-medium mt-0.5">
+                  {displayFormat(bomCode)}
                 </p>
               </div>
               <button
@@ -302,10 +314,9 @@ export default function BomDetailPage({ data }) {
             </div>
 
             <div className="space-y-1.5">
-              <button
-                type="button"
-                onClick={() => setActiveTab("summary")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              <Link
+                href={getTabHref("summary")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg   text-sm font-semibold transition cursor-pointer ${
                   activeTab === "summary"
                     ? "bg-[#1565c0] text-white shadow-sm"
                     : "text-gray-700 hover:bg-gray-50"
@@ -315,7 +326,7 @@ export default function BomDetailPage({ data }) {
                   <FileText size={16} />
                   <span>Summary</span>
                 </div>
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -338,15 +349,15 @@ export default function BomDetailPage({ data }) {
                     />
                     <div>
                       <h3 className="text-sm font-bold text-gray-900 leading-snug">
-                        {bomName}
+                        {displayFormat(bomName)}
                       </h3>
-                      <p className="text-xs text-gray-400 font-medium mt-0.5">
-                        {bomCode || "—"}
+                      <p className="  text-sm text-gray-400 font-medium mt-0.5">
+                        {displayFormat(bomCode)}
                       </p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-xs divide-y divide-gray-50 pt-1">
+                  <div className="space-y-2   text-sm divide-y divide-gray-50 pt-1">
                     <div className="flex justify-between py-1 items-center">
                       <span className="text-gray-500 font-medium">
                         Item Name
@@ -357,11 +368,11 @@ export default function BomDetailPage({ data }) {
                           onClick={() => handleOpenDrawer("Item", itemId)}
                           className="text-[#1565c0] font-semibold hover:underline text-right truncate max-w-[170px] cursor-pointer"
                         >
-                          {itemName || `Item #${itemId}`}
+                          {displayFormat(itemName)}
                         </ModuleLink>
                       ) : (
                         <span className="font-semibold text-gray-800 text-right truncate max-w-[170px]">
-                          {itemName || "—"}
+                          {displayFormat(itemName)}
                         </span>
                       )}
                     </div>
@@ -383,12 +394,11 @@ export default function BomDetailPage({ data }) {
                           }
                           className="text-[#1565c0] font-semibold hover:underline text-right truncate max-w-[170px] cursor-pointer"
                         >
-                          {processTemplateName ||
-                            `Template #${processTemplateId}`}
+                          {displayFormat(processTemplateName)}
                         </ModuleLink>
                       ) : (
                         <span className="font-semibold text-gray-800 text-right truncate max-w-[170px]">
-                          {processTemplateName || "—"}
+                          {displayFormat(processTemplateName)}
                         </span>
                       )}
                     </div>
@@ -407,7 +417,7 @@ export default function BomDetailPage({ data }) {
                         Reference Code
                       </span>
                       <span className="text-gray-800 font-medium">
-                        {referenceNumber || "-"}
+                        {displayFormat(referenceNumber)}
                       </span>
                     </div>
 
@@ -419,17 +429,17 @@ export default function BomDetailPage({ data }) {
                 </div>
 
                 <div className="md:col-span-4 bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col justify-between space-y-3">
-                  <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <h3 className="  text-sm font-semibold text-gray-600    tracking-wider">
                     Production Item Info
                   </h3>
 
-                  <div className="space-y-2 text-xs divide-y divide-gray-50 pt-1 flex-1">
+                  <div className="space-y-2   text-sm divide-y divide-gray-50 pt-1 flex-1">
                     <div className="flex justify-between py-1">
                       <span className="text-gray-500 font-medium">
                         Print Name
                       </span>
                       <span className="font-semibold text-gray-800 text-right truncate max-w-[170px]">
-                        {itemName || "Final Gold Biscuit"}
+                        {displayFormat(itemName)}
                       </span>
                     </div>
 
@@ -438,7 +448,7 @@ export default function BomDetailPage({ data }) {
                         Item Code
                       </span>
                       <span className="font-semibold text-gray-800 font-mono">
-                        {itemCode || "FINALGOL001"}
+                        {displayFormat(itemCode)}
                       </span>
                     </div>
 
@@ -447,14 +457,14 @@ export default function BomDetailPage({ data }) {
                         Short Name
                       </span>
                       <span className="font-semibold text-gray-800 font-mono">
-                        {itemCode || "FINALGOLDBISCUIT"}
+                        {displayFormat(bomData?.shortName)}
                       </span>
                     </div>
 
                     <div className="flex justify-between py-1">
                       <span className="text-gray-500 font-medium">Barcode</span>
                       <span className="font-semibold text-gray-800 font-mono">
-                        3609121563387
+                        {displayFormat(bomData?.itemBarcode)}
                       </span>
                     </div>
 
@@ -463,7 +473,7 @@ export default function BomDetailPage({ data }) {
                         Cost Per Unit
                       </span>
                       <span className="font-bold text-gray-900">
-                        {formattedCost}
+                        {displayFormat(formattedCost)}
                       </span>
                     </div>
 
@@ -479,25 +489,18 @@ export default function BomDetailPage({ data }) {
                 </div>
 
                 <div className="md:col-span-2 bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col">
-                  <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">
+                  <h3 className="  text-sm font-semibold text-gray-600    tracking-wider mb-3">
                     Attachments
                   </h3>
 
                   {allAttachments.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center py-6 text-center">
-                      <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-2">
-                        <Search size={24} />
-                      </div>
-                      <p className="text-xs text-gray-400 font-medium">
-                        No Attachments found.
-                      </p>
-                    </div>
+                    <NoDataMessage moduleName="Attachments" />
                   ) : (
                     <div className="space-y-2 overflow-y-auto max-h-[220px] pr-1">
                       {allAttachments.map((att, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between p-2.5 rounded-lg border border-gray-200 bg-gray-50 text-xs"
+                          className="flex items-center justify-between p-2.5 rounded-lg border border-gray-200 bg-gray-50   text-sm"
                         >
                           <span className="font-medium text-gray-800 truncate max-w-[170px]">
                             {att.originalFileName ||
@@ -559,13 +562,13 @@ export default function BomDetailPage({ data }) {
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                   <h3 className="text-sm font-bold text-gray-900">
-                    {processTemplateName || "Process Template"}
+                    {displayFormat(processTemplateName)} 
                   </h3>
 
                   <button
                     type="button"
                     onClick={toggleAllAccordions}
-                    className="bg-[#1565c0] hover:bg-[#0f57a6] text-white text-xs font-semibold px-4 py-1.5 rounded-md shadow-sm transition cursor-pointer"
+                    className="bg-[#1565c0] hover:bg-[#0f57a6] text-white   text-sm font-semibold px-4 py-1.5 rounded-md shadow-sm transition cursor-pointer"
                   >
                     {areAllOpen ? "Close All" : "Open All"}
                   </button>
@@ -573,9 +576,7 @@ export default function BomDetailPage({ data }) {
 
                 <div className="space-y-3">
                   {processList.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-gray-400 italic">
-                      No process steps configured for this BOM.
-                    </div>
+                    <NoDataMessage moduleName="Process Steps" />
                   ) : (
                     processList.map((proc, pIdx) => {
                       const isOpen = !!openAccordionStates[pIdx];
@@ -592,10 +593,11 @@ export default function BomDetailPage({ data }) {
                             {
                               id: `main-${itemId}`,
                               itemId: Number(itemId),
-                              itemName: itemName || `Item #${itemId}`,
-                              itemCode: itemCode || "",
-                              itemImageUrl: itemImageUrl || null,
-                              quantity: 1,
+                              itemName: displayFormat(itemName),
+                              itemCode: displayFormat(itemCode),
+                              itemImageUrl: itemImageUrl,
+                              quantity: bomData?.primitiveQuantity,
+                              uomName: bomData?.uomName,
                               isMainOutput: true,
                             },
                           ];
@@ -618,15 +620,13 @@ export default function BomDetailPage({ data }) {
                           <button
                             type="button"
                             onClick={() => toggleSingleAccordion(pIdx)}
-                            className={`w-full px-5 py-3.5 text-xs font-bold flex items-center justify-between transition cursor-pointer ${
+                            className={`w-full px-5 py-3.5   text-sm font-bold flex items-center justify-between transition cursor-pointer ${
                               isOpen
                                 ? "bg-[#1565c0] text-white shadow-sm"
                                 : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                             }`}
                           >
-                            <span className="tracking-wide">
-                              {procName}
-                            </span>
+                            <span className="tracking-wide">{procName}</span>
                             {isOpen ? (
                               <ChevronUp size={18} />
                             ) : (
@@ -644,12 +644,12 @@ export default function BomDetailPage({ data }) {
                             <div className="overflow-hidden">
                               <div className="p-5 bg-white grid grid-cols-1 lg:grid-cols-12 gap-6 items-start border-t border-gray-200">
                                 <div className="lg:col-span-6 space-y-2.5">
-                                  <h4 className="text-xs font-bold text-gray-700">
+                                  <h4 className="  text-sm font-bold text-gray-700">
                                     Entry Material
                                   </h4>
 
                                   <div className="overflow-x-auto rounded-lg border border-gray-200">
-                                    <table className="w-full text-left text-xs border-collapse">
+                                    <table className="w-full text-left   text-sm border-collapse">
                                       <thead>
                                         <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
                                           <th className="py-2.5 px-3">
@@ -666,14 +666,11 @@ export default function BomDetailPage({ data }) {
                                           </th>
                                         </tr>
                                       </thead>
-                                      <tbody className="divide-y divide-gray-100 text-xs">
+                                      <tbody className="divide-y divide-gray-100   text-sm">
                                         {proc.entryItems.length === 0 ? (
                                           <tr>
-                                            <td
-                                              colSpan={4}
-                                              className="py-4 text-center text-gray-400 italic"
-                                            >
-                                              No Entry Material found.
+                                            <td colSpan={4}>
+                                              <NoDataMessage moduleName="Entry Material" />
                                             </td>
                                           </tr>
                                         ) : (
@@ -708,7 +705,6 @@ export default function BomDetailPage({ data }) {
                                                 </td>
                                                 <td className="py-2.5 px-3 font-semibold text-[#1565c0]">
                                                   <div className="flex items-center gap-1.5">
-                                                    
                                                     <ModuleLink
                                                       href={buildRoute(
                                                         "item",
@@ -723,8 +719,9 @@ export default function BomDetailPage({ data }) {
                                                       }
                                                       className="hover:underline text-left cursor-pointer font-semibold text-[#1565c0]"
                                                     >
-                                                      {eItem.itemName ||
-                                                        `Item #${eItem.itemId}`}
+                                                      {displayFormat(
+                                                        eItem.itemName,
+                                                      )}
                                                     </ModuleLink>
                                                   </div>
                                                   <p className="text-[10px] text-gray-400 font-mono font-normal">
@@ -734,23 +731,19 @@ export default function BomDetailPage({ data }) {
                                                   </p>
                                                 </td>
                                                 <td className="py-2.5 px-3 text-right font-medium text-gray-800">
-                                                  {eItem.quantity} 
+                                                  {formatQuantityWithUom(
+                                                    eItem.quantity,
+                                                    eItem.uomName,
+                                                  )}
                                                 </td>
                                                 <td className="py-2.5 px-3 text-right font-semibold text-gray-900">
                                                   {eItem.isInternalTransfer ? (
                                                     <span className="text-gray-400 font-normal">
-                                                      -
+                                                      {displayFormat(null, "COST")}
                                                     </span>
                                                   ) : (
                                                     <>
-                                                      {currencySymbol}{" "}
-                                                      {lineCost.toLocaleString(
-                                                        undefined,
-                                                        {
-                                                          minimumFractionDigits: 2,
-                                                          maximumFractionDigits: 2,
-                                                        },
-                                                      )}
+                                                      {formatCurrency(lineCost, currencySymbol)}
                                                     </>
                                                   )}
                                                 </td>
@@ -764,12 +757,12 @@ export default function BomDetailPage({ data }) {
                                 </div>
 
                                 <div className="lg:col-span-6 space-y-2.5">
-                                  <h4 className="text-xs font-bold text-gray-700">
+                                  <h4 className="  text-sm font-bold text-gray-700">
                                     Exit Material
                                   </h4>
 
                                   <div className="overflow-x-auto rounded-lg border border-gray-200">
-                                    <table className="w-full text-left text-xs border-collapse">
+                                    <table className="w-full text-left   text-sm border-collapse">
                                       <thead>
                                         <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
                                           <th className="py-2.5 px-3">
@@ -783,14 +776,11 @@ export default function BomDetailPage({ data }) {
                                           </th>
                                         </tr>
                                       </thead>
-                                      <tbody className="divide-y divide-gray-100 text-xs">
+                                      <tbody className="divide-y divide-gray-100   text-sm">
                                         {exitItemsToRender.length === 0 ? (
                                           <tr>
-                                            <td
-                                              colSpan={3}
-                                              className="py-4 text-center text-gray-400 italic"
-                                            >
-                                              No Exit Material found.
+                                            <td colSpan={3}>
+                                              <NoDataMessage moduleName="Exit Material" />
                                             </td>
                                           </tr>
                                         ) : (
@@ -833,8 +823,9 @@ export default function BomDetailPage({ data }) {
                                                     }
                                                     className="hover:underline text-left cursor-pointer font-semibold text-[#1565c0]"
                                                   >
-                                                    {exItem.itemName ||
-                                                      `Item #${exItem.itemId}`}
+                                                    {displayFormat(
+                                                      exItem.itemName,
+                                                    )}
                                                   </ModuleLink>
                                                   <p className="text-[10px] text-gray-400 font-mono font-normal">
                                                     {exItem.itemCode
@@ -843,7 +834,10 @@ export default function BomDetailPage({ data }) {
                                                   </p>
                                                 </td>
                                                 <td className="py-2.5 px-3 text-right font-medium text-gray-800">
-                                                  {formatNumber(exItem.quantity)} {exItem.uomName || bomData?.uomName || ""}
+                                                  {formatQuantityWithUom(
+                                                    exItem.quantity,
+                                                    exItem.uomName,
+                                                  )}
                                                 </td>
                                               </tr>
                                             ),

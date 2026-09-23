@@ -2,7 +2,48 @@
 
 const MODULE_STATUS_OVERRIDES = {
   "production-batch": {
-    Pending: { label: "Waiting for Stock", color: "text-amber-600 font-semibold", bg: "bg-amber-50" },
+    Pending: {
+      label: "Waiting for Stock",
+      color: "text-amber-600 font-semibold",
+      bg: "bg-amber-50",
+    },
+    Completed: {
+      label: "Completed",
+      color: "text-green-600 font-semibold",
+      bg: "bg-green-50",
+    },
+    StockReceived: {
+      label: "Stock Received",
+      color: "text-blue-600 font-semibold",
+      bg: "bg-blue-50",
+    },
+    "Stock Received": {
+      label: "Stock Received",
+      color: "text-blue-600 font-semibold",
+      bg: "bg-blue-50",
+    },
+    InProgress: {
+      label: "In Progress",
+      color: "text-purple-600 font-semibold",
+      bg: "bg-purple-50",
+    },
+    Processed: {
+      label: "Processed",
+      color: "text-green-600 font-semibold",
+      bg: "bg-green-50",
+    },
+    Cancelled: {
+      label: "Cancelled",
+      color: "text-red-600 font-semibold",
+      bg: "bg-red-50",
+    },
+  },
+  "batch-process": {
+    InProgress: {
+      label: "In Progress",
+      color: "text-amber-500 font-semibold",
+      bg: "bg-amber-50",
+    },
   },
 };
 
@@ -15,7 +56,7 @@ export const STATUS_CONFIG = {
   InProgress: { label: "In Progress", color: "text-purple-600 font-semibold", bg: "bg-purple-50" },
   "In Progress": { label: "In Progress", color: "text-purple-600 font-semibold", bg: "bg-purple-50" },
   Completed: { label: "Completed", color: "text-green-600 font-semibold", bg: "bg-green-50" },
-  Finished: { label: "Finished", color: "text-green-600 font-semibold", bg: "bg-green-50" },
+  Processed: { label: "Processed", color: "text-green-600 font-semibold", bg: "bg-green-50" },
   Cancelled: { label: "Cancelled", color: "text-red-600 font-semibold", bg: "bg-red-50" },
 
   // ProductionBatchProcessStatus
@@ -45,14 +86,17 @@ export const STATUS_CONFIG = {
   "Fully Issued": { label: "Fully Issued", color: "text-green-600 font-semibold", bg: "bg-green-50" },
   MaterialRequested: { label: "Material Requested", color: "text-blue-600 font-semibold", bg: "bg-blue-50" },
   "Material Requested": { label: "Material Requested", color: "text-blue-600 font-semibold", bg: "bg-blue-50" },
-
+  Delivered: { label: "Delivered", color: "text-green-600 font-semibold", bg: "bg-green-50" },
+  
+  
   // General Statuses
   InProduction: { label: "In Production", color: "text-blue-600 font-semibold", bg: "bg-blue-50" },
   "In Production": { label: "In Production", color: "text-blue-600 font-semibold", bg: "bg-blue-50" },
   Draft: { label: "Draft", color: "text-gray-600 font-semibold", bg: "bg-gray-100" },
   Active: { label: "Active", color: "text-green-700 font-semibold", bg: "bg-green-100", dot: "bg-green-500" },
   Inactive: { label: "Inactive", color: "text-red-700 font-semibold", bg: "bg-red-100", dot: "bg-red-500" },
-  PartialCancelled: { label: "Partially Cancelled", color: "text-yellow-800 font-semibold", bg: "bg-yellow-100" },
+  PartialCancelled: { label: "Partially Cancelled", color: "text-yellow-600 font-semibold", bg: "bg-yellow-50" },
+  "Partially Cancelled": { label: "Partially Cancelled", color: "text-yellow-600 font-semibold", bg: "bg-yellow-50" },
 };
 
 

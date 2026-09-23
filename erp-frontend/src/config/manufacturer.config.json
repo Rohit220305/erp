@@ -1,5 +1,6 @@
 {
   "moduleName": "Manufacturer",
+  "parentModule": "Master",
   "title": "Manufacturer",
   "permissions": {
     "list": "MANUFACTURER_LIST",

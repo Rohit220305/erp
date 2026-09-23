@@ -10,17 +10,19 @@ import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
 import ModuleLink from "@/components/common/ModuleLink";
 
-const DetailRow = ({ label, value, href, onClick, valueClassName = "" }) => {
-  if (!value) return null;
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
+
+const DetailRow = ({ label, value, href, onClick, valueClassName = "", valueNode }) => {
   return (
     <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
       <span className="text-gray-500 font-medium">{label}</span>
-      {href ? (
+      {valueNode ? valueNode : href ? (
         <ModuleLink href={href} onClick={onClick} className="text-[#1565c0] font-medium text-sm">
-          {value}
+          {displayFormat(value)}
         </ModuleLink>
       ) : (
-        <span className={`text-gray-900 ${valueClassName}`}>{value}</span>
+        <span className={`text-gray-900 ${valueClassName}`}>{displayFormat(value)}</span>
       )}
     </div>
   );
@@ -110,11 +112,7 @@ export default function ItemCategoryDetailPage({ data }) {
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">Status</span>
-                <span
-                  className={`font-semibold ${data.status === "Active" ? "text-green-600" : "text-red-500"}`}
-                >
-                  {data.status}
-                </span>
+                <StatusBadge status={data.status} />
               </div>
             </div>
           </div>
@@ -146,17 +144,7 @@ export default function ItemCategoryDetailPage({ data }) {
               <DetailRow label="Storage types" value={storageTypesValue} />
               <DetailRow
                 label="Status"
-                value={
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      data.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {data.status}
-                  </span>
-                }
+                valueNode={<StatusBadge status={data.status} />}
               />
             </div>
 

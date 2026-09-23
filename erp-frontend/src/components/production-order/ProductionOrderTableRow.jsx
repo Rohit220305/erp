@@ -7,7 +7,7 @@ import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 
-import { formatNumber } from "@/utils/number-formatter";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ProductionOrderTableRow({
   item,
@@ -41,10 +41,10 @@ export default function ProductionOrderTableRow({
                   onClick={setSelectedItemForDetails ? () => setSelectedItemForDetails(item) : null}
                   className="font-bold text-[#1565c0] hover:underline cursor-pointer"
                 >
-                  {value || "—"}
+                  {displayFormat(value)}
                 </ModuleLink>
               ) : (
-                <span className="font-bold text-gray-800">{value || "—"}</span>
+                <span className="font-bold text-gray-800">{displayFormat(value)}</span>
               )}
             </td>
           );
@@ -59,10 +59,10 @@ export default function ProductionOrderTableRow({
                   onClick={setSelectedOutputItemForDetails ? () => setSelectedOutputItemForDetails({ itemId: item.itemId, id: item.itemId }) : null}
                   className="font-medium text-[#1565c0] hover:underline cursor-pointer"
                 >
-                  {value || "—"}
+                  {displayFormat(value)}
                 </ModuleLink>
               ) : (
-                <span className="font-medium text-gray-800">{value || "—"}</span>
+                <span className="font-medium text-gray-800">{displayFormat(value)}</span>
               )}
             </td>
           );
@@ -77,10 +77,10 @@ export default function ProductionOrderTableRow({
                   onClick={setSelectedBomForDetails ? () => setSelectedBomForDetails({ bomId: item.bomId, id: item.bomId }) : null}
                   className="font-medium text-[#1565c0] hover:underline cursor-pointer font-mono"
                 >
-                  {value || "—"}
+                  {displayFormat(value)}
                 </ModuleLink>
               ) : (
-                <span className="font-medium text-gray-800 font-mono">{value || "—"}</span>
+                <span className="font-medium text-gray-800 font-mono">{displayFormat(value)}</span>
               )}
             </td>
           );
@@ -96,10 +96,10 @@ export default function ProductionOrderTableRow({
                   onClick={setSelectedUserForDetails && userId ? () => setSelectedUserForDetails({ addedBy: userId, userId, id: userId }) : null}
                   className="font-medium text-[#1565c0] hover:underline cursor-pointer"
                 >
-                  {value || "—"}
+                  {displayFormat(value)}
                 </ModuleLink>
               ) : (
-                <span className="font-medium text-gray-800">{value || "—"}</span>
+                <span className="font-medium text-gray-800">{displayFormat(value)}</span>
               )}
             </td>
           );
@@ -109,7 +109,7 @@ export default function ProductionOrderTableRow({
           return (
             <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap">
               <span className="font-mono text-xs text-gray-700 bg-gray-50 ">
-                {value || "—"}
+                {displayFormat(value)}
               </span>
             </td>
           );
@@ -125,11 +125,17 @@ export default function ProductionOrderTableRow({
 
         return (
           <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap text-gray-700 font-mono">
-            {col.key === "productionQuantity" || col.key === "packageQuantity" || col.key === "pendingQuantity"
-              ? formatNumber(value)
-              : value !== null && value !== undefined && value !== ""
-              ? value
-              : "—"}
+            {displayFormat(
+              col.key === "productionQuantity"
+                ? item.productionQuantityDisplay
+                : col.key === "packageQuantity"
+                ? item.packageQuantityDisplay
+                : col.key === "pendingQuantity"
+                ? item.pendingQuantityDisplay
+                : value !== null && value !== undefined && value !== ""
+                ? (col.type === "date" ? displayFormat(value, "DATE") : value)
+                : null
+            )}
           </td>
         );
       })}

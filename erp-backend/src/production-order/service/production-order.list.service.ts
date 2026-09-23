@@ -82,6 +82,7 @@ export class ProductionOrderListService {
         'po.remark AS remark',
         'po.plantId AS plantId',
         'po.customerId AS customerId',
+        'po.customerName AS customerName',
         'po.status AS status',
         'po.addedDate AS addedDate',
         'po.updatedDate AS updatedDate',
@@ -166,9 +167,9 @@ export class ProductionOrderListService {
             primitiveQuantity: numPrimitiveQty,
             packageQuantity: numPackageQty,
             pendingPackageQuantity: numPendingPackageQty,
-            productionQuantityDisplay: `${numProdQty.toFixed(2)}${uomSuffix}`,
-            pendingQuantityDisplay: `${numPendingQty.toFixed(2)}${uomSuffix}`,
-            packageQuantityDisplay: `${numPackageQty.toFixed(2)}${pkgSuffix}`,
+            productionQuantityDisplay: this.general.formatQuantityWithUom(numProdQty, row.itemUomName),
+            pendingQuantityDisplay: this.general.formatQuantityWithUom(numPendingQty, row.itemUomName),
+            packageQuantityDisplay: this.general.formatQuantityWithUom(numPackageQty, row.packageUomName || 'Unit(s)'),
             addedDateFormatted: row.addedDate ? await this.general.dateFormat(row.addedDate) : null,
             updatedDateFormatted: row.updatedDate ? await this.general.dateFormat(row.updatedDate) : null,
             productionDateFormatted: row.productionDate ? await this.general.dateFormat(row.productionDate, false) : null,
@@ -218,6 +219,7 @@ export class ProductionOrderListService {
         'po.remark AS remark',
         'po.plantId AS plantId',
         'po.customerId AS customerId',
+        'po.customerName AS customerName',
         'po.status AS status',
         'po.addedDate AS addedDate',
         'po.updatedDate AS updatedDate',
@@ -268,7 +270,7 @@ export class ProductionOrderListService {
         'inProgressQuantity',
       );
       qb.addSelect(
-        '(SELECT IFNULL(SUM(pb.batchQuantity), 0) FROM production_batch pb WHERE pb.productionOrderId = po.id AND pb.sysRecDeleted = 0 AND pb.status IN (\'Completed\', \'Finished\'))',
+        '(SELECT IFNULL(SUM(pb.producedQuantity), 0) FROM production_batch pb WHERE pb.productionOrderId = po.id AND pb.sysRecDeleted = 0 AND pb.status IN (\'Completed\', \'Finished\'))',
         'producedQuantity',
       );
 
@@ -303,11 +305,11 @@ export class ProductionOrderListService {
       poDetails.packageQuantity = numPackageQty;
       poDetails.pendingPackageQuantity = numPendingPackageQty;
 
-      poDetails.productionQuantityDisplay = `${numProdQty.toFixed(2)}${uomSuffix}`;
-      poDetails.pendingQuantityDisplay = `${numPendingQty.toFixed(2)}${uomSuffix}`;
-      poDetails.inProgressQuantityDisplay = `${numInProgressQty.toFixed(2)}${uomSuffix}`;
-      poDetails.producedQuantityDisplay = `${numProducedQty.toFixed(2)}${uomSuffix}`;
-      poDetails.packageQuantityDisplay = `${numPackageQty.toFixed(2)}${pkgSuffix}`;
+      poDetails.productionQuantityDisplay = this.general.formatQuantityWithUom(numProdQty, poDetails.itemUomName);
+      poDetails.pendingQuantityDisplay = this.general.formatQuantityWithUom(numPendingQty, poDetails.itemUomName);
+      poDetails.inProgressQuantityDisplay = this.general.formatQuantityWithUom(numInProgressQty, poDetails.itemUomName);
+      poDetails.producedQuantityDisplay = this.general.formatQuantityWithUom(numProducedQty, poDetails.itemUomName);
+      poDetails.packageQuantityDisplay = this.general.formatQuantityWithUom(numPackageQty, poDetails.packageUomName || 'Unit(s)');
 
       poDetails.addedDateFormatted = poDetails.addedDate ? await this.general.dateFormat(poDetails.addedDate) : null;
       poDetails.updatedDateFormatted = poDetails.updatedDate ? await this.general.dateFormat(poDetails.updatedDate) : null;
@@ -396,11 +398,11 @@ export class ProductionOrderListService {
       const costResult = BomCostUtility.calculateLiveCost(itemsForCostCalc, itemPriceMap);
 
       poDetails.itemCostPerUnit = costResult.totalUnitCost;
-      poDetails.itemCostPerUnitFormatted = symbolPrefix ? `${symbolPrefix}${costResult.totalUnitCost.toFixed(2)}` : costResult.totalUnitCost.toFixed(2);
+      poDetails.itemCostPerUnitFormatted = this.general.formatCurrency(costResult.totalUnitCost, currencySymbol);
 
       const estimatedTotalCost = parseFloat((costResult.totalUnitCost * numPackageQty).toFixed(4));
       poDetails.estimatedTotalCost = estimatedTotalCost;
-      poDetails.estimatedTotalCostFormatted = symbolPrefix ? `${symbolPrefix}${estimatedTotalCost.toFixed(2)}` : estimatedTotalCost.toFixed(2);
+      poDetails.estimatedTotalCostFormatted = this.general.formatCurrency(estimatedTotalCost, currencySymbol);
 
       const uniqueItemMap = new Map<number, any>();
       for (const r of rawItems) {

@@ -138,7 +138,6 @@ export class ItemService {
   }
 
   async updateItem(req, params, newFiles: any[]) {
-    console.log('updateItem called with params:', params);
     
     let return_data: any = {};
     try {

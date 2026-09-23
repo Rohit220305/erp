@@ -33,6 +33,7 @@ import { ProductionBatchProcessEntity } from 'src/production-batch/entity/produc
 import { ProductionBatchItemEntity } from 'src/production-batch/entity/production-batch-item.entity';
 import { BatchProcessLogEntity } from 'src/production-batch/entity/batch-process-log.entity';
 import { BatchProcessLogItemEntity } from 'src/production-batch/entity/batch-process-log-item.entity';
+import { ProductionBatchProcessTimelineEntity } from 'src/production-batch/entity/production-batch-process-timeline.entity';
 
 import { MaterialRequestEntity } from 'src/material-request/entity/material-request.entity';
 import { MaterialRequestItemEntity } from 'src/material-request/entity/material-request-item.entity';
@@ -79,6 +80,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     BatchProcessLogEntity,
     BatchProcessLogItemEntity,
     ProductionBatchItemEntity,
+    ProductionBatchProcessTimelineEntity,
 
     MaterialRequestEntity,
     MaterialRequestItemEntity,

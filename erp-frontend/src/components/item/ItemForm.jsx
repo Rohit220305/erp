@@ -22,6 +22,7 @@ import itemConfig from "@/config/item.config.json";
 import { getItemSchema } from "@/lib/validation/item.schema";
 import { X, Info, Star, RefreshCw } from "lucide-react";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import NumericInput from "@/components/common/NumericInput";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "Active" },
@@ -89,6 +90,7 @@ const BASE_DEFAULTS = {
   shelfLifeUnit: "month",
   batchCode: "",
   isScrap: "No",
+  isInHouseProduction: "No",
   description: "",
   remark: "",
   status: "Active",
@@ -687,6 +689,40 @@ export default function ItemForm({
     </div>
   );
 
+  const renderNumericField = ({
+    name,
+    label,
+    required = false,
+    disabled = false,
+    readOnly = false,
+    min,
+    maxDecimals = 4,
+    ...props
+  }) => (
+    <div className="space-y-1.5" id={`field-${name}`}>
+      <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+        {label} {required && <span className="text-red-400 ml-1">*</span>}
+      </label>
+      <NumericInput
+        value={
+          formData[name] === null || formData[name] === undefined
+            ? ""
+            : formData[name]
+        }
+        onChange={(val) => handleChange(name, val)}
+        disabled={disabled || readOnly}
+        min={min}
+        maxDecimals={maxDecimals}
+        className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+          ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-200 hover:border-gray-300"}
+          ${errors[name] ? "border-red-400 bg-red-50" : ""}`}
+        placeholder={props.placeholder || `Enter ${label}`}
+        {...props}
+      />
+      {errors[name] && <p className="text-xs text-red-500">{errors[name]}</p>}
+    </div>
+  );
+
   return (
     <div className="pt-6 h-full overflow-y-auto pb-20 mx-6 relative">
       {loading && <Loader overlay />}
@@ -753,6 +789,12 @@ export default function ItemForm({
               required: true,
             })}
             {renderSelectField({
+              name: "isInHouseProduction",
+              label: "In-House Production?",
+              options: YES_NO_OPTIONS,
+              required: true,
+            })}
+            {renderSelectField({
               name: "manufacturerId",
               label: "Manufacturer",
               options: manufacturerOptions,
@@ -783,11 +825,9 @@ export default function ItemForm({
               required: true,
               companyScoped: true,
             })}
-            {renderInputField({
+            {renderNumericField({
               name: "unitsPerPacking",
               label: "Units Per Packing",
-              type: "number",
-              step: "0.01",
               required: true,
             })}
 
@@ -798,11 +838,9 @@ export default function ItemForm({
               required: true,
               companyScoped: true,
             })}
-            {renderInputField({
+            {renderNumericField({
               name: "primitiveQuantity",
               label: "Primitive Quantity",
-              type: "number",
-              step: "0.01",
               required: true,
             })}
             {renderSelectField({
@@ -822,27 +860,21 @@ export default function ItemForm({
               required: true,
               companyScoped: true,
             })}
-            {renderInputField({
+            {renderNumericField({
               name: "purchasePrice",
               label: "Purchase Price",
-              type: "number",
-              step: "0.01",
               required: true,
             })}
 
-            {renderInputField({
+            {renderNumericField({
               name: "costPrice",
               label: "Cost Price",
-              type: "number",
-              step: "0.01",
               required: true,
             })}
 
-            {renderInputField({
+            {renderNumericField({
               name: "costPerUnit",
               label: "Cost Per Unit",
-              type: "number",
-              step: "0.01",
               required: true,
             })}
 
@@ -895,11 +927,11 @@ export default function ItemForm({
               required: true,
             })}
             <div className="grid md:grid-cols-2 gap-x-16 gap-y-6 ">
-              {renderInputField({
+              {renderNumericField({
                 name: "shelfLife",
                 label: "Shelf Life",
-                type: "number",
                 required: true,
+                maxDecimals: 0,
               })}
               {renderSelectField({
                 name: "shelfLifeUnit",
@@ -1076,16 +1108,14 @@ export default function ItemForm({
                 </label>
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <input
-                      type="number"
-                      step="0.01"
+                    <NumericInput
                       value={
                         formData.weight === null ||
                         formData.weight === undefined
                           ? ""
                           : formData.weight
                       }
-                      onChange={(e) => handleChange("weight", e.target.value)}
+                      onChange={(val) => handleChange("weight", val)}
                       className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                         ${errors.weight ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}
                     />
@@ -1134,16 +1164,14 @@ export default function ItemForm({
                 </label>
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <input
-                      type="number"
-                      step="0.01"
+                    <NumericInput
                       value={
                         formData.volume === null ||
                         formData.volume === undefined
                           ? ""
                           : formData.volume
                       }
-                      onChange={(e) => handleChange("volume", e.target.value)}
+                      onChange={(val) => handleChange("volume", val)}
                       className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                         ${errors.volume ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}
                     />
@@ -1196,9 +1224,7 @@ export default function ItemForm({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
-                    <input
-                      type="number"
-                      step="0.01"
+                    <NumericInput
                       placeholder=""
                       value={
                         formData.length === null ||
@@ -1206,30 +1232,26 @@ export default function ItemForm({
                           ? ""
                           : formData.length
                       }
-                      onChange={(e) => handleChange("length", e.target.value)}
+                      onChange={(val) => handleChange("length", val)}
                       className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                         ${errors.length ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}
                     />
                   </div>
                   <div className="flex-1">
-                    <input
-                      type="number"
-                      step="0.01"
+                    <NumericInput
                       placeholder=""
                       value={
                         formData.width === null || formData.width === undefined
                           ? ""
                           : formData.width
                       }
-                      onChange={(e) => handleChange("width", e.target.value)}
+                      onChange={(val) => handleChange("width", val)}
                       className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                         ${errors.width ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}
                     />
                   </div>
                   <div className="flex-1">
-                    <input
-                      type="number"
-                      step="0.01"
+                    <NumericInput
                       placeholder=""
                       value={
                         formData.height === null ||
@@ -1237,7 +1259,7 @@ export default function ItemForm({
                           ? ""
                           : formData.height
                       }
-                      onChange={(e) => handleChange("height", e.target.value)}
+                      onChange={(val) => handleChange("height", val)}
                       className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white
                         ${errors.height ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}
                     />

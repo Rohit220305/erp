@@ -1,8 +1,3 @@
-export const metadata = {
-  title: "Create Production Batch | ERP System",
-  description: "Create a new Production Batch from Production Order",
-};
-
 import ProductionBatchForm from "@/components/production-batch/ProductionBatchForm";
 
 export default async function CreateProductionBatchPage({ params }) {

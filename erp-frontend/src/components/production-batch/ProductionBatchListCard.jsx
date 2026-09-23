@@ -6,6 +6,7 @@ import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 
 import { formatNumber } from "@/utils/number-formatter";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ProductionBatchListCard({
   item,
@@ -42,7 +43,7 @@ export default function ProductionBatchListCard({
                     : null
                 }
               >
-                {item.batchCode || "—"}
+                {displayFormat(item.batchCode)}
               </ModuleLink>
             </div>
 
@@ -57,13 +58,13 @@ export default function ProductionBatchListCard({
                 onOpenDrawer={
                   setSelectedOrderForDetails
                     ? () =>
-                        setSelectedOrderForDetails({
-                          productionOrderId: item.productionOrderId,
-                        })
+                      setSelectedOrderForDetails({
+                        productionOrderId: item.productionOrderId,
+                      })
                     : null
                 }
               >
-                {item.productionOrderCode || "—"}
+                {displayFormat(item.productionOrderCode)}
               </ModuleLink>
             </div>
 
@@ -81,7 +82,7 @@ export default function ProductionBatchListCard({
                     : null
                 }
               >
-                {item.itemName || "—"}
+                {displayFormat(item.itemName)}
               </ModuleLink>
             </div>
 
@@ -90,7 +91,7 @@ export default function ProductionBatchListCard({
                 Batch Qty
               </p>
               <div className="text-[13px] text-gray-900 font-bold font-mono truncate">
-                {formatNumber(item.batchQuantity)}
+                {item.batchQuantityFormatted || formatNumber(item.batchQuantity)}
               </div>
             </div>
 
@@ -99,7 +100,7 @@ export default function ProductionBatchListCard({
                 Status
               </p>
               <StatusBadge
-                status={item.status || "—"}
+                status={displayFormat(item.status)}
                 module="production-batch"
               />
             </div>
@@ -110,18 +111,16 @@ export default function ProductionBatchListCard({
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <ChevronDown
-              className={`text-[#1565c0] transition-transform duration-400 ${
-                isExpanded ? "rotate-180" : ""
-              }`}
+              className={`text-[#1565c0] transition-transform duration-400 ${isExpanded ? "rotate-180" : ""
+                }`}
               size={20}
             />
           </div>
         </div>
 
         <div
-          className={`transition-all duration-400 ease-in-out overflow-hidden ${
-            isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-          }`}
+          className={`transition-all duration-400 ease-in-out overflow-hidden ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+            }`}
         >
           <div className="px-6 py-5 bg-gray-50/50 border-t border-gray-100">
             <div className="grid grid-cols-5 gap-4 items-start pr-[52px]">
@@ -139,7 +138,7 @@ export default function ProductionBatchListCard({
                       : null
                   }
                 >
-                  {item.bomName || "—"}
+                  {displayFormat(item.bomName)}
                 </ModuleLink>
               </div>
 
@@ -148,7 +147,7 @@ export default function ProductionBatchListCard({
                   Material Status
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.materialStatus || "—"}
+                  {displayFormat(item.materialStatus)}
                 </div>
               </div>
 
@@ -163,11 +162,11 @@ export default function ProductionBatchListCard({
                   onOpenDrawer={
                     setSelectedUserForDetails
                       ? () =>
-                          setSelectedUserForDetails({ addedBy: item.addedBy })
+                        setSelectedUserForDetails({ addedBy: item.addedBy })
                       : null
                   }
                 >
-                  {item.addedByName || "—"}
+                  {displayFormat(item.addedByName)}
                 </ModuleLink>
               </div>
 
@@ -176,7 +175,16 @@ export default function ProductionBatchListCard({
                   Created Date
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.addedDateFormatted || "—"}
+                  {displayFormat(item.addedDateFormatted, "DATE")}
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[11px] text-gray-400 mb-1.5 tracking-wider font-medium">
+                  Customer Name
+                </p>
+                <div className="text-[13px] text-gray-800 font-medium truncate">
+                  {displayFormat(item.customerName)}
                 </div>
               </div>
             </div>

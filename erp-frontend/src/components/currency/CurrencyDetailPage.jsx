@@ -9,13 +9,20 @@ import AccessDenied from "@/components/common/AccessDenied";
 import ModuleLink from "@/components/common/ModuleLink";
 import SideDrawer from "@/components/common/SideDrawer";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
-const DetailRow = ({ label, value }) => (
-  <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
-    <span className="text-gray-500 font-medium">{label}</span>
-    <span className="text-gray-900">{value}</span>
-  </div>
-);
+const DetailRow = ({ label, value, valueNode }) => {
+  if (!value && !valueNode) return null;
+  return (
+    <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
+      <span className="text-gray-500 font-medium">{label}</span>
+      {valueNode ? valueNode : (
+        <span className="text-gray-900">{displayFormat(value)}</span>
+      )}
+    </div>
+  );
+};
 
 export default function CurrencyDetailPage({ currency }) {
   const { setConfig, resetConfig } = useHeader();
@@ -78,32 +85,23 @@ export default function CurrencyDetailPage({ currency }) {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-3">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-xl text-3xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
-                {currency.currencySymbol || currency.currencyCode?.[0] || "C"}
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-xl text-3xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                  {currency.currencySymbol || currency.currencyCode?.[0] || "C"}
+                </div>
+                <div>
+                  <h2 className="font-semibold text-lg text-gray-900 leading-tight">
+                    {displayFormat(currency.currencyName)}
+                  </h2>
+                  <p className="text-gray-500 text-sm mt-0.5">
+                    {displayFormat(currency.currencyCode)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-semibold text-lg text-gray-900 leading-tight">
-                  {currency.currencyName}
-                </h2>
-                <p className="text-gray-500 text-sm mt-0.5">
-                  {currency.currencyCode}
-                </p>
-              </div>
+              <StatusBadge status={currency.status} />
             </div>
 
-            <hr className="my-4 border-gray-100" />
-
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Status</span>
-                <span
-                  className={`font-semibold ${currency.status === "Active" ? "text-green-600" : "text-red-500"}`}
-                >
-                  {currency.status}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -119,20 +117,7 @@ export default function CurrencyDetailPage({ currency }) {
                 label="Currency Symbol"
                 value={currency.currencySymbol || "-"}
               />
-              <DetailRow
-                label="Status"
-                value={
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      currency.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {currency.status}
-                  </span>
-                }
-              />
+             
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 break-inside-avoid">
@@ -141,19 +126,29 @@ export default function CurrencyDetailPage({ currency }) {
                   Added Info
                 </h3>
                 <div>
-                  {currency.addedByName && addedByUserId && can(CAPABILITIES.USER.VIEW) ? (
+                  {currency.addedByName &&
+                  addedByUserId &&
+                  can(CAPABILITIES.USER.VIEW) ? (
                     <ModuleLink
                       href={buildRoute("user", "detail", { id: addedByUserId })}
-                      onClick={() => setSideDrawerState({ isOpen: true, moduleName: "User", id: addedByUserId })}
+                      onClick={() =>
+                        setSideDrawerState({
+                          isOpen: true,
+                          moduleName: "User",
+                          id: addedByUserId,
+                        })
+                      }
                       className="text-[#1565c0] font-medium block"
                     >
                       {currency.addedByName}
                     </ModuleLink>
                   ) : (
-                    <p className="text-gray-900 font-medium">{currency.addedByName || "-"}</p>
+                    <p className="text-gray-900 font-medium">
+                      {displayFormat(currency.addedByName)}
+                    </p>
                   )}
                   <p className="text-gray-400 text-xs mt-0.5">
-                    {currency.addedDateFormatted || "-"}
+                    {displayFormat(currency.addedDateFormatted, "DATE")}
                   </p>
                 </div>
               </div>
@@ -164,19 +159,31 @@ export default function CurrencyDetailPage({ currency }) {
                     Updated Info
                   </h3>
                   <div>
-                    {currency.updatedByName && updatedByUserId && can(CAPABILITIES.USER.VIEW) ? (
+                    {currency.updatedByName &&
+                    updatedByUserId &&
+                    can(CAPABILITIES.USER.VIEW) ? (
                       <ModuleLink
-                        href={buildRoute("user", "detail", { id: updatedByUserId })}
-                        onClick={() => setSideDrawerState({ isOpen: true, moduleName: "User", id: updatedByUserId })}
+                        href={buildRoute("user", "detail", {
+                          id: updatedByUserId,
+                        })}
+                        onClick={() =>
+                          setSideDrawerState({
+                            isOpen: true,
+                            moduleName: "User",
+                            id: updatedByUserId,
+                          })
+                        }
                         className="text-[#1565c0] font-medium block"
                       >
                         {currency.updatedByName}
                       </ModuleLink>
                     ) : (
-                      <p className="text-gray-900 font-medium">{currency.updatedByName || "-"}</p>
+                      <p className="text-gray-900 font-medium">
+                        {displayFormat(currency.updatedByName)}
+                      </p>
                     )}
                     <p className="text-gray-400 text-xs mt-0.5">
-                      {currency.updatedDateFormatted}
+                      {displayFormat(currency.updatedDateFormatted, "DATE")}
                     </p>
                   </div>
                 </div>
@@ -188,7 +195,9 @@ export default function CurrencyDetailPage({ currency }) {
 
       <SideDrawer
         open={sideDrawerState.isOpen}
-        onClose={() => setSideDrawerState({ isOpen: false, moduleName: null, id: null })}
+        onClose={() =>
+          setSideDrawerState({ isOpen: false, moduleName: null, id: null })
+        }
         moduleName={sideDrawerState.moduleName}
         mode="details"
         data={sideDrawerState.id ? { id: sideDrawerState.id } : null}

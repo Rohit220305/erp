@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const getProductionBatchSchema = (primitiveQuantity = 0, pendingQuantity = null) => {
-  const minQty = Number(primitiveQuantity) > 0 ? Number(primitiveQuantity) : 0.0001;
+  const minQty = Number(primitiveQuantity) > 0 ? Number(primitiveQuantity)  :0;
 
   let batchQtySchema = z.coerce
     .number({ invalid_type_error: "Please enter a valid batch quantity" })

@@ -99,6 +99,7 @@ export class ProductionBatchListService {
         'po.pendingQuantity AS pendingQuantity',
         'po.productionDate AS productionDate',
         'po.customerId AS customerId',
+        'po.customerName AS customerName',
         'po.plantId AS plantId',
         'po.companyId AS companyId',
         'po.itemId AS itemId',
@@ -107,6 +108,9 @@ export class ProductionBatchListService {
       qb.addSelect('bom.id', 'bomId');
       qb.addSelect('bom.processTemplateId', 'processTemplateId');
       qb.leftJoin('bom_master', 'bom', 'bom.id = po.bomId');
+
+      qb.addSelect('template.templateName', 'processTemplateName');
+      qb.leftJoin('process_template', 'template', 'template.id = bom.processTemplateId');
 
       qb.addSelect('item.itemName', 'itemName');
       qb.addSelect('item.primitiveQuantity', 'primitiveQuantity');
@@ -194,8 +198,8 @@ export class ProductionBatchListService {
         message: 'BOM suggest fetched successfully.',
         data: {
           ...poDetails,
-          productionQuantityDisplay: poDetails.productionQuantity ? `${parseFloat(poDetails.productionQuantity).toFixed(2)} ${poDetails.uomName || ''}` : '',
-          pendingQuantityDisplay: poDetails.pendingQuantity ? `${parseFloat(poDetails.pendingQuantity).toFixed(2)} ${poDetails.uomName || ''}` : '',
+          productionQuantityDisplay: this.general.formatQuantityWithUom(poDetails.productionQuantity, poDetails.uomName),
+          pendingQuantityDisplay: this.general.formatQuantityWithUom(poDetails.pendingQuantity, poDetails.uomName),
           productionDateFormatted: poDetails.productionDate ? await this.general.dateFormat(poDetails.productionDate) : null,
           primitiveQuantity: parseFloat(String(primitiveQuantity)),
           batchSeqNo,
@@ -244,6 +248,7 @@ export class ProductionBatchListService {
       ]);
 
       qb.addSelect('po.productionOrderCode', 'productionOrderCode');
+      qb.addSelect('po.customerName', 'customerName');
       qb.leftJoin('production_order', 'po', 'po.id = pb.productionOrderId');
 
       qb.addSelect('bom.bomName', 'bomName');
@@ -253,6 +258,9 @@ export class ProductionBatchListService {
       qb.addSelect('item.itemName', 'itemName');
       qb.addSelect('item.itemCode', 'itemCode');
       qb.leftJoin('item_master', 'item', 'item.id = pb.itemId');
+
+      qb.addSelect('uom.uomName', 'uomName');
+      qb.leftJoin('item_uom_master', 'uom', 'uom.id = item.itemUomId');
 
       qb.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
       qb.addSelect('addedByUser.id as addedBy')
@@ -274,6 +282,7 @@ export class ProductionBatchListService {
       const formattedList = await Promise.all(
         rawList.map(async (row) => ({
           ...row,
+          batchQuantityFormatted: this.general.formatQuantityWithUom(row.batchQuantity, row.uomName),
           addedDateFormatted: row.addedDate ? await this.general.dateFormat(row.addedDate) : null,
           updatedDateFormatted: row.updatedDate ? await this.general.dateFormat(row.updatedDate) : null,
         }))
@@ -318,6 +327,7 @@ export class ProductionBatchListService {
         'pbp.status as status',
         'pbp.startTime as startTime',
         'pbp.endTime as endTime',
+        'pbp.activeDurationSeconds as activeDurationSeconds',
         'pbp.productionBatchId as productionBatchId',
       ]);
       qb.addSelect('pm.processName', 'processName');
@@ -350,7 +360,7 @@ export class ProductionBatchListService {
           'pbi.requestedQty as requestedQty',
           'pbi.receivedQty as receivedQty',
         ])
-        .addSelect(['item.itemName as itemName', 'item.itemCode as itemCode'])
+        .addSelect(['item.itemName as itemName', 'item.itemCode as itemCode', 'item.costPerUnit as costPerUnit', 'item.currencyCode as currencyCode'])
         .leftJoin('item_master', 'item', 'item.id = pbi.itemId')
         .addSelect('uom.uomName', 'uomName')
         .leftJoin('item_uom_master', 'uom', 'uom.id = item.itemUomId')
@@ -362,6 +372,30 @@ export class ProductionBatchListService {
         )
         .where('pbi.productionBatchProcessId = :processExecutionId', { processExecutionId: query.processExecutionId })
         .getRawMany();
+
+      const timelineEventsRaw = await this.pbProcessRepo.manager.createQueryBuilder()
+        .select([
+          'tl.id AS id',
+          'tl.productionBatchProcessId AS productionBatchProcessId',
+          'tl.action AS action',
+          'tl.actionAt AS actionAt',
+          'tl.actionBy AS actionById',
+          "CONCAT(u.firstName, ' ', u.lastName) AS actionByName"
+        ])
+        .from('production_batch_process_timeline', 'tl')
+        .leftJoin('users', 'u', 'u.id = tl.actionBy')
+        .where('tl.productionBatchProcessId = :processExecutionId', { processExecutionId: query.processExecutionId })
+        .orderBy('tl.actionAt', 'ASC')
+        .getRawMany();
+
+      const formattedTimelineEvents = await Promise.all(
+        timelineEventsRaw.map(async (tl) => ({
+          ...tl,
+          id: Number(tl.id),
+          productionBatchProcessId: Number(tl.productionBatchProcessId),
+          actionAtFormatted: tl.actionAt ? await this.general.dateFormat(tl.actionAt) : null,
+        }))
+      );
 
       let parsedNodePosition = processData.nodePosition;
       let parsedDependencies = processData.dependencies;
@@ -395,6 +429,12 @@ export class ProductionBatchListService {
           shortage: Number(i.shortage || 0),
           requestedQty: Number(i.requestedQty || i.requestQty || 0),
           receivedQty: Number(i.receivedQty || 0),
+          requiredQtyFormatted: this.general.formatQuantityWithUom(i.requiredQty || 0, i.uomName),
+          consumedQtyFormatted: this.general.formatQuantityWithUom(i.consumedQty || 0, i.uomName),
+          producedQtyFormatted: this.general.formatQuantityWithUom(i.producedQty || 0, i.uomName),
+          availableStockFormatted: this.general.formatQuantityWithUom(i.availableStock || 0, i.uomName),
+          shortageFormatted: this.general.formatQuantityWithUom(i.shortage || 0, i.uomName),
+          requestedQtyFormatted: this.general.formatQuantityWithUom(i.requestedQty || i.requestQty || 0, i.uomName),
           imageUrl,
         });
       }
@@ -406,9 +446,11 @@ export class ProductionBatchListService {
         sequenceNumber: Number(processData.sequenceNumber),
         startTime: processData.startTime ? await this.general.dateFormat(processData.startTime) : null,
         endTime: processData.endTime ? await this.general.dateFormat(processData.endTime) : null,
+        formattedTimeTaken: this.general.formatDurationSeconds(processData.activeDurationSeconds),
         nodePosition: parsedNodePosition,
         dependencies: parsedDependencies,
         handleConfig: parsedHandleConfig,
+        timelineEvents: formattedTimelineEvents,
         items: formattedItems,
       };
 
@@ -452,8 +494,11 @@ export class ProductionBatchListService {
         'pb.addedBy AS addedBy',
         'pb.productionOrderId AS productionOrderId',
         'pb.bomId AS bomId',
+        'pb.completedBy AS completedBy',
+        'pb.completedDate AS completedDate',
       ]);
       qb.addSelect('po.productionOrderCode', 'productionOrderCode');
+      qb.addSelect('po.customerName', 'customerName');
       qb.addSelect('po.id', 'productionOrderId');
       qb.leftJoin('production_order', 'po', 'po.id = pb.productionOrderId');
 
@@ -475,13 +520,24 @@ export class ProductionBatchListService {
       qb.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
       qb.leftJoin('users', 'addedByUser', 'addedByUser.id = pb.addedBy');
 
+      qb.addSelect("CONCAT(completedByUser.firstName, ' ', completedByUser.lastName)", 'completedByName');
+      qb.leftJoin('users', 'completedByUser', 'completedByUser.id = pb.completedBy');
+
+      qb.addSelect('cc.currencyCode', 'companyCurrencyCode');
+      qb.leftJoin('company_currency_mapping', 'cc', 'cc.companyId = pb.companyId');
+
+      qb.addSelect('cm.currencySymbol', 'companyCurrencySymbol');
+      qb.leftJoin('currency_master', 'cm', 'cm.currencyCode = cc.currencyCode');
+
       qb.where('pb.id = :id', { id: query.id });
       if (companyId) qb.andWhere('pb.companyId = :companyId', { companyId });
 
       const batchData = await qb.getRawOne();
       if (!batchData) throw new Error('Production Batch not found');
       batchData.addedDateFormatted = batchData.addedDate ? await this.general.dateFormat(batchData.addedDate) : null;
-
+      batchData.batchQuantityFormatted = this.general.formatQuantityWithUom(batchData.batchQuantity, batchData.uomName);
+      batchData.producedQuantityFormatted = this.general.formatQuantityWithUom(batchData.producedQuantity, batchData.uomName);
+      batchData.completedDateFormatted = batchData.completedDate ? await this.general.dateFormat(batchData.completedDate) : null;
       const batchSeqNo = await this.pbRepo
         .createQueryBuilder('pb')
         .where('pb.productionOrderId = :poId', { poId: batchData.productionOrderId })
@@ -500,6 +556,7 @@ export class ProductionBatchListService {
           'pbp.status as status',
           'pbp.startTime as startTime',
           'pbp.endTime as endTime',
+          'pbp.activeDurationSeconds as activeDurationSeconds',
         ])
         .addSelect('pm.processName', 'processName')
         .addSelect('pm.processCode', 'processCode')
@@ -528,7 +585,7 @@ export class ProductionBatchListService {
             'pbi.requestedQty as requestedQty',
             'pbi.receivedQty as receivedQty',
           ])
-          .addSelect(['item.itemName as itemName', 'item.itemCode as itemCode'])
+          .addSelect(['item.itemName as itemName', 'item.itemCode as itemCode', 'item.costPerUnit as costPerUnit', 'item.currencyCode as currencyCode'])
           .leftJoin('item_master', 'item', 'item.id = pbi.itemId')
           .addSelect('uom.uomName', 'uomName')
           .leftJoin('item_uom_master', 'uom', 'uom.id = item.itemUomId')
@@ -568,6 +625,36 @@ export class ProductionBatchListService {
         );
       }
 
+      const timelineEventsRaw = await this.pbRepo.manager.createQueryBuilder()
+        .select([
+          'tl.id AS id',
+          'tl.productionBatchProcessId AS productionBatchProcessId',
+          'tl.action AS action',
+          'tl.actionAt AS actionAt',
+          'tl.actionBy AS actionById',
+          "CONCAT(u.firstName, ' ', u.lastName) AS actionByName",
+          'pm.processName AS processName',
+          'pm.id AS processId',
+        ])
+        .from('production_batch_process_timeline', 'tl')
+        .innerJoin('production_batch_process', 'pbp', 'pbp.id = tl.productionBatchProcessId')
+        .innerJoin('process_master', 'pm', 'pm.id = pbp.processId')
+        .leftJoin('users', 'u', 'u.id = tl.actionBy')
+        .where('tl.productionBatchId = :batchId', { batchId: query.id })
+        .orderBy('tl.actionAt', 'ASC')
+        .getRawMany();
+
+      const formattedTimelineEvents = await Promise.all(
+        timelineEventsRaw.map(async (tl) => ({
+          ...tl,
+          id: Number(tl.id),
+          productionBatchProcessId: Number(tl.productionBatchProcessId),
+          processId: Number(tl.processId),
+          actionById: tl.actionById ? Number(tl.actionById) : null,
+          actionAtFormatted: tl.actionAt ? await this.general.dateFormat(tl.actionAt) : null,
+        }))
+      );
+
       const structuredProcesses = processes.map((p) => {
         let parsedNodePosition = p.nodePosition;
         let parsedDependencies = p.dependencies;
@@ -591,6 +678,7 @@ export class ProductionBatchListService {
           nodePosition: parsedNodePosition,
           dependencies: parsedDependencies,
           handleConfig: parsedHandleConfig,
+          formattedTimeTaken: this.general.formatDurationSeconds(p.activeDurationSeconds),
           items: items
             .filter((i) => Number(i.productionBatchProcessId) === Number(p.id))
             .map((i) => ({
@@ -605,6 +693,12 @@ export class ProductionBatchListService {
               shortage: Number(i.shortage || 0),
               requestedQty: Number(i.requestedQty || i.requestQty || 0),
               receivedQty: Number(i.receivedQty || 0),
+              requiredQtyFormatted: this.general.formatQuantityWithUom(i.requiredQty || 0, i.uomName),
+              consumedQtyFormatted: this.general.formatQuantityWithUom(i.consumedQty || 0, i.uomName),
+              producedQtyFormatted: this.general.formatQuantityWithUom(i.producedQty || 0, i.uomName),
+              availableStockFormatted: this.general.formatQuantityWithUom(i.availableStock || 0, i.uomName),
+              shortageFormatted: this.general.formatQuantityWithUom(i.shortage || 0, i.uomName),
+              requestedQtyFormatted: this.general.formatQuantityWithUom(i.requestedQty || i.requestQty || 0, i.uomName),
               itemImageUrl: itemImageMap.get(Number(i.itemId)) || null,
             })),
         };
@@ -651,17 +745,69 @@ export class ProductionBatchListService {
           addedDateFormatted: log.addedDate ? await this.general.dateFormat(log.addedDate) : null,
           logDateFormatted: log.logDate ? await this.general.dateFormat(log.logDate, false) : null,
           loggedQty: Number(log.loggedQty || 0),
+          loggedQtyFormatted: this.general.formatQuantityWithUom(log.loggedQty || 0, log.uomName),
         })),
       );
+
+      const totalBatchDurationSeconds = processes.reduce((total, p) => {
+        return total + (Number(p.activeDurationSeconds) || 0);
+      }, 0);
+
+
+      const companyCurrency = batchData.companyCurrencySymbol;
+      const currencyCode = batchData.companyCurrencyCode;
+
+
+      let totalMaterialCost = 0;
+      const materialCostArray = materialDetails.rawMaterials
+        .filter((rm) => Number(rm.consumedQty) > 0)
+        .map((rm) => {
+          const mCost = (Number(rm.consumedQty)) * (Number(rm.costPerUnit));
+          totalMaterialCost += mCost;
+          return {
+            itemId: rm.itemId,
+            itemName: rm.itemName,
+            uomName: rm.uomName,
+            usage: rm.consumedQty,
+            usageFormatted: rm.consumedQtyFormatted,
+            costPerUnit: rm.costPerUnit,
+            costPerUnitFormatted: this.general.formatQuantityWithUom(rm.costPerUnit, rm.uomName, 2,true),
+            materialCost: mCost,
+            materialCostFormatted: this.general.formatCurrency(mCost),
+          };
+        });
+
+      // const additionalCost = 0;
+      // const scrapCost = 0;
+      // const totalCost = totalMaterialCost + additionalCost + scrapCost;
+
+
+
+      const batchCost = {
+        materialCost: materialCostArray,
+        totalMaterialCost: this.general.formatNumber(totalMaterialCost),
+        totalMaterialCostFormatted: this.general.formatCurrency(
+          totalMaterialCost,
+          companyCurrency,
+        ),
+        currency: companyCurrency,
+        currencyCode : currencyCode,
+        // additionalCost,
+        // scrapCost,
+        // totalCost,
+      };
 
       return_data = {
         success: 1,
         message: 'Batch details fetched successfully.',
         data: {
           ...batchData,
+          formattedTimeTaken: totalBatchDurationSeconds > 0 ? this.general.formatDurationSeconds(totalBatchDurationSeconds) : null,
+          timelineEvents: formattedTimelineEvents,
           processes: structuredProcesses,
           materialDetails,
           processLogs: formattedProcessLogs,
+          batchCost,
         },
       };
     } catch (err: any) {

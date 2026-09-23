@@ -55,6 +55,7 @@ export const getItemSchema = (isSuperAdmin = false) => {
       shelfLifeUnit: z.string().min(1, "Please select Shelf Life Unit."),
       batchCode: z.string().trim().min(1, "Please enter Batch Code."),
       isScrap: z.string().min(1, "Please select Is Scrap."),
+      isInHouseProduction: z.string().min(1, "Please select In-House Production."),
       description: z.string().trim().optional().nullable(),
       remark: z.string().trim().optional().nullable(),
 

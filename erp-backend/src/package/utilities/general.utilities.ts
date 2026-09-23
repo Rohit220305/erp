@@ -107,6 +107,51 @@ export class GeneralUtilities {
     return time ? `${day}/${month}/${year} ${hours}:${minutes} ${ampm}` : `${day}/${month}/${year}`;
   }
 
+  formatDurationSeconds(totalSeconds: number | null | undefined): string {
+    if (totalSeconds === null || totalSeconds === undefined || isNaN(totalSeconds) || totalSeconds === 0) {
+      return "0 minutes";
+    }
+
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days} days`);
+    if (hours > 0) parts.push(`${hours} hours`);
+    if (minutes > 0) parts.push(`${minutes} minutes`);
+
+    if (parts.length === 0) {
+      const seconds = Math.floor(totalSeconds % 60);
+      return `${seconds} seconds`;
+    }
+
+    return parts.join(' ');
+  }
+
+  formatNumber(val: number | string | null | undefined, decimals = 4): string {
+    if (val === null || val === undefined || val === '' || isNaN(Number(val))) {
+      return '0';
+    }
+    const num = Number(val);
+    const isFloat = num % 1 !== 0;
+    return num.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: isFloat ? decimals : 0,
+    });
+  }
+
+  formatQuantityWithUom(val: number | string | null | undefined, uomName = '', decimals = 4 , perUnit = false): string {
+    const formatted = this.formatNumber(val, decimals);
+    if(perUnit) return uomName ? `${formatted} / ${uomName}` : formatted;
+    return uomName ? `${formatted} ${uomName}` : formatted;
+  }
+  
+  formatCurrency(val: number | string | null | undefined, currencySymbol = '', decimals = 2): string {
+    const formatted = this.formatNumber(val, decimals);
+    return currencySymbol ? `${currencySymbol} ${formatted}` : formatted;
+  }
+
   async encryptPassword(password) {
     const encryptedpass = password;
     return encryptedpass;

@@ -63,7 +63,6 @@ export class BatchProcessLogService {
 
   async createLog(req: any, dto: CreateProcessLogDto) {
     let return_data: any = {};
-    console.log("dto", dto);
     try {
       const companyId = req.user?.companyId;
 

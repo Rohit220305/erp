@@ -10,6 +10,9 @@ import Loader from "@/components/common/Loader";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { toast } from "react-hot-toast";
 import { formatNumber } from "@/utils/number-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
+import NoDataMessage from "@/components/common/NoDataMessage";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDrawer }) {
   const router = useRouter();
@@ -77,21 +80,10 @@ export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDra
     }
   };
 
-  const getStatusBadge = (status) => {
-    if (status === "Pending") {
-      return <span className="bg-orange-500 text-white font-semibold rounded-full px-3 py-1 text-[11px]">Pending</span>;
-    }
-    if (status === "Delivered") {
-      return <span className="bg-green-600 text-white font-semibold rounded-full px-3 py-1 text-[11px]">Delivered</span>;
-    }
-    if (status === "Cancelled") {
-      return <span className="bg-gray-400 text-white font-semibold rounded-full px-3 py-1 text-[11px]">Cancelled</span>;
-    }
-    return null;
-  };
+
 
   const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
+    if (!dateString) return displayFormat("", "DATE");
     const d = new Date(dateString);
     return `${d.toLocaleDateString("en-GB")} ${d.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' })}`;
   };
@@ -107,11 +99,7 @@ export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDra
   return (
     <div className="w-full pb-10">
       {requests.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-10 text-center shadow-sm">
-          <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">No Material Requests</h3>
-          <p className="mt-1 text-sm text-gray-500">There are no material requests created for this batch yet.</p>
-        </div>
+        <NoDataMessage moduleName="Material Request" />
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {requests.map((req) => (
@@ -122,7 +110,7 @@ export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDra
                   <span>{req.code}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {getStatusBadge(req.status)}
+                  <StatusBadge status={req.status} />
                 </div>
               </div>
 
@@ -194,7 +182,7 @@ export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDra
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-bold text-gray-900 leading-none mb-1">
-                      {formatNumber(req.requestedQtySum)} <span className="text-sm font-medium">Unit(s)</span>
+                      {req.requestedQtySumFormatted || formatNumber(req.requestedQtySum)} <span className="text-sm font-medium">Unit(s)</span>
                     </p>
                     <p className="text-xs text-gray-500">Total Qty</p>
                   </div>
@@ -211,7 +199,7 @@ export default function ProductionBatchMaterialRequestTab({ batchData, onOpenDra
         title={modalState.type === "DELIVER" ? "Confirm Delivery" : "Cancel Request"}
         message={
           modalState.type === "DELIVER"
-            ? `Are you sure you want to mark ${modalState.request?.code} as Delivered? This will permanently credit the requested quantities into the batch stock.`
+            ? `Are you sure you want to mark this request as Delivered?`
             : `Are you sure you want to cancel ${modalState.request?.code}?`
         }
         confirmLabel={modalState.type === "DELIVER" ? "Mark Delivered" : "Cancel"}

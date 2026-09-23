@@ -19,11 +19,17 @@ import ConfirmModal from "@/components/common/ConfirmModal";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import AccessDenied from "@/components/common/AccessDenied";
 import Loader from "@/components/common/Loader";
-import { formatNumber } from "@/utils/number-formatter";
+
 import { formatCurrency } from "@/utils/number-formatter";
 import productionOrderConfig from "@/config/production-order.config.json";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 import NumericInput from "@/components/common/NumericInput";
+
+const STATIC_CUSTOMER_OPTIONS = [
+  { value: "Aditya Infotech", label: "Aditya Infotech" },
+  { value: "Indian Jwellers", label: "Indian Jwellers" },
+  { value: "Sugam Gold Traders", label: "Sugam Gold Traders" },
+];
 
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
@@ -198,7 +204,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       navbar: {
         title: mode === "create" ? "Add" : "Edit",
         breadcrumbs: [
-          { label: "Master", href: buildRoute("home", "list") },
+          {label: "Production", },
           { label: "Production Orders", href: buildRoute("production-order", "list") },
         ],
       },
@@ -232,10 +238,12 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       itemId: initialData?.itemId || "",
       bomId: initialData?.bomId || "",
       productionQuantity: initialData?.productionQuantity || 0,
+      packageQuantity: initialData?.packageQuantity || 1,
       productionDate: initialData?.productionDate
         ? new Date(initialData.productionDate).toISOString().split("T")[0]
-        : "",
+        : todayStr,
       referenceNumber: initialData?.referenceNumber || "",
+      customerName: initialData?.customerName || "",
       remark: initialData?.remark || "",
       status: initialData?.status || "Pending",
     },
@@ -254,15 +262,17 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
     if (initialData) {
       const formattedDate = initialData.productionDate
         ? new Date(initialData.productionDate).toISOString().split("T")[0]
-        : "";
+        : todayStr;
 
       reset({
         companyId: initialData.companyId || "",
         itemId: initialData.itemId || "",
         bomId: initialData.bomId || "",
         productionQuantity: initialData.productionQuantity || 0,
+        packageQuantity: initialData.packageQuantity || 1,
         productionDate: formattedDate,
         referenceNumber: initialData.referenceNumber || "",
+        customerName: initialData.customerName || "",
         remark: initialData.remark || "",
         status: initialData.status || "Pending",
       });
@@ -375,7 +385,9 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         const itemRes = await listItems({ page: 1, limit: 1000, filters });
         const itemList = itemRes?.settings?.data?.list || itemRes?.data?.list || itemRes?.data || [];
 
-        const mappedItems = itemList.map((i) => ({
+        const filteredItemList = itemList.filter(i => i.isInHouseProduction === 'Yes');
+
+        const mappedItems = filteredItemList.map((i) => ({
           label: i.itemName,
           value: i.id,
           primitiveQuantity: i.primitiveQuantity || 1,
@@ -488,6 +500,8 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       const calc = parseFloat((prodQty / primitiveQty).toFixed(4));
       setPackageQuantity(calc);
       setDisplayPackageQuantity(calc);
+      setValue("packageQuantity", calc);
+      if (calc > 0) clearErrors("packageQuantity");
     }
   }, [selectedItemDetails]);
 
@@ -501,6 +515,8 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
     const calculatedPkgQty = parseFloat((val / primitiveQty).toFixed(4));
     setPackageQuantity(calculatedPkgQty);
     setDisplayPackageQuantity(calculatedPkgQty);
+    setValue("packageQuantity", calculatedPkgQty);
+    if (calculatedPkgQty > 0) clearErrors("packageQuantity");
   };
 
   const handleProductionQtyBlur = (e) => {
@@ -519,6 +535,8 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
     const calculatedPkgQty = parseFloat((val / primitiveQty).toFixed(4));
     setPackageQuantity(calculatedPkgQty);
     setDisplayPackageQuantity(calculatedPkgQty);
+    setValue("packageQuantity", calculatedPkgQty);
+    if (calculatedPkgQty > 0) clearErrors("packageQuantity");
   };
 
   const handlePackageQtyChange = (e) => {
@@ -528,6 +546,8 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
 
     const pkgVal = parseFloat(rawVal) || 0;
     setPackageQuantity(pkgVal);
+    setValue("packageQuantity", pkgVal);
+    if (pkgVal > 0) clearErrors("packageQuantity");
 
     const primitiveQty = selectedItemDetails?.primitiveQuantity || 1;
     const calculatedProdQty = parseFloat((pkgVal * primitiveQty).toFixed(4));
@@ -538,6 +558,8 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
     const pkgVal = parseFloat(e.target.value) || 0;
     setPackageQuantity(pkgVal);
     setDisplayPackageQuantity(pkgVal);
+    setValue("packageQuantity", pkgVal);
+    if (pkgVal > 0) clearErrors("packageQuantity");
 
     const primitiveQty = selectedItemDetails?.primitiveQuantity || 1;
     const calculatedProdQty = parseFloat((pkgVal * primitiveQty).toFixed(4));
@@ -609,12 +631,16 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       submitFormData.append("itemId", String(formDataToSubmit.itemId));
       submitFormData.append("bomId", String(formDataToSubmit.bomId));
       submitFormData.append("productionQuantity", String(formDataToSubmit.productionQuantity));
+      submitFormData.append("packageQuantity", String(formDataToSubmit.packageQuantity));
       submitFormData.append("productionDate", formDataToSubmit.productionDate);
       if (formDataToSubmit.referenceNumber) {
         submitFormData.append("referenceNumber", formDataToSubmit.referenceNumber);
       }
       if (formDataToSubmit.remark) {
         submitFormData.append("remark", formDataToSubmit.remark);
+      }
+      if (formDataToSubmit.customerName) {
+        submitFormData.append("customerName", formDataToSubmit.customerName);
       }
       submitFormData.append("status", "Pending");
 
@@ -667,6 +693,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
     onChangeCustom = null,
     valueCustom = undefined,
     onBlur = null,
+    suffix = null,
     ...props
   }) => {
     if (type === "number") {
@@ -675,26 +702,34 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
           <label className="block text-xs font-semibold text-gray-500 tracking-wide">
             {label} {required && <span className="text-red-400 ml-1">*</span>}
           </label>
-          <NumericInput
-            value={valueCustom !== undefined ? valueCustom : watch(name)}
-            onChange={(val) => {
-              if (onChangeCustom) {
-                onChangeCustom({ target: { value: val } });
-              } else {
-                setValue(name, val);
-                setIsDirty(true);
-                if (errors[name]) clearErrors(name);
-              }
-            }}
-            onBlur={(e) => {
-              if (onBlur) onBlur(e);
-            }}
-            disabled={disabled || readOnly}
-            className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
-              ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200 font-semibold" : "bg-white border-gray-200 hover:border-gray-300"}
-              ${errors[name] ? "border-red-400 bg-red-50" : ""}`}
-            placeholder={props.placeholder || `Enter ${label}`}
-          />
+          <div className="relative w-full">
+            <NumericInput
+              value={valueCustom !== undefined ? valueCustom : watch(name)}
+              onChange={(val) => {
+                if (onChangeCustom) {
+                  onChangeCustom({ target: { value: val } });
+                } else {
+                  setValue(name, val);
+                  setIsDirty(true);
+                  if (errors[name]) clearErrors(name);
+                }
+              }}
+              onBlur={(e) => {
+                if (onBlur) onBlur(e);
+              }}
+              disabled={disabled || readOnly}
+              className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+                ${suffix ? "pr-20" : ""}
+                ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200 font-semibold" : "bg-white border-gray-200 hover:border-gray-300"}
+                ${errors[name] ? "border-red-400 bg-red-50" : ""}`}
+              placeholder={props.placeholder || `Enter ${label}`}
+            />
+            {suffix && (
+              <div className="absolute right-0 top-0 bottom-0 flex items-center px-4 bg-gray-100 border-l border-gray-200 rounded-r-lg text-sm text-gray-600 font-medium pointer-events-none">
+                {suffix}
+              </div>
+            )}
+          </div>
           {subtext && <p className="text-xs text-gray-400 italic">{subtext}</p>}
           {errors[name] && <p className="text-xs text-red-500">{errors[name]?.message || errors[name]}</p>}
         </div>
@@ -728,14 +763,14 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
               }
             }}
             className={`w-full p-4 border rounded-lg text-sm transition-all outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400
+              ${suffix ? "pr-20" : ""}
               ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200 font-semibold" : "bg-white border-gray-200 hover:border-gray-300"}
               ${errors[name] ? "border-red-400 bg-red-50" : ""}
-              ${props.className || ""} ${type === "date" && !disabled && !readOnly ? "cursor-pointer" : ""}
-              ${type === "date" && !(valueCustom !== undefined ? valueCustom : watch(name)) ? "[&::-webkit-datetime-edit]:text-transparent" : ""}`}
+              ${props.className || ""} ${type === "date" && !disabled && !readOnly ? "cursor-pointer" : ""}`}
             placeholder={props.placeholder || `Enter ${label}`}
             onClick={(e) => {
               if (type === "date" && !disabled && !readOnly && e.target.showPicker) {
-                try { e.target.showPicker(); } catch (err) {}
+                try { e.target.showPicker(); } catch (err) { }
               }
               if (props.onClick) props.onClick(e);
             }}
@@ -745,10 +780,10 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
             }}
             {...props}
           />
-          {type === "date" && !(valueCustom !== undefined ? valueCustom : watch(name)) && (
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af] pointer-events-none">
-              {props.placeholder || `Select ${label}`}
-            </span>
+          {suffix && (
+            <div className="absolute right-0 top-0 bottom-0 flex items-center px-4 bg-gray-100 border-l border-gray-200 rounded-r-lg text-sm text-gray-600 font-medium pointer-events-none">
+              {suffix}
+            </div>
           )}
         </div>
         {subtext && <p className="text-xs text-gray-400 italic">{subtext}</p>}
@@ -811,6 +846,44 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
             )}
             {user?.isSuperAdmin && <div className="hidden md:block"></div>}
 
+            <div className="space-y-1.5" id="field-customerName">
+              <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                Customer Name
+              </label>
+              <Controller
+                name="customerName"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    instanceId="select-customerName"
+                    options={STATIC_CUSTOMER_OPTIONS}
+                    value={
+                      STATIC_CUSTOMER_OPTIONS.find(
+                        (i) => String(i.value) === String(field.value),
+                      ) || null
+                    }
+                    onChange={(opt) => {
+                      field.onChange(opt ? opt.value : "");
+                      setIsDirty(true);
+                    }}
+                    isDisabled={mode === "edit" || submitting}
+                    isClearable={true}
+                    isSearchable={true}
+                    placeholder="Select Customer Name"
+                    classNamePrefix="react-select"
+                    styles={customSelectStyles(
+                      errors.customerName,
+                      mode === "edit" || submitting,
+                    )}
+                  />
+                )}
+              />
+              {errors.customerName && (
+                <p className="text-xs text-red-500">
+                  {errors.customerName.message}
+                </p>
+              )}
+            </div>
             <div className="space-y-1.5" id="field-itemId">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                 Production Item <span className="text-red-400 ml-1">*</span>
@@ -910,26 +983,36 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
 
             {renderInputField({
               name: "productionQuantity",
-              label: `Production Qty (${selectedItemDetails?.itemUomName || "Units"})`,
+              label: "Production Qty",
+              suffix: selectedItemDetails?.itemUomName || "Unit(s)",
               type: "number",
               step: "any",
               required: true,
-              valueCustom: watchProductionQuantity !== undefined && watchProductionQuantity !== null ? watchProductionQuantity : "",
+              valueCustom:
+                watchProductionQuantity !== undefined &&
+                watchProductionQuantity !== null
+                  ? watchProductionQuantity
+                  : "",
               onChangeCustom: handleProductionQtyChange,
               onBlur: handleProductionQtyBlur,
-              placeholder: "Enter Production Quantity",
+              placeholder: "Enter Production Qty",
             })}
 
             {renderInputField({
               name: "packageQuantity",
-              label: `Package Qty (${selectedItemDetails?.packageUomName || "Unit(s)"})`,
+              label: "Package Qty",
+              suffix: selectedItemDetails?.packageUomName || "Unit(s)",
               type: "number",
               step: "any",
               required: true,
-              valueCustom: displayPackageQuantity !== undefined && displayPackageQuantity !== null ? displayPackageQuantity : "",
+              valueCustom:
+                displayPackageQuantity !== undefined &&
+                displayPackageQuantity !== null
+                  ? displayPackageQuantity
+                  : "",
               onChangeCustom: handlePackageQtyChange,
               onBlur: handlePackageQtyBlur,
-              placeholder: "Enter Package Quantity",
+              placeholder: "Enter Package Qty",
             })}
 
             {renderInputField({
@@ -968,7 +1051,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
               name: "remark",
               label: "Remarks",
               type: "text",
-              required: true,
+              required: false,
             })}
 
             <div className="">
@@ -1073,14 +1156,14 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
             </div>
           </div>
 
-        <ProductionOrderMaterialTabs
-          materialDetails={dynamicMaterialDetails}
-          packageQuantity={packageQuantity}
-          currencySymbol={selectedBomDetails?.currencySymbol || ""}
-          showToggle={true}
-          isPackageToggleOn={isPackageToggleOn}
-          onPackageToggleChange={setIsPackageToggleOn}
-        />
+          <ProductionOrderMaterialTabs
+            materialDetails={dynamicMaterialDetails}
+            packageQuantity={packageQuantity}
+            currencySymbol={selectedBomDetails?.currencySymbol || ""}
+            showToggle={true}
+            isPackageToggleOn={isPackageToggleOn}
+            onPackageToggleChange={setIsPackageToggleOn}
+          />
         </div>
 
         <div className="flex items-center justify-center gap-4 pt-4">
@@ -1107,7 +1190,13 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        actionType={
+          confirmState.type === "submit"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
+        }
         entityName="Production Order"
         title={
           confirmState.type === "submit"
@@ -1129,7 +1218,11 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
           } else {
             setConfirmState({ isOpen: false, type: null, data: null });
             if (mode === "edit" && (id || initialData?.id)) {
-              router.push(buildRoute("production-order", "detail", { id: id || initialData?.id }));
+              router.push(
+                buildRoute("production-order", "detail", {
+                  id: id || initialData?.id,
+                }),
+              );
             } else {
               router.push(buildRoute("production-order", "list"));
             }

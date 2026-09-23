@@ -1,6 +1,7 @@
 {
   "moduleName": "ProductionBatch",
-  "title": "Production Batches",
+  "parentModule": "Production",
+  "title": "Production Batch",
   "permissions": {
     "list": "PRODUCTION_BATCH_LIST",
     "create": "PRODUCTION_BATCH_CREATE",
@@ -73,6 +74,14 @@
       "searchable": false,
       "sortable": true,
       "width": "160px"
+    },
+    {
+      "label": "Customer Name",
+      "key": "customerName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
     },
     {
       "label": "Status",

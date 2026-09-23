@@ -35,7 +35,7 @@ export const menuCategories = [
     icon: "BookOpen",
     groups: [
       {
-        title: "Item Master",
+        title: "Item",
         icon: "Settings",
         iconBg: "#1565c0",
         permission: "ITEM_LIST",

@@ -26,7 +26,6 @@ export const productionOrderDrawerConfig = {
     {
       title: null,
       fields: [
-        { label: "Order Code", key: "productionOrderCode", type: "text" },
         { 
           label: "Production Item", 
           key: "itemName", 

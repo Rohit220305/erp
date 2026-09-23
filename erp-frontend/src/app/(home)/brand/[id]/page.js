@@ -2,20 +2,6 @@ import { getBrand } from "@/lib/api/brand-api";
 import BrandDetailPage from "@/components/brand/BrandDetailPage";
 import { notFound } from "next/navigation";
 
-export async function generateMetadata({ params }) {
-  const { id } = await params;
-  try {
-    const res = await getBrand({ id });
-    const brandName = res?.data?.brandName || res?.settings?.data?.brandName;
-    if (brandName) {
-      return { title: `${brandName} | Brand` };
-    }
-  } catch (error) {
-    //
-  }
-  return { title: "Brand Details" };
-}
-
 export default async function Page({ params }) {
   const { id } = await params;
   try {

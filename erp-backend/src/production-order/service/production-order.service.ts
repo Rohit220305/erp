@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { ProductionOrderEntity } from '../entity/production-order.entity';
 import { ItemEntity } from '../../item/entity/item.entity';
 import { BomEntity } from '../../bom/entity/bom.entity';
@@ -13,8 +13,13 @@ import {
   ProductionOrderAddDto,
   ProductionOrderDeleteDto,
   ProductionOrderUpdateDto,
+  CancelProductionOrderDto,
 } from '../dto/production-order.dto';
 import { ProductionOrderStatus } from '../enum/production-order.enum';
+import { ProductionBatchEntity } from '../../production-batch/entity/production-batch.entity';
+import { ProductionBatchStatus } from '../../production-batch/enum/production-batch.enum';
+import { MaterialRequestEntity } from '../../material-request/entity/material-request.entity';
+import { MaterialRequestStatus } from '../../material-request/enum/material-request.enum';
 
 @Injectable()
 export class ProductionOrderService {
@@ -28,6 +33,10 @@ export class ProductionOrderService {
     private readonly general: GeneralUtilities,
     private readonly activityLogService: ActivityLogService,
     private readonly attachmentMasterService: AttachmentMasterService,
+    @InjectRepository(ProductionBatchEntity)
+    private readonly pbRepo: Repository<ProductionBatchEntity>,
+    @InjectRepository(MaterialRequestEntity)
+    private readonly materialRequestRepo: Repository<MaterialRequestEntity>,
   ) {}
 
   private async finishSuccess(params: any, incomingData?: any) {
@@ -76,7 +85,9 @@ export class ProductionOrderService {
     }
 
     if (bom.itemId !== itemId) {
-      throw new Error(`Selected BOM (ID: ${bomId}) does not belong to the selected Item (ID: ${itemId}).`);
+      throw new Error(
+        `Selected BOM (ID: ${bomId}) does not belong to the selected Item (ID: ${itemId}).`,
+      );
     }
 
     if (plantId) {
@@ -86,7 +97,9 @@ export class ProductionOrderService {
     }
   }
 
-  private async generateUniqueProductionOrderCode(companyId: number): Promise<string> {
+  private async generateUniqueProductionOrderCode(
+    companyId: number,
+  ): Promise<string> {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -112,7 +125,11 @@ export class ProductionOrderService {
     return `${prefix}${String(nextSeq).padStart(5, '0')}`;
   }
 
-  async startInsertProductionOrder(req: AppRequest, params: ProductionOrderAddDto, files?: any[]) {
+  async startInsertProductionOrder(
+    req: AppRequest,
+    params: ProductionOrderAddDto,
+    files?: any[],
+  ) {
     const response = await this.insertProductionOrder(req, params, files);
     if (response.success === 1) {
       return await this.finishSuccess(response);
@@ -120,7 +137,11 @@ export class ProductionOrderService {
     return await this.finishFailure(response);
   }
 
-  async insertProductionOrder(req: AppRequest, params: ProductionOrderAddDto, files?: any[]) {
+  async insertProductionOrder(
+    req: AppRequest,
+    params: ProductionOrderAddDto,
+    files?: any[],
+  ) {
     try {
       if (!this.general.isSuperAdmin(req)) {
         params.companyId = req.user?.companyId;
@@ -138,7 +159,9 @@ export class ProductionOrderService {
         params.customerId,
       );
 
-      const numProductionQty = parseFloat(String(params.productionQuantity || 0));
+      const numProductionQty = parseFloat(
+        String(params.productionQuantity || 0),
+      );
       if (isNaN(numProductionQty) || numProductionQty <= 0) {
         throw new Error('Production Quantity must be greater than 0');
       }
@@ -150,7 +173,9 @@ export class ProductionOrderService {
 
       while (attempts < maxAttempts && !insertId) {
         attempts++;
-        finalCode = await this.generateUniqueProductionOrderCode(params.companyId);
+        finalCode = await this.generateUniqueProductionOrderCode(
+          params.companyId,
+        );
 
         try {
           const dbInsertData: any = {
@@ -165,6 +190,7 @@ export class ProductionOrderService {
             remark: params.remark?.trim() || null,
             plantId: params.plantId || null,
             customerId: params.customerId || null,
+            customerName: params.customerName?.trim() || null,
             status: params.status || ProductionOrderStatus.Pending,
             addedBy: req.user?.sub || null,
             addedDate: new Date(),
@@ -181,24 +207,29 @@ export class ProductionOrderService {
       }
 
       if (!insertId) {
-        throw new Error('Failed to generate unique Production Order code after multiple attempts.');
+        throw new Error(
+          'Failed to generate unique Production Order code after multiple attempts.',
+        );
       }
 
       let attachmentMessage = '';
       if (files && files.length > 0) {
         try {
-          const syncRes = await this.attachmentMasterService.syncMultipleAttachments(
-            params.companyId,
-            AttachmentModule.PRODUCTION_ORDER,
-            insertId,
-            [],
-            files,
-          );
+          const syncRes =
+            await this.attachmentMasterService.syncMultipleAttachments(
+              params.companyId,
+              AttachmentModule.PRODUCTION_ORDER,
+              insertId,
+              [],
+              files,
+            );
           if (syncRes.success === 0) {
-            attachmentMessage = ' Production Order created successfully, but attachments failed to save.';
+            attachmentMessage =
+              ' Production Order created successfully, but attachments failed to save.';
           }
         } catch {
-          attachmentMessage = ' Production Order created successfully, but attachments failed to save.';
+          attachmentMessage =
+            ' Production Order created successfully, but attachments failed to save.';
         }
       }
 
@@ -223,7 +254,11 @@ export class ProductionOrderService {
     }
   }
 
-  async startUpdateProductionOrder(req: AppRequest, params: ProductionOrderUpdateDto, files?: any[]) {
+  async startUpdateProductionOrder(
+    req: AppRequest,
+    params: ProductionOrderUpdateDto,
+    files?: any[],
+  ) {
     const response = await this.updateProductionOrder(req, params, files);
     if (response.success === 1) {
       return await this.finishSuccess(response);
@@ -231,7 +266,11 @@ export class ProductionOrderService {
     return await this.finishFailure(response);
   }
 
-  async updateProductionOrder(req: AppRequest, params: ProductionOrderUpdateDto, files?: any[]) {
+  async updateProductionOrder(
+    req: AppRequest,
+    params: ProductionOrderUpdateDto,
+    files?: any[],
+  ) {
     try {
       if (!params.id) throw new Error('Production Order ID is required');
 
@@ -241,14 +280,21 @@ export class ProductionOrderService {
       if (!existingPO) throw new Error('Production Order not found');
 
       const [batchRes] = await this.poRepo.manager.query(
-        `SELECT COUNT(id) as cnt FROM erp_production_batch WHERE production_order_id = ? AND sys_rec_deleted = 0 AND status != 'Cancelled'`,
+        `SELECT COUNT(id) as cnt FROM production_batch WHERE productionOrderId = ? AND sysRecDeleted = 0 AND status != 'Cancelled'`,
         [params.id],
       );
       if (parseInt(batchRes?.cnt || '0', 10) > 0) {
-        throw new Error('Cannot edit Production Order once a batch has been created.');
+        throw new Error(
+          'Cannot edit Production Order once a batch has been created.',
+        );
       }
 
-      this.general.assertCompanyAccess(req, existingPO.companyId, 'update', 'Production Order');
+      this.general.assertCompanyAccess(
+        req,
+        existingPO.companyId,
+        'update',
+        'Production Order',
+      );
 
       const targetCompanyId = this.general.isSuperAdmin(req)
         ? params.companyId || existingPO.companyId
@@ -262,7 +308,9 @@ export class ProductionOrderService {
         params.customerId,
       );
 
-      const numProductionQty = parseFloat(String(params.productionQuantity || 0));
+      const numProductionQty = parseFloat(
+        String(params.productionQuantity || 0),
+      );
       if (isNaN(numProductionQty) || numProductionQty <= 0) {
         throw new Error('Production Quantity must be greater than 0');
       }
@@ -287,6 +335,7 @@ export class ProductionOrderService {
         remark: params.remark?.trim() || null,
         plantId: params.plantId || null,
         customerId: params.customerId || null,
+        customerName: params.customerName?.trim() || null,
         status: params.status || existingPO.status,
         updatedBy: req.user?.sub || null,
         updatedDate: new Date(),
@@ -295,15 +344,19 @@ export class ProductionOrderService {
       await this.poRepo.update({ id: params.id }, updatePayload);
 
       let attachmentMessage = '';
-      if ((files && files.length > 0) || params.retainedAttachments !== undefined) {
+      if (
+        (files && files.length > 0) ||
+        params.retainedAttachments !== undefined
+      ) {
         try {
-          const syncRes = await this.attachmentMasterService.syncMultipleAttachments(
-            targetCompanyId,
-            AttachmentModule.PRODUCTION_ORDER,
-            params.id,
-            retainedList,
-            files || [],
-          );
+          const syncRes =
+            await this.attachmentMasterService.syncMultipleAttachments(
+              targetCompanyId,
+              AttachmentModule.PRODUCTION_ORDER,
+              params.id,
+              retainedList,
+              files || [],
+            );
           if (syncRes.success === 0) {
             attachmentMessage = ` Production Order updated, but attachment sync failed: ${syncRes.message}`;
           }
@@ -332,7 +385,10 @@ export class ProductionOrderService {
     }
   }
 
-  async startDeleteProductionOrder(req: AppRequest, query: ProductionOrderDeleteDto) {
+  async startDeleteProductionOrder(
+    req: AppRequest,
+    query: ProductionOrderDeleteDto,
+  ) {
     const response = await this.deleteProductionOrder(req, query);
     if (response.success === 1) {
       return await this.finishSuccess(response);
@@ -340,7 +396,10 @@ export class ProductionOrderService {
     return await this.finishFailure(response);
   }
 
-  async deleteProductionOrder(req: AppRequest, query: ProductionOrderDeleteDto) {
+  async deleteProductionOrder(
+    req: AppRequest,
+    query: ProductionOrderDeleteDto,
+  ) {
     try {
       if (!query.id) throw new Error('Production Order ID is required');
 
@@ -349,7 +408,12 @@ export class ProductionOrderService {
       });
       if (!existingPO) throw new Error('Production Order not found');
 
-      this.general.assertCompanyAccess(req, existingPO.companyId, 'delete', 'Production Order');
+      this.general.assertCompanyAccess(
+        req,
+        existingPO.companyId,
+        'delete',
+        'Production Order',
+      );
 
       await this.poRepo.update(
         { id: query.id },
@@ -378,5 +442,111 @@ export class ProductionOrderService {
       if (err instanceof ForbiddenException) throw err;
       return { success: 0, message: err.message };
     }
+  }
+
+  async startCancelProductionOrder(
+    req: AppRequest,
+    params: CancelProductionOrderDto,
+  ) {
+    const response = await this.cancelProductionOrder(req, params);
+    if (response.success === 1) {
+      return await this.finishSuccess(response);
+    }
+    return await this.finishFailure(response);
+  }
+
+  async cancelProductionOrder(
+    req: AppRequest,
+    params: CancelProductionOrderDto,
+  ) {
+    let return_data: any = {};
+    try {
+      if (!params.id) {
+        throw new Error('Production Order ID is required for cancellation');
+      }
+
+      const existingPO = await this.poRepo.findOne({
+        where: { id: params.id, sysRecDeleted: false },
+      });
+
+      if (!existingPO) {
+        throw new Error('Production Order not found');
+      }
+
+      this.general.assertCompanyAccess(
+        req,
+        existingPO.companyId,
+        'update',
+        'Production Order',
+      );
+
+      if (
+        existingPO.status === ProductionOrderStatus.Completed ||
+        existingPO.status === ProductionOrderStatus.Cancelled ||
+        existingPO.status === ProductionOrderStatus.PartialCancelled
+      ) {
+        throw new Error(`Cannot cancel order in ${existingPO.status} status.`);
+      }
+
+      if (
+        existingPO.status === ProductionOrderStatus.InProgress &&
+        existingPO.pendingQuantity <= 0
+      ) {
+        throw new Error(
+          'Cannot cancel an InProgress order with 0 pending quantity.',
+        );
+      }
+
+      // Fetch all non-deleted batches
+      const batches = await this.pbRepo.find({
+        where: { productionOrderId: existingPO.id, sysRecDeleted: false },
+      });
+
+      const idleBatches = batches.filter(
+        (b) =>
+          b.status === ProductionBatchStatus.Pending ||
+          b.status === ProductionBatchStatus.StockReceived,
+      );
+      const activeBatches = batches.filter(
+        (b) =>
+          b.status === ProductionBatchStatus.InProgress ||
+          b.status === ProductionBatchStatus.Completed ||
+          b.status === ProductionBatchStatus.Processed,
+      );
+
+
+      // Determine final order status
+      if (activeBatches.length === 0) {
+        existingPO.status = ProductionOrderStatus.Cancelled;
+      } else {
+        existingPO.status = ProductionOrderStatus.PartialCancelled;
+      }
+
+      existingPO.updatedBy = req.user?.sub || null;
+      existingPO.updatedDate = new Date();
+      await this.poRepo.save(existingPO);
+
+      const logPayload = this.general.buildActivityLogPayload(
+        req,
+        'PRODUCTION_ORDER_CANCEL',
+        'PRODUCTION_ORDER',
+        params.id,
+        existingPO.productionOrderCode,
+        existingPO.companyId,
+      );
+      await this.activityLogService.log(logPayload);
+
+      return_data = {
+        success: 1,
+        message: 'Production Order cancelled successfully.',
+      };
+    } catch (err: any) {
+      if (err instanceof ForbiddenException) throw err;
+      return_data = {
+        success: 0,
+        message: err.message,
+      };
+    }
+    return return_data;
   }
 }

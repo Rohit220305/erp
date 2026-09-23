@@ -1,5 +1,6 @@
 {
   "moduleName": "Storage",
+  "parentModule": "Master",
   "title": "Storage Type",
   "permissions": {
     "list": "STORAGE_LIST",
@@ -8,7 +9,7 @@
     "update": "STORAGE_UPDATE",
     "delete": "STORAGE_DELETE"
   },
-  "columns": [  
+  "columns": [
     {
       "label": "Image",
       "key": "imageUrl",

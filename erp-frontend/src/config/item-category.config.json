@@ -1,5 +1,6 @@
 {
   "moduleName": "ItemCategory",
+  "parentModule": "Master",
   "title": "Item Category",
   "permissions": {
     "list": "ITEM_CATEGORY_LIST",
@@ -35,7 +36,7 @@
       "sortable": true,
       "width": "180px"
     },
-    
+
     {
       "label": "Added Date",
       "key": "addedDateFormatted",

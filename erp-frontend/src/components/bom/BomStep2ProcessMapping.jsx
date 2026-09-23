@@ -7,6 +7,9 @@ import { getItem } from "@/lib/api/item-api";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import ModuleLink from "@/components/common/ModuleLink";
 import SideDrawer from "@/components/common/SideDrawer";
+import NumericInput from "@/components/common/NumericInput";
+import { displayFormat } from "@/utils/no-data-formatter";
+import NoDataMessage from "@/components/common/NoDataMessage";
 
 const selectStyles = {
   control: (base, state) => ({
@@ -117,9 +120,9 @@ export default function BomStep2ProcessMapping({
             setItemPrimitiveQtyDisplay(display);
           }
         })
-        .catch(() => setItemPrimitiveQtyDisplay("—"));
+        .catch(() => setItemPrimitiveQtyDisplay(null));
     } else {
-      setItemPrimitiveQtyDisplay("—");
+      setItemPrimitiveQtyDisplay(null);
     }
   }, [formData.itemId]);
 
@@ -145,8 +148,8 @@ export default function BomStep2ProcessMapping({
         sequenceNo: tp.sequenceNo || idx + 1,
         processName: tp.processName || tp.process?.processName || `Process #${idx + 1}`,
         processCode: tp.processCode || tp.process?.processCode || "",
-        workCentreName: tp.workCentreName || tp.workCentre?.workCentreName || "—",
-        exitItemName: tp.exitItemName || tp.exitItem?.itemName || tp.item?.itemName || "—",
+        workCentreName: tp.workCentreName || tp.workCentre?.workCentreName || null,
+        exitItemName: tp.exitItemName || tp.exitItem?.itemName || tp.item?.itemName || null,
         exitItemId: tp.exitItemId || tp.itemId || null,
         entryItems: entryMaterials.length > 0
           ? entryMaterials
@@ -329,14 +332,16 @@ export default function BomStep2ProcessMapping({
       .filter(Boolean);
 
     const fixedExitId = isLastProcess && proc.exitItemId ? Number(proc.exitItemId) : null;
+    const finalItemId = formData.itemId ? Number(formData.itemId) : null;
 
     const excludedIds = new Set([
       ...usedInEntry,
       ...usedInExit,
       ...(fixedExitId ? [fixedExitId] : []),
+      ...(finalItemId ? [finalItemId] : []),
     ]);
 
-    return rawItemOptions.filter((opt) => !excludedIds.has(Number(opt.value)));
+    return rawItemOptions.filter((opt) => !excludedIds.has(Number(opt.value)) && opt.isInHouseProduction === 'No');
   };
 
   const getAvailableExitOptions = (proc, currentMIdx, isLastProcess) => {
@@ -350,14 +355,16 @@ export default function BomStep2ProcessMapping({
       .filter(Boolean);
 
     const fixedExitId = isLastProcess && proc.exitItemId ? Number(proc.exitItemId) : null;
+    const finalItemId = formData.itemId ? Number(formData.itemId) : null;
 
     const excludedIds = new Set([
       ...usedInExit,
       ...usedInEntry,
       ...(fixedExitId ? [fixedExitId] : []),
+      ...(finalItemId ? [finalItemId] : []),
     ]);
 
-    return rawItemOptions.filter((opt) => !excludedIds.has(Number(opt.value)));
+    return rawItemOptions.filter((opt) => !excludedIds.has(Number(opt.value)) && opt.isInHouseProduction === 'No');
   };
 
   const selectedOutputItem = rawItemOptions.find((i) => Number(i.value) === Number(formData.itemId));
@@ -368,7 +375,7 @@ export default function BomStep2ProcessMapping({
     formData.processTemplateName ||
     selectedProcessTemplate?.label ||
     selectedProcessTemplate?.templateName ||
-    "—";
+    null;
   const isAllOpen = Object.values(openStates).every(Boolean);
 
   return (
@@ -380,12 +387,12 @@ export default function BomStep2ProcessMapping({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-4 gap-x-6 text-xs">
           <div>
             <span className="text-gray-400 block mb-1">BOM Name</span>
-            <span className="font-medium text-gray-900">{formData.bomName || "—"}</span>
+            <span className="font-medium text-gray-900">{displayFormat(formData.bomName)}</span>
           </div>
 
           <div>
             <span className="text-gray-400 block mb-1">Reference Number</span>
-            <span className="font-medium text-gray-900">{formData.referenceNumber || "—"}</span>
+            <span className="font-medium text-gray-900">{displayFormat(formData.referenceNumber)}</span>
           </div>
 
           <div>
@@ -399,18 +406,18 @@ export default function BomStep2ProcessMapping({
                   setSideDrawerState({ isOpen: true, moduleName: "Item", id: formData.itemId })
                 }
               >
-                {selectedOutputItem ? selectedOutputItem.label : "—"}
+                {displayFormat(selectedOutputItem?.label)}
               </ModuleLink>
             ) : (
               <span className="font-medium text-gray-800">
-                {selectedOutputItem ? selectedOutputItem.label : "—"}
+                {displayFormat(selectedOutputItem?.label)}
               </span>
             )}
           </div>
 
           <div>
             <span className="text-gray-400 block mb-1">Primitive Qty</span>
-            <span className="font-medium text-gray-900">{itemPrimitiveQtyDisplay}</span>
+            <span className="font-medium text-gray-900">{displayFormat(itemPrimitiveQtyDisplay)}</span>
           </div>
 
           <div>
@@ -428,11 +435,11 @@ export default function BomStep2ProcessMapping({
                   })
                 }
               >
-                {processTemplateNameDisplay}
+                {displayFormat(processTemplateNameDisplay)}
               </ModuleLink>
             ) : (
               <span className="font-medium text-gray-800">
-                {processTemplateNameDisplay}
+                {displayFormat(processTemplateNameDisplay)}
               </span>
             )}
           </div>
@@ -465,9 +472,7 @@ export default function BomStep2ProcessMapping({
 
         <div className="space-y-4">
           {groupedProcesses.length === 0 ? (
-            <div className="p-8 text-center text-gray-400 italic text-xs border border-dashed border-gray-200 rounded-lg">
-              No process steps defined in template.
-            </div>
+            <NoDataMessage moduleName="Process Steps" />
           ) : (
             groupedProcesses.map((proc, pIdx) => {
               const isOpen = !!openStates[pIdx];
@@ -521,9 +526,7 @@ export default function BomStep2ProcessMapping({
 
                         <div className="p-3">
                           {proc.entryItems.length === 0 ? (
-                            <div className="py-8 text-center text-xs text-gray-500 font-medium">
-                              No Entry Material found.
-                            </div>
+                            <NoDataMessage moduleName="Entry Material" />
                           ) : (
                             <table className="w-full text-left text-xs border-separate border-spacing-y-1">
                               <thead>
@@ -580,20 +583,18 @@ export default function BomStep2ProcessMapping({
                                     </td>
                                     <td className="py-3 px-3">
                                       <div className="flex items-center rounded-md border border-gray-200 overflow-hidden bg-white h-[42px]">
-                                        <input
-                                          type="number"
-                                          min="0.0001"
-                                          step="any"
+                                        <NumericInput
                                           value={row.quantity || ""}
-                                          onChange={(e) =>
+                                          onChange={(val) =>
                                             updateEntryMaterial(
                                               pIdx,
                                               mIdx,
                                               "quantity",
-                                              e.target.value,
+                                              val,
                                             )
                                           }
                                           className="w-full h-full px-3 text-xs outline-none bg-white text-gray-800 font-medium"
+                                          placeholder="0"
                                         />
                                         <span className="h-full px-3.5 bg-[#dce4ec] border-l border-gray-200 text-gray-700 text-xs font-semibold flex items-center justify-center min-w-[60px]">
                                           {getItemUomLabel(row.itemId)}
@@ -646,9 +647,9 @@ export default function BomStep2ProcessMapping({
                                   Item Name
                                 </span>
                                 <span className="font-semibold text-[#1565c0]">
-                                  {selectedOutputItem
+                                  {displayFormat(selectedOutputItem
                                     ? selectedOutputItem.label
-                                    : proc.exitItemName}
+                                    : proc.exitItemName)}
                                 </span>
                               </div>
                               <div>
@@ -664,9 +665,7 @@ export default function BomStep2ProcessMapping({
 
                           {proc.exitItemsList.length === 0 ? (
                             !isLastProcess ? (
-                              <div className="py-6 text-center text-xs text-gray-500 font-medium">
-                                No Exit Material found.
-                              </div>
+                              <NoDataMessage moduleName="Exit Material" />
                             ) : null
                           ) : (
                             <table className="w-full text-left text-xs border-separate border-spacing-y-1">
@@ -722,20 +721,18 @@ export default function BomStep2ProcessMapping({
                                     </td>
                                     <td className="py-3 px-3">
                                       <div className="flex items-center rounded-md border border-gray-200 overflow-hidden bg-white h-[42px]">
-                                        <input
-                                          type="number"
-                                          min="0.0001"
-                                          step="any"
+                                        <NumericInput
                                           value={row.quantity || ""}
-                                          onChange={(e) =>
+                                          onChange={(val) =>
                                             updateExitMaterial(
                                               pIdx,
                                               mIdx,
                                               "quantity",
-                                              e.target.value,
+                                              val,
                                             )
                                           }
                                           className="w-full h-full px-3 text-xs outline-none bg-white text-gray-800 font-medium"
+                                          placeholder="0"
                                         />
                                         <span className="h-full px-3.5 bg-[#dce4ec] border-l border-gray-200 text-gray-700 text-xs font-semibold flex items-center justify-center min-w-[60px]">
                                           {getItemUomLabel(row.itemId)}

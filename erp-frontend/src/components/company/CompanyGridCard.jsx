@@ -3,6 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import { Building2 } from "lucide-react";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function CompanyGridCard({ item, config, setSelectedItemForDetails }) {
   const { can } = useAuth();
@@ -48,10 +49,10 @@ export default function CompanyGridCard({ item, config, setSelectedItemForDetail
                   : "text-gray-900"
               }`}
             >
-              {item.companyName || "—"}
+              {displayFormat(item.companyName)}
             </p>
             <p className="text-gray-400 text-sm mt-2 leading-tight">
-              {item.shortName || item.companyCode || "—"}
+              {displayFormat(item.shortName || item.companyCode)}
             </p>
           </div>
         </div>
@@ -64,7 +65,7 @@ export default function CompanyGridCard({ item, config, setSelectedItemForDetail
           <div className="grid grid-cols-[110px_1fr] items-center gap-2">
             <span className="text-gray-400">Email</span>
             <span className="text-gray-900 truncate" title={item.email}>
-              {item.email}
+              {displayFormat(item.email)}
             </span>
           </div>
         )}
@@ -72,7 +73,7 @@ export default function CompanyGridCard({ item, config, setSelectedItemForDetail
         {formattedPhone && (
           <div className="grid grid-cols-[110px_1fr] items-center gap-2">
             <span className="text-gray-400">Phone</span>
-            <span className="text-gray-900 truncate">{formattedPhone}</span>
+            <span className="text-gray-900 truncate">{displayFormat(formattedPhone)}</span>
           </div>
         )}
 
@@ -80,7 +81,7 @@ export default function CompanyGridCard({ item, config, setSelectedItemForDetail
           <div className="grid grid-cols-[110px_1fr] items-center gap-2">
             <span className="text-gray-400">Added date</span>
             <span className="text-gray-900 truncate">
-              {item.addedDateFormatted}
+              {displayFormat(item.addedDateFormatted, "DATE")}
             </span>
           </div>
         )}

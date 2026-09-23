@@ -3,6 +3,8 @@ import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 export default function GroupTableRow({ group, onRowAction }) {
   const { can } = useAuth();
@@ -21,30 +23,27 @@ export default function GroupTableRow({ group, onRowAction }) {
                 href={buildRoute("group", "edit", { id: group?.id })}
                 className="text-sm"
               >
-                {group?.groupName || "—"}
+                {displayFormat(group?.groupName)}
               </ModuleLink>
             ) : (
               <p className="font-medium text-gray-800 text-sm">
-                {group?.groupName || "—"}
+                {displayFormat(group?.groupName)}
               </p>
             )}
           </div>
         </div>
       </td>
       <td className="px-4 py-3 text-sm text-gray-700">
-        {group?.groupCode || "—"}
+        {displayFormat(group?.groupCode)}
       </td>
       <td className="px-4 py-3 text-sm text-gray-500">
-        {group?.description || "—"}
+        {displayFormat(group?.description)}
       </td>
       <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-        {group?.addedDateFormatted || "—"}
+        {displayFormat(group?.addedDateFormatted, "DATE")}
       </td>
       <td className="px-4 py-3 text-sm">
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
-          {isActive ? "Active" : "Inactive"}
-        </span>
+        <StatusBadge status={group?.status} />
       </td>
     </tr>
   );

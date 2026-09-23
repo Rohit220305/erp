@@ -71,6 +71,7 @@ export class ItemListService {
         'item.description AS description',
         'item.remark AS remark',
         'item.status AS status',
+        'item.isInHouseProduction AS isInHouseProduction',
         'item.addedDate AS addedDate',
         'item.updatedDate AS updatedDate',
         'item.addedBy AS addedBy',
@@ -145,6 +146,20 @@ export class ItemListService {
       itemData.addedDateFormatted = await this.general.dateFormat(itemData.addedDate);
       if (itemData.updatedDate) {
         itemData.updatedDateFormatted = await this.general.dateFormat(itemData.updatedDate);
+      }
+
+      itemData.purchasePriceFormatted = this.general.formatCurrency(itemData.purchasePrice, itemData.currencySymbol);
+      itemData.costPriceFormatted = this.general.formatCurrency(itemData.costPrice, itemData.currencySymbol);
+      itemData.costPerUnitFormatted = this.general.formatCurrency(itemData.costPerUnit, itemData.currencySymbol);
+
+      if (itemData.primitiveQuantity != null) {
+        itemData.primitiveQuantityDisplay = this.general.formatQuantityWithUom(itemData.primitiveQuantity, itemData.itemUomName);
+      }
+      if (itemData.weight != null) {
+        itemData.weightDisplay = this.general.formatQuantityWithUom(itemData.weight, itemData.weightUomName);
+      }
+      if (itemData.volume != null) {
+        itemData.volumeDisplay = this.general.formatQuantityWithUom(itemData.volume, itemData.volumeUomName);
       }
 
       const images = await this.itemImageRepo.find({
@@ -236,6 +251,7 @@ export class ItemListService {
         'item.description AS description',
         'item.remark AS remark',
         'item.status AS status',
+        'item.isInHouseProduction AS isInHouseProduction',
         'item.addedDate AS addedDate',
         'item.updatedDate AS updatedDate',
         'item.addedBy AS addedBy',
@@ -327,6 +343,20 @@ export class ItemListService {
           );
         } else {
           item.primaryImageUrl = null;
+        }
+
+        item.purchasePriceFormatted = this.general.formatCurrency(item.purchasePrice, item.currencySymbol);
+        item.costPriceFormatted = this.general.formatCurrency(item.costPrice, item.currencySymbol);
+        item.costPerUnitFormatted = this.general.formatCurrency(item.costPerUnit, item.currencySymbol);
+
+        if (item.primitiveQuantity != null) {
+          item.primitiveQuantityDisplay = this.general.formatQuantityWithUom(item.primitiveQuantity, item.itemUomName);
+        }
+        if (item.weight != null) {
+          item.weightDisplay = this.general.formatQuantityWithUom(item.weight, item.weightUomName);
+        }
+        if (item.volume != null) {
+          item.volumeDisplay = this.general.formatQuantityWithUom(item.volume, item.volumeUomName);
         }
       }
       

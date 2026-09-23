@@ -1,24 +1,29 @@
 "use client";
 
+import Link from "next/link";
+import StatusBadge from "@/components/common/StatusBadge";
 import {
   FileText,
   Package,
   Workflow,
   ShoppingCart,
   ClipboardList,
+  Clock,
 } from "lucide-react";
 
 export default function ProductionBatchSidebar({
   batchData,
-  activeTab = "SUMMARY",
-  setActiveTab,
+  activeTab = "summary",
+  getTabHref,
 }) {
   const navItems = [
-    { id: "SUMMARY", label: "Summary", icon: FileText },
-    { id: "ITEM_DETAILS", label: "Item Details", icon: Package },
-    { id: "PROCESS_ITEM_DETAILS", label: "Process Item Details", icon: Workflow },
-    { id: "MATERIAL_REQUEST", label: "Material Request", icon: ShoppingCart },
-    { id: "CONSUMPTION_LOG", label: "Consumption Log", icon: ClipboardList },
+    { id: "summary", label: "Summary", icon: FileText },
+    { id: "item-details", label: "Item Details", icon: Package },
+    { id: "process-item-details", label: "Process Item Details", icon: Workflow },
+    { id: "material-request", label: "Material Request", icon: ShoppingCart },
+    { id: "consumption-log", label: "Consumption Log", icon: ClipboardList },
+    { id: "timeline", label: "Timeline", icon: Clock },
+    { id: "cost-report", label: "Batch Cost Report", icon: FileText },
   ];
 
   return (
@@ -29,6 +34,7 @@ export default function ProductionBatchSidebar({
             <h2 className="font-bold text-[14px] text-gray-900 leading-snug">
               {batchData?.batchCode }
             </h2>
+            <StatusBadge status={batchData?.status} module="batch" />
           </div>
         </div>
       </div>
@@ -37,11 +43,12 @@ export default function ProductionBatchSidebar({
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
+          const href = getTabHref ? getTabHref(item.id) : "#";
           return (
-            <button
+            <Link
               key={item.id}
-              type="button"
-              onClick={() => setActiveTab(item.id)}
+              href={href}
+              replace
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] font-medium transition-colors cursor-pointer ${
                 isActive
                   ? "bg-[#1565c0] text-white shadow-sm font-semibold"
@@ -50,7 +57,7 @@ export default function ProductionBatchSidebar({
             >
               <Icon size={16} className={isActive ? "text-white" : "text-gray-500"} />
               <span>{item.label}</span>
-            </button>
+            </Link>
           );
         })}
       </div>

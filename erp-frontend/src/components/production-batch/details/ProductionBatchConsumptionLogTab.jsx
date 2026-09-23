@@ -1,22 +1,25 @@
 import React from "react";
 import dayjs from "dayjs";
 import ModuleLink from "@/components/common/ModuleLink";
+import NoDataMessage from "@/components/common/NoDataMessage";
 import { formatQuantityWithUom } from "@/utils/number-formatter";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ProductionBatchConsumptionLogTab({ processLogs, onOpenDrawer }) {
   if (!processLogs || processLogs.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm">
-        <p className="text-sm text-gray-500 font-medium">
-          No logs found for this batch.
-        </p>
+      <div className="pb-10">
+        <NoDataMessage moduleName="Consumption Log" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm ">
+      <h2 className="text-[15px] font-bold text-gray-900  p-3">
+        Consumption Log
+      </h2>
+      <div className="overflow-">
         <table className="min-w-full text-sm text-left">
           <thead className="bg-[#f8f9fa] border-b border-gray-200 text-xs font-semibold text-gray-600 tracking-wider">
             <tr>
@@ -78,18 +81,18 @@ export default function ProductionBatchConsumptionLogTab({ processLogs, onOpenDr
                     className={`px-4 py-3 font-medium whitespace-nowrap ${isConsumption ? "text-red-500" : "text-gray-500"}`}
                   >
                     {isConsumption
-                      ? formatQuantityWithUom(log.loggedQty, uomStr)
+                      ? log.loggedQtyFormatted
                       : formatQuantityWithUom(0, uomStr)}
                   </td>
                   <td
                     className={`px-4 py-3 font-medium whitespace-nowrap ${isProduction ? "text-green-600" : "text-gray-500"}`}
                   >
                     {isProduction
-                      ? formatQuantityWithUom(log.loggedQty, uomStr)
+                      ? log.loggedQtyFormatted
                       : formatQuantityWithUom(0, uomStr)}
                   </td>
                   <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                    {log.logDateFormatted ? log.logDateFormatted : "-"}
+                    {displayFormat(log.logDateFormatted, "DATE")}
                   </td>
                   <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
                     {log.addedBy ? (
@@ -102,11 +105,13 @@ export default function ProductionBatchConsumptionLogTab({ processLogs, onOpenDr
                         {log.addedByName || "User"}
                       </ModuleLink>
                     ) : (
-                      <span className="text-gray-500">-</span>
+                      <span className="text-gray-500">
+                        {displayFormat(log.addedByName)}
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                    {log.addedDateFormatted ? log.addedDateFormatted : "-"}
+                    {displayFormat(log.addedDateFormatted, "DATE")}
                   </td>
                 </tr>
               );

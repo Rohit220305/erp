@@ -6,6 +6,7 @@ import { CAPABILITIES } from "@/config/capabilities.config";
 import ModuleLink from "@/components/common/ModuleLink";
 import StatusBadge from "@/components/common/StatusBadge";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function BomTableRow({
   item,
@@ -23,7 +24,6 @@ export default function BomTableRow({
   const canViewProcessTemplate = can(CAPABILITIES.PROCESS_TEMPLATE?.VIEW || "PROCESS_TEMPLATE_VIEW");
   const canViewCompany = can(CAPABILITIES.COMPANY?.VIEW || "COMPANY_VIEW");
   const canViewUser = can(CAPABILITIES.USER?.VIEW || "USER_VIEW");
-  console.log(item)
   return (
     <tr className="border-b border-gray-100 hover:bg-blue-50/30 transition-colors text-xs font-medium">
       {bomConfig.columns.map((col, idx) => {
@@ -42,10 +42,10 @@ export default function BomTableRow({
                   onClick={() => setSelectedItemForDetails(item)}
                   className="font-semibold text-[#1565c0] hover:underline cursor-pointer"
                 >
-                  {value || "—"}
+                  {displayFormat(value)}
                 </ModuleLink>
               ) : (
-                <span className="font-semibold text-gray-800">{value || "—"}</span>
+                <span className="font-semibold text-gray-800">{displayFormat(value)}</span>
               )}
             </td>
           );
@@ -54,7 +54,7 @@ export default function BomTableRow({
         if (col.key === "bomCode") {
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap font-mono text-gray-800">
-              {value || "—"}
+              {displayFormat(value)}
             </td>
           );
         }
@@ -68,10 +68,10 @@ export default function BomTableRow({
                   onClick={() => setSelectedOutputItemForDetails({ categoryId: item.itemId, id: item.itemId })}
                   className="font-medium text-[#1565c0] hover:underline cursor-pointer"
                 >
-                  {value || "—"}
+                  {displayFormat(value)}
                 </ModuleLink>
               ) : (
-                <span className="text-gray-800">{value || "—"}</span>
+                <span className="text-gray-800">{displayFormat(value)}</span>
               )}
             </td>
           );
@@ -80,7 +80,7 @@ export default function BomTableRow({
         if (col.key === "itemCode") {
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap font-mono text-gray-700">
-              {value || "—"}
+              {displayFormat(value)}
             </td>
           );
         }
@@ -88,7 +88,7 @@ export default function BomTableRow({
         if (col.key === "productionMethod") {
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap text-gray-800 capitalize">
-              {value || "—"}
+              {displayFormat(value)}
             </td>
           );
         }
@@ -102,10 +102,10 @@ export default function BomTableRow({
                   onClick={() => setSelectedCompanyForDetails({ companyId: item.companyId, id: item.companyId })}
                   className="font-medium text-[#1565c0] hover:underline cursor-pointer"
                 >
-                  {value || "—"}
+                  {displayFormat(value)}
                 </ModuleLink>
               ) : (
-                <span className="text-gray-800">{value || "—"}</span>
+                <span className="text-gray-800">{displayFormat(value)}</span>
               )}
             </td>
           );
@@ -114,7 +114,7 @@ export default function BomTableRow({
         if (col.key === "itemBarcode") {
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap font-mono text-gray-800">
-              {value || "—"}
+              {displayFormat(value)}
             </td>
           );
         }
@@ -133,10 +133,10 @@ export default function BomTableRow({
                   }
                   className="font-medium text-[#1565c0] hover:underline cursor-pointer"
                 >
-                  {value || "—"}
+                  {displayFormat(value)}
                 </ModuleLink>
               ) : (
-                <span className="font-medium text-gray-900">{value || "—"}</span>
+                <span className="font-medium text-gray-900">{displayFormat(value)}</span>
               )}
             </td>
           );
@@ -145,7 +145,7 @@ export default function BomTableRow({
         if (col.key === "addedDateFormatted") {
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap text-gray-700">
-              {value || "—"}
+              {displayFormat(value, "DATE")}
             </td>
           );
         }
@@ -153,14 +153,14 @@ export default function BomTableRow({
         if (col.type === "statusBadge" || col.key === "status") {
           return (
             <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap">
-              <StatusBadge status={value || "Active"} />
+              <StatusBadge status={value} />
             </td>
           );
         }
 
         return (
           <td key={col.key || idx} className="px-4 py-3.5 whitespace-nowrap text-gray-700">
-            {value !== null && value !== undefined && value !== "" ? value : "—"}
+            {displayFormat(value !== null && value !== undefined && value !== "" ? (col.type === "date" ? displayFormat(value, "DATE") : value) : null)}
           </td>
         );
       })}

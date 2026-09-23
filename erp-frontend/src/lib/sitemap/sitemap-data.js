@@ -55,7 +55,7 @@ export const sitemapData = [
         path: "/item-category",
         permission: "ITEM_CATEGORY_LIST",
       },
-      { label: "Item Master", path: "/item", permission: "ITEM_LIST" },
+      { label: "Item", path: "/item", permission: "ITEM_LIST" },
     ],
   },
   {

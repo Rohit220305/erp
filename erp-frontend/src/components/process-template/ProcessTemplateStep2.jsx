@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Select from "react-select";
 import { listProcesses } from "@/lib/api/process-api";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 import { ArrowUp, ArrowDown, Trash2, Plus, Info } from "lucide-react";
 import ConfirmModal from "@/components/common/ConfirmModal";
 
@@ -338,21 +340,19 @@ export default function ProcessTemplateStep2({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
           <div>
             <span className="block text-gray-500 text-xs mb-1">Template Name</span>
-            <span className="font-semibold text-gray-800">{formData.templateName || "-"}</span>
+            <span className="font-semibold text-gray-800">{displayFormat(formData.templateName)}</span>
           </div>
           <div>
             <span className="block text-gray-500 text-xs mb-1">Template Code</span>
-            <span className="font-semibold text-gray-800">{formData.templateCode || "-"}</span>
+            <span className="font-semibold text-gray-800">{displayFormat(formData.templateCode)}</span>
           </div>
           <div>
             <span className="block text-gray-500 text-xs mb-1">Remark</span>
-            <span className="font-medium text-gray-700">{formData.remark || "-"}</span>
+            <span className="font-medium text-gray-700">{displayFormat(formData.remark)}</span>
           </div>
           <div>
             <span className="block text-gray-500 text-xs mb-1">Status</span>
-            <span className={`font-semibold ${isStatusActive ? "text-green-600" : "text-red-600"}`}>
-              {formData.status || "Active"}
-            </span>
+            <StatusBadge status={formData.status} />
           </div>
         </div>
       </div>

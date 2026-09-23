@@ -11,19 +11,20 @@ import SharedImageZoom from "@/components/common/SharedImageZoom";
 import { Tag } from "lucide-react";
 import SideDrawer from "@/components/common/SideDrawer";
 import ModuleLink from "@/components/common/ModuleLink";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
-function DetailRow({ label, value, valueClassName = "", href, onClick }) {
-  if (!value) return null;
+function DetailRow({ label, value, valueClassName = "", href, onClick, valueNode }) {
   return (
     <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
       <span className="text-sm text-gray-500">{label}</span>
-      {href ? (
+      {valueNode ? valueNode : href ? (
         <ModuleLink href={href} onClick={onClick} className="text-[#1565c0] font-medium text-sm text-right">
-          {value}
+          {displayFormat(value)}
         </ModuleLink>
       ) : (
         <span className={`text-sm font-medium text-right ${valueClassName}`}>
-          {value}
+          {displayFormat(value)}
         </span>
       )}
     </div>
@@ -41,16 +42,16 @@ function UserInfoCard({ title, name, date, href, onClick }) {
         <div className="flex flex-col">
           {href ? (
             <ModuleLink href={href} onClick={onClick} className="text-sm font-semibold text-[#1565c0]">
-              {name || "System"}
+              {displayFormat(name)}
             </ModuleLink>
           ) : (
             <span className="text-sm font-semibold text-gray-900">
-              {name || "System"}
+              {displayFormat(name)}
             </span>
           )}
           {date && (
             <span className="text-xs text-gray-400 mt-1">
-              {date}
+              {displayFormat(date, "DATE")}
             </span>
           )}
         </div>
@@ -198,8 +199,7 @@ export default function BrandDetailPage({ data }) {
                 />
                 <DetailRow
                   label="Status"
-                  value={status}
-                  valueClassName={isActive ? "text-green-500" : "text-red-500"}
+                  valueNode={<StatusBadge status={status} />}
                 />
               </div>
             </div>

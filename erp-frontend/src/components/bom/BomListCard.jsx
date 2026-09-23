@@ -7,7 +7,9 @@ import { CAPABILITIES } from "@/config/capabilities.config";
 import StatusBadge from "@/components/common/StatusBadge";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
+import { formatCurrency } from "@/utils/number-formatter";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function BomListCard({
   item,
@@ -59,15 +61,15 @@ export default function BomListCard({
                       }
                       className="block text-[#1565c0] hover:underline cursor-pointer font-semibold text-xs truncate text-left"
                     >
-                      {item.itemName || "—"}
+                      {displayFormat(item.itemName)}
                     </ModuleLink>
                   ) : (
                     <p className="text-xs font-semibold text-gray-800 truncate">
-                      {item.itemName || "—"}
+                      {displayFormat(item.itemName)}
                     </p>
                   )}
                   <p className="text-[10px] text-gray-400 font-mono mt-0.5 truncate">
-                    ({item.itemCode || "—"})
+                    ({displayFormat(item.itemCode)})
                   </p>
                 </div>
               </div>
@@ -83,11 +85,11 @@ export default function BomListCard({
                   onClick={() => setSelectedItemForDetails(item)}
                   className="block text-[#1565c0] hover:underline cursor-pointer font-semibold text-xs truncate text-left"
                 >
-                  {item.bomName || "—"}
+                  {displayFormat(item.bomName)}
                 </ModuleLink>
               ) : (
                 <p className="text-xs font-semibold text-gray-800 truncate">
-                  {item.bomName || "—"}
+                  {displayFormat(item.bomName)}
                 </p>
               )}
             </div>
@@ -97,7 +99,7 @@ export default function BomListCard({
                 Status
               </p>
               <div>
-                <StatusBadge status={item.status || "Active"} />
+                <StatusBadge status={item.status} />
               </div>
             </div>
 
@@ -106,7 +108,7 @@ export default function BomListCard({
                 BoM Code
               </p>
               <div className="text-xs font-mono text-gray-800 font-medium truncate">
-                {item.bomCode || "—"}
+                {displayFormat(item.bomCode)}
               </div>
             </div>
           </div>
@@ -136,7 +138,7 @@ export default function BomListCard({
                   Reference Number
                 </p>
                 <p className="text-xs font-medium text-gray-800 truncate">
-                  {item.referenceNumber || "-"}
+                  {displayFormat(item.referenceNumber)}
                 </p>
               </div>
 
@@ -145,7 +147,7 @@ export default function BomListCard({
                   Production Method
                 </p>
                 <p className="text-xs font-semibold text-gray-800 capitalize truncate">
-                  {item.productionMethod || "-"}
+                  {displayFormat(item.productionMethod)}
                 </p>
               </div>
 
@@ -154,7 +156,7 @@ export default function BomListCard({
                   Cost Per Unit
                 </p>
                 <p className="text-xs font-semibold text-gray-900 truncate">
-                  {item.costPerUnitFormatted || item.costPerUnit || "-"}
+                  {displayFormat(item.costPerUnitFormatted || (item.costPerUnit != null && item.costPerUnit !== "" ? formatCurrency(item.costPerUnit, item.currencySymbol) : null))}
                 </p>
               </div>
 
@@ -163,7 +165,7 @@ export default function BomListCard({
                   Item Bar Code
                 </p>
                 <p className="text-xs font-medium text-[#1565c0] font-mono truncate">
-                  {item.itemBarcode || "-"}
+                  {displayFormat(item.itemBarcode)}
                 </p>
               </div>
 
@@ -183,11 +185,11 @@ export default function BomListCard({
                       }
                       className="font-semibold text-xs text-[#1565c0] hover:underline cursor-pointer truncate block"
                     >
-                      {item.addedByName || "-"}
+                      {displayFormat(item.addedByName)}
                     </ModuleLink>
                   ) : (
                     <span className="font-semibold text-xs text-gray-900 truncate block">
-                      {item.addedByName || "-"}
+                      {displayFormat(item.addedByName)}
                     </span>
                   );
                 })()}
@@ -198,7 +200,7 @@ export default function BomListCard({
                   Added Date
                 </p>
                 <p className="text-xs font-medium text-gray-800 truncate">
-                  {item.addedDateFormatted || "-"}
+                  {displayFormat(item.addedDateFormatted, "DATE")}
                 </p>
               </div>
             </div>

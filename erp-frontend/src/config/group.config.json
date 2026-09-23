@@ -1,5 +1,6 @@
 {
   "moduleName": "Group",
+  "parentModule": "User",
   "title": "Group Master",
   "permissions": {
     "list": "GROUP_LIST",

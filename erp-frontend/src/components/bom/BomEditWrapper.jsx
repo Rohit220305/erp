@@ -23,6 +23,13 @@ export default function BomEditWrapper({ id }) {
 
         if (res && (res.success === 1 || res.settings?.success === 1)) {
           const data = res.data || res.settings?.data || {};
+
+          if (Number(data.productionOrderCount || 0) > 0) {
+            toast.error("BOM cannot be edited because it is linked to one or more Production Orders.");
+            router.replace(`/bom/details/${id}`);
+            return;
+          }
+
           if (data.processStages && Array.isArray(data.processStages)) {
             const flatItems = [];
             data.processStages.forEach((stage) => {

@@ -34,3 +34,10 @@ export async function deleteBom({ id }) {
     method: "DELETE",
   });
 }
+
+export async function cloneBom(data) {
+  return apiClient("/bom/clone-bom", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}

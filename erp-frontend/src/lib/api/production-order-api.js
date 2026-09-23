@@ -34,3 +34,11 @@ export async function deleteProductionOrder({ id }) {
     method: "DELETE",
   });
 }
+
+export async function cancelProductionOrder(data) {
+  return apiClient("/production-order/cancel-order", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+

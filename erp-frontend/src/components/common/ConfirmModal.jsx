@@ -19,15 +19,15 @@ const ACTION_DEFAULTS = {
   }),
   delete: (entity) => ({
     title: "Confirm Delete",
-    message: `Are you sure you want to delete this ${entity || "record"}? This action cannot be undone.`,
+    message: `Are you sure you want to delete this ${entity || "record"}?`,
     confirmLabel: "Delete",
     danger: true,
   }),
   discard: (entity) => ({
     title: "Discard Changes",
     message: entity
-      ? `Are you sure you want to discard your changes for this ${entity}? Any unsaved data will be lost.`
-      : "Are you sure you want to discard your changes? Any unsaved data will be lost.",
+      ? `Are you sure you want to discard your changes for this ${entity}? .`
+      : "Are you sure you want to discard your changes?",
     confirmLabel: "Discard",
     danger: true,
   }),
@@ -55,6 +55,14 @@ export default function ConfirmModal({
   const confirmRef = useRef(null);
   const [mounted, setMounted] = useState(false);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", handleEsc);
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+    };
+  }, [isOpen, onCancel]);
   useEffect(() => {
     setMounted(true);
     if (isOpen) confirmRef.current?.focus();
@@ -84,34 +92,38 @@ export default function ConfirmModal({
         onClick={onCancel}
       />
 
-      <div className="relative z-10 bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 animate-in fade-in-0 zoom-in-95">
+      <div className="relative z-10 bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 p-5 animate-in fade-in-0 zoom-in-95 flex flex-col items-center text-center">
         <button
           type="button"
           onClick={onCancel}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition cursor-pointer"
+          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition cursor-pointer"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
-        <div
-          className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
-            isDanger ? "bg-red-100" : "bg-blue-100"
-          }`}
-        >
-          <AlertTriangle
-            size={24}
-            className={isDanger ? "text-red-600" : "text-blue-600"}
-          />
+        <div className="flex items-center justify-center gap-3 mb-4 w-full">
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isDanger ? "bg-red-100" : "bg-blue-100"
+              }`}
+          >
+            <AlertTriangle
+              size={20}
+              className={isDanger ? "text-red-600" : "text-blue-600"}
+            />
+          </div>
+          <h3 className="text-base font-semibold text-gray-900">{finalTitle}</h3>
         </div>
 
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{finalTitle}</h3>
-        <p className="text-sm text-gray-500 mb-6">{finalMessage}</p>
 
-        <div className="flex gap-3 justify-end">
+        <div className="max-h-32 overflow-y-auto mb-6 w-full px-2 custom-scrollbar">
+          <p className="text-sm text-gray-500 leading-relaxed">{finalMessage}</p>
+        </div>
+
+        <div className="flex gap-3 justify-center w-full">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition cursor-pointer"
+            className="px-4 py-2 text-sm font-medium border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition cursor-pointer min-w-[100px]"
           >
             {cancelLabel}
           </button>
@@ -119,11 +131,10 @@ export default function ConfirmModal({
             ref={confirmRef}
             type="button"
             onClick={onConfirm}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition cursor-pointer ${
-              isDanger
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-[#1565c0] hover:bg-[#0f57a6]"
-            }`}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-md transition cursor-pointer min-w-[100px] ${isDanger
+              ? "bg-red-600 hover:bg-red-700"
+              : "bg-[#1565c0] hover:bg-[#0f57a6]"
+              }`}
           >
             {finalConfirmLabel}
           </button>

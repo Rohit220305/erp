@@ -173,6 +173,10 @@ export class ItemAddDto {
   @IsEnum(YesNo)
   isScrap: YesNo;
 
+  @IsNotEmpty()
+  @IsEnum(YesNo)
+  isInHouseProduction: YesNo;
+
   @IsOptional()
   @IsString()
   description?: string;

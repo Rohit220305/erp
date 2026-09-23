@@ -1,5 +1,6 @@
 {
   "moduleName": "Brand",
+  "parentModule": "Master",
   "title": "Brand Master",
   "permissions": {
     "list": "BRAND_LIST",

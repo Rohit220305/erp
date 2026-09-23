@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-
+import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 export interface CategorizedBatchItems {
   rawMaterials: any[];
   semiFinished: any[];
@@ -8,6 +8,8 @@ export interface CategorizedBatchItems {
 
 @Injectable()
 export class BatchItemCategorizerUtility {
+  constructor(private readonly general: GeneralUtilities) { }
+
   categorizeBatchItems(
     items: any[],
     mainItemId?: number,
@@ -37,10 +39,10 @@ export class BatchItemCategorizerUtility {
         targetMainItemId && itemId === targetMainItemId
           ? finishedProductsMap
           : isEntry && !isInternal
-          ? rawMaterialsMap
-          : isInternal
-          ? semiFinishedMap
-          : finishedProductsMap;
+            ? rawMaterialsMap
+            : isInternal
+              ? semiFinishedMap
+              : finishedProductsMap;
 
       if (!targetMap.has(itemId)) {
         targetMap.set(itemId, {
@@ -51,17 +53,22 @@ export class BatchItemCategorizerUtility {
           uomName: item.uomName,
           materialType: item.materialType,
           isInternalTransfer: isInternal,
-          requiredQty: Number(item.requiredQty || 0),
+          requiredQty: isInternal && item.materialType === 'Exit' ? 0 : Number(item.requiredQty || 0),
           requestedQty: Number(item.requestedQty || item.requestQty || 0),
           receivedQty: Number(item.receivedQty || 0),
           consumedQty: Number(item.consumedQty || 0),
           producedQty: Number(item.producedQty || 0),
           availableStock: Number(item.availableStock || 0),
+          costPerUnit: Number(item.costPerUnit || 0),
+          currencyCode: item.currencyCode || 'N/A',
           itemImageUrl: itemImageMap ? itemImageMap.get(itemId) || null : item.itemImageUrl || null,
         });
       } else {
         const existing = targetMap.get(itemId);
-        existing.requiredQty += Number(item.requiredQty || 0);
+        if (isInternal && item.materialType === 'Exit') {
+        } else {
+          existing.requiredQty += Number(item.requiredQty || 0);
+        }
         existing.requestedQty += Number(item.requestedQty || item.requestQty || 0);
         existing.receivedQty += Number(item.receivedQty || 0);
         existing.consumedQty += Number(item.consumedQty || 0);
@@ -77,7 +84,7 @@ export class BatchItemCategorizerUtility {
         itemId: targetMainItemId,
         itemName: batchData.itemName,
         itemCode: batchData.itemCode,
-        uomName: batchData.uomName ,
+        uomName: batchData.uomName,
         materialType: 'Exit',
         isInternalTransfer: false,
         requiredQty: Number(batchData.batchQuantity || 0),
@@ -90,20 +97,47 @@ export class BatchItemCategorizerUtility {
       });
     }
 
-    const rawMaterials = Array.from(rawMaterialsMap.values()).map((item) => ({
-      ...item,
-      availableStock: Math.max(0, Number(item.receivedQty || 0) - Number(item.consumedQty || 0)),
-    }));
+    const rawMaterials = Array.from(rawMaterialsMap.values()).map((item) => {
+      const availableStock = Math.max(0, Number(item.receivedQty || 0) - Number(item.consumedQty || 0));
+      return {
+        ...item,
+        availableStock,
+        requiredQtyFormatted: this.general.formatQuantityWithUom(item.requiredQty, item.uomName),
+        requestedQtyFormatted: this.general.formatQuantityWithUom(item.requestedQty, item.uomName),
+        receivedQtyFormatted: this.general.formatQuantityWithUom(item.receivedQty, item.uomName),
+        consumedQtyFormatted: this.general.formatQuantityWithUom(item.consumedQty, item.uomName),
+        producedQtyFormatted: this.general.formatQuantityWithUom(item.producedQty, item.uomName),
+        availableStockFormatted: this.general.formatQuantityWithUom(availableStock, item.uomName),
+      };
+    });
 
-    const semiFinished = Array.from(semiFinishedMap.values()).map((item) => ({
-      ...item,
-      availableStock: Math.max(0, Number(item.producedQty || 0) - Number(item.consumedQty || 0)),
-    }));
+    const semiFinished = Array.from(semiFinishedMap.values()).map((item) => {
+      const availableStock = Math.max(0, Number(item.producedQty || 0) - Number(item.consumedQty || 0));
+      return {
+        ...item,
+        availableStock,
+        requiredQtyFormatted: this.general.formatQuantityWithUom(item.requiredQty, item.uomName),
+        requestedQtyFormatted: this.general.formatQuantityWithUom(item.requestedQty, item.uomName),
+        receivedQtyFormatted: this.general.formatQuantityWithUom(item.receivedQty, item.uomName),
+        consumedQtyFormatted: this.general.formatQuantityWithUom(item.consumedQty, item.uomName),
+        producedQtyFormatted: this.general.formatQuantityWithUom(item.producedQty, item.uomName),
+        availableStockFormatted: this.general.formatQuantityWithUom(availableStock, item.uomName),
+      };
+    });
 
-    const finishedProducts = Array.from(finishedProductsMap.values()).map((item) => ({
-      ...item,
-      availableStock: Number(item.producedQty || 0),
-    }));
+    const finishedProducts = Array.from(finishedProductsMap.values()).map((item) => {
+      const availableStock = Number(item.producedQty || 0);
+      return {
+        ...item,
+        availableStock,
+        requiredQtyFormatted: this.general.formatQuantityWithUom(item.requiredQty, item.uomName),
+        requestedQtyFormatted: this.general.formatQuantityWithUom(item.requestedQty, item.uomName),
+        receivedQtyFormatted: this.general.formatQuantityWithUom(item.receivedQty, item.uomName),
+        consumedQtyFormatted: this.general.formatQuantityWithUom(item.consumedQty, item.uomName),
+        producedQtyFormatted: this.general.formatQuantityWithUom(item.producedQty, item.uomName),
+        availableStockFormatted: this.general.formatQuantityWithUom(availableStock, item.uomName),
+      };
+    });
 
     return {
       rawMaterials,

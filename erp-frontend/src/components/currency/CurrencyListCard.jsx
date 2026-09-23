@@ -3,6 +3,8 @@
 import { useAuth } from "@/context/AuthContext";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 
 export default function CurrencyListCard({ item, config, setSelectedItemForDetails }) {
@@ -32,15 +34,15 @@ export default function CurrencyListCard({ item, config, setSelectedItemForDetai
                 onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
                 className="block font-semibold text-sm text-[#1565c0] truncate leading-snug"
               >
-                {item.currencyName || "—"}
+                {displayFormat(item.currencyName)}
               </ModuleLink>
             ) : (
               <p className="font-semibold text-sm text-gray-800 truncate leading-snug">
-                {item.currencyName || "—"}
+                {displayFormat(item.currencyName)}
               </p>
             )}
             <p className="text-xs text-gray-400 mt-0.5 font-mono tracking-wide">
-              {item.currencyCode || "—"}
+              {displayFormat(item.currencyCode)}
             </p>
           </div>
 
@@ -49,25 +51,12 @@ export default function CurrencyListCard({ item, config, setSelectedItemForDetai
               Symbol
             </p>
             <p className="text-sm text-gray-800 font-medium">
-              {item.currencySymbol || "—"}
+              {displayFormat(item.currencySymbol)}
             </p>
           </div>
 
           <div className="flex-shrink-0">
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                isActive
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  isActive ? "bg-green-500" : "bg-red-500"
-                }`}
-              />
-              {item.status || "—"}
-            </span>
+            <StatusBadge status={item.status} />
           </div>
 
         </div>

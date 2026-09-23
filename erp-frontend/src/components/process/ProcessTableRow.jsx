@@ -5,6 +5,8 @@ import { Tag } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 export default function ProcessTableRow({
   item,
@@ -40,18 +42,18 @@ export default function ProcessTableRow({
             onClick={() => setSelectedItemForDetails(item)}
             className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
           >
-            {item.processName}
+            {displayFormat(item.processName)}
           </ModuleLink>
         ) : (
           <span className="text-sm font-medium text-gray-900">
-            {item.processName}
+            {displayFormat(item.processName)}
           </span>
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           <span className="text-sm font-mono text-gray-900 px-2 py-1 ">
-            {item.processCode || "—"}
+            {displayFormat(item.processCode)}
           </span>
         </div>
       </td>
@@ -63,10 +65,10 @@ export default function ProcessTableRow({
             className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
             title={item.workCentreName}
           >
-            {item.workCentreName}
+            {displayFormat(item.workCentreName)}
           </ModuleLink>
         ) : (
-          <span className="text-sm font-medium text-gray-900">—</span>
+          <span className="text-sm font-medium text-gray-900">{displayFormat(item.workCentreName)}</span>
         )}
       </td>
       {user?.isSuperAdmin && (
@@ -78,31 +80,22 @@ export default function ProcessTableRow({
               className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
               title={item.companyName}
             >
-              {item.companyName}
+              {displayFormat(item.companyName)}
             </ModuleLink>
           ) : (
-            <span className="text-sm font-medium text-gray-900">—</span>
+            <span className="text-sm font-medium text-gray-900">{displayFormat(item.companyName)}</span>
           )}
         </td>
       )}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex flex-col">
           <span className="text-xs text-gray-500">
-            {item.addedDateFormatted || "-"}
+            {displayFormat(item.addedDateFormatted, "DATE")}
           </span>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-            isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-          }`}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`}
-          />
-          {isActive ? "Active" : "Inactive"}
-        </span>
+        <StatusBadge status={item.status} />
       </td>
     </tr>
   );

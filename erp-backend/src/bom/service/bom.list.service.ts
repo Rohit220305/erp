@@ -104,6 +104,10 @@ export class BomListService {
         '(SELECT COUNT(1) FROM bom_process_items bpi WHERE bpi.bomId = bom.id AND bpi.materialType = \'Entry\')',
         'totalMaterial',
       );
+      qb.addSelect(
+        '(SELECT COUNT(1) FROM production_order po WHERE po.bomId = bom.id AND po.sysRecDeleted = 0 AND po.status != \'Cancelled\')',
+        'productionOrderCount',
+      );
 
       qb.where('bom.sysRecDeleted = 0');
 
@@ -191,14 +195,10 @@ export class BomListService {
           bomRow.itemImageUrl = itemImageMap.get(Number(bomRow.itemId)) || null;
           bomRow.liveCalculatedCostPerUnit = costResult.totalUnitCost;
           bomRow.totalMaterial = Number(bomRow.totalMaterial || 0);
+          bomRow.productionOrderCount = parseInt(String(bomRow.productionOrderCount || 0), 10);
 
-          const currencySym = bomRow.currencySymbol || '₦';
-          const liveCostFormatted = Number(costResult.totalUnitCost || 0).toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
           bomRow.costPerUnit = costResult.totalUnitCost;
-          bomRow.costPerUnitFormatted = `${currencySym} ${liveCostFormatted}`;
+          bomRow.costPerUnitFormatted = this.general.formatCurrency(costResult.totalUnitCost, bomRow.currencySymbol);
         });
       }
 
@@ -292,10 +292,14 @@ export class BomListService {
         "currency.currencyCode = cc.currencyCode AND currency.status = 'Active' AND currency.sysRecDeleted = 0",
       );
 
+      qb.addSelect(
+        '(SELECT COUNT(1) FROM production_order po WHERE po.bomId = bom.id AND po.sysRecDeleted = 0 AND po.status != \'Cancelled\')',
+        'productionOrderCount',
+      );
+
       qb.where('bom.id = :id', { id: params.id });
       qb.andWhere('bom.sysRecDeleted = 0');
 
-      console.log()
       const bomDetails = await qb.getRawOne();
       if (!bomDetails) {
         throw new Error('BOM not found');
@@ -305,6 +309,7 @@ export class BomListService {
 
       bomDetails.addedDateFormatted = bomDetails.addedDate ? await this.general.dateFormat(bomDetails.addedDate) : null;
       bomDetails.updatedDateFormatted = bomDetails.updatedDate ? await this.general.dateFormat(bomDetails.updatedDate) : null;
+      bomDetails.productionOrderCount = parseInt(String(bomDetails.productionOrderCount || 0), 10);
 
       const itemQb = this.bomProcessItemRepo.createQueryBuilder('bpi');
       itemQb.select([
@@ -394,8 +399,8 @@ export class BomListService {
       bomDetails.liveCalculatedCostPerUnit = costResult.totalUnitCost;
       
       const currencySymbol = bomDetails.currencySymbol || '';
-      const liveCostFormatted = Number(costResult.totalUnitCost || 0).toFixed(2);
-      bomDetails.costPerUnit = currencySymbol ? `${currencySymbol} ${liveCostFormatted}` : liveCostFormatted;
+      bomDetails.costPerUnit = costResult.totalUnitCost;
+      bomDetails.costPerUnitFormatted = this.general.formatCurrency(costResult.totalUnitCost, currencySymbol);
       bomDetails.costBreakdown = costResult;
 
       const processStagesMap = new Map<number, any>();

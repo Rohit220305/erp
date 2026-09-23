@@ -6,6 +6,7 @@ import StatusBadge from "@/components/common/StatusBadge";
 import productionBatchConfig from "@/config/production-batch.config.json";
 
 import { formatNumber } from "@/utils/number-formatter";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ProductionBatchTableRow({
   item,
@@ -36,7 +37,7 @@ export default function ProductionBatchTableRow({
                 className="font-bold text-[#1565c0] hover:underline"
                 onOpenDrawer={setSelectedBatchForDetails ? () => setSelectedBatchForDetails(item) : null}
               >
-                {value || "—"}
+                {displayFormat(value)}
               </ModuleLink>
             </td>
           );
@@ -51,7 +52,7 @@ export default function ProductionBatchTableRow({
                 className="font-medium text-[#1565c0] hover:underline"
                 onOpenDrawer={setSelectedOrderForDetails ? () => setSelectedOrderForDetails({ productionOrderId: item.productionOrderId }) : null}
               >
-                {value || "—"}
+                {displayFormat(value)}
               </ModuleLink>
             </td>
           );
@@ -66,7 +67,7 @@ export default function ProductionBatchTableRow({
                 className="font-medium text-[#1565c0] hover:underline"
                 onOpenDrawer={setSelectedItemForDetails ? () => setSelectedItemForDetails({ itemId: item.itemId }) : null}
               >
-                {value || "—"}
+                {displayFormat(value)}
               </ModuleLink>
             </td>
           );
@@ -81,7 +82,7 @@ export default function ProductionBatchTableRow({
                 className="font-medium text-[#1565c0] hover:underline font-mono"
                 onOpenDrawer={setSelectedBomForDetails ? () => setSelectedBomForDetails({ bomId: item.bomId }) : null}
               >
-                {value || "—"}
+                {displayFormat(value)}
               </ModuleLink>
             </td>
           );
@@ -96,7 +97,7 @@ export default function ProductionBatchTableRow({
                 className="font-medium text-[#1565c0] hover:underline"
                 onOpenDrawer={setSelectedUserForDetails ? () => setSelectedUserForDetails({ addedBy: item.addedBy }) : null}
               >
-                {value || "—"}
+                {displayFormat(value)}
               </ModuleLink>
             </td>
           );
@@ -113,10 +114,8 @@ export default function ProductionBatchTableRow({
         return (
           <td key={col.key || idx} className="px-4 py-3 whitespace-nowrap text-gray-700 font-mono">
             {col.key === "batchQuantity"
-              ? formatNumber(value)
-              : value !== null && value !== undefined && value !== ""
-              ? value
-              : "—"}
+              ? item.batchQuantityFormatted || formatNumber(value)
+              : displayFormat(value)}
           </td>
         );
       })}

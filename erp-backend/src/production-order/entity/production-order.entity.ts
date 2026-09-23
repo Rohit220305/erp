@@ -56,6 +56,9 @@ export class ProductionOrderEntity extends AbstractBaseEntity {
   @Column({ type: 'int', nullable: true })
   customerId: number | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  customerName: string | null;
+
   @Column({
     type: 'enum',
     enum: ProductionOrderStatus,

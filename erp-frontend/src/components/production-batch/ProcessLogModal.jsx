@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { X, Info, ChevronDown } from "lucide-react";
+import { X, Info, ChevronDown, Package } from "lucide-react";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { addProcessLog } from "@/lib/api/production-batch-api";
 import { toast } from "react-hot-toast";
 import { formatNumber } from "@/utils/number-formatter";
 import NumericInput from "@/components/common/NumericInput";
+import NoDataMessage from "@/components/common/NoDataMessage";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 function MaterialThumbnail({ itemName, imageUrl }) {
   if (imageUrl) {
@@ -16,7 +18,6 @@ function MaterialThumbnail({ itemName, imageUrl }) {
       />
     );
   }
-
   const initials = (itemName || "?")
     .split(/\s+/)
     .map((w) => w[0])
@@ -26,7 +27,7 @@ function MaterialThumbnail({ itemName, imageUrl }) {
 
   return (
     <div className="w-24 h-24 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
-      <span className="text-xl font-bold text-gray-400">{initials}</span>
+      <Package size={32} className="text-gray-400" />
     </div>
   );
 }
@@ -243,7 +244,6 @@ export default function ProcessLogModal({
                     value={processName}
                     className="w-32 px-3 py-1.5 border border-gray-200 rounded text-xs text-gray-700 bg-gray-50/80 font-medium lowercase outline-none"
                   />
-                  <ChevronDown size={14} className="absolute right-2 text-gray-400 pointer-events-none" />
                 </div>
               </div>
 
@@ -282,13 +282,13 @@ export default function ProcessLogModal({
                     >
                       <div className="flex flex-col text-left">
                         <span className="text-sm font-bold text-gray-800">
-                          {item.itemName}
+                          {displayFormat(item.itemName)}
                         </span>
                         <div className="flex flex-col mt-0.5 space-y-0.5">
                           <span className="text-xs text-gray-500 font-medium">
                             {logType === "Consumption" ? "Consumed: " : "Produced: "}
                             <span className="text-gray-900 font-semibold">
-                              {logType === "Consumption" ? formatNumber(item.consumedQty) : formatNumber(item.producedQty)} / {formatNumber(item.requiredQty)} {item.unit}
+                              {displayFormat(`${logType === "Consumption" ? formatNumber(item.consumedQty) : formatNumber(item.producedQty)} / ${formatNumber(item.requiredQty)} ${item.unit}`)}
                             </span>
                           </span>
                         </div>
@@ -313,9 +313,7 @@ export default function ProcessLogModal({
                   ))}
 
                   {items.length === 0 && (
-                    <div className="text-center py-8 text-gray-400 text-sm italic">
-                      No items available for this log type.
-                    </div>
+                    <NoDataMessage moduleName="Logs" />
                   )}
                 </div>
               </div>
@@ -341,13 +339,13 @@ export default function ProcessLogModal({
 
                         <div className="text-left mt-1">
                           <h4 className="text-sm font-bold text-gray-800 truncate">
-                            {item.itemName}
+                            {displayFormat(item.itemName)}
                           </h4>
                           <div className="flex flex-col mt-0.5 space-y-0.5">
                             <span className="text-[11px] text-gray-500 font-medium">
                               {logType === "Consumption" ? "Consumed: " : "Produced: "}
                               <span className="text-gray-900 font-semibold">
-                                {logType === "Consumption" ? formatNumber(item.consumedQty) : formatNumber(item.producedQty)} / {formatNumber(item.requiredQty)} {item.unit}
+                                {displayFormat(`${logType === "Consumption" ? formatNumber(item.consumedQty) : formatNumber(item.producedQty)} / ${formatNumber(item.requiredQty)} ${item.unit}`)}
                               </span>
                             </span>
                           </div>
@@ -361,14 +359,12 @@ export default function ProcessLogModal({
                             type="button"
                             disabled={logType === "Consumption" ? Math.max(0, item.requiredQty - item.consumedQty) <= 0 : Math.max(0, item.requiredQty - item.producedQty) <= 0}
                             onClick={() => handleToggleUseAll(item.itemId)}
-                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
-                              item.useAll ? "bg-blue-600" : "bg-gray-300"
-                            }`}
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${item.useAll ? "bg-blue-600" : "bg-gray-300"
+                              }`}
                           >
                             <span
-                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                item.useAll ? "translate-x-4" : "translate-x-0"
-                              }`}
+                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${item.useAll ? "translate-x-4" : "translate-x-0"
+                                }`}
                             />
                           </button>
                         </div>
@@ -383,19 +379,20 @@ export default function ProcessLogModal({
             <div className="flex items-center justify-center gap-4 pt-8 pb-2">
               <button
                 type="button"
+                onClick={handleDiscardRequest}
+                disabled={isSubmitting}
+                className="px-8 py-2 bg-white border border-gray-200 hover:bg-gray-100  text-gray-800 text-sm font-bold rounded-md shadow-sm transition cursor-pointer"
+              >
+                Discard
+              </button>
+
+              <button
+                type="button"
                 onClick={handleSubmitRequest}
                 disabled={isSubmitting || items.length === 0}
                 className="px-8 py-2 bg-[#1967d2] hover:bg-[#1557b0] active:bg-[#114999] text-white text-sm font-bold rounded-md shadow-sm transition cursor-pointer disabled:opacity-50"
               >
                 Submit
-              </button>
-              <button
-                type="button"
-                onClick={handleDiscardRequest}
-                disabled={isSubmitting}
-                className="px-8 py-2 bg-[#1967d2] hover:bg-[#1557b0] active:bg-[#114999] text-white text-sm font-bold rounded-md shadow-sm transition cursor-pointer"
-              >
-                Discard
               </button>
             </div>
           </div>
@@ -411,8 +408,8 @@ export default function ProcessLogModal({
         }
         message={
           confirmState.type === "submit"
-            ? `Are you sure you want to submit this ${logType.toLowerCase()} log? This action is immutable and will update running totals.`
-            : `Are you sure you want to discard your changes? Any entered log quantities will be lost.`
+            ? `Are you sure you want to submit this ${logType.toLowerCase()} log? `
+            : `Are you sure you want to discard your changes?`
         }
         confirmLabel={confirmState.type === "submit" ? "Submit Log" : "Discard"}
         cancelLabel="Cancel"

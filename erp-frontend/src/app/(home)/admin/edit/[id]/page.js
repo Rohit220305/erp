@@ -28,7 +28,7 @@ export default function AdminEditRoute() {
       navbar: {
         title: "Edit User",
         breadcrumbs: [
-          { label: "Master", href: "/" },
+          { label: "User", },
           { label: "User Management", href: "/admin" },
           { label: "Edit User" },
         ],

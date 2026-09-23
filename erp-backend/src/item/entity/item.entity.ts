@@ -115,6 +115,9 @@ export class ItemEntity extends AbstractBaseEntity {
   @Column({ type: 'enum', enum: YesNo, default: YesNo.No })
   isScrap: YesNo;
 
+  @Column({ type: 'enum', enum: YesNo, default: YesNo.No })
+  isInHouseProduction: YesNo;
+
   @Column({ type: 'text', nullable: true })
   description: string | null;
 

@@ -1,5 +1,6 @@
 {
   "moduleName": "Currency",
+  "parentModule": "Master",
   "title": "Currency Master",
   "permissions": {
     "list": "CURRENCY_LIST",

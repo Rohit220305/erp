@@ -1,5 +1,6 @@
 {
   "moduleName": "ItemUom",
+  "parentModule": "Master",
   "title": "Item UOM",
   "permissions": {
     "list": "ITEM_UOM_LIST",
@@ -228,6 +229,5 @@
         { "label": "Inactive", "value": "Inactive" }
       ]
     }
-    
   ]
 }

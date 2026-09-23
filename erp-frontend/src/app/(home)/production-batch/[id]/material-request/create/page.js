@@ -2,19 +2,6 @@ import { suggestMaterialRequest } from "@/lib/api/material-request-api";
 import ProductionMaterialRequestForm from "@/components/production-batch/details/ProductionMaterialRequestForm";
 import { notFound } from "next/navigation";
 
-export async function generateMetadata({ params }) {
-  const { id } = await params;
-  try {
-    const res = await suggestMaterialRequest({ productionBatchId: id });
-    const payload = res?.data || res?.settings?.data;
-    const code = payload?.batchData?.batchCode;
-    if (code) {
-      return { title: `Request Material - ${code}` };
-    }
-  } catch (error) { }
-  return { title: "Request Material" };
-}
-
 export default async function Page({ params }) {
   const { id } = await params;
   try {

@@ -5,13 +5,15 @@ import { ProductionBatchEntity } from '../entity/production-batch.entity';
 import { ProductionBatchProcessEntity } from '../entity/production-batch-process.entity';
 import { ProductionBatchItemEntity } from '../entity/production-batch-item.entity';
 
-import { ProductionBatchAddDto, ProductionBatchDeleteDto } from '../dto/production-batch.dto';
+import { ProductionBatchAddDto, ProductionBatchDeleteDto, CancelProductionBatchDto } from '../dto/production-batch.dto';
 import { ProductionBatchStatus, ProductionBatchProcessStatus, MaterialStatus } from '../enum/production-batch.enum';
 import { CompanyEntity } from '../../company/entity/company.entity';
 import { ProductionOrderEntity } from '../../production-order/entity/production-order.entity';
 import { ProductionOrderStatus } from '../../production-order/enum/production-order.enum';
 import { BomEntity } from '../../bom/entity/bom.entity';
 import { ItemEntity } from '../../item/entity/item.entity';
+import { MaterialRequestEntity } from '../../material-request/entity/material-request.entity';
+import { MaterialRequestStatus } from '../../material-request/enum/material-request.enum';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { ActivityLogService } from 'src/activity-log/service/activity-log.service';
 import { AttachmentMasterService } from 'src/attachment-master/service/attachment-master.service';
@@ -39,6 +41,8 @@ export class ProductionBatchService {
     private readonly bomRepo: Repository<BomEntity>,
     @InjectRepository(ItemEntity)
     private readonly itemRepo: Repository<ItemEntity>,
+    @InjectRepository(MaterialRequestEntity)
+    private readonly materialRequestRepo: Repository<MaterialRequestEntity>,
   ) { }
 
   private async finishSuccess(params: any, incomingData?: any) {
@@ -128,7 +132,6 @@ export class ProductionBatchService {
   }
 
   async insertProductionBatch(req: IAppRequest, params: ProductionBatchAddDto) {
-    console.log(params, 'params');
     let return_data: any = {};
     try {
       if (!this.general.isSuperAdmin(req)) {
@@ -229,7 +232,6 @@ export class ProductionBatchService {
 
           const processRes = await this.pbProcessRepo.insert(processData);
           const processInsertId = processRes?.raw?.insertId;
-          console.log(process.items, 'process.items');
           if (processInsertId && process.items && Array.isArray(process.items) && process.items.length > 0) {
             const processItemsData = process.items.map((item) => ({
 
@@ -331,6 +333,70 @@ export class ProductionBatchService {
       return_data = {
         success: 1,
         message: 'Production Batch deleted successfully.',
+      };
+    } catch (err: any) {
+      if (err instanceof ForbiddenException) throw err;
+      return_data = {
+        success: 0,
+        message: err.message,
+      };
+    }
+    return return_data;
+  }
+
+  async startCancelProductionBatch(req: IAppRequest, params: CancelProductionBatchDto) {
+    const response = await this.cancelProductionBatch(req, params);
+    if (response.success === 1) {
+      return await this.finishSuccess(response);
+    }
+    return await this.finishFailure(response);
+  }
+
+  async cancelProductionBatch(req: IAppRequest, params: CancelProductionBatchDto) {
+    let return_data: any = {};
+    try {
+      if (!params.id) {
+        throw new Error('Production Batch ID is required for cancellation');
+      }
+
+      const existingBatch = await this.pbRepo.findOne({
+        where: { id: params.id, sysRecDeleted: false },
+      });
+
+      if (!existingBatch) {
+        throw new Error('Production Batch not found');
+      }
+
+      this.general.assertCompanyAccess(req, existingBatch.companyId, 'update', 'Production Batch');
+
+      if (
+        existingBatch.status !== ProductionBatchStatus.Pending &&
+        existingBatch.status !== ProductionBatchStatus.StockReceived
+      ) {
+        throw new Error(`Cannot cancel batch in ${existingBatch.status} status.`);
+      }
+
+      // 1. Set batch status to Cancelled
+      existingBatch.status = ProductionBatchStatus.Cancelled;
+      existingBatch.updatedBy = req.user?.sub || null;
+      existingBatch.updatedDate = new Date();
+      await this.pbRepo.save(existingBatch);
+
+
+      // 3. Log activity
+      const logPayload = this.general.buildActivityLogPayload(
+        req,
+        'PRODUCTION_BATCH_CANCEL',
+        'PRODUCTION_BATCH',
+        params.id,
+        existingBatch.batchCode,
+        existingBatch.companyId,
+      );
+      await this.activityLogService.log(logPayload);
+
+      return_data = {
+        success: 1,
+        message: 'Production Batch cancelled successfully.',
       };
     } catch (err: any) {
       if (err instanceof ForbiddenException) throw err;

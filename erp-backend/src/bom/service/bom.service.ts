@@ -11,7 +11,7 @@ import { BomProcessItemEntity } from '../entity/bom-process-item.entity';
 import { ProcessTemplateEntity } from '../../process-template/entity/process.template.entity';
 import { ProcessTemplateMappingEntity } from '../../process-template/entity/process.template.mapping.entity';
 import { ItemEntity } from '../../item/entity/item.entity';
-import { BomAddDto, BomUpdateDto, BomDeleteDto, BomProcessItemDto } from '../dto/bom.dto';
+import { BomAddDto, BomUpdateDto, BomDeleteDto, BomProcessItemDto, BomCloneDto} from '../dto/bom.dto';
 import { MaterialType } from '../enum/bom.enum';
 import { Status } from 'src/package/common/enums/enum';
 
@@ -309,6 +309,14 @@ export class BomService {
         throw new Error('BOM ID is required for update');
       }
 
+      const orderCount = await this.bomRepo.query(
+        `SELECT COUNT(1) as count FROM production_order WHERE bomId = ? AND sysRecDeleted = 0 AND status != 'Cancelled'`,
+        [params.id]
+      );
+      if (orderCount[0].count > 0) {
+        throw new Error('Cannot update this BOM because it is already linked to one or more Production Orders.');
+      }
+
       const existingBom = await this.bomRepo.findOne({
         where: { id: params.id, sysRecDeleted: false },
       });
@@ -487,6 +495,109 @@ export class BomService {
     }
     return return_data;
   }
+
+  async startCLoneBom(req: IAppRequest, params: BomCloneDto) { 
+    const response = await this.cloneBom(req, params);
+    if (response.success === 1) {
+      return await this.finishSuccess(response);
+    }
+    return await this.finishFailure(response);
+  }
+
+  async cloneBom(req: IAppRequest, params: BomCloneDto) {
+    let return_data: any = {};
+
+    try {
+      const companyId = req.user?.companyId;
+      if (!companyId) {
+        throw new Error('Company ID is required for cloning BOM');
+      }
+
+      const sourceBom = await this.bomRepo.findOne({
+        where: { id: params.sourceBomId, sysRecDeleted: false },
+      });
+      if (!sourceBom) {
+        throw new Error('Source BOM not found');
+      }
+
+      const targetCompanyId = companyId;
+
+      this.general.assertCompanyAccess(
+        req,
+        sourceBom.companyId,
+        'clone',
+        'BOM',
+      );
+
+      const newBomCode = await this.generateUniqueBomCode(targetCompanyId);
+
+      const newBom = this.bomRepo.create({
+        bomName: params.newBomName.trim(),
+        bomCode: newBomCode,
+        productionMethod: sourceBom.productionMethod,
+        itemId: sourceBom.itemId,
+        processTemplateId: sourceBom.processTemplateId,
+        customerId: sourceBom.customerId,
+        referenceNumber: sourceBom.referenceNumber,
+        remarks: sourceBom.remarks,
+        companyId: targetCompanyId,
+        status: Status.Active,
+        addedBy: req.user?.sub || null,
+        addedDate: new Date(),
+      });
+      const res = await this.bomRepo.save(newBom);
+      const insertId = res?.id;
+      if (!insertId) {
+        throw new Error('Failed to create cloned BOM record');
+      }
+
+      const sourceItems = await this.bomProcessItemRepo.find({
+        where: { bomId: params.sourceBomId },
+      });
+
+      if (sourceItems.length > 0) {
+        const clonedItems = sourceItems.map((item) => ({
+          bomId: insertId,
+          processTemplateMappingId: item.processTemplateMappingId,
+          materialType: item.materialType,
+          itemId: item.itemId,
+          quantity: item.quantity,
+          isPrimary: item.isPrimary,
+        }));
+        await this.bomProcessItemRepo.insert(clonedItems);
+      }
+
+      try {
+        const activityPayload = this.general.buildActivityLogPayload(
+          req,
+          'BOM',
+          'CLONE_BOM',
+          insertId,
+          `Cloned BOM '${sourceBom.bomName}' (${sourceBom.bomCode}) to '${params.newBomName}' (${newBomCode})`,
+          targetCompanyId,
+        );
+        await this.activityLogService.log(activityPayload);
+      } catch (logErr) {
+        console.error('Failed to log BOM clone activity:', logErr);
+      }
+      return_data = {
+        success: 1,
+        message: 'BOM cloned successfully',
+        data: {
+          id: insertId,
+          bomName: params.newBomName,
+          bomCode: newBomCode,
+        },
+      };
+    } catch (error: any) {
+      return_data = {
+        success: 0,
+        message: error.message || 'Error occurred while cloning BOM',
+      };
+    }
+    return return_data;
+  }
+
 
   async finishSuccess(params: any, incomingData?: any) {
     let output: any = {

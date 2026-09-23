@@ -78,7 +78,10 @@ export default function ProcessTemplateForm({
         title: mode === "create" ? "Add New" : "Edit Template",
         breadcrumbs: [
           { label: "Master", href: buildRoute("home", "list") },
-          { label: "Process Template", href: buildRoute("process-template", "list") },
+          {
+            label: "Process Template",
+            href: buildRoute("process-template", "list"),
+          },
         ],
         actionButton: null,
       },
@@ -207,7 +210,7 @@ export default function ProcessTemplateForm({
           processes: `Process row ${i + 1} does not have a process selected.`,
         });
         setCurrentStep(2);
-        
+
         return false;
       }
     }

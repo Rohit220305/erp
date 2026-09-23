@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function UserGridCard({ user, handleLoginAs, currentUser, can, setSelectedUserForDetails, setSelectedUserForPasswordReset, setSelectedCompanyForDetails }) {
   const router = useRouter();
@@ -34,15 +35,15 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
                 onClick={() => setSelectedUserForDetails?.(user)}
                 className="text-[#1565c0] font-medium leading-tight mb-0.5 hover:underline block"
               >
-                {user.fullName}
+                {displayFormat(user.fullName)}
               </ModuleLink>
             ) : (
               <p className="text-gray-800 font-medium leading-tight mb-0.5">
-                {user.fullName}
+                {displayFormat(user.fullName)}
               </p>
             )}
             <p className="text-gray-400 text-sm leading-tight">
-              {user.email || "—"}
+              {displayFormat(user.email)}
             </p>
           </div>
         </div>
@@ -54,7 +55,7 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
         <div>
           <p className="text-gray-400 text-xs mb-0.5">Group Name</p>
           <p className="text-gray-900 font-medium text-sm">
-            {user.groupName || "—"}
+            {displayFormat(user.groupName)}
           </p>
         </div>
 
@@ -108,7 +109,7 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
       <div className="space-y-3 text-sm">
         <div className="grid grid-cols-[110px_1fr] items-center gap-2">
           <span className="text-gray-400">User Name</span>
-          <span className="text-gray-900 truncate">{user.userName || "—"}</span>
+          <span className="text-gray-900 truncate">{displayFormat(user.userName)}</span>
         </div>
         <div className="grid grid-cols-[110px_1fr] items-center gap-2">
           <span className="text-gray-400">Company Name</span>
@@ -118,16 +119,16 @@ export default function UserGridCard({ user, handleLoginAs, currentUser, can, se
               onClick={() => setSelectedCompanyForDetails?.(user)}
               className="font-medium truncate"
             >
-              {user.companyName || "—"}
+              {displayFormat(user.companyName)}
             </ModuleLink>
           ) : (
-            <span className="text-gray-900 truncate">{user.companyName || "—"}</span>
+            <span className="text-gray-900 truncate">{displayFormat(user.companyName)}</span>
           )}
         </div>
         <div className="grid grid-cols-[110px_1fr] items-center gap-2">
           <span className="text-gray-400">Last Login</span>
           <span className="text-gray-900 truncate">
-            {user.lastLoginDateFormatted || "Never logged in"}
+            {displayFormat(user.lastLoginDateFormatted, "DATE")}
           </span>
         </div>
       </div>

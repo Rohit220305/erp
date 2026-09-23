@@ -23,7 +23,7 @@ export default function GroupAddPage() {
       navbar: {
         title: "Add Group",
         breadcrumbs: [
-          { label: "Master", href: "/" },
+          { label: "User", },
           { label: "Group Master", href: "/group" },
           { label: "Add Group" },
         ],

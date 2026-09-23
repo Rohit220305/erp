@@ -72,4 +72,7 @@ export class ProductionBatchEntity extends AbstractBaseEntity {
 
   @Column({ type: 'int', nullable: true })
   completedBy: number | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  completedDate: Date | null;
 }

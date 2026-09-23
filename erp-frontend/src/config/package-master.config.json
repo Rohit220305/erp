@@ -1,5 +1,6 @@
 {
   "moduleName": "PackageMaster",
+  "parentModule": "Master",
   "title": "Package Types",
   "permissions": {
     "list": "PACKAGE_LIST",

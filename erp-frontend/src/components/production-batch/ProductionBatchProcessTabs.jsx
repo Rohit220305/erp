@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Edit2 } from "lucide-react";
+import { Edit2, Eye } from "lucide-react";
+import NoDataMessage from "@/components/common/NoDataMessage";
+import StatusBadge from "@/components/common/StatusBadge";
+import { displayFormat } from "@/utils/no-data-formatter";
 import ModuleLink from "@/components/common/ModuleLink";
 import { formatNumber } from "@/utils/number-formatter";
 
@@ -107,7 +110,11 @@ export default function ProductionBatchProcessTabs({
                   }`}
                 >
                   <span>{proc.processName || `Process ${proc.processId}`}</span>
-                  <Edit2 size={13} className="text-gray-400" />
+                  <Eye size={13} className={`${
+                    isSelected
+                      ? "text-[#1565c0]"
+                      : "text-gray-400"
+                  }`} />
                 </button>
               );
             })}
@@ -169,28 +176,28 @@ export default function ProductionBatchProcessTabs({
                               className="font-bold text-[#1565c0] hover:underline"
                               onOpenDrawer={onOpenDrawer}
                             >
-                              {item.itemName}
+                              {displayFormat(item.itemName)}
                             </ModuleLink>
                           ) : (
                             <div className="font-bold text-gray-900">
-                              {item.itemName}
+                              {displayFormat(item.itemName)}
                             </div>
                           )}
-                          <div className="text-[11px] text-gray-500 font-mono mt-0.5">
-                            ({item.itemCode })
+                          <div className="text-sm text-gray-500 font-mono mt-0.5">
+                            {displayFormat(item.itemCode)}
                           </div>
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                          {formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} {item.uomName || item.itemUomName || ""}
+                          {displayFormat(item.requiredQtyFormatted )}
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-600">
-                          {formatNumber(0)} {item.uomName || item.itemUomName || ""}
+                          {displayFormat(`${formatNumber(0)} ${item.uomName || item.itemUomName || ""}`)}
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                          {formatNumber(item.shortage)} {item.uomName || item.itemUomName || ""}
+                          {displayFormat(item.shortageFormatted || `${formatNumber(item.shortage)} ${item.uomName || item.itemUomName || ""}`)}
                         </td>
                         <td className="px-4 py-3.5 text-right font-mono font-bold text-gray-900">
-                          {formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} {item.uomName || item.itemUomName || ""}
+                          {displayFormat(item.requiredQtyFormatted || `${formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} ${item.uomName || item.itemUomName || ""}`)}
                         </td>
                       </tr>
                     ))}
@@ -239,31 +246,31 @@ export default function ProductionBatchProcessTabs({
                                 className="font-bold text-[#1565c0] hover:underline"
                                 onOpenDrawer={onOpenDrawer}
                               >
-                                {item.itemName}
+                                {displayFormat(item.itemName)}
                               </ModuleLink>
                             ) : (
                               <div className="font-bold text-gray-900">
-                                {item.itemName}
+                                {displayFormat(item.itemName)}
                               </div>
                             )}
-                            <div className="text-[11px] text-gray-500 font-mono mt-0.5">
-                              ({item.itemCode } )
+                            <div className="text-sm text-gray-500 font-mono mt-0.5">
+                              ({displayFormat(item.itemCode)})
                             </div>
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                            {formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} {item.uomName || item.itemUomName || ""}
+                            {displayFormat(item.requiredQtyFormatted || `${formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} ${item.uomName || item.itemUomName || ""}`)}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-600">
-                            {formatNumber(item.availableStock)} {item.uomName || item.itemUomName || ""}
+                            {displayFormat(item.availableStockFormatted || `${formatNumber(item.availableStock)} ${item.uomName || item.itemUomName || ""}`)}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-600">
-                            {formatNumber(0)} {item.uomName || item.itemUomName || ""}
+                            {displayFormat(`${formatNumber(0)} ${item.uomName || item.itemUomName || ""}`)}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono text-gray-900 font-medium">
-                            {formatNumber(item.shortage)} {item.uomName || item.itemUomName || ""}
+                            {displayFormat(item.shortageFormatted || `${formatNumber(item.shortage)} ${item.uomName || item.itemUomName || ""}`)}
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono font-bold text-gray-900">
-                            {formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} {item.uomName || item.itemUomName || ""}
+                            {displayFormat(item.requiredQtyFormatted || `${formatNumber(item.totalRequirement || item.requestedQty || item.requestQty)} ${item.uomName || item.itemUomName || ""}`)}
                           </td>
                         </tr>
                       );

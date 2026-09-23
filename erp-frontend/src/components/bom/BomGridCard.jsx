@@ -9,6 +9,8 @@ import { useAuth } from "@/context/AuthContext";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
 import ModuleLink from "@/components/common/ModuleLink";
+import { formatNumber, formatCurrency } from "@/utils/number-formatter";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function BomGridCard({
   item,
@@ -69,21 +71,21 @@ export default function BomGridCard({
                 onClick={() => setSelectedItemForDetails(item)}
                 className="text-[#1565c0] hover:underline cursor-pointer font-semibold text-sm block truncate text-left w-full"
               >
-                {item.bomName || "—"}
+                {displayFormat(item.bomName)}
               </ModuleLink>
             ) : (
               <p className="text-sm font-semibold text-gray-900 truncate">
-                {item.bomName || "—"}
+                {displayFormat(item.bomName)}
               </p>
             )}
 
             <p className="text-xs font-mono text-gray-400 mt-0.5 truncate">
-              {item.bomCode || "—"}
+              {displayFormat(item.bomCode)}
             </p>
 
             <div className="flex items-center gap-1.5 text-xs text-gray-500 font-mono mt-1">
               <Barcode size={14} className="text-gray-400 shrink-0" />
-              <span className="truncate">{item.itemBarcode || "—"}</span>
+              <span className="truncate">{displayFormat(item.itemBarcode)}</span>
             </div>
           </div>
         </div>
@@ -102,11 +104,11 @@ export default function BomGridCard({
                 }
                 className="text-[#1565c0] hover:underline cursor-pointer font-medium truncate text-left"
               >
-                {item.itemName || "—"}
+                {displayFormat(item.itemName)}
               </ModuleLink>
             ) : (
               <span className="text-gray-800 font-medium truncate">
-                {item.itemName || "—"}
+                {displayFormat(item.itemName)}
               </span>
             )}
           </div>
@@ -114,21 +116,21 @@ export default function BomGridCard({
           <div className="grid grid-cols-[110px_1fr] items-center gap-2">
             <span className="text-gray-400 font-medium">Cost Per Unit</span>
             <span className="text-gray-900 font-semibold truncate">
-              {item.costPerUnitFormatted || item.costPerUnit || "—"}
+              {displayFormat(item.costPerUnitFormatted || (item.costPerUnit != null && item.costPerUnit !== "" ? formatCurrency(item.costPerUnit, item.currencySymbol) : null))}
             </span>
           </div>
 
           <div className="grid grid-cols-[110px_1fr] items-center gap-2">
             <span className="text-gray-400 font-medium">Total Material</span>
             <span className="text-gray-800 font-medium truncate">
-              {item.totalMaterial ?? "0"}
+              {displayFormat(item.totalMaterial != null ? formatNumber(item.totalMaterial) : null)}
             </span>
           </div>
 
           <div className="grid grid-cols-[110px_1fr] items-center gap-2">
             <span className="text-gray-400 font-medium">Production Method</span>
             <span className="text-gray-800 font-medium truncate capitalize">
-              {item.productionMethod || "—"}
+              {displayFormat(item.productionMethod)}
             </span>
           </div>
         </div>
@@ -150,15 +152,15 @@ export default function BomGridCard({
                 }
                 className="text-xs font-semibold text-[#1565c0] hover:underline cursor-pointer truncate block"
               >
-                {item.addedByName || "—"}
+                {displayFormat(item.addedByName)}
               </ModuleLink>
             ) : (
               <p className="text-xs font-semibold text-gray-800 truncate">
-                {item.addedByName || "—"}
+                {displayFormat(item.addedByName)}
               </p>
             )}
             <p className="text-[10px] text-gray-400 font-medium truncate">
-              {item.addedDateFormatted || "—"}
+              {displayFormat(item.addedDateFormatted, "DATE")}
             </p>
           </div>
         </div>

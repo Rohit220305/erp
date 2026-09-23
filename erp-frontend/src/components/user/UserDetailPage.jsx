@@ -24,21 +24,29 @@ import AccessDenied from "@/components/common/AccessDenied";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import ModuleLink from "@/components/common/ModuleLink";
 import SideDrawer from "@/components/common/SideDrawer";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
+import NoDataMessage from "../common/NoDataMessage";
 
-function DetailRow({ label, value, href, onClick }) {
+function DetailRow({ label, value, href, onClick, valueNode }) {
+  if (!value && !valueNode) return null;
   return (
     <div className="flex items-start justify-between py-2.5 border-b border-gray-100 last:border-0">
       <span className="text-sm text-gray-500 min-w-[140px]">{label}</span>
-      {href ? (
+      {valueNode ? (
+        valueNode
+      ) : href ? (
         <ModuleLink
           href={href}
           onClick={onClick}
           className="text-sm font-medium text-right"
         >
-          {value || "-"}
+          {displayFormat(value)}
         </ModuleLink>
       ) : (
-        <span className="text-sm font-medium text-right">{value || "-"}</span>
+        <span className="text-sm font-medium text-right">
+          {displayFormat(value)}
+        </span>
       )}
     </div>
   );
@@ -85,13 +93,14 @@ export default function UserDetailPage({ user }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: buildRoute("home", "list") },
+          { label: "User" },
           { label: "User Management", href: buildRoute("user", "list") },
         ],
         actionButton: can(CAPABILITIES.USER.UPDATE)
           ? {
               label: "Edit",
-              onClick: () => router.push(buildRoute("user", "edit", { id: user?.id })),
+              onClick: () =>
+                router.push(buildRoute("user", "edit", { id: user?.id })),
             }
           : null,
       },
@@ -198,14 +207,11 @@ export default function UserDetailPage({ user }) {
                       />
                       <div className="flex flex-col justify-center gap-1">
                         <h2 className="font-semibold text-lg">
-                          {user?.firstName} {user?.lastName}
+                          {displayFormat(user?.firstName)}{" "}
+                          {displayFormat(user?.lastName)}
                         </h2>
                         <div>
-                          <span
-                            className={` px-2 py-1  text-white rounded-lg ${user?.status === "Active" ? "bg-green-600 " : "bg-red-600"}`}
-                          >
-                            {user?.status}
-                          </span>
+                          <StatusBadge status={user?.status} />
                         </div>
                       </div>
                     </div>
@@ -216,8 +222,23 @@ export default function UserDetailPage({ user }) {
                       <DetailRow
                         label="Company"
                         value={user?.companyName}
-                        href={can(CAPABILITIES.COMPANY.VIEW) && user?.companyId ? buildRoute("company", "detail", { id: user.companyId }) : null}
-                        onClick={can(CAPABILITIES.COMPANY.VIEW) && user?.companyId ? () => setSideDrawerState({ isOpen: true, moduleName: "Company", id: user.companyId }) : null}
+                        href={
+                          can(CAPABILITIES.COMPANY.VIEW) && user?.companyId
+                            ? buildRoute("company", "detail", {
+                                id: user.companyId,
+                              })
+                            : null
+                        }
+                        onClick={
+                          can(CAPABILITIES.COMPANY.VIEW) && user?.companyId
+                            ? () =>
+                                setSideDrawerState({
+                                  isOpen: true,
+                                  moduleName: "Company",
+                                  id: user.companyId,
+                                })
+                            : null
+                        }
                       />
                     )}
                     {user?.id == currentUser?.id ? (
@@ -229,29 +250,63 @@ export default function UserDetailPage({ user }) {
                     {user.addedDateFormatted && (
                       <DetailRow
                         label="Added Date"
-                        value={user.addedDateFormatted}
+                        value={displayFormat(user.addedDateFormatted, "DATE")}
                       />
                     )}
                     {user.updatedDateFormatted && (
                       <DetailRow
                         label="Updated Date"
-                        value={user.updatedDateFormatted}
+                        value={displayFormat(user.updatedDateFormatted, "DATE")}
                       />
                     )}
                     {user.addedByName && (
                       <DetailRow
                         label="Added By"
                         value={user.addedByName}
-                        href={can(CAPABILITIES.USER.VIEW) && (user?.addedBy || user?.addedById) ? buildRoute("user", "detail", { id: user.addedBy || user.addedById }) : null}
-                        onClick={can(CAPABILITIES.USER.VIEW) && (user?.addedBy || user?.addedById) ? () => setSideDrawerState({ isOpen: true, moduleName: "User", id: user.addedBy || user.addedById }) : null}
+                        href={
+                          can(CAPABILITIES.USER.VIEW) &&
+                          (user?.addedBy || user?.addedById)
+                            ? buildRoute("user", "detail", {
+                                id: user.addedBy || user.addedById,
+                              })
+                            : null
+                        }
+                        onClick={
+                          can(CAPABILITIES.USER.VIEW) &&
+                          (user?.addedBy || user?.addedById)
+                            ? () =>
+                                setSideDrawerState({
+                                  isOpen: true,
+                                  moduleName: "User",
+                                  id: user.addedBy || user.addedById,
+                                })
+                            : null
+                        }
                       />
                     )}
                     {user.updatedByName && (
                       <DetailRow
                         label="Updated By"
                         value={user.updatedByName}
-                        href={can(CAPABILITIES.USER.VIEW) && (user?.updatedBy || user?.updatedById) ? buildRoute("user", "detail", { id: user.updatedBy || user.updatedById }) : null}
-                        onClick={can(CAPABILITIES.USER.VIEW) && (user?.updatedBy || user?.updatedById) ? () => setSideDrawerState({ isOpen: true, moduleName: "User", id: user.updatedBy || user.updatedById }) : null}
+                        href={
+                          can(CAPABILITIES.USER.VIEW) &&
+                          (user?.updatedBy || user?.updatedById)
+                            ? buildRoute("user", "detail", {
+                                id: user.updatedBy || user.updatedById,
+                              })
+                            : null
+                        }
+                        onClick={
+                          can(CAPABILITIES.USER.VIEW) &&
+                          (user?.updatedBy || user?.updatedById)
+                            ? () =>
+                                setSideDrawerState({
+                                  isOpen: true,
+                                  moduleName: "User",
+                                  id: user.updatedBy || user.updatedById,
+                                })
+                            : null
+                        }
                       />
                     )}
                   </div>
@@ -261,7 +316,9 @@ export default function UserDetailPage({ user }) {
                       <h3 className="font-semibold mb-5">Contact Info</h3>
                       <div className="flex items-center gap-3 mb-3">
                         <Mail size={16} className="text-[#1565c0]" />
-                        <span className="text-sm">{user?.email || "-"}</span>
+                        <span className="text-sm">
+                          {displayFormat(user?.email)}
+                        </span>
                       </div>
                       {user?.phone && (
                         <div className="flex items-center gap-3 mb-3">
@@ -275,7 +332,8 @@ export default function UserDetailPage({ user }) {
                       <div className="flex items-center gap-3">
                         <Calendar size={16} className="text-[#1565c0]" />
                         <span className="text-sm">
-                          Last login: {user?.lastLoginDateFormatted || "Never"}
+                          Last login:{" "}
+                          {displayFormat(user?.lastLoginDateFormatted, "DATE")}
                         </span>
                       </div>
                     </div>
@@ -295,11 +353,10 @@ export default function UserDetailPage({ user }) {
                             </th>
                             <th className="py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                               Profile
-                            </th> 
+                            </th>
                             <th className="py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                               Group Code
                             </th>
-                      
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -317,20 +374,16 @@ export default function UserDetailPage({ user }) {
                               <td className="py-4 px-4 text-sm text-gray-600">
                                 {grp.groupCode || "-"}
                               </td>
-        
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
                   ) : (
-                    <div className="py-8 text-center text-sm text-gray-500 bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
-                      No other profiles available.
-                    </div>
+                    <NoDataMessage moduleName="Other Profiles" />
                   )}
                 </div>
               )}
-
 
               {displayedTab === "activity" && (
                 <div className="bg-white rounded-xl hover:shadow-lg transition py-6 me-4 h-[75vh]">
@@ -346,7 +399,9 @@ export default function UserDetailPage({ user }) {
 
       <SideDrawer
         open={sideDrawerState.isOpen}
-        onClose={() => setSideDrawerState({ isOpen: false, moduleName: null, id: null })}
+        onClose={() =>
+          setSideDrawerState({ isOpen: false, moduleName: null, id: null })
+        }
         moduleName={sideDrawerState.moduleName}
         mode="details"
         data={sideDrawerState.id ? { id: sideDrawerState.id } : null}

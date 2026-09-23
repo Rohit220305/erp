@@ -4,10 +4,11 @@ import { Repository, In } from 'typeorm';
 import { ProductionBatchEntity } from '../entity/production-batch.entity';
 import { ProductionBatchProcessEntity } from '../entity/production-batch-process.entity';
 import { ProductionBatchItemEntity } from '../entity/production-batch-item.entity';
+import { ProductionBatchProcessTimelineEntity } from '../entity/production-batch-process-timeline.entity';
 import { ProductionOrderEntity } from '../../production-order/entity/production-order.entity';
 import { ProductionOrderStatus } from '../../production-order/enum/production-order.enum';
 import { ProcessExecutionDto, MarkBatchCompletedDto } from '../dto/production-batch.dto';
-import { ProductionBatchProcessStatus, ProductionBatchStatus, MaterialStatus, MaterialType } from '../enum/production-batch.enum';
+import { ProductionBatchProcessStatus, ProductionBatchStatus, MaterialStatus, MaterialType, ProductionBatchTimelineAction } from '../enum/production-batch.enum';
 import { BatchItemCategorizerUtility } from '../utility/batch-item-categorizer.utility';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
 import { AppRequest as IAppRequest } from 'src/package/types/app-request.type';
@@ -23,9 +24,11 @@ export class ProcessExecutionService {
     private readonly pbProcessRepo: Repository<ProductionBatchProcessEntity>,
     @InjectRepository(ProductionBatchItemEntity)
     private readonly pbItemRepo: Repository<ProductionBatchItemEntity>,
+    @InjectRepository(ProductionBatchProcessTimelineEntity)
+    private readonly timelineRepo: Repository<ProductionBatchProcessTimelineEntity>,
     @InjectRepository(ProductionOrderEntity)
     private readonly poRepo: Repository<ProductionOrderEntity>,
-  ) {}
+  ) { }
 
   private async finishSuccess(params: any, incomingData?: any) {
     const output: any = {
@@ -54,7 +57,7 @@ export class ProcessExecutionService {
   async startProcess(dto: ProcessExecutionDto, req: IAppRequest) {
     const companyId = req.user?.companyId || 1;
     const process = await this.pbProcessRepo.findOne({
-      where: { id: dto.processExecutionId, productionBatchId: dto.batchId, companyId },
+      where: { id: dto.processExecutionId, productionBatchId: dto.batchId },
     });
 
     if (!process) {
@@ -74,6 +77,15 @@ export class ProcessExecutionService {
     }
     await this.pbProcessRepo.save(process);
 
+    await this.timelineRepo.insert({
+      companyId,
+      productionBatchId: dto.batchId,
+      productionBatchProcessId: process.id,
+      action: ProductionBatchTimelineAction.Started,
+      actionBy: req.user?.sub || null,
+      actionAt: new Date(),
+    });
+
     const batch = await this.pbRepo.findOne({ where: { id: dto.batchId, companyId } });
     if (
       batch &&
@@ -89,7 +101,7 @@ export class ProcessExecutionService {
   async pauseProcess(dto: ProcessExecutionDto, req: IAppRequest) {
     const companyId = req.user?.companyId || 1;
     const process = await this.pbProcessRepo.findOne({
-      where: { id: dto.processExecutionId, productionBatchId: dto.batchId, companyId },
+      where: { id: dto.processExecutionId, productionBatchId: dto.batchId },
     });
 
     if (!process) {
@@ -103,13 +115,22 @@ export class ProcessExecutionService {
     process.status = ProductionBatchProcessStatus.Paused;
     await this.pbProcessRepo.save(process);
 
+    await this.timelineRepo.insert({
+      companyId,
+      productionBatchId: dto.batchId,
+      productionBatchProcessId: process.id,
+      action: ProductionBatchTimelineAction.Paused,
+      actionBy: req.user?.sub || null,
+      actionAt: new Date(),
+    });
+
     return this.finishSuccess({ message: 'Process paused successfully.', data: process }, dto);
   }
 
   async resumeProcess(dto: ProcessExecutionDto, req: IAppRequest) {
     const companyId = req.user?.companyId || 1;
     const process = await this.pbProcessRepo.findOne({
-      where: { id: dto.processExecutionId, productionBatchId: dto.batchId, companyId },
+      where: { id: dto.processExecutionId, productionBatchId: dto.batchId },
     });
 
     if (!process) {
@@ -123,29 +144,75 @@ export class ProcessExecutionService {
     process.status = ProductionBatchProcessStatus.InProgress;
     await this.pbProcessRepo.save(process);
 
+    await this.timelineRepo.insert({
+      companyId,
+      productionBatchId: dto.batchId,
+      productionBatchProcessId: process.id,
+      action: ProductionBatchTimelineAction.Resumed,
+      actionBy: req.user?.sub || null,
+      actionAt: new Date(),
+    });
+
     return this.finishSuccess({ message: 'Process resumed successfully.', data: process }, dto);
   }
 
   async finishProcess(dto: ProcessExecutionDto, req: IAppRequest) {
     const companyId = req.user?.companyId || 1;
     const process = await this.pbProcessRepo.findOne({
-      where: { id: dto.processExecutionId, productionBatchId: dto.batchId, companyId },
+      where: { id: dto.processExecutionId, productionBatchId: dto.batchId },
     });
 
     if (!process) {
       return this.finishFailure({ message: 'Process execution record not found.' }, dto);
     }
 
-    if (process.status !== ProductionBatchProcessStatus.InProgress) {
-      return this.finishFailure({ message: `Cannot finish process with status ${process.status}.` }, dto);
+    if (process.status !== ProductionBatchProcessStatus.InProgress && process.status !== ProductionBatchProcessStatus.Paused) {
+      return this.finishFailure({ message: `Cannot finish process with status ${process.status}. Process must be InProgress.` }, dto);
     }
 
     process.status = ProductionBatchProcessStatus.Completed;
     process.endTime = new Date();
+
+    await this.timelineRepo.insert({
+      companyId,
+      productionBatchId: dto.batchId,
+      productionBatchProcessId: process.id,
+      action: ProductionBatchTimelineAction.Completed,
+      actionBy: req.user?.sub || null,
+      actionAt: process.endTime,
+    });
+
+    const timelineEvents = await this.timelineRepo.find({
+      where: { productionBatchProcessId: process.id },
+      order: { actionAt: 'ASC' },
+    });
+
+    let totalActiveMs = 0;
+    let currentStartTime: Date | null = null;
+
+    for (const event of timelineEvents) {
+      if (
+        event.action === ProductionBatchTimelineAction.Started ||
+        event.action === ProductionBatchTimelineAction.Resumed
+      ) {
+        currentStartTime = event.actionAt;
+      } else if (
+        event.action === ProductionBatchTimelineAction.Paused ||
+        event.action === ProductionBatchTimelineAction.Completed
+      ) {
+        if (currentStartTime !== null) {
+          const activeInterval = event.actionAt.getTime() - currentStartTime.getTime();
+          totalActiveMs += activeInterval;
+          currentStartTime = null;
+        }
+      }
+    }
+
+    process.activeDurationSeconds = Math.floor(totalActiveMs / 1000);
     await this.pbProcessRepo.save(process);
 
     const allProcesses = await this.pbProcessRepo.find({
-      where: { productionBatchId: dto.batchId, companyId },
+      where: { productionBatchId: dto.batchId },
       order: { sequenceNumber: 'DESC' },
     });
 
@@ -154,6 +221,7 @@ export class ProcessExecutionService {
       const batch = await this.pbRepo.findOne({ where: { id: dto.batchId, companyId } });
       if (batch) {
         batch.producedQuantity = dto.producedQty !== undefined ? dto.producedQty : batch.batchQuantity;
+        batch.status = ProductionBatchStatus.Processed;
         await this.pbRepo.save(batch);
       }
     }
@@ -172,7 +240,7 @@ export class ProcessExecutionService {
     }
 
     const processes = await this.pbProcessRepo.find({
-      where: { productionBatchId: dto.batchId, companyId },
+      where: { productionBatchId: dto.batchId },
     });
 
     const allCompleted =
@@ -194,22 +262,29 @@ export class ProcessExecutionService {
     batch.markCompleted = true;
     if (req.user?.sub) {
       batch.completedBy = req.user.sub;
+      batch.completedDate = new Date();
     }
     await this.pbRepo.save(batch);
 
     // Update parent order status if target quantity met
     const po = await this.poRepo.findOne({ where: { id: batch.productionOrderId } });
     if (po) {
-      const completedBatches = await this.pbRepo.find({
+      const allBatches = await this.pbRepo.find({
         where: {
           productionOrderId: batch.productionOrderId,
-          status: In([ProductionBatchStatus.Completed, ProductionBatchStatus.Finished]),
           sysRecDeleted: false,
         }
       });
-      
-      const totalProduced = completedBatches.reduce((sum, b) => sum + (b.batchQuantity || 0), 0);
-      if (totalProduced >= po.productionQuantity) {
+
+      const totalProduced = allBatches
+        .filter((b) => b.status === ProductionBatchStatus.Completed || b.status === ProductionBatchStatus.Processed)
+        .reduce((sum, b) => sum + (Number(b.producedQuantity) || 0), 0);
+
+      const allBatchesCompleted = allBatches.every(
+        (b) => b.status === ProductionBatchStatus.Completed || b.status === ProductionBatchStatus.Processed || b.status === ProductionBatchStatus.Cancelled
+      );
+
+      if (totalProduced >= po.productionQuantity || (po.pendingQuantity <= 0 && allBatchesCompleted)) {
         po.status = ProductionOrderStatus.Completed;
         await this.poRepo.save(po);
       }

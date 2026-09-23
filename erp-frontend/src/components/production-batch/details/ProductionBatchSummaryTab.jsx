@@ -2,20 +2,17 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import {
-  FileText,
-  Workflow,
-  Expand,
-  X,
-} from "lucide-react";
+import { FileText, Workflow, Expand, X, Wallet, Wallet2 } from "lucide-react";
 import Loader from "@/components/common/Loader";
 import ModuleLink from "@/components/common/ModuleLink";
 import { getStatusDisplay } from "@/utils/status-formatter";
 import StatusBadge from "@/components/common/StatusBadge";
 import { formatQuantityWithUom } from "@/utils/number-formatter";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 const ProcessFlowchartContainer = dynamic(
-  () => import("@/components/process-template/flowchart/ProcessFlowchartContainer"),
+  () =>
+    import("@/components/process-template/flowchart/ProcessFlowchartContainer"),
   {
     ssr: false,
     loading: () => (
@@ -23,7 +20,7 @@ const ProcessFlowchartContainer = dynamic(
         <Loader />
       </div>
     ),
-  }
+  },
 );
 
 export default function ProductionBatchSummaryTab({
@@ -32,119 +29,195 @@ export default function ProductionBatchSummaryTab({
   onOpenDrawer,
 }) {
   const [isFlowchartModalOpen, setIsFlowchartModalOpen] = useState(false);
-
+  const batchCost = batchData?.batchCost;
+  console.log("batchCost", batchCost);
+  console.log(batchCost.totalMaterialCostFormatted);
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 mb-6 border-b border-gray-100">
-          <div className="flex items-center gap-2 text-[14px] font-medium text-gray-700">
-            <FileText size={16} className="text-gray-400" />
-            <span>Details</span>
-            <span className="text-gray-300">|</span>
-            <span>Batch Code :</span>
-            <span className=" text-gray-900">
-              {batchData?.batchCode || "—"}
-            </span>
-            <span className="text-gray-300">|</span>
-            <span>Item Name :</span>
-            <ModuleLink
-              moduleName="Item"
-              id={batchData?.itemId}
-              className="text-[#1565c0]   hover:underline"
-              onOpenDrawer={onOpenDrawer}
-            >
-              {batchData?.itemName || "—"}
-            </ModuleLink>
+      <div className="grid grid-cols-10 gap-4">
+        <div className="col-span-6 bg-white rounded-xl border border-gray-200 p-6 shadow-sm w-full">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 mb-6 border-b border-gray-100">
+            <div className="flex items-center gap-2 text-[14px] font-medium text-gray-700">
+              <FileText size={16} className="text-gray-400" />
+              <span>Details</span>
+              <span className="text-gray-300">|</span>
+              <span>Batch Code :</span>
+              <span className=" text-gray-900">
+                {displayFormat(batchData?.batchCode)}
+              </span>
+              <span className="text-gray-300">|</span>
+              <span>Item Name :</span>
+              <ModuleLink
+                moduleName="Item"
+                id={batchData?.itemId}
+                className="text-[#1565c0]   hover:underline"
+                onOpenDrawer={onOpenDrawer}
+              >
+                {displayFormat(batchData?.itemName)}
+              </ModuleLink>
+            </div>
+
+            <StatusBadge status={batchData?.status} module="production-batch" />
           </div>
 
-          <StatusBadge status={batchData?.status} module="production-batch" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8 text-[14px]">
+            <div className="space-y-4">
+              <div>
+                <span className="text-gray-400 block mb-1">
+                  Production Request Code
+                </span>
+                <ModuleLink
+                  moduleName="ProductionOrder"
+                  id={batchData?.productionOrderId}
+                  className="text-[#1565c0]  hover:underline"
+                  onOpenDrawer={onOpenDrawer}
+                >
+                  {displayFormat(batchData?.productionOrderCode)}
+                </ModuleLink>
+              </div>
+
+              <div>
+                <span className="text-gray-400 block mb-1">Customer Name</span>
+                <span className="text-gray-900 text-[14px]">
+                  {displayFormat(batchData?.customerName)}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-gray-400 block mb-1">Production Qty</span>
+                <span className="  text-gray-900 text-[14px]">
+                  {batchData?.batchQuantityFormatted ||
+                    formatQuantityWithUom(
+                      batchData?.batchQuantity || 0,
+                      batchData?.uomName || "",
+                    )}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-gray-400 block mb-1">Requested Date</span>
+                <span className="font-medium text-gray-800">
+                  {displayFormat(batchData?.addedDateFormatted, "DATE")}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <span className="text-gray-400 block mb-1">
+                  Bill Of Material
+                </span>
+                <ModuleLink
+                  moduleName="Bom"
+                  id={batchData?.bomId}
+                  className="text-[#1565c0]hover:underline"
+                  onOpenDrawer={onOpenDrawer}
+                >
+                  {displayFormat(batchData?.bomName || batchData?.bomCode)}
+                </ModuleLink>
+              </div>
+
+              <div>
+                <span className="text-gray-400 block mb-1">
+                  Qty To Be Packaged
+                </span>
+                <span className="  text-gray-900 text-[14px]">
+                  {batchData?.batchQuantityFormatted}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-gray-400 block mb-1">Batch No</span>
+                <span className=" text-xs">
+                  {displayFormat(batchData?.batchSeqNo)}
+                </span>
+              </div>
+
+              {(batchData?.status === "Completed" ||
+                batchData?.status === "Processed") && (
+                <div>
+                  <span className="text-gray-400 block mb-1">
+                    Total Turnaround Time
+                  </span>
+                  <span className="font-medium ">
+                    {batchData?.formattedTimeTaken}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <span className="text-gray-400 block mb-1">
+                  Process Template
+                </span>
+                <ModuleLink
+                  moduleName="ProcessTemplate"
+                  id={batchData?.processTemplateId}
+                  className="text-[#1565c0]   hover:underline"
+                  onOpenDrawer={onOpenDrawer}
+                >
+                  {displayFormat(batchData?.processTemplateName)}
+                </ModuleLink>
+              </div>
+
+              <div>
+                <span className="text-gray-400 block mb-1">Requested By</span>
+                <ModuleLink
+                  moduleName="User"
+                  id={batchData?.addedBy}
+                  className="text-[#1565c0]   hover:underline"
+                  onOpenDrawer={onOpenDrawer}
+                >
+                  {displayFormat(batchData?.addedByName)}
+                </ModuleLink>
+              </div>
+
+              <div>
+                <span className="text-gray-400 block mb-1">MR Status</span>
+                <StatusBadge status={batchData?.materialStatus} />
+              </div>
+            {batchData?.completedBy && (
+              <div>
+                <span className="text-gray-400 block mb-1">Completed By</span>
+                <ModuleLink
+                  moduleName="User"
+                  id={batchData?.completedBy}
+                  className="text-[#1565c0]   hover:underline"
+                  onOpenDrawer={onOpenDrawer}
+                >
+                  {displayFormat(batchData?.completedByName)}
+                </ModuleLink>
+              </div>
+            )}
+            </div>
+          </div>
         </div>
+        <div className="col-span-4 bg-white rounded-xl border border-gray-200 p-6 shadow-sm w-full">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 mb-6 border-b border-gray-100">
+            <span className="text-gray-700 text-sm flex justify-content-between gap-2">
+              <Wallet2 size={18} />
+              <span>Cost Details</span>
+            </span>
+            <span className="text-gray-700 text-sm font-semibold">
+              Total Cost : {batchCost.totalMaterialCostFormatted}
+            </span>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8 text-[14px]">
-          <div className="space-y-4">
-            <div>
-              <span className="text-gray-400 block mb-1">Production Request Code</span>
-              <ModuleLink
-                moduleName="ProductionOrder"
-                id={batchData?.productionOrderId}
-                className="text-[#1565c0]  hover:underline"
-                onOpenDrawer={onOpenDrawer}
-              >
-                {batchData?.productionOrderCode || "—"}
-              </ModuleLink>
-            </div>
-
-            <div>
-              <span className="text-gray-400 block mb-1">Production Qty</span>
-              <span className="  text-gray-900 text-[14px]">
-                {formatQuantityWithUom(batchData?.batchQuantity || 0, batchData?.uomName || "")}
-              </span>
-            </div>
-
-            <div>
-              <span className="text-gray-400 block mb-1">Requested Date</span>
-              <span className="font-medium text-gray-800">
-                {batchData?.addedDateFormatted || "—"}
+          <div className="text-sm border-b  border-gray-100 pb-4 mb-4">
+            <div className="flex justify-between">
+              <span className="text-gray-600 block mb-1">Material Cost</span>
+              <span className="text-gray-900 text-[14px]">
+                {batchCost.totalMaterialCostFormatted}
               </span>
             </div>
           </div>
-
-          <div className="space-y-4">
-            <div>
-              <span className="text-gray-400 block mb-1">Bill Of Material</span>
-              <ModuleLink
-                moduleName="Bom"
-                id={batchData?.bomId}
-                className="text-[#1565c0]hover:underline"
-                onOpenDrawer={onOpenDrawer}
-              >
-                {batchData?.bomName || batchData?.bomCode || "—"}
-              </ModuleLink>
-            </div>
-
-            <div>
-              <span className="text-gray-400 block mb-1">Qty To Be Packaged</span>
-              <span className="  text-gray-900 text-[14px]">
-                {formatQuantityWithUom(batchData?.batchQuantity || 0, batchData?.uomName || "")}
+          <div className="text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600 block mb-1">Total Cost</span>
+              <span className="text-gray-900 text-[14px]">
+                {batchCost.totalMaterialCostFormatted}
               </span>
-            </div>
-
-            <div>
-              <span className="text-gray-400 block mb-1">Batch No</span>
-              <span className=" text-xs">
-                {batchData?.batchSeqNo || 1}
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <span className="text-gray-400 block mb-1">Process Template</span>
-              <ModuleLink
-                moduleName="ProcessTemplate"
-                id={batchData?.processTemplateId}
-                className="text-[#1565c0]   hover:underline"
-                onOpenDrawer={onOpenDrawer}
-              >
-                {batchData?.processTemplateName || "—"}
-              </ModuleLink>
-            </div>
-
-            <div>
-              <span className="text-gray-400 block mb-1">Requested By</span>
-              <ModuleLink
-                moduleName="User"
-                id={batchData?.addedBy}
-                className="text-[#1565c0]   hover:underline"
-                onOpenDrawer={onOpenDrawer}
-              >
-                {batchData?.addedByName || "—"}
-              </ModuleLink>
-            </div>
-
-            <div>
-              <span className="text-gray-400 block mb-1">MR Status</span>
-              <StatusBadge status={batchData?.materialStatus || "YetToRequest"} />
             </div>
           </div>
         </div>
@@ -212,7 +285,9 @@ export default function ProductionBatchSummaryTab({
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50/80">
               <div className="flex items-center gap-2   text-gray-900 text-sm">
                 <Workflow size={18} className="text-[#1565c0]" />
-                <span>Process Flowchart - {batchData?.batchCode || "Full View"}</span>
+                <span>
+                  Process Flowchart - {batchData?.batchCode || "Full View"}
+                </span>
               </div>
               <button
                 type="button"

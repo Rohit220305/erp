@@ -93,7 +93,6 @@ export class BomAddDto {
   @IsEnum(Status)
   status?: Status = Status.Active;
 
-
   @Transform(({ value }) => {
     let parsed = value;
     if (typeof value === 'string') {
@@ -104,7 +103,9 @@ export class BomAddDto {
       }
     }
     if (Array.isArray(parsed)) {
-      return parsed.map((item: any) => plainToInstance(BomProcessItemDto, item));
+      return parsed.map((item: any) =>
+        plainToInstance(BomProcessItemDto, item),
+      );
     }
     return parsed;
   })
@@ -188,4 +189,15 @@ export class BomListDto {
   @IsOptional()
   @IsString()
   logicalOperator?: string;
+}
+
+export class BomCloneDto {
+  @IsInt()
+  @IsNotEmpty()
+  @Type(() => Number)
+  sourceBomId: number;
+
+  @IsString()
+  @IsNotEmpty()
+  newBomName: string;
 }

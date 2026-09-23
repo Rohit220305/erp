@@ -4,6 +4,8 @@ import { useState } from "react";
 import { ChevronDown, Building2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 export default function CompanyListCard({ item, config, setSelectedItemForDetails }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -48,11 +50,11 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                       }
                       className="block w-fit text-[#1565c0] hover:underline cursor-pointer font-semibold text-sm truncate"
                     >
-                      {item.companyName || "—"}
+                      {displayFormat(item.companyName)}
                     </span>
                   ) : (
                     <p className="text-sm font-semibold text-gray-800 truncate">
-                      {item.companyName || "—"}
+                      {displayFormat(item.companyName)}
                     </p>
                   )}
                 </div>
@@ -63,7 +65,7 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                 Company code
               </p>
               <p className="text-[11px] text-gray-00 mt-0.5 no-underline truncate">
-                {item.companyCode || "—"}
+                {displayFormat(item.companyCode)}
               </p>
             </div>
             <div className="min-w-0">
@@ -71,7 +73,7 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                 Legal Name
               </p>
               <div className="text-[13px] text-gray-800 font-medium truncate">
-                {item.legalName || "—"}
+                {displayFormat(item.legalName)}
               </div>
             </div>
 
@@ -80,7 +82,7 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                 Registration No.
               </p>
               <div className="text-[13px] text-gray-800 font-medium truncate">
-                {item.registrationNumber || "—"}
+                {displayFormat(item.registrationNumber)}
               </div>
             </div>
             <div className="min-w-0">
@@ -88,18 +90,7 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                 Status
               </p>
               <div>
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                    isActive
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`}
-                  />
-                  {item.status || "—"}
-                </span>
+                <StatusBadge status={item.status} />
               </div>
             </div>
           </div>
@@ -132,7 +123,7 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                   className="text-[13px] text-gray-800 font-medium truncate"
                   title={item.email}
                 >
-                  {item.email || "—"}
+                  {displayFormat(item.email)}
                 </div>
               </div>
 
@@ -141,9 +132,9 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                   Phone
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.phone
-                    ? `${item.dialCode || ""} ${item.phone}`.trim()
-                    : "—"}
+                  {displayFormat(
+                    item.phone ? `${item.dialCode || ""} ${item.phone}`.trim() : null
+                  )}
                 </div>
               </div>
 
@@ -152,7 +143,7 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                   Contact Person
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.contactPersonName || "—"}
+                  {displayFormat(item.contactPersonName)}
                 </div>
               </div>
 
@@ -178,7 +169,7 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                       ))}
                     </div>
                   ) : (
-                    "—"
+                    displayFormat(null)
                   )}
                 </div>
               </div>
@@ -187,7 +178,7 @@ export default function CompanyListCard({ item, config, setSelectedItemForDetail
                   Added Date
                 </p>
                 <div className="text-[13px] text-gray-800 font-medium truncate">
-                  {item.addedDateFormatted || "—"}
+                  {displayFormat(item.addedDateFormatted, "DATE")}
                 </div>
               </div>
             </div>

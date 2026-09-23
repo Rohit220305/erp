@@ -1,5 +1,6 @@
 {
   "moduleName": "User",
+  "parentModule": "User",
   "modulePath": "/admin",
   "title": "User Management",
   "permissions": {
@@ -10,12 +11,37 @@
     "delete": "USER_DELETE"
   },
   "columns": [
-    { "label": "User", "key": "fullName", "searchable": true, "sortable": true },
+    {
+      "label": "User",
+      "key": "fullName",
+      "searchable": true,
+      "sortable": true
+    },
     { "label": "Email", "key": "email", "searchable": true, "sortable": true },
-    { "label": "Company", "key": "companyName", "searchable": true, "sortable": true },
-    { "label": "Group", "key": "groupName", "searchable": true, "sortable": true },
-    { "label": "Login As", "key": "loginAs", "searchable": false, "sortable": false },
-    { "label": "Last Login", "key": "lastLoginDateFormatted", "searchable": false, "sortable": false },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Group",
+      "key": "groupName",
+      "searchable": true,
+      "sortable": true
+    },
+    {
+      "label": "Login As",
+      "key": "loginAs",
+      "searchable": false,
+      "sortable": false
+    },
+    {
+      "label": "Last Login",
+      "key": "lastLoginDateFormatted",
+      "searchable": false,
+      "sortable": false
+    },
     {
       "label": "Status",
       "key": "status",
@@ -42,7 +68,12 @@
   "searchFields": [
     { "label": "User", "value": "fullName", "type": "text" },
     { "label": "Email", "value": "email", "type": "text" },
-    { "label": "Company", "value": "companyId", "type": "select", "options": [] },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "options": []
+    },
     { "label": "Group", "value": "groupId", "type": "select", "options": [] },
     {
       "label": "Status",
@@ -57,8 +88,20 @@
   "sidebarFields": [
     { "label": "User", "value": "fullName", "type": "text" },
     { "label": "Email", "value": "email", "type": "text" },
-    { "label": "Company", "value": "companyId", "type": "select", "options": [] , "isMultiSelect": true},
-    { "label": "Group", "value": "groupId", "type": "select", "options": [] , "isMultiSelect": true},
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "options": [],
+      "isMultiSelect": true
+    },
+    {
+      "label": "Group",
+      "value": "groupId",
+      "type": "select",
+      "options": [],
+      "isMultiSelect": true
+    },
     {
       "label": "Status",
       "value": "status",
@@ -66,7 +109,7 @@
       "options": [
         { "label": "Active", "value": "Active" },
         { "label": "Inactive", "value": "Inactive" }
-      ], 
+      ],
       "isMultiSelect": true
     }
   ],

@@ -8,6 +8,7 @@ import BomGridCard from "@/components/bom/BomGridCard";
 import bomConfig from "@/config/bom.config.json";
 import { listBoms, getBom, deleteBom } from "@/lib/api/bom-api";
 import SideDrawer from "@/components/common/SideDrawer";
+import BomCloneDrawer from "@/components/bom/BomCloneDrawer";
 
 export default function BomListing() {
   const [selectedOutputItemForDetails, setSelectedOutputItemForDetails] = useState(null);
@@ -15,13 +16,28 @@ export default function BomListing() {
   const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
+  const [isCloneOpen, setIsCloneOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleCloneSuccess = () => {
+    setIsCloneOpen(false);
+    setRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <>
       <DynamicListing
+        key={refreshKey}
         schema={bomConfig}
         fetchData={listBoms}
         fetchItem={getBom}
         deleteFn={deleteBom}
+        extraNavButtons={[
+          {
+            label: "Clone BOM",
+            onClick: () => setIsCloneOpen(true),
+          },
+        ]}
         renderTableRow={(item, onRowAction, setSelectedItemForDetails) => (
           <BomTableRow
             item={item}
@@ -57,6 +73,12 @@ export default function BomListing() {
             setSelectedUserForDetails={setSelectedUserForDetails}
           />
         )}
+      />
+
+      <BomCloneDrawer
+        open={isCloneOpen}
+        onClose={() => setIsCloneOpen(false)}
+        onSuccess={handleCloneSuccess}
       />
 
       <SideDrawer

@@ -205,9 +205,12 @@ export class MaterialRequestListService {
           ...item,
           shortage,
           suggestedQty,
+          requiredQtyFormatted: this.general.formatQuantityWithUom(item.requiredQty, item.uomName),
+          availableStockFormatted: this.general.formatQuantityWithUom(item.availableStock, item.uomName),
+          shortageFormatted: this.general.formatQuantityWithUom(shortage, item.uomName),
+          suggestedQtyFormatted: this.general.formatQuantityWithUom(suggestedQty, item.uomName),
         };
       });
-      // console.log('Material request suggestions:', suggestions);
       return_data = {
         success: 1,
         message: 'Material request suggestions fetched successfully.',
@@ -301,9 +304,11 @@ export class MaterialRequestListService {
           return {
             ...materialRequest,
             requestedQtySum: materialRequestItems.reduce((acc, i) => acc + (Number(i.requestedQty) || 0), 0),
+            requestedQtySumFormatted: this.general.formatNumber(materialRequestItems.reduce((acc, i) => acc + (Number(i.requestedQty) || 0), 0)),
             items: materialRequestItems.map((i) => ({
               ...i,
               requestedQty: Number(i.requestedQty) || 0,
+              requestedQtyFormatted: this.general.formatNumber(i.requestedQty || 0),
             })),
             attachments,
           };

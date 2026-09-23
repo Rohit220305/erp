@@ -76,7 +76,7 @@ export default function BomForm({
       navbar: {
         title: mode === "create" ? "Add" : "Edit",
         breadcrumbs: [
-          { label: "Master", href: "/" },
+          { label: "Production" },
           { label: "Bill of Materials", href: "/bom" },
         ],
         actionButton: null,
@@ -98,8 +98,10 @@ export default function BomForm({
       try {
         const itemRes = await listItems({ page: 1, limit: 1000 });
         const itemList = itemRes?.settings?.data?.list || itemRes?.data?.list || itemRes?.data || [];
+        
+        const inHouseItems = itemList.filter(i => i.isInHouseProduction === "Yes");
         setItemOptions(
-          itemList.map((i) => ({ label: i.itemName, value: i.id }))
+          inHouseItems.map((i) => ({ label: i.itemName, value: i.id }))
         );
         setRawItemOptions(itemList.map((i) => ({ ...i, label: i.itemName, value: i.id })));
 

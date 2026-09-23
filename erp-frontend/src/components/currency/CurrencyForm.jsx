@@ -68,7 +68,7 @@ const customSelectStyles = (error, disabled) => ({
     ...base,
     transition: "all .2s ease",
     transform: state.selectProps.menuIsOpen ? "rotate(180deg)" : null,
-  })
+  }),
 });
 
 export default function CurrencyForm({
@@ -112,7 +112,7 @@ export default function CurrencyForm({
       navbar: {
         title: `${mode === "create" ? "Add" : "Edit"} ${currencyConfig.moduleName}`,
         breadcrumbs: [
-          { label: "Master", href: buildRoute("home", "list") },
+          { label: currencyConfig.parentModule || "Master" },
           { label: currencyConfig.title, href: buildRoute("currency", "list") },
           {
             label: `${mode === "create" ? "Add" : "Edit"} ${currencyConfig.moduleName}`,
@@ -333,7 +333,13 @@ export default function CurrencyForm({
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
-        actionType={confirmState.type === "submit" ? (mode === "create" ? "create" : "update") : "discard"}
+        actionType={
+          confirmState.type === "submit"
+            ? mode === "create"
+              ? "create"
+              : "update"
+            : "discard"
+        }
         entityName="Currency"
         onConfirm={() => {
           if (confirmState.type === "submit") {

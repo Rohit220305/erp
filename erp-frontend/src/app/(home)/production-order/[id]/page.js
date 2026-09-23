@@ -1,20 +1,8 @@
+import { Suspense } from "react";
 import { getProductionOrder } from "@/lib/api/production-order-api";
 import ProductionOrderDetailPage from "@/components/production-order/ProductionOrderDetailPage";
+import Loader from "@/components/common/Loader";
 import { notFound } from "next/navigation";
-
-export async function generateMetadata({ params }) {
-  const { id } = await params;
-  try {
-    const res = await getProductionOrder({ id });
-    const code = res?.data?.productionOrderCode || res?.settings?.data?.productionOrderCode;
-    if (code) {
-      return { title: `${code} | Production Order Details` };
-    }
-  } catch (error) {
-    //
-  }
-  return { title: "Production Order Details" };
-}
 
 export default async function Page({ params }) {
   const { id } = await params;
@@ -25,7 +13,11 @@ export default async function Page({ params }) {
     }
     const data = res?.data || res?.settings?.data;
     if (!data) return notFound();
-    return <ProductionOrderDetailPage data={data} />;
+    return (
+      <Suspense fallback={<Loader fullPage />}>
+        <ProductionOrderDetailPage data={data} />
+      </Suspense>
+    );
   } catch (error) {
     return notFound();
   }

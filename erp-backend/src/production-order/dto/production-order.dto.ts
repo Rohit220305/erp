@@ -56,6 +56,10 @@ export class ProductionOrderAddDto {
   customerId?: number;
 
   @IsOptional()
+  @IsString()
+  customerName?: string;
+
+  @IsOptional()
   @IsEnum(ProductionOrderStatus)
   status?: ProductionOrderStatus = ProductionOrderStatus.Pending;
 }
@@ -72,6 +76,13 @@ export class ProductionOrderUpdateDto extends ProductionOrderAddDto {
 }
 
 export class ProductionOrderDeleteDto {
+  @IsInt()
+  @Transform(({ value }) => Number(value))
+  @IsNotEmpty()
+  id: number;
+}
+
+export class CancelProductionOrderDto {
   @IsInt()
   @Transform(({ value }) => Number(value))
   @IsNotEmpty()

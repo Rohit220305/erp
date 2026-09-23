@@ -34,4 +34,6 @@ export class ProductionBatchProcessEntity {
   @Column({ type: 'datetime', nullable: true })
   endTime: Date | null;
 
+  @Column({ type: 'int', nullable: true })
+  activeDurationSeconds: number | null;
 }

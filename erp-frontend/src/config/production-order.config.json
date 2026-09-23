@@ -1,5 +1,6 @@
 {
   "moduleName": "ProductionOrder",
+  "parentModule": "Production",
   "title": "Production Orders",
   "permissions": {
     "list": "PRODUCTION_ORDER_LIST",
@@ -47,7 +48,7 @@
       "width": "180px"
     },
     {
-      "label": "Produced Qty",
+      "label": "Production Qty",
       "key": "productionQuantityDisplay",
       "type": "text",
       "searchable": false,
@@ -96,7 +97,6 @@
       "sortable": true,
       "width": "140px",
       "options": [
-       
         { "label": "Pending", "value": "Pending" },
         { "label": "In Progress", "value": "InProgress" },
         { "label": "Partial Cancelled", "value": "PartialCancelled" },
@@ -136,7 +136,11 @@
     ]
   },
   "sidebarFields": [
-    { "label": "Production Request Code", "value": "productionOrderCode", "type": "text" },
+    {
+      "label": "Production Request Code",
+      "value": "productionOrderCode",
+      "type": "text"
+    },
     { "label": "Item Name", "value": "itemName", "type": "text" },
     { "label": "Item Code", "value": "itemCode", "type": "text" },
     { "label": "BOM Name", "value": "bomName", "type": "text" },
@@ -155,7 +159,11 @@
     }
   ],
   "searchFields": [
-    { "label": "Production Request Code", "value": "productionOrderCode", "type": "text" },
+    {
+      "label": "Production Request Code",
+      "value": "productionOrderCode",
+      "type": "text"
+    },
     { "label": "Item Name", "value": "itemName", "type": "text" },
     { "label": "Item Code", "value": "itemCode", "type": "text" },
     { "label": "BOM Code", "value": "bomCode", "type": "text" },

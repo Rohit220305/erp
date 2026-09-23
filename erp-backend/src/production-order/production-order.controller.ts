@@ -23,6 +23,7 @@ import {
   ProductionOrderDetailsDto,
   ProductionOrderListDto,
   ProductionOrderUpdateDto,
+  CancelProductionOrderDto,
 } from './dto/production-order.dto';
 
 import { ProductionOrderService } from './service/production-order.service';
@@ -111,5 +112,11 @@ export class ProductionOrderController {
         message: error.message,
       };
     }
+  }
+
+  @Post('cancel-order')
+  @RequirePermission(CAPABILITIES.PRODUCTION_ORDER.DELETE)
+  async cancelOrder(@AppRequest() req: IAppRequest, @Body() body: CancelProductionOrderDto) {
+    return await this.poService.startCancelProductionOrder(req, body);
   }
 }

@@ -5,6 +5,8 @@ import ActionRenderer from "@/components/core/dynamic-ui/ActionRenderer";
 import currencyConfig from "@/config/currency.config.json";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 
 export default function CurrencyTableRow({ item, onRowAction, setSelectedItemForDetails }) {
@@ -23,35 +25,28 @@ export default function CurrencyTableRow({ item, onRowAction, setSelectedItemFor
             onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
             className="font-medium text-[#1565c0]"
           >
-            {item.currencyName || "—"}
+            {displayFormat(item.currencyName)}
           </ModuleLink>
         ) : (
-          <span className="font-medium text-gray-800">{item.currencyName || "—"}</span>
+          <span className="font-medium text-gray-800">{displayFormat(item.currencyName)}</span>
         )}
       </td>
 
       <td className="px-4 py-3 text-sm">
         <span className="font-mono text-gray-700 tracking-wide text-xs font-semibold">
-          {item.currencyCode || "—"}
+          {displayFormat(item.currencyCode)}
         </span>
       </td>
 
 
       <td className="px-4 py-3 text-sm">
         <span className="inline-flex items-center justify-center w-8 h-8   text-base   ">
-          {item.currencySymbol || "—"}
+          {displayFormat(item.currencySymbol)}
         </span>
       </td>
 
       <td className="px-4 py-3 text-sm">
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-            isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-          }`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
-          {item.status || "—"}
-        </span>
+        <StatusBadge status={item.status} />
       </td>
 
     

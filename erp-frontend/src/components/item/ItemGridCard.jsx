@@ -6,6 +6,7 @@ import { Package } from "lucide-react";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
 
 export default function ItemGridCard({
   item,
@@ -47,15 +48,15 @@ export default function ItemGridCard({
                 onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
                 className="font-medium leading-tight mb-0.5 block text-[#1565c0]"
               >
-                {item.itemName || "—"}
+                {displayFormat(item.itemName)}
               </ModuleLink>
             ) : (
               <p className="font-medium leading-tight mb-0.5 truncate text-gray-900">
-                {item.itemName || "—"}
+                {displayFormat(item.itemName)}
               </p>
             )}
             <p className="text-gray-400 text-xs font-mono mt-1 leading-tight truncate">
-              {item.itemCode || "—"}
+              {displayFormat(item.itemCode)}
             </p>
           </div>
         </div>
@@ -72,36 +73,34 @@ export default function ItemGridCard({
               onClick={() => setSelectedCategoryForDetails(item)}
               className="text-[#1565c0] font-medium block"
             >
-              {item.categoryName || "—"}
+              {displayFormat(item.categoryName)}
             </ModuleLink>
           ) : (
-            <span className="text-gray-900 font-medium truncate">{item.categoryName || "—"}</span>
+            <span className="text-gray-900 font-medium truncate">{displayFormat(item.categoryName)}</span>
           )}
         </div>
 
         <div className="grid grid-cols-[90px_1fr] items-center gap-2">
           <span className="text-gray-400">Brand</span>
-          <span className="text-gray-900 font-medium truncate">{item.brandName || "—"}</span>
+          <span className="text-gray-900 font-medium truncate">{displayFormat(item.brandName)}</span>
         </div>
 
         <div className="grid grid-cols-[90px_1fr] items-center gap-2">
           <span className="text-gray-400">Barcode</span>
-          <span className="text-gray-900 font-mono truncate">{item.barcode || "—"}</span>
+          <span className="text-gray-900 font-mono truncate">{displayFormat(item.barcode)}</span>
         </div>
 
         <div className="grid grid-cols-[90px_1fr] items-center gap-2">
           <span className="text-gray-400">Price</span>
           <span className="text-gray-900 font-medium truncate">
-            {item.purchasePrice !== null && item.purchasePrice !== undefined && item.purchasePrice !== ""
-              ? item.purchasePrice
-              : "—"}
+            {displayFormat(item.purchasePriceFormatted)}
           </span>
         </div>
 
         {item.addedDateFormatted && (
           <div className="grid grid-cols-[90px_1fr] items-center gap-2">
             <span className="text-gray-400">Added Date</span>
-            <span className="text-gray-500 truncate">{item.addedDateFormatted}</span>
+            <span className="text-gray-500 truncate">{displayFormat(item.addedDateFormatted, "DATE")}</span>
           </div>
         )}
       </div>

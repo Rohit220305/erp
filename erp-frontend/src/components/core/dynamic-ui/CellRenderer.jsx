@@ -86,7 +86,7 @@ export default function CellRenderer({
       return <span>{formatNumber(value, column.formatOptions)}</span>;
 
     case "currency":
-      return <span>{formatCurrency(value, data?.currencySymbol || column.currencySymbol || "₦", column.formatOptions)}</span>;
+      return <span>{formatCurrency(value, data?.currencySymbol || column.currencySymbol || "", column.formatOptions)}</span>;
 
     case "quantity":
       return <span>{formatQuantityWithUom(value, data?.uomName || column.uomName || "", column.formatOptions)}</span>;

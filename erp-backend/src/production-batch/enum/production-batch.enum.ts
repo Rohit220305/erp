@@ -3,7 +3,7 @@ export enum ProductionBatchStatus {
   StockReceived = 'StockReceived',
   InProgress = 'InProgress',
   Completed = 'Completed',
-  Finished = 'Finished',
+  Processed = 'Processed',
   Cancelled = 'Cancelled',
 }
 
@@ -38,4 +38,12 @@ export enum MaterialRequestStatus {
 export enum LogType {
   Consumption = 'Consumption',
   Production = 'Production',
+}
+
+export enum ProductionBatchTimelineAction {
+  Started = 'Started',
+  Paused = 'Paused',
+  Resumed = 'Resumed',
+  Completed = 'Completed',
+  Skipped = 'Skipped',
 }

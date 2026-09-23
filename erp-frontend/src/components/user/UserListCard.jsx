@@ -6,6 +6,8 @@ import { CAPABILITIES } from "@/config/capabilities.config";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 export default function UserListCard({ user, can, setSelectedUserForDetails, setSelectedCompanyForDetails }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -17,7 +19,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
     ? `${user.dialCode || ""}`.trim()
       ? `${user.dialCode} ${user.phone}`
       : `(+91) ${user.phone}`
-    : "—";
+    : null;
 
   return (
     <div className="mx-2 my-2">
@@ -44,11 +46,11 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                       onClick={() => setSelectedUserForDetails?.(user)}
                       className="text-sm truncate block"
                     >
-                      {user.fullName}
+                      {displayFormat(user.fullName)}
                     </ModuleLink>
                   ) : (
                     <p className="text-sm font-semibold text-gray-800 truncate">
-                      {user.fullName}
+                      {displayFormat(user.fullName)}
                     </p>
                   )}
                 </div>
@@ -60,7 +62,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                 User Name
               </p>
               <p className="text-[13px] text-gray-800 font-medium truncate" title={user.userName || user.email}>
-                {user.userName || user.email || "—"}
+                {displayFormat(user.userName || user.email)}
               </p>
             </div>
 
@@ -74,11 +76,11 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                   onClick={() => setSelectedCompanyForDetails(user)}
                   className="text-[13px] font-medium truncate block"
                 >
-                  {user.companyName || "—"}
+                  {displayFormat(user.companyName)}
                 </ModuleLink>
               ) : (
                 <p className="text-[13px] font-medium text-gray-800 truncate">
-                  {user.companyName || "—"}
+                  {displayFormat(user.companyName)}
                 </p>
               )}
             </div>
@@ -88,12 +90,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                 Status
               </p>
               <div>
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`} />
-                  {user.status || "—"}
-                </span>
+                <StatusBadge status={user.status} />
               </div>
             </div>
           </div>
@@ -119,7 +116,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                   Email
                 </p>
                 <p className="text-[13px] text-gray-800 font-medium truncate" title={user.email}>
-                  {user.email || "—"}
+                  {displayFormat(user.email)}
                 </p>
               </div>
 
@@ -128,7 +125,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                   Phone
                 </p>
                 <p className="text-[13px] text-gray-800 font-medium truncate">
-                  {formattedPhone}
+                  {displayFormat(formattedPhone)}
                 </p>
               </div>
 
@@ -137,7 +134,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                   Group Name
                 </p>
                 <p className="text-[13px] text-gray-800 font-medium truncate">
-                  {user.groupName || "—"}
+                  {displayFormat(user.groupName)}
                 </p>
               </div>
 
@@ -146,7 +143,7 @@ export default function UserListCard({ user, can, setSelectedUserForDetails, set
                   Last Login
                 </p>
                 <p className="text-[13px] text-gray-800 font-medium truncate">
-                  {user.lastLoginDateFormatted || "—"}
+                  {displayFormat(user.lastLoginDateFormatted, "DATE")}
                 </p>
               </div>
             </div>

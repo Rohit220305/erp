@@ -28,7 +28,7 @@ export default function GroupEditRoute() {
       navbar: {
         title: "Edit Group",
         breadcrumbs: [
-          { label: "Master", href: "/" },
+          { label: "User",  },
           { label: "Group Master", href: "/group" },
           { label: "Edit Group" },
         ],

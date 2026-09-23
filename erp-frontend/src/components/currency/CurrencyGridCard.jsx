@@ -3,6 +3,8 @@
 import { useAuth } from "@/context/AuthContext";
 import ModuleLink from "@/components/common/ModuleLink";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 
 export default function CurrencyGridCard({ item, config, setSelectedItemForDetails }) {
@@ -28,15 +30,15 @@ export default function CurrencyGridCard({ item, config, setSelectedItemForDetai
               onClick={() => setSelectedItemForDetails && setSelectedItemForDetails(item)}
               className="font-semibold text-sm leading-tight truncate text-[#1565c0] block"
             >
-              {item.currencyName || "—"}
+              {displayFormat(item.currencyName)}
             </ModuleLink>
           ) : (
             <p className="font-semibold text-sm leading-tight truncate text-gray-900">
-              {item.currencyName || "—"}
+              {displayFormat(item.currencyName)}
             </p>
           )}
           <p className="text-gray-400 text-xs mt-1 font-mono tracking-wide">
-            {item.currencyCode || "—"}
+            {displayFormat(item.currencyCode)}
           </p>
         </div>
       </div>
@@ -47,26 +49,13 @@ export default function CurrencyGridCard({ item, config, setSelectedItemForDetai
         <div className="flex items-center justify-between">
           <span className="text-gray-400 text-xs">Symbol</span>
           <span className="text-gray-900 font-semibold text-base">
-            {item.currencySymbol || "—"}
+            {displayFormat(item.currencySymbol)}
           </span>
         </div>
       </div>
 
       <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-            isActive
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              isActive ? "bg-green-500" : "bg-red-500"
-            }`}
-          />
-          {item.status || "—"}
-        </span>
+        <StatusBadge status={item.status} />
       </div>
 
     </div>

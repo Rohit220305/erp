@@ -183,7 +183,7 @@ export default function ProcessForm({
             ? `Add ${processConfig.title}`
             : `Edit ${processConfig.title}`,
         breadcrumbs: [
-          { label: "Master", href: buildRoute("home", "list") },
+          { label:  "Master" },
           { label: "Process Master", href: buildRoute("process", "list") },
           { label: mode === "create" ? "Add" : "Edit" },
         ],

@@ -65,10 +65,22 @@ export function buildRoute(moduleName, action = "list", params = {}) {
     throw new Error(`[routeBuilder] No "${action}" route defined for module "${moduleName}"`);
   }
 
-  return pattern.replace(/\{(\w+)\}/g, (_, paramKey) => {
+  const usedParams = new Set();
+
+  const path = pattern.replace(/\{(\w+)\}/g, (_, paramKey) => {
     if (params[paramKey] === undefined || params[paramKey] === null) {
       throw new Error(`[routeBuilder] Missing param "${paramKey}" for ${moduleName}.${action}`);
     }
+    usedParams.add(paramKey);
     return encodeURIComponent(params[paramKey]);
-  });
+  }); 
+
+  const queryParts = [];
+  for (const [k, v] of Object.entries(params)) {
+    if (!usedParams.has(k) && v !== undefined && v !== null && v !== "") {
+      queryParts.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+    }
+  }
+
+  return queryParts.length > 0 ? `${path}?${queryParts.join("&")}` : path;
 }

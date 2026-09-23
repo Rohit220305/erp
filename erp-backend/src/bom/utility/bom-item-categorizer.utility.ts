@@ -1,4 +1,5 @@
 import { MaterialType } from '../enum/bom.enum';
+import { GeneralUtilities } from '../../package/utilities/general.utilities';
 
 export interface BomProcessItemCategorizationInput {
   id: number;
@@ -20,6 +21,7 @@ export interface BomProcessItemCategorizationInput {
   primitiveQuantity?: number | string | null;
   itemUomName?: string | null;
   packageUomName?: string | null;
+  uomName?: string | null;
 }
 
 export interface CategorizedItemDetail {
@@ -36,6 +38,7 @@ export interface CategorizedItemDetail {
   qtyPerUnit: number;
   qtyPerUnitDisplay: string;
   unitPrice: number;
+  uomName: string;
   unitPriceFormatted: string;
   totalRequiredQty: number;
   totalRequiredQtyDisplay: string;
@@ -59,6 +62,7 @@ export class BomItemCategorizerUtility {
     const rawMaterials: CategorizedItemDetail[] = [];
     const semiFinished: CategorizedItemDetail[] = [];
     const finishedProducts: CategorizedItemDetail[] = [];
+    const generalUtil = new GeneralUtilities();
 
     for (const item of items) {
       const isEntry = item.materialType === MaterialType.Entry || item.materialType === 'Entry';
@@ -72,7 +76,7 @@ export class BomItemCategorizerUtility {
       const totalRequiredQty = parseFloat((numQtyPerUnit * packageQuantity).toFixed(4));
       const totalCost = parseFloat((totalRequiredQty * unitPrice).toFixed(4));
 
-      const uomSuffix = item.itemUomName ? ` ${item.itemUomName}` : '';
+      const uomName = item.itemUomName || item.uomName || '';
       const symbolPrefix = currencySymbol ? `${currencySymbol} ` : '';
 
       const detail: CategorizedItemDetail = {
@@ -87,13 +91,14 @@ export class BomItemCategorizerUtility {
         processName: item.processName || '',
         processCode: item.processCode || '',
         qtyPerUnit: numQtyPerUnit,
-        qtyPerUnitDisplay: `${numQtyPerUnit.toFixed(2)}${uomSuffix}`,
+        qtyPerUnitDisplay: generalUtil.formatQuantityWithUom(numQtyPerUnit, uomName),
         unitPrice,
-        unitPriceFormatted: (isEntry && !isInternal && unitPrice > 0) ? `${symbolPrefix}${unitPrice.toFixed(2)}` : 'NA',
+        uomName,
+        unitPriceFormatted: (isEntry && !isInternal && unitPrice > 0) ? `${symbolPrefix}${Number(unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'NA',
         totalRequiredQty,
-        totalRequiredQtyDisplay: `${totalRequiredQty.toFixed(2)}${uomSuffix}`,
+        totalRequiredQtyDisplay: generalUtil.formatQuantityWithUom(totalRequiredQty, uomName),
         totalCost,
-        totalCostFormatted: isEntry && !isInternal && totalCost > 0 ? `${symbolPrefix}${totalCost.toFixed(2)}` : 'NA',
+        totalCostFormatted: isEntry && !isInternal && totalCost > 0 ? `${symbolPrefix}${Number(totalCost).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'NA',
         itemImageUrl: item.itemImageUrl || null,
       };
 
@@ -111,7 +116,6 @@ export class BomItemCategorizerUtility {
         }
       }
     }
-
     return {
       rawMaterials,
       semiFinished,

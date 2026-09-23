@@ -139,6 +139,13 @@ export class ProductionBatchDeleteDto {
   id: number;
 }
 
+export class CancelProductionBatchDto {
+  @IsInt()
+  @Transform(({ value }) => Number(value))
+  @IsNotEmpty()
+  id: number;
+}
+
 export class ProductionBatchDetailsDto {
   @IsInt()
   @Transform(({ value }) => Number(value))

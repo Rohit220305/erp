@@ -8,8 +8,10 @@ import { ProductionBatchProcessEntity } from './entity/production-batch-process.
 import { ProductionBatchItemEntity } from './entity/production-batch-item.entity';
 import { BatchProcessLogEntity } from './entity/batch-process-log.entity';
 import { BatchProcessLogItemEntity } from './entity/batch-process-log-item.entity';
+import { ProductionBatchProcessTimelineEntity } from './entity/production-batch-process-timeline.entity';
 
 import { ProductionOrderEntity } from '../production-order/entity/production-order.entity';
+import { MaterialRequestEntity } from '../material-request/entity/material-request.entity';
 import { BomEntity } from '../bom/entity/bom.entity';
 import { BomProcessItemEntity } from '../bom/entity/bom-process-item.entity';
 import { ProcessTemplateMappingEntity } from '../process-template/entity/process.template.mapping.entity';
@@ -33,6 +35,7 @@ import { BatchItemCategorizerUtility } from './utility/batch-item-categorizer.ut
       ProductionBatchItemEntity,
       BatchProcessLogEntity,
       BatchProcessLogItemEntity,
+      ProductionBatchProcessTimelineEntity,
 
       ProductionOrderEntity,
       BomEntity,
@@ -42,6 +45,7 @@ import { BatchItemCategorizerUtility } from './utility/batch-item-categorizer.ut
       ItemEntity,
       CompanyEntity,
       UserEntity,
+      MaterialRequestEntity,
     ]),
     AttachmentMasterModule,
     ActivityLogModule,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
 import {
   X,
   PlayCircle,
@@ -11,6 +12,7 @@ import {
   FileText,
   ExternalLink,
   Search,
+  CirclePlay,
 } from "lucide-react";
 import { getStatusDisplay } from "@/utils/status-formatter";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -23,8 +25,10 @@ import {
 } from "@/lib/api/production-batch-api";
 import Loader from "@/components/common/Loader";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import NoDataMessage from "@/components/common/NoDataMessage";
+import { displayFormat } from "@/utils/no-data-formatter";
 import ProcessLogModal from "./ProcessLogModal";
-import { formatNumber } from "@/utils/number-formatter";
+import { formatNumber, formatQuantityWithUom } from "@/utils/number-formatter";
 import NumericInput from "@/components/common/NumericInput";
 
 function CircularProgressGauge({ percentage = 0, label, color = "#22c55e", subText }) {
@@ -122,6 +126,9 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
     try {
       const res = await startProcess({ batchId, processExecutionId });
       if (res?.settings?.success === 1) {
+        toast.success(
+          `${processData?.processName } process started successfully.`,
+        );
         await fetchProcessDetails();
         onProcessUpdated?.();
       } else {
@@ -141,6 +148,9 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
     try {
       const res = await pauseProcess({ batchId, processExecutionId });
       if (res?.settings?.success === 1) {
+        toast.success(
+          `${processData?.processName } process paused successfully.`,
+        );
         await fetchProcessDetails();
         onProcessUpdated?.();
       } else {
@@ -160,6 +170,9 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
     try {
       const res = await resumeProcess({ batchId, processExecutionId });
       if (res?.settings?.success === 1) {
+        toast.success(
+          `${processData?.processName } process resumed successfully.`,
+        );
         await fetchProcessDetails();
         onProcessUpdated?.();
       } else {
@@ -183,6 +196,9 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
       }
       const res = await finishProcess(payload);
       if (res?.settings?.success === 1) {
+        toast.success(
+          `${processData?.processName } process finished successfully.`,
+        );
         await fetchProcessDetails();
         onProcessUpdated?.();
         if (exitItems.length > 0) {
@@ -334,15 +350,16 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
   
   const isBatchCompleted =
     batchData?.status === "Completed" ||
-    batchData?.status === "Finished" ||
     Boolean(batchData?.markCompleted);
+
+  const isBatchCancelled = batchData?.status === "Cancelled";
 
   const isYetToStart =
     status === "YetToStart" ||
     status === "Yet To Start" ||
     status === "Yet-to-start";
 
-  const showActionSection = !isBatchCompleted && !isYetToStart;
+  const showActionSection = !isBatchCompleted && !isBatchCancelled && !isYetToStart;
   return (
     <div className="fixed top-[74px] bottom-0 left-0 right-0 z-[60] overflow-hidden pointer-events-auto">
       <div
@@ -373,7 +390,9 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
           <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-3">
             <Loader />
             <p className="text-xs font-semibold text-gray-500">
-              {isActionLoading ? "Updating process status..." : "Loading process details..."}
+              {isActionLoading
+                ? "Updating process status..."
+                : "Loading process details..."}
             </p>
           </div>
         ) : error ? (
@@ -382,232 +401,175 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
           </div>
         ) : processData ? (
           <div className="flex-1 overflow-y-auto min-h-0  bg-slate-50 text-gray-800 text-[13px]">
-          <div className="bg-white  p-4">
-            <div className="grid grid-cols-2 gap-y-4 gap-x-6">
-              <div>
-                <span className="text-xs text-gray-400 block mb-0.5">
-                  Process
-                </span>
-                <span className="font-semibold text-gray-900">
-                  {processData.processName || "—"}
-                </span>
-              </div>
-              <div>
-                <span className="text-xs text-gray-400 block mb-0.5">
-                  Status
-                </span>
-                <StatusBadge status={status} />
-              </div>
-              <div>
-                <span className="text-xs text-gray-400 block mb-0.5">
-                  Start Time
-                </span>
-                <span className="font-medium text-gray-700">
-                  {processData.startTime || "—"}
-                </span>
-              </div>
-              <div>
-                <span className="text-xs text-gray-400 block mb-0.5">
-                  End Time
-                </span>
-                <span className="font-medium text-gray-700">
-                  {processData.endTime || "—"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {showActionSection && (
-            <div className="bg-white ">
-              <h3 className="text-[14px] font-semibold bg-gray-100 text-gray-800 tracking-wider p-4">
-                Action
-              </h3>
-              <div className="p-4 space-y-3.5">
-                {actionError && (
-                  <div className="p-2 mb-2 text-xs text-red-600 bg-red-50 rounded border border-red-200">
-                    {actionError}
-                  </div>
-                )}
-
-                {(status === "ReadytoStart" || status === "ReadyToStart" || status === "Ready to Start") && (
-                  <button
-                    type="button"
-                    disabled={isActionLoading}
-                    onClick={requestStartProcess}
-                    className="flex items-center gap-2.5 text-gray-700 hover:text-green-700 font-medium text-xs cursor-pointer transition disabled:opacity-50"
-                  >
-                    <PlusCircle size={18} className="text-green-500" />
-                    <span>Start Process</span>
-                  </button>
-                )}
-
-                {status === "InProgress" && (
-                  <button
-                    type="button"
-                    disabled={isActionLoading}
-                    onClick={requestPauseProcess}
-                    className="flex items-center gap-2.5 text-gray-700 hover:text-amber-600 font-medium text-xs cursor-pointer transition disabled:opacity-50"
-                  >
-                    <PauseCircle size={18} className="text-amber-500" />
-                    <span>Pause Process</span>
-                  </button>
-                )}
-
-                {status === "Paused" && (
-                  <button
-                    type="button"
-                    disabled={isActionLoading}
-                    onClick={requestResumeProcess}
-                    className="flex items-center gap-2.5 text-gray-700 hover:text-amber-600 font-medium text-xs cursor-pointer transition disabled:opacity-50"
-                  >
-                    <PlayCircle size={18} className="text-amber-500" />
-                    <span>Resume Process</span>
-                  </button>
-                )}
-
-                {entryItems.length > 0 && (status === "InProgress" || status === "Paused" || status === "Completed") && (
-                  <button
-                    type="button"
-                    onClick={() => setLogModalState({ isOpen: true, logType: "Consumption", items: entryItems })}
-                    className="flex items-center gap-2.5 text-gray-700 hover:text-red-600 font-medium text-xs cursor-pointer transition w-full text-left"
-                  >
-                    <PlusCircle size={18} className="text-red-500" />
-                    <span>Add Consumption Log</span>
-                  </button>
-                )}
-
-                {exitItems.length > 0 && status === "Completed" && (
-                  <button
-                    type="button"
-                    onClick={() => setLogModalState({ isOpen: true, logType: "Production", items: exitItems })}
-                    className="flex items-center gap-2.5 text-gray-700 hover:text-green-600 font-medium text-xs cursor-pointer transition w-full text-left"
-                  >
-                    <PlusCircle size={18} className="text-green-500" />
-                    <span>Add Production Log</span>
-                  </button>
-                )}
-
-                {(status === "InProgress" || status === "Paused") && (
-                  <button
-                    type="button"
-                    disabled={isActionLoading}
-                    onClick={requestFinishProcess}
-                    className="flex items-center gap-2.5 text-gray-700 hover:text-red-600 font-medium text-xs cursor-pointer transition disabled:opacity-50"
-                  >
-                    <PauseCircle size={18} className="text-red-500" />
-                    <span>Finish Process</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white  border-gray-200 py-4 ">
-            <h3 className="text-[14px] font-semibold bg-gray-100 text-gray-800  tracking-wider p-4">
-              Batch Process Progress
-            </h3>
-
-            <div className="flex items-center justify-around py-4">
-              <CircularProgressGauge
-                percentage={consumedPercent}
-                label="Consumed"
-                color="#ef4444"
-                subText={consumedText}
-              />
-              {!isLastProcess && (
-                <CircularProgressGauge
-                  percentage={producedPercent}
-                  label="Produced"
-                  color="#22c55e"
-                  subText={producedText}
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-1 bg-white">
-            <div className="  ">
-              <button
-                type="button"
-                onClick={() => toggleAccordion("entry")}
-                className="w-full flex items-center justify-between p-4 text-[14px] font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 transition cursor-pointer text-left"
-              >
-                <span>Entry Items</span>
-                {activeAccordion === "entry" ? (
-                  <MinusCircle
-                    size={18}
-                    className="text-gray-700 transition-colors"
-                  />
-                ) : (
-                  <PlusCircle
-                    size={18}
-                    className="text-gray-700 transition-colors"
-                  />
-                )}
-              </button>
-
-              <div
-                className={`grid transition-all duration-300 ease-in-out ${
-                  activeAccordion === "entry"
-                    ? "grid-rows-[1fr] opacity-100"
-                    : "grid-rows-[0fr] opacity-0"
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                    {entryItems.length > 0 ? (
-                      <>
-
-                        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                          <table className="w-full text-left text-xs">
-                            <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
-                            <tr>
-                              <th className="py-2.5 px-3">Item Name</th>
-                              <th className="py-2.5 px-3 text-right">
-                                Required Qty
-                              </th>
-                              <th className="py-2.5 px-3 text-right">
-                                Consumed Qty
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100">
-                            {entryItems.map((item, idx) => (
-                              <tr key={idx} className="hover:bg-gray-50">
-                                <td className="py-2.5 px-3 font-medium text-gray-800">
-                                  {item.itemName}
-                                </td>
-                                <td className="py-2.5 px-3 text-right font-mono">
-                                  {formatNumber(item.requiredQty)} {item.uomName || item.itemUomName || ""}
-                                </td>
-                                <td className="py-2.5 px-3 text-right font-mono text-[#c01515]">
-                                  {formatNumber(item.consumedQty)} {item.uomName || item.itemUomName || ""}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      </>
-                    ) : (
-                      <p className="text-xs text-gray-400 italic text-center py-3">
-                        No entry material items for this process step.
-                      </p>
-                    )}
-                  </div>
+            <div className="bg-white  p-4">
+              <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+                <div>
+                  <span className="text-xs text-gray-400 block mb-0.5">
+                    Process
+                  </span>
+                  <span className="font-semibold text-gray-900">
+                    {displayFormat(processData.processName)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block mb-0.5">
+                    Status
+                  </span>
+                  <StatusBadge status={processData.status} />
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block mb-0.5">
+                    Start Time
+                  </span>
+                  <span className="font-medium text-gray-700">
+                    {displayFormat(processData.startTime, "DATE")}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block mb-0.5">
+                    End Time
+                  </span>
+                  <span className="font-medium text-gray-700">
+                    {displayFormat(processData.endTime, "DATE")}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {exitItems.length > 0 && (
-              <div className=" overflow-hidden ">
+            {showActionSection && (
+              <div className="bg-white ">
+                <h3 className="text-[14px] font-semibold bg-gray-100 text-gray-800 tracking-wider p-4">
+                  Action
+                </h3>
+                <div className="p-4 space-y-3.5">
+                  {actionError && (
+                    <div className="p-2 mb-2 text-xs text-red-600 bg-red-50 rounded border border-red-200">
+                      {actionError}
+                    </div>
+                  )}
+
+                  {(status === "ReadytoStart" ||
+                    status === "ReadyToStart" ||
+                    status === "Ready to Start") && (
+                    <button
+                      type="button"
+                      disabled={isActionLoading}
+                      onClick={requestStartProcess}
+                      className="flex items-center gap-2.5 text-gray-700 hover:text-green-700 font-medium text-xs cursor-pointer transition disabled:opacity-50"
+                    >
+                      <CirclePlay size={18} className="text-green-500" />
+                      <span>Start Process</span>
+                    </button>
+                  )}
+
+                  {status === "InProgress" && (
+                    <button
+                      type="button"
+                      disabled={isActionLoading}
+                      onClick={requestPauseProcess}
+                      className="flex items-center gap-2.5 text-gray-700 hover:text-amber-600 font-medium text-xs cursor-pointer transition disabled:opacity-50"
+                    >
+                      <PauseCircle size={18} className="text-amber-500" />
+                      <span>Pause Process</span>
+                    </button>
+                  )}
+
+                  {status === "Paused" && (
+                    <button
+                      type="button"
+                      disabled={isActionLoading}
+                      onClick={requestResumeProcess}
+                      className="flex items-center gap-2.5 text-gray-700 hover:text-amber-600 font-medium text-xs cursor-pointer transition disabled:opacity-50"
+                    >
+                      <PlayCircle size={18} className="text-amber-500" />
+                      <span>Resume Process</span>
+                    </button>
+                  )}
+
+                  {entryItems.length > 0 &&
+                    (status === "InProgress" ||
+                      status === "Paused" ||
+                      status === "Completed") && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLogModalState({
+                            isOpen: true,
+                            logType: "Consumption",
+                            items: entryItems,
+                          })
+                        }
+                        className="flex items-center gap-2.5 text-gray-700 hover:text-red-600 font-medium text-xs cursor-pointer transition w-full text-left"
+                      >
+                        <PlusCircle size={18} className="text-red-500" />
+                        <span>Add Consumption Log</span>
+                      </button>
+                    )}
+
+                  {exitItems.length > 0 && status === "Completed" && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLogModalState({
+                          isOpen: true,
+                          logType: "Production",
+                          items: exitItems,
+                        })
+                      }
+                      className="flex items-center gap-2.5 text-gray-700 hover:text-green-600 font-medium text-xs cursor-pointer transition w-full text-left"
+                    >
+                      <PlusCircle size={18} className="text-green-500" />
+                      <span>Add Production Log</span>
+                    </button>
+                  )}
+
+                  {(status === "InProgress" || status === "Paused") && (
+                    <button
+                      type="button"
+                      disabled={isActionLoading}
+                      onClick={requestFinishProcess}
+                      className="flex items-center gap-2.5 text-gray-700 hover:text-red-600 font-medium text-xs cursor-pointer transition disabled:opacity-50"
+                    >
+                      <PauseCircle size={18} className="text-red-500" />
+                      <span>Finish Process</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white  border-gray-200 py-4 ">
+              <h3 className="text-[14px] font-semibold bg-gray-100 text-gray-800  tracking-wider p-4">
+                Batch Process Progress
+              </h3>
+
+              <div className="flex items-center justify-around py-4">
+                <CircularProgressGauge
+                  percentage={consumedPercent}
+                  label="Consumed"
+                  color="#ef4444"
+                  subText={consumedText}
+                />
+                {exitItems.length > 0 && (
+                  <CircularProgressGauge
+                    percentage={producedPercent}
+                    label="Produced"
+                    color="#22c55e"
+                    subText={producedText}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1 bg-white">
+              <div className="  ">
                 <button
                   type="button"
-                  onClick={() => toggleAccordion("exit")}
+                  onClick={() => toggleAccordion("entry")}
                   className="w-full flex items-center justify-between p-4 text-[14px] font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 transition cursor-pointer text-left"
                 >
-                  <span>Exit Items</span>
-                  {activeAccordion === "exit" ? (
+                  <span>Entry Items</span>
+                  {activeAccordion === "entry" ? (
                     <MinusCircle
                       size={18}
                       className="text-gray-700 transition-colors"
@@ -622,52 +584,144 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
 
                 <div
                   className={`grid transition-all duration-300 ease-in-out ${
-                    activeAccordion === "exit"
+                    activeAccordion === "entry"
                       ? "grid-rows-[1fr] opacity-100"
                       : "grid-rows-[0fr] opacity-0"
                   }`}
                 >
                   <div className="overflow-hidden">
                     <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
-                            <tr>
-                              <th className="py-2.5 px-3">Item Name</th>
-                              <th className="py-2.5 px-3 text-right">Required Qty</th>
-                              <th className="py-2.5 px-3 text-right">Produced Qty</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100">
-                            {exitItems.map((item, idx) => (
-                              <tr key={idx} className="hover:bg-gray-50">
-                                <td className="py-2.5 px-3 font-medium text-gray-800">
-                                  {item.itemName}
-                                </td>
-                                <td className="py-2.5 px-3 text-right font-mono">
-                                  {formatNumber(item.requestedQty || item.requestQty || item.requiredQty)} {item.uomName || item.itemUomName || ""}
-                                </td>
-                                <td className="py-2.5 px-3 text-right font-mono text-green-600 font-semibold">
-                                  {formatNumber(item.producedQty)} {item.uomName || item.itemUomName || ""}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      {entryItems.length > 0 ? (
+                        <>
+                          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                            <table className="w-full text-left text-xs">
+                              <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
+                                <tr>
+                                  <th className="py-2.5 px-3">Item Name</th>
+                                  <th className="py-2.5 px-3 text-right">
+                                    Required Qty
+                                  </th>
+                                  <th className="py-2.5 px-3 text-right">
+                                    Consumed Qty
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {entryItems.map((item, idx) => (
+                                  <tr key={idx} className="hover:bg-gray-50">
+                                    <td className="py-2.5 px-3 font-medium text-gray-800">
+                                      {displayFormat(item.itemName)}
+                                    </td>
+                                    <td className="py-2.5 px-3 text-right font-mono">
+                                      {displayFormat(
+                                        item.requiredQtyFormatted ||
+                                          `${formatNumber(item.requiredQty)} ${item.uomName || item.itemUomName || ""}`
+                                      )}
+                                    </td>
+                                    <td className="py-2.5 px-3 text-right font-mono text-[#c01515]">
+                                      {displayFormat(
+                                        item.consumedQtyFormatted ||
+                                          `${formatNumber(item.consumedQty)} ${item.uomName || item.itemUomName || ""}`
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-xs text-gray-400 italic text-center py-3">
+                          No entry material items for this process step.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+
+              {exitItems.length > 0 && (
+                <div className=" overflow-hidden ">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion("exit")}
+                    className="w-full flex items-center justify-between p-4 text-[14px] font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 transition cursor-pointer text-left"
+                  >
+                    <span>Exit Items</span>
+                    {activeAccordion === "exit" ? (
+                      <MinusCircle
+                        size={18}
+                        className="text-gray-700 transition-colors"
+                      />
+                    ) : (
+                      <PlusCircle
+                        size={18}
+                        className="text-gray-700 transition-colors"
+                      />
+                    )}
+                  </button>
+
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      activeAccordion === "exit"
+                        ? "grid-rows-[1fr] opacity-100"
+                        : "grid-rows-[0fr] opacity-0"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+                        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
+                              <tr>
+                                <th className="py-2.5 px-3">Item Name</th>
+                                <th className="py-2.5 px-3 text-right">
+                                  Required Qty
+                                </th>
+                                <th className="py-2.5 px-3 text-right">
+                                  Produced Qty
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {exitItems.map((item, idx) => (
+                                <tr key={idx} className="hover:bg-gray-50">
+                                  <td className="py-2.5 px-3 font-medium text-gray-800">
+                                    {displayFormat(item.itemName)}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono">
+                                    {displayFormat(
+                                      item.requestedQtyFormatted ||
+                                        item.requiredQtyFormatted ||
+                                        `${formatNumber(item.requestedQty || item.requestQty || item.requiredQty)} ${item.uomName || item.itemUomName || ""}`
+                                    )}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono text-green-600 font-semibold">
+                                    {displayFormat(
+                                      item.producedQtyFormatted ||
+                                        `${formatNumber(item.producedQty)} ${item.uomName || item.itemUomName || ""}`
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ) : null}
       </div>
 
       <ProcessLogModal
         isOpen={logModalState.isOpen}
-        onClose={() => setLogModalState({ isOpen: false, logType: "", items: [] })}
+        onClose={() =>
+          setLogModalState({ isOpen: false, logType: "", items: [] })
+        }
         logType={logModalState.logType}
         items={logModalState.items}
         processData={processData}
@@ -693,21 +747,29 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
         <div className="fixed inset-0 z-[1100] flex items-center justify-center">
           <div
             className="absolute inset-0 bg-black/40"
-            onClick={() => setFinalProcessConfirm({ isOpen: false, producedQty: 0 })}
+            onClick={() =>
+              setFinalProcessConfirm({ isOpen: false, producedQty: 0 })
+            }
           />
           <div className="relative z-10 bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-6 animate-in fade-in-0 zoom-in-95 text-center">
             <h3 className="text-[17px] font-medium text-gray-900 mb-1">
-              Enter Produced Qty in {batchData?.uomName || batchData?.uom || ""}?
+              Enter Produced Qty in {batchData?.uomName || batchData?.uom || ""}
+              ?
             </h3>
             <p className="text-sm font-normal text-gray-600 mb-5">
               Quantity To Be Produced : {batchData?.batchQuantity || 0}
             </p>
-            
+
             <NumericInput
               min={0}
               maxDecimals={4}
               value={finalProcessConfirm.producedQty}
-              onChange={(val) => setFinalProcessConfirm(prev => ({ ...prev, producedQty: val }))}
+              onChange={(val) =>
+                setFinalProcessConfirm((prev) => ({
+                  ...prev,
+                  producedQty: val,
+                }))
+              }
               className="w-full text-left border border-[#1bbdcc] rounded-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#1bbdcc] mb-6 text-gray-800 text-sm"
             />
 
@@ -716,7 +778,10 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
                 type="button"
                 onClick={async () => {
                   const qty = finalProcessConfirm.producedQty;
-                  setFinalProcessConfirm(prev => ({ ...prev, isOpen: false }));
+                  setFinalProcessConfirm((prev) => ({
+                    ...prev,
+                    isOpen: false,
+                  }));
                   await handleFinishProcess(qty);
                 }}
                 className="bg-[#1565c0] hover:bg-[#11529c] text-white font-medium py-1.5 px-5 rounded text-sm transition-colors"
@@ -726,7 +791,9 @@ export default function ProductionBatchProcessDrawer({ open, onClose, batchId, b
               </button>
               <button
                 type="button"
-                onClick={() => setFinalProcessConfirm({ isOpen: false, producedQty: 0 })}
+                onClick={() =>
+                  setFinalProcessConfirm({ isOpen: false, producedQty: 0 })
+                }
                 className="bg-white border border-[#1565c0] text-[#1565c0] font-medium py-1.5 px-5 rounded text-sm hover:bg-gray-50 transition-colors"
                 disabled={isActionLoading}
               >

@@ -1,5 +1,6 @@
 {
   "moduleName": "Company",
+  "parentModule": "Master",
   "title": "Company Master",
   "permissions": {
     "list": "COMPANY_LIST",

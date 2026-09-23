@@ -16,6 +16,7 @@ import Loader from "@/components/common/Loader";
 import ModuleLink from "@/components/common/ModuleLink";
 import SideDrawer from "@/components/common/SideDrawer";
 import { formatNumber } from "@/utils/number-formatter";
+import { displayFormat } from "@/utils/no-data-formatter";
 import NumericInput from "@/components/common/NumericInput";
 
 export default function ProductionBatchForm({ orderId }) {
@@ -37,7 +38,6 @@ export default function ProductionBatchForm({ orderId }) {
       setSideDrawerState({ isOpen: true, moduleName, id });
     }
   };
-
   const primitiveQty = batchData?.primitiveQuantity || 1;
   const pendingQuantity = batchData?.pendingQuantity || null;
   const schema = getProductionBatchSchema(primitiveQty, pendingQuantity);
@@ -76,8 +76,8 @@ export default function ProductionBatchForm({ orderId }) {
       navbar: {
         title: "Add",
         breadcrumbs: [
-          { label: "Master", href: buildRoute("home", "list") },
-          { label: "Production Batches", href: buildRoute("production-batch", "list") },
+          {label: "Production", },
+          { label: "Create Batch", href: buildRoute("production-order", "detail", { id: orderId }) },
         ],
         actionButton: null,
       },
@@ -238,9 +238,8 @@ export default function ProductionBatchForm({ orderId }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-xs">
-            <div className="space-y-4">
               <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
+                <span className="block text-gray-500 text-sm mb-1">
                   Item Name
                 </span>
                 {batchData.itemId ? (
@@ -250,47 +249,18 @@ export default function ProductionBatchForm({ orderId }) {
                     className="block font-medium text-[#1565c0] text-sm hover:underline"
                     onOpenDrawer={handleOpenDrawer}
                   >
-                    {batchData.itemName || "—"}
+                    {displayFormat(batchData.itemName)}
                   </ModuleLink>
                 ) : (
                   <span className="block font-medium text-gray-800 text-sm">
-                    {batchData.itemName || "—"}
+                    {displayFormat(batchData.itemName)}
                   </span>
                 )}
               </div>
-              <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
-                  Customer
-                </span>
-                {customerId ? (
-                  <ModuleLink
-                    moduleName="Company"
-                    id={customerId}
-                    className="block font-medium text-[#1565c0] text-sm hover:underline"
-                    onOpenDrawer={handleOpenDrawer}
-                  >
-                    {batchData.customerName || "Casa Comfort Enterprise Lmt"}
-                  </ModuleLink>
-                ) : (
-                  <span className="block font-medium text-gray-800 text-sm">
-                    {batchData.customerName || "Casa Comfort Enterprise Lmt"}
-                  </span>
-                )}
-              </div>
-              <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
-                  Pending Qty
-                </span>
-                <span className="block font-bold text-gray-900 text-sm">
-                  {batchData.pendingQuantityDisplay }
-                </span>
-              </div>
-            </div>
 
-            <div className="space-y-4">
               <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
-                  BoM Name
+                <span className="block text-gray-500 text-sm mb-1">
+                  BoM
                 </span>
                 {batchData.bomId ? (
                   <ModuleLink
@@ -299,37 +269,18 @@ export default function ProductionBatchForm({ orderId }) {
                     className="block font-medium text-[#1565c0] text-sm hover:underline"
                     onOpenDrawer={handleOpenDrawer}
                   >
-                    {batchData.bomName || "—"}
+                    {displayFormat(batchData.bomName)}
                   </ModuleLink>
                 ) : (
                   <span className="block font-medium text-gray-800 text-sm">
-                    {batchData.bomName || "—"}
+                    {displayFormat(batchData.bomName)}
                   </span>
                 )}
               </div>
-              <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
-                  Production Date
-                </span>
-                <span className="block font-medium text-gray-800 text-sm">
-                  {batchData.productionDateFormatted || "—"}
-                </span>
-              </div>
-              <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
-                  Primitive Qty
-                </span>
-                <span className="block font-medium text-gray-800 text-sm">
-                  {formatNumber(batchData.primitiveQuantity)}{" "}
-                  {batchData.uomName || ""}
-                </span>
-              </div>
-            </div>
 
-            <div className="space-y-4">
               <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
-                  Process Template Name
+                <span className="block text-gray-500 text-sm mb-1">
+                  Process Template
                 </span>
                 {batchData.processTemplateId ? (
                   <ModuleLink
@@ -338,16 +289,17 @@ export default function ProductionBatchForm({ orderId }) {
                     className="block font-medium text-[#1565c0] text-sm hover:underline"
                     onOpenDrawer={handleOpenDrawer}
                   >
-                    {batchData.processTemplateName || "Gold Manufacturing"}
+                    {batchData.processTemplateName }
                   </ModuleLink>
                 ) : (
                   <span className="block font-medium text-gray-800 text-sm">
-                    {batchData.processTemplateName || "Gold Manufacturing"}
+                    {batchData.processTemplateName}
                   </span>
                 )}
               </div>
+
               <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
+                <span className="block text-gray-500 text-sm mb-1">
                   Requested By
                 </span>
                 {batchData.addedBy ? (
@@ -357,16 +309,64 @@ export default function ProductionBatchForm({ orderId }) {
                     className="block font-medium text-[#1565c0] text-sm hover:underline"
                     onOpenDrawer={handleOpenDrawer}
                   >
-                    {batchData.addedByName || "—"}
+                    {displayFormat(batchData.addedByName)}
                   </ModuleLink>
                 ) : (
                   <span className="block font-medium text-gray-800 text-sm">
-                    {batchData.addedByName || "—"}
+                    {displayFormat(batchData.addedByName)}
                   </span>
                 )}
               </div>
+
               <div>
-                <span className="block text-gray-500 text-[11px] mb-1 font-semibold text-gray-700">
+                <span className="block text-gray-500 text-sm mb-1">
+                  Customer Name
+                </span>
+                <span className="block font-medium text-gray-800 text-sm">
+                  {displayFormat(batchData.customerName)}
+                </span>
+              </div>
+
+              <div>
+                <span className="block text-gray-500 text-sm mb-1">
+                  Pending Qty
+                </span>
+                <span className="block font-bold text-gray-900 text-sm">
+                  {batchData.pendingQuantityDisplay }
+                </span>
+              </div>
+
+              <div>
+                <span className="block text-gray-500 text-sm mb-1">
+                  Production Date
+                </span>
+                <span className="block font-medium text-gray-800 text-sm">
+                  {displayFormat(batchData.productionDateFormatted, "DATE")}
+                </span>
+              </div>
+
+              <div>
+                <span className="block text-gray-500 text-sm mb-1">
+                  Primitive Qty
+                </span>
+                <span className="block font-medium text-gray-800 text-sm">
+                  {formatNumber(batchData.primitiveQuantity)}{" "}
+                  {batchData.uomName || ""}
+                </span>
+              </div>
+
+              <div>
+                <span className="block text-gray-500 text-sm mb-1">
+                  Total Qty
+                </span>
+                <span className="block font-bold text-gray-900 text-sm">
+                  {batchData.totalQuantityDisplay ||
+                    batchData.productionQuantityDisplay }
+                </span>
+              </div>
+
+              <div>
+                <span className="block text-gray-500 text-sm mb-1 font-semibold text-gray-700">
                   Batch Qty
                 </span>
                 <div className="flex items-center gap-2">
@@ -389,10 +389,6 @@ export default function ProductionBatchForm({ orderId }) {
                       {batchData.uomName || ""}
                     </span>
                   </div>
-                  {/* <div className="flex items-center text-xs text-gray-500 bg-blue-50 px-2 py-1 rounded border border-blue-100">
-                    <Info size={14} className="text-blue-500 mr-1" />
-                    <span>Max Available: <strong className="text-blue-700">{batchData.pendingQuantityDisplay || "0.00"}</strong></span>
-                  </div> */}
                 </div>
                 {errors.batchQuantity && (
                   <span className="text-xs text-red-500 font-medium mt-1 block">
@@ -400,42 +396,6 @@ export default function ProductionBatchForm({ orderId }) {
                   </span>
                 )}
               </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
-                  Plant Name
-                </span>
-                {plantId ? (
-                  <ModuleLink
-                    moduleName="Company"
-                    id={plantId}
-                    className="block font-medium text-[#1565c0] text-sm hover:underline"
-                    onOpenDrawer={handleOpenDrawer}
-                  >
-                    {batchData.plantName ||
-                      batchData.companyName ||
-                      "Atlas Tar Plant"}
-                  </ModuleLink>
-                ) : (
-                  <span className="block font-medium text-gray-800 text-sm">
-                    {batchData.plantName ||
-                      batchData.companyName ||
-                      "Atlas Tar Plant"}
-                  </span>
-                )}
-              </div>
-              <div>
-                <span className="block text-gray-500 text-[11px] mb-1">
-                  Total Qty
-                </span>
-                <span className="block font-bold text-gray-900 text-sm">
-                  {batchData.totalQuantityDisplay ||
-                    batchData.productionQuantityDisplay }
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 

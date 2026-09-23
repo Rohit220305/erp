@@ -11,15 +11,21 @@ import ModuleLink from "@/components/common/ModuleLink";
 import SideDrawer from "@/components/common/SideDrawer";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { Tag, FileText, ExternalLink } from "lucide-react";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
-function DetailRow({ label, value, valueClassName = "" }) {
-  if (!value) return null;
+function DetailRow({ label, value, valueClassName = "", valueNode }) {
+  if (!value && !valueNode) return null;
   return (
     <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className={`text-sm font-medium text-right ${valueClassName}`}>
-        {value}
-      </span>
+      {valueNode ? (
+        valueNode
+      ) : (
+        <span className={`text-sm font-medium text-right ${valueClassName}`}>
+          {displayFormat(value)}
+        </span>
+      )}
     </div>
   );
 }
@@ -44,10 +50,14 @@ function UserInfoCard({ title, name, date, userId, onOpenUser }) {
             </ModuleLink>
           ) : (
             <span className="text-sm font-semibold text-gray-900">
-              {name || "System"}
+              {displayFormat(name)}
             </span>
           )}
-          {date && <span className="text-xs text-gray-400 mt-1">{date}</span>}
+          {date && (
+            <span className="text-xs text-gray-400 mt-1">
+              {displayFormat(date, "DATE")}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -59,8 +69,10 @@ export default function ProcessDetailPage({ data }) {
   const router = useRouter();
   const { can, user } = useAuth();
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
-  const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
-  const [selectedWorkCentreForDetails, setSelectedWorkCentreForDetails] = useState(null);
+  const [selectedCompanyForDetails, setSelectedCompanyForDetails] =
+    useState(null);
+  const [selectedWorkCentreForDetails, setSelectedWorkCentreForDetails] =
+    useState(null);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
 
   useEffect(() => {
@@ -76,15 +88,14 @@ export default function ProcessDetailPage({ data }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Master", href: buildRoute("home", "list") },
+          { label:  "Master" },
           { label: "Process Master", href: buildRoute("process", "list") },
-
         ],
         actionButton: can(CAPABILITIES.PROCESS?.UPDATE || "PROCESS_UPDATE")
           ? {
-            label: "Edit",
-            onClick: () => setIsEditDrawerOpen(true),
-          }
+              label: "Edit",
+              onClick: () => setIsEditDrawerOpen(true),
+            }
           : null,
       },
     });
@@ -130,7 +141,9 @@ export default function ProcessDetailPage({ data }) {
 
   const isActive = status === "Active" || status === "active";
   const hasAddedInfo = Boolean(addedByName || addedDateFormatted || addedBy);
-  const hasUpdatedInfo = Boolean(updatedByName || updatedDateFormatted || updatedBy);
+  const hasUpdatedInfo = Boolean(
+    updatedByName || updatedDateFormatted || updatedBy,
+  );
 
   return (
     <div className="p-6  min-h-full px-10 overflow-y-scroll">
@@ -139,11 +152,11 @@ export default function ProcessDetailPage({ data }) {
           <div className="bg-white rounded-xl hover:shadow-lg transition p-5 border border-gray-100">
             <div className="mb-4">
               <h2 className="font-semibold text-base text-gray-900">
-                {processName}
+                {displayFormat(processName)}
               </h2>
               {processCode && (
                 <p className="text-gray-400 text-sm mt-0.5 font-mono uppercase">
-                  {processCode}
+                  {displayFormat(processCode)}
                 </p>
               )}
             </div>
@@ -174,11 +187,11 @@ export default function ProcessDetailPage({ data }) {
                 />
                 <div className="flex flex-col">
                   <h2 className="font-semibold text-base text-gray-900">
-                    {processName}
+                    {displayFormat(processName)}
                   </h2>
                   {processCode && (
                     <span className="text-xs text-gray-400 font-mono uppercase mt-0.5">
-                      {processCode}
+                      {displayFormat(processCode)}
                     </span>
                   )}
                 </div>
@@ -225,12 +238,7 @@ export default function ProcessDetailPage({ data }) {
                 )}
                 <DetailRow
                   label="Status"
-                  value={status}
-                  valueClassName={
-                    isActive
-                      ? "text-green-600 font-semibold"
-                      : "text-red-600 font-semibold"
-                  }
+                  valueNode={<StatusBadge status={status} />}
                 />
               </div>
             </div>
@@ -268,7 +276,7 @@ export default function ProcessDetailPage({ data }) {
                     Description
                   </h3>
                   <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap max-h-[200px] overflow-y-scroll">
-                    {description}
+                    {displayFormat(description)}
                   </div>
                 </div>
               )}

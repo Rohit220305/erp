@@ -1,5 +1,6 @@
 {
   "moduleName": "WorkCentreCategory",
+  "parentModule": "Master",
   "title": "Work Centre Category",
   "permissions": {
     "list": "WORK_CENTRE_CATEGORY_LIST",
@@ -170,6 +171,5 @@
         }
       ]
     }
-    
   ]
 }

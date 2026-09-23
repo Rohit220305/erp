@@ -4,6 +4,8 @@ import { useAuth } from "@/context/AuthContext";
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 import ModuleLink from "@/components/common/ModuleLink";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
 export default function ManufacturerTableRow({
   item,
@@ -25,11 +27,11 @@ export default function ManufacturerTableRow({
             onClick={() => setSelectedItemForDetails(item)}
             className="text-sm font-medium text-[#1565c0]"
           >
-            {item.manufacturerName}
+            {displayFormat(item.manufacturerName)}
           </ModuleLink>
         ) : (
           <span className="text-sm font-medium text-gray-900">
-            {item.manufacturerName}
+            {displayFormat(item.manufacturerName)}
           </span>
         )}
       </td>
@@ -46,11 +48,11 @@ export default function ManufacturerTableRow({
               className="text-sm text-[#1565c0]"
               title={item.companyName}
             >
-              {item.companyName || "—"}
+              {displayFormat(item.companyName)}
             </ModuleLink>
           ) : (
             <span className="text-sm font-medium text-gray-900" title={item.companyName}>
-              {item.companyName || "—"}
+              {displayFormat(item.companyName)}
             </span>
           )}
         </td>
@@ -58,33 +60,24 @@ export default function ManufacturerTableRow({
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           <span className="text-sm font-mono text-gray-900 px-2 py-1 ">
-            {item.manufacturerCode || "—"}
+            {displayFormat(item.manufacturerCode)}
           </span>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span className="text-sm text-gray-700">
-          {item.referenceCode || "—"}
+          {displayFormat(item.referenceCode)}
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex flex-col">
           <span className="text-xs text-gray-500">
-            {item.addedDateFormatted || "-"}
+            {displayFormat(item.addedDateFormatted, "DATE")}
           </span>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-            isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-          }`}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"}`}
-          />
-          {isActive ? "Active" : "Inactive"}
-        </span>
+        <StatusBadge status={item.status} />
       </td>
     </tr>
   );

@@ -9,17 +9,19 @@ import AccessDenied from "@/components/common/AccessDenied";
 import SideDrawer from "@/components/common/SideDrawer";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 import ModuleLink from "@/components/common/ModuleLink";
+import { displayFormat } from "@/utils/no-data-formatter";
+import StatusBadge from "@/components/common/StatusBadge";
 
-function DetailRow({ label, value, href, onClick }) {
+function DetailRow({ label, value, href, onClick, valueNode }) {
   return (
     <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
       <span className="text-gray-500 font-medium">{label}</span>
-      {href ? (
+      {valueNode ? valueNode : href ? (
         <ModuleLink href={href} onClick={onClick} className="text-[#1565c0] font-medium">
-          {value || "-"}
+          {displayFormat(value)}
         </ModuleLink>
       ) : (
-        <span className="text-gray-900">{value}</span>
+        <span className="text-gray-900">{displayFormat(value)}</span>
       )}
     </div>
   );
@@ -102,11 +104,7 @@ export default function ItemUomDetailPage({ data }) {
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">Status</span>
-                <span
-                  className={`font-semibold ${data.status === "Active" ? "text-green-600" : "text-red-500"}`}
-                >
-                  {data.status}
-                </span>
+                <StatusBadge status={data.status} />
               </div>
             </div>
           </div>
@@ -121,29 +119,19 @@ export default function ItemUomDetailPage({ data }) {
               <DetailRow label="Item UOM Name" value={data.uomName} />
               {user?.isSuperAdmin && (
                 <DetailRow
-                  label="Company"
-                  value={data.companyName || "-"}
-                  href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
-                  onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
-                />
+                label="Company"
+                value={data.companyName}
+                href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
+                onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
+              />
               )}
               <DetailRow label="ISO Code" value={data.isoCode} />
-              <DetailRow label="Item UOM Code" value={data.itemUomCode || "-"} />
-              <DetailRow label="Abbreviation" value={data.abbreviation || "-"} />
-              <DetailRow label="Unit Type" value={data.unitType || "-"} />
+              <DetailRow label="Item UOM Code" value={data.itemUomCode} />
+              <DetailRow label="Abbreviation" value={data.abbreviation} />
+              <DetailRow label="Unit Type" value={data.unitType} />
               <DetailRow
                 label="Status"
-                value={
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      data.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {data.status}
-                  </span>
-                }
+                valueNode={<StatusBadge status={data.status} />}
               />
             </div>
 
@@ -161,14 +149,14 @@ export default function ItemUomDetailPage({ data }) {
                         onClick={addedByUserId ? () => setSelectedUserForDetails({ userId: addedByUserId }) : null}
                         className="text-[#1565c0] font-medium text-sm"
                       >
-                        {data.addedByName || "System"}
+                        {displayFormat(data.addedByName)}
                       </ModuleLink>
                     ) : (
-                      <p className="text-gray-900 font-medium text-sm">{data.addedByName || "System"}</p>
+                      <p className="text-gray-900 font-medium text-sm">{displayFormat(data.addedByName)}</p>
                     );
                   })()}
                   <p className="text-gray-400 text-xs mt-0.5">
-                    {data.addedDateFormatted || "-"}
+                    {displayFormat(data.addedDateFormatted, "DATE")}
                   </p>
                 </div>
               </div>
@@ -187,14 +175,14 @@ export default function ItemUomDetailPage({ data }) {
                           onClick={updatedByUserId ? () => setSelectedUserForDetails({ userId: updatedByUserId }) : null}
                           className="text-[#1565c0] font-medium text-sm"
                         >
-                          {data.updatedByName || "System"}
+                          {displayFormat(data.updatedByName)}
                         </ModuleLink>
                       ) : (
-                        <p className="text-gray-900 font-medium text-sm">{data.updatedByName || "System"}</p>
+                        <p className="text-gray-900 font-medium text-sm">{displayFormat(data.updatedByName)}</p>
                       );
                     })()}
                     <p className="text-gray-400 text-xs mt-0.5">
-                      {data.updatedDateFormatted}
+                      {displayFormat(data.updatedDateFormatted, "DATE")}
                     </p>
                   </div>
                 </div>

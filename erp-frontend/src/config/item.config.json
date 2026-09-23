@@ -1,6 +1,7 @@
 {
   "moduleName": "Item",
-  "title": "Item Master",
+  "parentModule": "Master",
+  "title": "Item",
   "permissions": {
     "list": "ITEM_LIST",
     "create": "ITEM_CREATE",
@@ -59,7 +60,6 @@
       "sortable": true,
       "width": "180px"
     },
-  
 
     {
       "label": "Usage Type",
@@ -85,7 +85,7 @@
       "sortable": true,
       "width": "160px"
     },
-   
+
     {
       "label": "Primitive Qty",
       "key": "primitiveQuantityDisplay",
@@ -104,7 +104,7 @@
     },
     {
       "label": "Purchase Price",
-      "key": "purchasePrice",
+      "key": "purchasePriceFormatted",
       "type": "text",
       "searchable": false,
       "sortable": true,
@@ -112,7 +112,7 @@
     },
     {
       "label": "Cost Price",
-      "key": "costPrice",
+      "key": "costPriceFormatted",
       "type": "text",
       "searchable": false,
       "sortable": true,
