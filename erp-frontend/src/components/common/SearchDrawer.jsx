@@ -98,6 +98,7 @@ export default function SearchDrawer({
                 className="flex h-8 w-8  cursor-pointer items-center justify-center rounded bg-[#1565c0] text-white hover:bg-[#0f57a6] transition"
               >
                 <Plus size={16} />
+                
               </button>
             </div>
 

@@ -77,7 +77,7 @@ export default function BomListCard({
 
             <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
-                BoM Name
+                BOM Name
               </p>
               {hasViewPerm && setSelectedItemForDetails ? (
                 <ModuleLink
@@ -105,7 +105,7 @@ export default function BomListCard({
 
             <div className="min-w-0">
               <p className="text-[11px] text-gray-400 mb-1.5 font-medium">
-                BoM Code
+                BOM Code
               </p>
               <div className="text-xs font-mono text-gray-800 font-medium truncate">
                 {displayFormat(item.bomCode)}

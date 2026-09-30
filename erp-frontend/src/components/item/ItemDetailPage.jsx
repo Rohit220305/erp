@@ -69,7 +69,7 @@ function UserInfoCard({ title, name, date, href, onClick }) {
 export default function ItemDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
 
   const [selectedCategoryForDetails, setSelectedCategoryForDetails] = useState(null);
   const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
@@ -196,12 +196,14 @@ export default function ItemDetailPage({ data }) {
                 <DetailRow label="Barcode" value={data.barcode} />
                 <DetailRow label="Vendor Barcode" value={data.vendorBarcode} />
                 <DetailRow label="Reference Code" value={data.referenceCode} />
-                <DetailRow
-                  label="Company"
-                  value={data.companyName}
-                  href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
-                  onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
-                />
+                {user?.isSuperAdmin && (
+                  <DetailRow
+                    label="Company"
+                    value={data.companyName}
+                    href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
+                    onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
+                  />
+                )}
                 <DetailRow
                   label="Category"
                   value={data.categoryName}

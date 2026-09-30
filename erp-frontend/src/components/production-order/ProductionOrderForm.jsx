@@ -11,8 +11,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
 import { listCompanies } from "@/lib/api/company-api";
 import { listItems, getItem } from "@/lib/api/item-api";
+import { listPlants } from "@/lib/api/plant-api";
 import { listBoms, getBom } from "@/lib/api/bom-api";
 import { createProductionOrder, updateProductionOrder } from "@/lib/api/production-order-api";
+import { listCustomerCompanies } from "@/lib/api/customer-company-api";
 import { productionOrderSchema } from "@/lib/validation/production-order.schema";
 import ProductionOrderMaterialTabs from "./ProductionOrderMaterialTabs";
 import ConfirmModal from "@/components/common/ConfirmModal";
@@ -25,11 +27,7 @@ import productionOrderConfig from "@/config/production-order.config.json";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 import NumericInput from "@/components/common/NumericInput";
 
-const STATIC_CUSTOMER_OPTIONS = [
-  { value: "Aditya Infotech", label: "Aditya Infotech" },
-  { value: "Indian Jwellers", label: "Indian Jwellers" },
-  { value: "Sugam Gold Traders", label: "Sugam Gold Traders" },
-];
+
 
 const customSelectStyles = (error, disabled) => ({
   control: (base) => ({
@@ -156,9 +154,13 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
   const [companyOptions, setCompanyOptions] = useState([]);
   const [itemOptions, setItemOptions] = useState([]);
   const [bomOptions, setBomOptions] = useState([]);
+  const [plantOptions, setPlantOptions] = useState([]);
+  const [customerOptions, setCustomerOptions] = useState([]);
 
   const [loadingItems, setLoadingItems] = useState(false);
   const [loadingBoms, setLoadingBoms] = useState(false);
+  const [loadingPlants, setLoadingPlants] = useState(false);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
 
   const [selectedItemDetails, setSelectedItemDetails] = useState(null);
   const [selectedBomDetails, setSelectedBomDetails] = useState(null);
@@ -243,7 +245,8 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         ? new Date(initialData.productionDate).toISOString().split("T")[0]
         : todayStr,
       referenceNumber: initialData?.referenceNumber || "",
-      customerName: initialData?.customerName || "",
+      customerId: initialData?.customerId || "",
+      plantId: initialData?.plantId || "",
       remark: initialData?.remark || "",
       status: initialData?.status || "Pending",
     },
@@ -272,7 +275,8 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
         packageQuantity: initialData.packageQuantity || 1,
         productionDate: formattedDate,
         referenceNumber: initialData.referenceNumber || "",
-        customerName: initialData.customerName || "",
+        customerId: initialData.customerId || "",
+        plantId: initialData.plantId || "",
         remark: initialData.remark || "",
         status: initialData.status || "Pending",
       });
@@ -368,6 +372,38 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       fetchCompanies();
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchPlants = async () => {
+      setLoadingPlants(true);
+      try {
+        const plantRes = await listPlants({ page: 1, limit: 100 });
+        const plantList = plantRes?.settings?.data?.list || plantRes?.data?.list || plantRes?.data || [];
+        setPlantOptions(plantList.map((p) => ({ label: p.name || p.plantName, value: p.id })));
+      } catch (err) {
+        console.error("Failed to load plants", err);
+      } finally {
+        setLoadingPlants(false);
+      }
+    };
+    fetchPlants();
+  }, []);
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      setLoadingCustomers(true);
+      try {
+        const custRes = await listCustomerCompanies({ page: 1, limit: 1000 });
+        const custList = custRes?.settings?.data?.list || custRes?.data?.list || custRes?.data || [];
+        setCustomerOptions(custList.map((c) => ({ label: c.name || c.customerName, value: c.id })));
+      } catch (err) {
+        console.error("Failed to load customers", err);
+      } finally {
+        setLoadingCustomers(false);
+      }
+    };
+    fetchCustomers();
+  }, []);
 
   useEffect(() => {
     if (!effectiveCompanyId) {
@@ -639,8 +675,11 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       if (formDataToSubmit.remark) {
         submitFormData.append("remark", formDataToSubmit.remark);
       }
-      if (formDataToSubmit.customerName) {
-        submitFormData.append("customerName", formDataToSubmit.customerName);
+      if (formDataToSubmit.customerId) {
+        submitFormData.append("customerId", String(formDataToSubmit.customerId));
+      }
+      if (formDataToSubmit.plantId) {
+        submitFormData.append("plantId", formDataToSubmit.plantId);
       }
       submitFormData.append("status", "Pending");
 
@@ -797,11 +836,7 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
       {(loading || submitting) && <Loader overlay />}
       <form onSubmit={handleFormSubmit} className="space-y-6 text-black">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-100 mb-6">
-            <h2 className="text-sm font-semibold text-gray-800 tracking-wide">
-              Production Order Details
-            </h2>
-          </div>
+          
 
           <div className="grid md:grid-cols-2 gap-x-16 gap-y-6">
             {user?.isSuperAdmin && (
@@ -846,19 +881,20 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
             )}
             {user?.isSuperAdmin && <div className="hidden md:block"></div>}
 
-            <div className="space-y-1.5" id="field-customerName">
+            <div className="space-y-1.5" id="field-customerId">
               <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                 Customer Name
               </label>
               <Controller
-                name="customerName"
+                name="customerId"
                 control={control}
                 render={({ field }) => (
                   <Select
-                    instanceId="select-customerName"
-                    options={STATIC_CUSTOMER_OPTIONS}
+                    instanceId="select-customerId"
+                    options={customerOptions}
+                    isLoading={loadingCustomers}
                     value={
-                      STATIC_CUSTOMER_OPTIONS.find(
+                      customerOptions.find(
                         (i) => String(i.value) === String(field.value),
                       ) || null
                     }
@@ -866,21 +902,61 @@ export default function ProductionOrderForm({ mode = "create", initialData = nul
                       field.onChange(opt ? opt.value : "");
                       setIsDirty(true);
                     }}
-                    isDisabled={mode === "edit" || submitting}
+                    isDisabled={mode === "edit" || submitting || loadingCustomers}
                     isClearable={true}
                     isSearchable={true}
                     placeholder="Select Customer Name"
                     classNamePrefix="react-select"
                     styles={customSelectStyles(
-                      errors.customerName,
+                      errors.customerId,
+                      mode === "edit" || submitting || loadingCustomers,
+                    )}
+                  />
+                )}
+              />
+              {errors.customerId && (
+                <p className="text-xs text-red-500">
+                  {errors.customerId.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5" id="field-plantId">
+              <label className="block text-xs font-semibold text-gray-500 tracking-wide">
+                Plant <span className="text-red-400 ml-1">*</span>
+              </label>
+              <Controller
+                name="plantId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    instanceId="select-plantId"
+                    options={plantOptions}
+                    value={
+                      plantOptions.find(
+                        (i) => String(i.value) === String(field.value),
+                      ) || null
+                    }
+                    onChange={(opt) => {
+                      field.onChange(opt ? opt.value : "");
+                      setIsDirty(true);
+                    }}
+                    isLoading={loadingPlants}
+                    isDisabled={mode === "edit" || submitting}
+                    isClearable={true}
+                    isSearchable={true}
+                    placeholder="Select Plant"
+                    classNamePrefix="react-select"
+                    styles={customSelectStyles(
+                      errors.plantId,
                       mode === "edit" || submitting,
                     )}
                   />
                 )}
               />
-              {errors.customerName && (
+              {errors.plantId && (
                 <p className="text-xs text-red-500">
-                  {errors.customerName.message}
+                  {errors.plantId.message}
                 </p>
               )}
             </div>

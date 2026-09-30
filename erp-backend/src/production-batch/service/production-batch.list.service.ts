@@ -99,7 +99,6 @@ export class ProductionBatchListService {
         'po.pendingQuantity AS pendingQuantity',
         'po.productionDate AS productionDate',
         'po.customerId AS customerId',
-        'po.customerName AS customerName',
         'po.plantId AS plantId',
         'po.companyId AS companyId',
         'po.itemId AS itemId',
@@ -118,6 +117,9 @@ export class ProductionBatchListService {
 
       qb.addSelect('uom.uomName', 'uomName');
       qb.leftJoin('item_uom_master', 'uom', 'uom.id = item.itemUomId');
+
+      qb.addSelect('customerCompany.name', 'customerName');
+      qb.leftJoin('customer_company', 'customerCompany', 'customerCompany.id = po.customerId');
 
       qb.addSelect("CONCAT(user.firstName, ' ', user.lastName)", 'addedByName');
       qb.leftJoin('users', 'user', 'user.id = po.addedBy');
@@ -248,8 +250,15 @@ export class ProductionBatchListService {
       ]);
 
       qb.addSelect('po.productionOrderCode', 'productionOrderCode');
-      qb.addSelect('po.customerName', 'customerName');
+      qb.addSelect('po.plantId', 'plantId');
       qb.leftJoin('production_order', 'po', 'po.id = pb.productionOrderId');
+
+      qb.addSelect('plant.name', 'plantName');
+      qb.addSelect('plant.code', 'plantCode');
+      qb.leftJoin('plant_master', 'plant', 'plant.id = po.plantId');
+
+      qb.addSelect('customerCompany.name', 'customerName');
+      qb.leftJoin('customer_company', 'customerCompany', 'customerCompany.id = po.customerId');
 
       qb.addSelect('bom.bomName', 'bomName');
       qb.addSelect('bom.bomCode', 'bomCode');
@@ -498,9 +507,17 @@ export class ProductionBatchListService {
         'pb.completedDate AS completedDate',
       ]);
       qb.addSelect('po.productionOrderCode', 'productionOrderCode');
-      qb.addSelect('po.customerName', 'customerName');
+      qb.addSelect('po.plantId', 'plantId');
       qb.addSelect('po.id', 'productionOrderId');
+      qb.addSelect('po.customerId', 'customerId');
       qb.leftJoin('production_order', 'po', 'po.id = pb.productionOrderId');
+
+      qb.addSelect('plant.name', 'plantName');
+      qb.addSelect('plant.code', 'plantCode');
+      qb.leftJoin('plant_master', 'plant', 'plant.id = po.plantId');
+
+      qb.addSelect('customerCompany.name', 'customerName');
+      qb.leftJoin('customer_company', 'customerCompany', 'customerCompany.id = po.customerId');
 
       qb.addSelect('bom.bomName', 'bomName');
       qb.addSelect('bom.bomCode', 'bomCode');

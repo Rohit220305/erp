@@ -95,7 +95,7 @@ const VALID_TABS = ["summary", "flowchart"];
 export default function ProcessTemplateDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   
   const { activeTab, getTabHref } = useTabNavigation({
     moduleKey: "process-template",
@@ -309,7 +309,7 @@ export default function ProcessTemplateDetailPage({ data }) {
                       label="Execution Type"
                       value={executionType || "Sequential"}
                     />
-                    {companyName && (
+                    {user?.isSuperAdmin && companyName && (
                       <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
                         <span className="text-sm text-gray-500">Company</span>
                         <ModuleLink

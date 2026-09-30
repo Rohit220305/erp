@@ -506,6 +506,7 @@ export class BomService {
 
   async cloneBom(req: IAppRequest, params: BomCloneDto) {
     let return_data: any = {};
+    console.log('Cloning BOM with params:', params);                                                                                    
 
     try {
       const companyId = req.user?.companyId;

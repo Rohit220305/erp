@@ -4,13 +4,19 @@ import { Injectable } from '@nestjs/common';
 import { pipeline } from 'stream/promises';
 import { validate } from 'class-validator';
 import { CommonFileDto } from '../dto/common-file.dto';
+import { ModSettingCacheService } from 'src/mod-setting/service/mod-setting.cache.service';
 
 @Injectable()
 export class CommonFileService {
+  constructor(private readonly modSettingCache: ModSettingCacheService) {}
+
   async transferFile(fileNames: string | string[], recordId: number, folderName: string) {
     try {
-      const uploadsDir = process.env.UPLOAD_DIR || './uploads';
-      const tempDir = process.env.TEMP_DIR || './temp-uploads';
+      const uploadsDir =
+        this.modSettingCache.getValue('UPLOAD_DIR') || './uploads';
+      const tempDir =
+        this.modSettingCache.getValue('TEMP_DIR') || './temp-uploads';
+
       const destinationFolder = path.join(
         uploadsDir,
         folderName,
@@ -52,7 +58,7 @@ export class CommonFileService {
 
   async deleteTempFile(fileName: string) {
     try {
-      const tempDir = process.env.TEMP_DIR || './temp-uploads';
+      const tempDir = this.modSettingCache.getValue('TEMP_DIR') || './temp-uploads';
 
       const tempFile = path.join(tempDir, fileName);
 
@@ -69,7 +75,7 @@ export class CommonFileService {
 
   async deleteFolder(folderName: string, subFolder: string) {
     try {
-      const uploadsDir = process.env.UPLOAD_DIR || './uploads';
+      const uploadsDir = this.modSettingCache.getValue('UPLOAD_DIR') || './uploads';
 
       const folderPath = path.join(uploadsDir, folderName, subFolder);
 
@@ -88,7 +94,8 @@ export class CommonFileService {
 
   async deleteFile(folderName: string, subFolder: string, fileName: string) {
     try {
-      const uploadsDir = process.env.UPLOAD_DIR || './uploads';
+      const uploadsDir =
+        this.modSettingCache.getValue('UPLOAD_DIR') || './uploads';
       const filePath = path.join(uploadsDir, folderName, subFolder, fileName);
 
       if (fs.existsSync(filePath)) {

@@ -14,7 +14,7 @@ import StatusBadge from "@/components/common/StatusBadge";
 
 function DetailRow({ label, value, href, onClick, valueNode }) {
   return (
-    <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
+    <div className="flex items-start justify-between py-2.5 border-b border-gray-50 last:border-0">
       <span className="text-gray-500 font-medium">{label}</span>
       {valueNode ? (
         valueNode
@@ -122,7 +122,7 @@ export default function PackageDetailPage({ data }) {
               <h3 className="font-semibold text-gray-900 mb-5 text-base border-b border-gray-100 pb-3">
                 Core Information
               </h3>
-              <DetailRow label="Package Type Name" value={data.packageName} />
+              <DetailRow label="Name" value={data.packageName} />
               {user?.isSuperAdmin && (
                 <DetailRow
                   label="Company"
@@ -142,7 +142,7 @@ export default function PackageDetailPage({ data }) {
                   }
                 />
               )}
-              <DetailRow label="Package Type Code" value={data.packageCode} />
+              <DetailRow label="Code" value={data.packageCode} />
               <DetailRow label="Abbreviation" value={data.abbreviation} />
               <DetailRow label="Description" value={data.description} />
             </div>

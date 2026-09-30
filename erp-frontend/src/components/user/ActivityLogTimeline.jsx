@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   CheckCircle2,
@@ -24,6 +24,21 @@ export default function ActivityLogTimeline({ userId }) {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+
+  const observer = useRef();
+  const lastElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          fetchLogs(page + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore, page]
+  );
 
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [startDate, setStartDate] = useState(null);
@@ -470,18 +485,13 @@ export default function ActivityLogTimeline({ userId }) {
                 </div>
               ))}
 
-              {hasMore && (
-                <div className="pt-4 pb-2 pl-6">
-                  <button
-                    onClick={() => {
-                      fetchLogs(page + 1);
-                    }}
-                    disabled={loading}
-                    className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
-                  >
-                    {loading ? "Loading..." : "Load older activity"}
-                  </button>
+              {loading && page > 1 && (
+                <div className="pt-4 pb-2 pl-6 flex justify-center">
+                  <Loader size="sm" />
                 </div>
+              )}
+              {hasMore && !loading && (
+                <div ref={lastElementRef} className="h-4" />
               )}
             </div>
           )}

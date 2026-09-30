@@ -63,6 +63,7 @@ export default function ProductionOrderDetailPage({ data }) {
   const canViewItem = can(CAPABILITIES.ITEM?.VIEW || "ITEM_VIEW");
   const canViewBom = can(CAPABILITIES.BOM?.VIEW || "BOM_VIEW");
   const canViewUser = can(CAPABILITIES.USER?.VIEW || "USER_VIEW");
+  const canViewPlant = can(CAPABILITIES.PLANT?.VIEW || "PLANT_VIEW");
   const canCreateBatch = can(CAPABILITIES.PRODUCTION_BATCH?.CREATE || "PRODUCTION_BATCH_CREATE");
   const canDeleteOrder = can(CAPABILITIES.PRODUCTION_ORDER?.DELETE || "PRODUCTION_ORDER_DELETE");
 
@@ -315,7 +316,21 @@ export default function ProductionOrderDetailPage({ data }) {
                     <div className="flex items-center justify-between">
                       <span className="text-gray-500">Customer Name</span>
                       <span className="font-medium text-gray-800">
-                        {displayFormat(orderData.customerName)}
+                        <ModuleLink
+                          moduleName="CustomerCompany"
+                          id={orderData.customerId}
+                          onClick={() =>
+                            setDrawerState({ isOpen: true, moduleName: "CustomerCompany", id: orderData.customerId })
+                          }
+                        >
+                          {displayFormat(orderData.customerName)}
+                        </ModuleLink>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Plant Name</span>
+                      <span className="font-medium text-gray-800">
+                        {displayFormat(orderData.plantName)}
                       </span>
                     </div>
                   </div>

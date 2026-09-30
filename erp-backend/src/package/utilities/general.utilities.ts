@@ -2,19 +2,33 @@ import { Injectable, BadRequestException, ForbiddenException } from "@nestjs/com
 import path from "path";
 import { SelectQueryBuilder } from 'typeorm';
 import { AppRequest } from '../types/app-request.type';
+import { ModSettingCacheService } from "src/mod-setting/service/mod-setting.cache.service";
+import dayjs from "dayjs";
 
 @Injectable()
 export class GeneralUtilities {
-  async makeFilterString(filters: any, columnMapOrAlias: Record<string, string> | string, logicalOperator = 'AND') {
+  constructor(private readonly modSettingCache: ModSettingCacheService) {}
+
+  async makeFilterString(
+    filters: any,
+    columnMapOrAlias: Record<string, string> | string,
+    logicalOperator = 'AND',
+  ) {
     try {
       let filterString: any = '';
       const op = logicalOperator === 'OR' ? 'OR' : 'AND';
 
       if (filters && filters.length > 0) {
-        filterString = await this.makeFilterCondition(filters[0], columnMapOrAlias);
+        filterString = await this.makeFilterCondition(
+          filters[0],
+          columnMapOrAlias,
+        );
 
         for (let i = 1; i < filters.length; i++) {
-          const condition = await this.makeFilterCondition(filters[i], columnMapOrAlias);
+          const condition = await this.makeFilterCondition(
+            filters[i],
+            columnMapOrAlias,
+          );
           filterString = filterString + ` ${op} ` + condition;
         }
       } else {
@@ -27,7 +41,10 @@ export class GeneralUtilities {
     }
   }
 
-  async makeFilterCondition(filter, columnMapOrAlias: Record<string, string> | string) {
+  async makeFilterCondition(
+    filter,
+    columnMapOrAlias: Record<string, string> | string,
+  ) {
     try {
       let mappedField = '';
 
@@ -44,7 +61,7 @@ export class GeneralUtilities {
         if (filter.value.length === 0) {
           return '1=1';
         }
-        const inValues = filter.value.map(v => `"${v}"`).join(',');
+        const inValues = filter.value.map((v) => `"${v}"`).join(',');
         return `${mappedField} IN (${inValues})`;
       }
 
@@ -80,36 +97,50 @@ export class GeneralUtilities {
   }
 
   async generateUrl(folder: string, subFolder: string, fileName: string) {
-    const baseUrl = process.env.BASE_URL;
+    const baseUrl = this.modSettingCache.getValue('BASE_URL');
 
     return `${baseUrl}/uploads/${folder}/${subFolder}/${fileName}`;
   }
 
+  // async dateFormat(dateTime, time = true) {
+  //   let date = new Date(dateTime);
+
+  //   let day = String(date.getDate()).padStart(2, '0');
+
+  //   let month = String(date.getMonth() + 1).padStart(2, '0');
+
+  //   let year = date.getFullYear();
+
+  //   let hours = date.getHours();
+
+  //   let minutes = String(date.getMinutes()).padStart(2, '0');
+
+  //   let ampm = hours >= 12 ? 'PM' : 'AM';
+
+  //   hours = hours % 12;
+
+  //   hours = hours ? hours : 12;
+
+  //   return time ? `${day}/${month}/${year} ${hours}:${minutes} ${ampm}` : `${day}/${month}/${year}`;
+  // }
+
   async dateFormat(dateTime, time = true) {
-    let date = new Date(dateTime);
-
-    let day = String(date.getDate()).padStart(2, '0');
-
-    let month = String(date.getMonth() + 1).padStart(2, '0');
-
-    let year = date.getFullYear();
-
-    let hours = date.getHours();
-
-    let minutes = String(date.getMinutes()).padStart(2, '0');
-
-    let ampm = hours >= 12 ? 'PM' : 'AM';
-
-    hours = hours % 12;
-
-    hours = hours ? hours : 12;
-
-    return time ? `${day}/${month}/${year} ${hours}:${minutes} ${ampm}` : `${day}/${month}/${year}`;
+    if (!dateTime) return '';
+    // Fetch the specific format from Cache, with standard fallbacks
+    const formatStr = time
+      ? this.modSettingCache.getValue('DATETIME_FORMAT') || 'DD/MM/YYYY hh:mm A'
+      : this.modSettingCache.getValue('DATE_FORMAT') || 'DD/MM/YYYY';
+    return dayjs(dateTime).format(formatStr);
   }
 
   formatDurationSeconds(totalSeconds: number | null | undefined): string {
-    if (totalSeconds === null || totalSeconds === undefined || isNaN(totalSeconds) || totalSeconds === 0) {
-      return "0 minutes";
+    if (
+      totalSeconds === null ||
+      totalSeconds === undefined ||
+      isNaN(totalSeconds) ||
+      totalSeconds === 0
+    ) {
+      return '0 minutes';
     }
 
     const days = Math.floor(totalSeconds / 86400);
@@ -129,29 +160,68 @@ export class GeneralUtilities {
     return parts.join(' ');
   }
 
-  formatNumber(val: number | string | null | undefined, decimals = 4): string {
-    if (val === null || val === undefined || val === '' || isNaN(Number(val))) {
-      return '0';
-    }
-    const num = Number(val);
-    const isFloat = num % 1 !== 0;
-    return num.toLocaleString('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: isFloat ? decimals : 0,
-    });
+  // formatNumber(val: number | string | null | undefined, decimals = 4): string {
+  //   if (val === null || val === undefined || val === '' || isNaN(Number(val))) {
+  //     return '0';
+  //   }
+  //   const num = Number(val);
+  //   const isFloat = num % 1 !== 0;
+  //   return num.toLocaleString('en-US', {
+  //     minimumFractionDigits: 0,
+  //     maximumFractionDigits: isFloat ? decimals : 0,
+  //   });
+  // }
+
+  formatNumber(
+    val: number | string | null | undefined,
+    fallbackDecimals = 4,
+  ): string {
+    const cacheVal = this.modSettingCache.getValue('DECIMAL_COUNT');
+    const decimals = cacheVal ? parseInt(cacheVal, 10) : fallbackDecimals;
+    if (val === null || val === undefined || val === '') return '';
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    if (isNaN(num)) return '';
+
+    return num.toFixed(decimals);
   }
 
-  formatQuantityWithUom(val: number | string | null | undefined, uomName = '', decimals = 4 , perUnit = false): string {
+  formatQuantityWithUom(
+    val: number | string | null | undefined,
+    uomName = '',
+    decimals = 4,
+    perUnit = false,
+  ): string {
     const formatted = this.formatNumber(val, decimals);
-    if(perUnit) return uomName ? `${formatted} / ${uomName}` : formatted;
+    if (perUnit) return uomName ? `${formatted} / ${uomName}` : formatted;
     return uomName ? `${formatted} ${uomName}` : formatted;
   }
-  
-  formatCurrency(val: number | string | null | undefined, currencySymbol = '', decimals = 2): string {
-    const formatted = this.formatNumber(val, decimals);
-    return currencySymbol ? `${currencySymbol} ${formatted}` : formatted;
-  }
 
+  // formatCurrency(
+  //   val: number | string | null | undefined,
+  //   currencySymbol = '',
+  //   decimals = 2,
+  // ): string {
+  //   const formatted = this.formatNumber(val, decimals);
+  //   return currencySymbol ? `${currencySymbol} ${formatted}` : formatted;
+  // }
+
+  formatCurrency(
+    val: number | string | null | undefined,
+    fallbackSymbol = '',
+  ): string {
+    const cacheDecimals = this.modSettingCache.getValue(
+      'CURRENCY_DECIMAL_COUNT',
+    );
+    const decimals = cacheDecimals ? parseInt(cacheDecimals, 10) : 2;
+    const symbol =
+      this.modSettingCache.getValue('BASE_CURRENCY_SYMBOL') || fallbackSymbol || '₹';
+    if (val === null || val === undefined || val === '') return '';
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    if (isNaN(num)) return '';
+
+    const formattedNum = num.toFixed(decimals);
+    return symbol ? `${symbol} ${formattedNum}` : formattedNum;
+  }
   async encryptPassword(password) {
     const encryptedpass = password;
     return encryptedpass;
@@ -170,7 +240,9 @@ export class GeneralUtilities {
   }
 
   isSuperAdmin(req: AppRequest): boolean {
-    return req.user?.isSuperAdmin === true || (req.user?.isSuperAdmin as any) === 1;
+    return (
+      req.user?.isSuperAdmin === true || (req.user?.isSuperAdmin as any) === 1
+    );
   }
 
   assertCompanyAccess(
@@ -186,14 +258,22 @@ export class GeneralUtilities {
     }
   }
 
-  async prepareInsertColumns(req: AppRequest, params: any, allowedFields: string[]) {
+  async prepareInsertColumns(
+    req: AppRequest,
+    params: any,
+    allowedFields: string[],
+  ) {
     const cols = await this.mapFields(params, allowedFields);
     cols.addedBy = req.user?.sub;
     cols.addedDate = () => 'NOW()';
     return cols;
   }
 
-  async prepareUpdateColumns(req: AppRequest, params: any, allowedFields: string[]) {
+  async prepareUpdateColumns(
+    req: AppRequest,
+    params: any,
+    allowedFields: string[],
+  ) {
     const cols = await this.mapFields(params, allowedFields);
     cols.updatedBy = req.user?.sub;
     cols.updatedDate = () => 'NOW()';
@@ -204,11 +284,8 @@ export class GeneralUtilities {
     uniqueFields: Record<string, string | null>,
     req: AppRequest,
   ): Record<string, any> {
-    // const timestamp = Date.now();
     const payload: any = { sysRecDeleted: true };
-    // for (const [key, value] of Object.entries(uniqueFields)) {
-    //   payload[key] = value ? `${value}_del_${timestamp}` : value;
-    // }
+
     payload.updatedBy = req.user?.sub;
     payload.updatedDate = () => 'NOW()';
     return payload;
@@ -242,7 +319,12 @@ export class GeneralUtilities {
     return { page, limit, skip };
   }
 
-  buildPaginationResponse(total: number, page: number, limit: number, skip: number) {
+  buildPaginationResponse(
+    total: number,
+    page: number,
+    limit: number,
+    skip: number,
+  ) {
     return {
       total,
       page,
@@ -253,10 +335,13 @@ export class GeneralUtilities {
     };
   }
 
-  buildColumnMapFromSelects(qb: SelectQueryBuilder<any>): Record<string, string> {
+  buildColumnMapFromSelects(
+    qb: SelectQueryBuilder<any>,
+  ): Record<string, string> {
     const map: Record<string, string> = {};
-    const selects: Array<{ selection: string; aliasName?: string }> =
-      (qb as any).expressionMap.selects;
+    const selects: Array<{ selection: string; aliasName?: string }> = (
+      qb as any
+    ).expressionMap.selects;
 
     for (const sel of selects) {
       if (sel.aliasName) {
@@ -297,8 +382,12 @@ export class GeneralUtilities {
     const columnMap = this.buildColumnMapFromSelects(qb);
 
     if (params?.search) {
-      const searchColumns = Object.values(columnMap).filter(col => !col.toUpperCase().includes('SELECT '));
-      const clauses = searchColumns.map(col => `${col} LIKE :search`).join(' OR ');
+      const searchColumns = Object.values(columnMap).filter(
+        (col) => !col.toUpperCase().includes('SELECT '),
+      );
+      const clauses = searchColumns
+        .map((col) => `${col} LIKE :search`)
+        .join(' OR ');
       if (clauses) {
         qb.andWhere(`(${clauses})`, { search: `%${params.search}%` });
       }
@@ -306,7 +395,9 @@ export class GeneralUtilities {
 
     if (params?.filters && params.filters.length > 0) {
       const whereString = await this.makeFilterString(
-        params.filters, columnMap, params.logicalOperator,
+        params.filters,
+        columnMap,
+        params.logicalOperator,
       );
       if (whereString) qb.andWhere(whereString);
     }
@@ -319,7 +410,11 @@ export class GeneralUtilities {
     }
   }
 
-  applyCompanyScope(qb: SelectQueryBuilder<any>, req: AppRequest, alias: string) {
+  applyCompanyScope(
+    qb: SelectQueryBuilder<any>,
+    req: AppRequest,
+    alias: string,
+  ) {
     if (!this.isSuperAdmin(req)) {
       qb.andWhere(`${alias}.companyId = :scopedCompanyId`, {
         scopedCompanyId: req.user?.companyId,
@@ -345,9 +440,15 @@ export class GeneralUtilities {
 
   getCompanyInitials(companyName: string): string {
     if (!companyName) return 'ERP';
-    const words = companyName.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/);
+    const words = companyName
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .trim()
+      .split(/\s+/);
     if (words.length >= 2) {
-      return words.map(w => w[0].toUpperCase()).join('').substring(0, 4);
+      return words
+        .map((w) => w[0].toUpperCase())
+        .join('')
+        .substring(0, 4);
     }
     return companyName.substring(0, 3).toUpperCase();
   }

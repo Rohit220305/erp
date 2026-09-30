@@ -24,8 +24,21 @@ export const menuCategories = [
         iconBg: "#1565c0",
         permission: "USER_LIST",
         items: [
-          { label: "Users", path: buildRoute("user", "list"), permission: "USER_LIST" },
-          { label: "Groups", path: buildRoute("group", "list"), permission: "GROUP_LIST" },
+          {
+            label: "Users",
+            path: buildRoute("user", "list"),
+            permission: "USER_LIST",
+          },
+          {
+            label: "Groups",
+            path: buildRoute("group", "list"),
+            permission: "GROUP_LIST",
+          },
+          {
+            label: "Customer",
+            path: buildRoute("customer-company", "list"),
+            permission: "CUSTOMER_COMPANY_LIST",
+          },
         ],
       },
     ],
@@ -45,7 +58,11 @@ export const menuCategories = [
             path: buildRoute("manufacturer", "list"),
             permission: "MANUFACTURER_LIST",
           },
-          { label: "Brand Master", path: buildRoute("brand", "list"), permission: "BRAND_LIST" },
+          {
+            label: "Brand Master",
+            path: buildRoute("brand", "list"),
+            permission: "BRAND_LIST",
+          },
           {
             label: "Item Category",
             path: buildRoute("item-category", "list"),
@@ -56,7 +73,11 @@ export const menuCategories = [
             path: buildRoute("storage", "list"),
             permission: "STORAGE_LIST",
           },
-          { label: "Item", path: buildRoute("item", "list"), permission: "ITEM_LIST" },
+          {
+            label: "Item",
+            path: buildRoute("item", "list"),
+            permission: "ITEM_LIST",
+          },
         ],
       },
       {
@@ -65,7 +86,11 @@ export const menuCategories = [
         iconBg: "#1565c0",
         permission: "ITEM_UOM_LIST",
         items: [
-          { label: "Item UOM", path: buildRoute("item-uom", "list"), permission: "ITEM_UOM_LIST" },
+          {
+            label: "Item UOM",
+            path: buildRoute("item-uom", "list"),
+            permission: "ITEM_UOM_LIST",
+          },
           {
             label: "Package Types",
             path: buildRoute("package-master", "list"),
@@ -154,6 +179,11 @@ export const menuCategories = [
             label: "Production Batch",
             path: buildRoute("production-batch", "list"),
             permission: "PRODUCTION_BATCH_LIST",
+          },
+          {
+            label: "Material Request",
+            path: buildRoute("material-request", "list"),
+            permission: "MATERIAL_REQUEST_LIST",
           },
         ],
       },

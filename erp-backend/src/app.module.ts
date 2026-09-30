@@ -29,6 +29,9 @@ import { BomModule } from './bom/bom.module';
 import { ProductionOrderModule } from './production-order/production-order.module';
 import { ProductionBatchModule } from './production-batch/production-batch.module';
 import { MaterialRequestModule } from './material-request/material-request.module';
+import { ModSettingModule } from './mod-setting/mod-setting.module';
+import { PlantModule } from './plant/plant.module';
+import { CustomerCompanyModule } from './customer-company/customer-company.module';
 
 @Module({
   imports: [
@@ -64,6 +67,9 @@ import { MaterialRequestModule } from './material-request/material-request.modul
     ProductionOrderModule,
     ProductionBatchModule,
     MaterialRequestModule,
+    ModSettingModule,
+    PlantModule,
+    CustomerCompanyModule,
   ],
 
   controllers: [AppController],

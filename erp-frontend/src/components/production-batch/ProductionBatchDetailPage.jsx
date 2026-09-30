@@ -216,7 +216,7 @@ export default function ProductionBatchDetailPage({ batchData: initialBatchData,
       setSideDrawerState({ isOpen: true, moduleName, id });
     }
   };
-  console.log("batchData in ProductionBatchDetailPage:", batchData);
+  // console.log("batchData in ProductionBatchDetailPage:", batchData);
   return (
     <div className="h-full">
       <div className="flex gap-6 items-start h-full ps-10 pt-2 ">

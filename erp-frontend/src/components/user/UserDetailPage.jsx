@@ -2,7 +2,9 @@
 import { CAPABILITIES } from "@/config/capabilities.config";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
+import useTabNavigation from "@/hooks/useTabNavigation";
 import { useHeader } from "@/context/HeaderContext";
 import { useAuth } from "@/context/AuthContext";
 import SharedImageZoom from "@/components/common/SharedImageZoom";
@@ -51,6 +53,39 @@ function DetailRow({ label, value, href, onClick, valueNode }) {
     </div>
   );
 }
+function UserInfoCard({ title, name, date, userId, onOpenUser }) {
+  const initial = name ? name.charAt(0).toUpperCase() : "S";
+  return (
+    <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
+      <h3 className="text-sm font-semibold text-gray-600 mb-5">{title}</h3>
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-[#1565c0] text-white flex items-center justify-center text-lg font-semibold shadow-sm shrink-0">
+          {initial}
+        </div>
+        <div className="flex flex-col">
+          {userId ? (
+            <ModuleLink
+              href={buildRoute("user", "detail", { id: userId })}
+              onClick={onOpenUser}
+              className="text-sm font-semibold text-[#1565c0] hover:underline cursor-pointer"
+            >
+              {displayFormat(name)}
+            </ModuleLink>
+          ) : (
+            <span className="text-sm font-semibold text-gray-900">
+              {displayFormat(name)}
+            </span>
+          )}
+          {date && (
+            <span className="text-xs text-gray-400 mt-1">
+              {displayFormat(date, "DATE")}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 
 export default function UserDetailPage({ user }) {
@@ -61,8 +96,14 @@ export default function UserDetailPage({ user }) {
     can,
   } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("summary");
-  const [displayedTab, setDisplayedTab] = useState("summary");
+  const { activeTab, getTabHref } = useTabNavigation({
+    moduleKey: "user",
+    entityId: user?.id,
+    defaultTab: "summary",
+    validTabs: ["summary", "profiles", "activity"],
+  });
+
+  const [displayedTab, setDisplayedTab] = useState(activeTab);
   const { execute: executeTabSwitch, isLoading: isTabSwitching } = useAsyncAction(1000);
   const [sideDrawerState, setSideDrawerState] = useState({
     isOpen: false,
@@ -148,8 +189,8 @@ export default function UserDetailPage({ user }) {
             <hr className="my-4" />
 
             <div className="flex flex-col gap-2">
-              <button
-                onClick={() => setActiveTab("summary")}
+              <Link
+                href={getTabHref("summary")}
                 className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium cursor-pointer transition ${
                   activeTab === "summary"
                     ? "bg-[#1565c0] text-white"
@@ -157,10 +198,10 @@ export default function UserDetailPage({ user }) {
                 }`}
               >
                 <UserIcon size={16} /> Summary
-              </button>
+              </Link>
 
-              <button
-                onClick={() => setActiveTab("profiles")}
+              <Link
+                href={getTabHref("profiles")}
                 className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium cursor-pointer transition ${
                   activeTab === "profiles"
                     ? "bg-[#1565c0] text-white"
@@ -168,11 +209,11 @@ export default function UserDetailPage({ user }) {
                 }`}
               >
                 Other Profiles
-              </button>
+              </Link>
 
               {canViewActivityLogs && (
-                <button
-                  onClick={() => setActiveTab("activity")}
+                <Link
+                  href={getTabHref("activity")}
                   className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium cursor-pointer transition ${
                     activeTab === "activity"
                       ? "bg-[#1565c0] text-white"
@@ -180,7 +221,7 @@ export default function UserDetailPage({ user }) {
                   }`}
                 >
                   <Activity size={16} /> Activity Logs
-                </button>
+                </Link>
               )}
             </div>
           </div>
@@ -218,7 +259,7 @@ export default function UserDetailPage({ user }) {
                     <DetailRow label="First Name" value={user?.firstName} />
                     <DetailRow label="Last Name" value={user?.lastName} />
                     <DetailRow label="Username" value={user?.userName} />
-                    {user?.companyName && (
+                    {currentUser?.isSuperAdmin && user?.companyName && (
                       <DetailRow
                         label="Company"
                         value={user?.companyName}
@@ -245,69 +286,6 @@ export default function UserDetailPage({ user }) {
                       <DetailRow label="Role" value={currentUser?.groupName} />
                     ) : (
                       <DetailRow label="Profile" value={user?.groupName} />
-                    )}
-
-                    {user.addedDateFormatted && (
-                      <DetailRow
-                        label="Added Date"
-                        value={displayFormat(user.addedDateFormatted, "DATE")}
-                      />
-                    )}
-                    {user.updatedDateFormatted && (
-                      <DetailRow
-                        label="Updated Date"
-                        value={displayFormat(user.updatedDateFormatted, "DATE")}
-                      />
-                    )}
-                    {user.addedByName && (
-                      <DetailRow
-                        label="Added By"
-                        value={user.addedByName}
-                        href={
-                          can(CAPABILITIES.USER.VIEW) &&
-                          (user?.addedBy || user?.addedById)
-                            ? buildRoute("user", "detail", {
-                                id: user.addedBy || user.addedById,
-                              })
-                            : null
-                        }
-                        onClick={
-                          can(CAPABILITIES.USER.VIEW) &&
-                          (user?.addedBy || user?.addedById)
-                            ? () =>
-                                setSideDrawerState({
-                                  isOpen: true,
-                                  moduleName: "User",
-                                  id: user.addedBy || user.addedById,
-                                })
-                            : null
-                        }
-                      />
-                    )}
-                    {user.updatedByName && (
-                      <DetailRow
-                        label="Updated By"
-                        value={user.updatedByName}
-                        href={
-                          can(CAPABILITIES.USER.VIEW) &&
-                          (user?.updatedBy || user?.updatedById)
-                            ? buildRoute("user", "detail", {
-                                id: user.updatedBy || user.updatedById,
-                              })
-                            : null
-                        }
-                        onClick={
-                          can(CAPABILITIES.USER.VIEW) &&
-                          (user?.updatedBy || user?.updatedById)
-                            ? () =>
-                                setSideDrawerState({
-                                  isOpen: true,
-                                  moduleName: "User",
-                                  id: user.updatedBy || user.updatedById,
-                                })
-                            : null
-                        }
-                      />
                     )}
                   </div>
 
@@ -338,8 +316,49 @@ export default function UserDetailPage({ user }) {
                       </div>
                     </div>
                   </div>
+                  <div className="space-y-6">
+                    {user.addedByName && (
+                      <UserInfoCard
+                        title="Added By"
+                        name={user.addedByName}
+                        date={user.addedDateFormatted}
+                        userId={user.addedBy || user.addedById}
+                        onOpenUser={
+                          can(CAPABILITIES.USER.VIEW) &&
+                          (user?.addedBy || user?.addedById)
+                            ? () =>
+                                setSideDrawerState({
+                                  isOpen: true,
+                                  moduleName: "User",
+                                  id: user.addedBy || user.addedById,
+                                })
+                            : null
+                        }
+                      />
+                    )}
+                    {user.updatedByName && (
+                      <UserInfoCard
+                        title="Updated By"
+                        name={user.updatedByName}
+                        date={user.updatedDateFormatted}
+                        userId={user.updatedBy || user.updatedById}
+                        onOpenUser={
+                          can(CAPABILITIES.USER.VIEW) &&
+                          (user?.updatedBy || user?.updatedById)
+                            ? () =>
+                                setSideDrawerState({
+                                  isOpen: true,
+                                  moduleName: "User",
+                                  id: user.updatedBy || user.updatedById,
+                                })
+                            : null
+                        }
+                      />
+                    )}
+                  </div>
                 </div>
               )}
+
               {displayedTab === "profiles" && (
                 <div className="bg-white rounded-xl hover:shadow-lg transition p-6 me-4">
                   <h3 className="font-semibold mb-5">Other Profiles</h3>

@@ -9,7 +9,7 @@ import { GeneralUtilities } from '../../package/utilities/general.utilities';
 import { AttachmentMasterService } from '../../attachment-master/service/attachment-master.service';
 import { AttachmentModule } from '../../attachment-master/enums/attachment-module.enum';
 import { BomCostUtility, ItemPriceLookup } from '../../bom/utility/bom-cost.utility';
-import { BomItemCategorizerUtility } from '../../bom/utility/bom-item-categorizer.utility';
+import { BomItemCategorizerService } from '../../bom/utility/bom-item-categorizer.utility';
 import { AppRequest } from '../../package/types/app-request.type';
 import {
   ProductionOrderDetailsDto,
@@ -29,6 +29,7 @@ export class ProductionOrderListService {
     private readonly itemImageRepo: Repository<ItemImageEntity>,
     private readonly general: GeneralUtilities,
     private readonly attachmentMasterService: AttachmentMasterService,
+    private readonly bomItemCategorizer: BomItemCategorizerService,
   ) { }
 
   private async finishSuccess(params: any, incomingData?: any) {
@@ -82,7 +83,6 @@ export class ProductionOrderListService {
         'po.remark AS remark',
         'po.plantId AS plantId',
         'po.customerId AS customerId',
-        'po.customerName AS customerName',
         'po.status AS status',
         'po.addedDate AS addedDate',
         'po.updatedDate AS updatedDate',
@@ -109,6 +109,13 @@ export class ProductionOrderListService {
       qb.addSelect('bom.bomCode', 'bomCode');
       qb.addSelect('bom.productionMethod', 'productionMethod');
       qb.leftJoin('bom_master', 'bom', 'bom.id = po.bomId');
+
+      qb.addSelect('plant.name', 'plantName');
+      qb.addSelect('plant.code', 'plantCode');
+      qb.leftJoin('plant_master', 'plant', 'plant.id = po.plantId');
+
+      qb.addSelect('customerCompany.name', 'customerName');
+      qb.leftJoin('customer_company', 'customerCompany', 'customerCompany.id = po.customerId');
 
       qb.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
       qb.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
@@ -219,7 +226,6 @@ export class ProductionOrderListService {
         'po.remark AS remark',
         'po.plantId AS plantId',
         'po.customerId AS customerId',
-        'po.customerName AS customerName',
         'po.status AS status',
         'po.addedDate AS addedDate',
         'po.updatedDate AS updatedDate',
@@ -246,6 +252,13 @@ export class ProductionOrderListService {
       qb.addSelect('bom.bomCode', 'bomCode');
       qb.addSelect('bom.productionMethod', 'productionMethod');
       qb.leftJoin('bom_master', 'bom', 'bom.id = po.bomId');
+
+      qb.addSelect('plant.name', 'plantName');
+      qb.addSelect('plant.code', 'plantCode');
+      qb.leftJoin('plant_master', 'plant', 'plant.id = po.plantId');
+
+      qb.addSelect('customerCompany.name', 'customerName');
+      qb.leftJoin('customer_company', 'customerCompany', 'customerCompany.id = po.customerId');
 
       qb.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
       qb.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
@@ -453,7 +466,7 @@ export class ProductionOrderListService {
         });
       }
 
-      poDetails.materialDetails = BomItemCategorizerUtility.categorizeItems(
+      poDetails.materialDetails = this.bomItemCategorizer.categorizeItems(
         [
           ...rawMaterials,
           ...semiFinished,

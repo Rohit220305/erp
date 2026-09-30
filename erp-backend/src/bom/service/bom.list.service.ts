@@ -11,7 +11,7 @@ import { ItemEntity } from '../../item/entity/item.entity';
 import { ItemImageEntity } from '../../item/entity/item-image.entity';
 import { BomDetailsDto, BomListDto } from '../dto/bom.dto';
 import { BomCostUtility, ItemPriceLookup } from '../utility/bom-cost.utility';
-import { BomItemCategorizerUtility } from '../utility/bom-item-categorizer.utility';
+import { BomItemCategorizerService } from '../utility/bom-item-categorizer.utility';
 import { AttachmentMasterService } from 'src/attachment-master/service/attachment-master.service';
 import { AttachmentModule } from 'src/attachment-master/enums/attachment-module.enum';
 
@@ -20,6 +20,7 @@ export class BomListService {
   constructor(
     private readonly general: GeneralUtilities,
     private readonly attachmentMasterService: AttachmentMasterService,
+    private readonly bomItemCategorizer: BomItemCategorizerService,
   ) {}
 
   @InjectRepository(BomEntity)
@@ -86,6 +87,9 @@ export class BomListService {
       qb.addSelect('template.templateName', 'processTemplateName');
       qb.addSelect('template.templateCode', 'processTemplateCode');
       qb.leftJoin('process_template', 'template', 'template.id = bom.processTemplateId');
+
+      qb.addSelect('customerCompany.name', 'customerName');
+      qb.leftJoin('customer_company', 'customerCompany', 'customerCompany.id = bom.customerId');
 
       qb.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
       qb.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
@@ -277,6 +281,9 @@ export class BomListService {
       qb.addSelect('template.templateName', 'processTemplateName');
       qb.addSelect('template.templateCode', 'processTemplateCode');
       qb.leftJoin('process_template', 'template', 'template.id = bom.processTemplateId');
+
+      qb.addSelect('customerCompany.name', 'customerName');
+      qb.leftJoin('customer_company', 'customerCompany', 'customerCompany.id = bom.customerId');
 
       qb.addSelect("CONCAT(addedByUser.firstName, ' ', addedByUser.lastName)", 'addedByName');
       qb.addSelect("CONCAT(updatedByUser.firstName, ' ', updatedByUser.lastName)", 'updatedByName');
@@ -525,7 +532,7 @@ export class BomListService {
         });
       }
 
-      bomDetails.materialDetails = BomItemCategorizerUtility.categorizeItems(
+      bomDetails.materialDetails = this.bomItemCategorizer.categorizeItems(
         [...rawMaterials, ...semiFinished, ...finishedProducts],
         1,
         currencySymbol,

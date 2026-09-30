@@ -109,13 +109,16 @@ export class AttachmentMasterService {
     retainedAttachments: any[],
     newFiles: any[]
   ) {
-    try {
-      if (!companyId || !entityId) return { success: 0, message: 'Missing parameters' };
 
-      const folderName = this.getFolderName(companyId, moduleName);
+    try {
+      const compId = Number(companyId);
+      const entId = Number(entityId);
+      if (!compId || !entId) return { success: 0, message: 'Missing parameters' };
+
+      const folderName = this.getFolderName(compId, moduleName);
 
       const dbAttachments = await this.attachmentRepo.find({
-        where: { companyId, moduleName, entityId },
+        where: { companyId: compId, moduleName, entityId: entId },
       });
 
       const retainedIds = new Set<number>();
@@ -141,21 +144,21 @@ export class AttachmentMasterService {
         if (!retainedStoredNamesFinal.has(dbAtt.storedFileName)) {
           await this.commonFileService.deleteFile(
             folderName,
-            `${entityId}`,
+            `${entId}`,
             dbAtt.storedFileName
           ).catch(() => null);
         }
       }
 
-      await this.attachmentRepo.delete({ companyId, moduleName, entityId });
+      await this.attachmentRepo.delete({ companyId: compId, moduleName, entityId: entId });
 
       const attachmentInserts: any[] = [];
 
       for (const retAtt of retainedDbAttachments) {
         attachmentInserts.push({
-          companyId,
+          companyId: compId,
           moduleName,
-          entityId,
+          entityId: entId,
           fileName: retAtt.fileName,
           storedFileName: retAtt.storedFileName,
           mimeType: retAtt.mimeType,
@@ -175,7 +178,7 @@ export class AttachmentMasterService {
 
             const fileResponse = await this.commonFileService.transferFile(
               storedFileName,
-              entityId,
+              entId,
               folderName
             );
 
@@ -186,9 +189,9 @@ export class AttachmentMasterService {
             successfullyTransferredStoredNames.push(storedFileName);
 
             attachmentInserts.push({
-              companyId,
+              companyId: compId,
               moduleName,
-              entityId,
+              entityId: entId,
               fileName: file.originalname || file.filename || storedFileName,
               storedFileName: storedFileName,
               mimeType: file.mimetype || 'application/pdf',
@@ -199,7 +202,7 @@ export class AttachmentMasterService {
           for (const storedName of successfullyTransferredStoredNames) {
             await this.commonFileService.deleteFile(
               folderName,
-              `${entityId}`,
+              `${entId}`,
               storedName
             ).catch(() => null); 
           }
@@ -210,7 +213,6 @@ export class AttachmentMasterService {
       if (attachmentInserts.length > 0) {
         await this.attachmentRepo.insert(attachmentInserts);
       }
-
       return { success: 1, message: 'Attachments synced successfully' };
     } catch (err: any) {
       return { success: 0, message: err.message };
@@ -223,18 +225,20 @@ export class AttachmentMasterService {
     entityId: number,
   ) {
     try {
-      if (!companyId || !entityId) return null;
+      const compId = Number(companyId);
+      const entId = Number(entityId);
+      if (!compId || !entId) return null;
 
       const attachment = await this.attachmentRepo.findOne({
-        where: { companyId, moduleName, entityId },
+        where: { companyId: compId, moduleName, entityId: entId },
       });
 
       if (!attachment) return null;
 
-      const folderName = this.getFolderName(companyId, moduleName);
+      const folderName = this.getFolderName(compId, moduleName);
       const url = await this.general.generateUrl(
         folderName,
-        `${entityId}`,
+        `${entId}`,
         attachment.storedFileName,
       );
 
@@ -254,21 +258,22 @@ export class AttachmentMasterService {
     entityId: number,
   ) {
     try {
-      if (!companyId || !entityId) return [];
+      const compId = Number(companyId);
+      const entId = Number(entityId);
+      if (!compId || !entId) return [];
 
       const attachments = await this.attachmentRepo.find({
-        where: { companyId, moduleName, entityId },
+        where: { companyId: compId, moduleName, entityId: entId },
       });
-
       if (!attachments || attachments.length === 0) return [];
 
-      const folderName = this.getFolderName(companyId, moduleName);
+      const folderName = this.getFolderName(compId, moduleName);
 
       const listWithUrls = await Promise.all(
         attachments.map(async (att) => {
           const url = await this.general.generateUrl(
             folderName,
-            `${entityId}`,
+            `${entId}`,
             att.storedFileName,
           );
           return {

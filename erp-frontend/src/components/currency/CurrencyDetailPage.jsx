@@ -15,9 +15,11 @@ import StatusBadge from "@/components/common/StatusBadge";
 const DetailRow = ({ label, value, valueNode }) => {
   if (!value && !valueNode) return null;
   return (
-    <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
+    <div className="flex items-start justify-between py-2.5 border-b border-gray-50 last:border-0">
       <span className="text-gray-500 font-medium">{label}</span>
-      {valueNode ? valueNode : (
+      {valueNode ? (
+        valueNode
+      ) : (
         <span className="text-gray-900">{displayFormat(value)}</span>
       )}
     </div>

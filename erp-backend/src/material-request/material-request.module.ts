@@ -10,6 +10,7 @@ import { ProductionBatchItemEntity } from '../production-batch/entity/production
 import { ProductionBatchProcessEntity } from '../production-batch/entity/production-batch-process.entity';
 import { ProductionBatchEntity } from '../production-batch/entity/production-batch.entity';
 import { UserEntity } from '../user/entity/user.entity';
+import { PlantEntity } from '../plant/entity/plant.entity';
 import { MaterialRequestItemEntity } from './entity/material-request-item.entity';
 import { MaterialRequestEntity } from './entity/material-request.entity';
 import { MaterialRequestController } from './material-request.controller';
@@ -29,6 +30,7 @@ import { ProductionBatchModule } from '../production-batch/production-batch.modu
       CompanyEntity,
       ItemEntity,
       UserEntity,
+      PlantEntity,
     ]),
     ActivityLogModule,
     AttachmentMasterModule,

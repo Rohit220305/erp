@@ -13,8 +13,23 @@ export class MaterialRequestEntity {
   @Column({ type: 'int' })
   companyId: number;
 
-  @Column({ type: 'int' })
-  productionBatchId: number;
+  @Column({ type: 'int', nullable: true })
+  productionBatchId: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  productionOrderId: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  plantId: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  warehouseId: number | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  warehouseName: string | null;
+
+  @Column({ type: 'tinyint', default: 0 })
+  isGlobal: boolean;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   remark: string | null;

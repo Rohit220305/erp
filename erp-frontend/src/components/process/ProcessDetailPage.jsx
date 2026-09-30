@@ -198,9 +198,8 @@ export default function ProcessDetailPage({ data }) {
               </div>
 
               <div className="space-y-1">
-                <DetailRow label="Process Name" value={processName} />
                 <DetailRow label="Process Code" value={processCode} />
-                {companyName && (
+                {user?.isSuperAdmin && companyName && (
                   <DetailRow
                     label="Company"
                     value={

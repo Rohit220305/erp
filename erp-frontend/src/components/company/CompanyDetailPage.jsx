@@ -98,7 +98,7 @@ export default function CompanyDetailsPage({ company }) {
     }
     return <div className="p-6 text-gray-500">Company data could not be loaded.</div>;
   }
-
+  console.log("company", company);
   const {
     id,
     companyName,
@@ -152,7 +152,11 @@ export default function CompanyDetailsPage({ company }) {
                 <h2 className="font-semibold text-md text-gray-900">
                   {displayFormat(companyName)}
                 </h2>
-                {shortName && <p className="text-gray-500 text-sm mt-0.5">{displayFormat(shortName)}</p>}
+                {shortName && (
+                  <p className="text-gray-500 text-sm mt-0.5">
+                    {displayFormat(shortName)}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -169,15 +173,23 @@ export default function CompanyDetailsPage({ company }) {
             <div className="xl:col-span-1 bg-white rounded-xl hover:shadow-lg transition p-6">
               <h3 className="font-semibold text-gray-600 mb-5">Details</h3>
 
-              {companyName && <DetailRow label="Company Name" value={companyName} />}
+              {companyName && (
+                <DetailRow label="Company Name" value={companyName} />
+              )}
               {shortName && <DetailRow label="Short Name" value={shortName} />}
               {parentCompanyName && (
                 <DetailRow
                   label="Parent Company"
                   value={
                     <ModuleLink
-                      href={buildRoute("company", "detail", { id: parentCompanyId })}
-                      onClick={() => setSelectedCompanyForDetails({ companyId: parentCompanyId })}
+                      href={buildRoute("company", "detail", {
+                        id: parentCompanyId,
+                      })}
+                      onClick={() =>
+                        setSelectedCompanyForDetails({
+                          companyId: parentCompanyId,
+                        })
+                      }
                       className="text-[#1565c0] font-medium hover:underline cursor-pointer"
                     >
                       {parentCompanyName}
@@ -188,7 +200,10 @@ export default function CompanyDetailsPage({ company }) {
               {legalName && <DetailRow label="Legal Name" value={legalName} />}
               {website && <DetailRow label="Website" value={website} />}
               {registrationNumber && (
-                <DetailRow label="Registration Number" value={registrationNumber} />
+                <DetailRow
+                  label="Registration Number"
+                  value={registrationNumber}
+                />
               )}
               {taxNumber && <DetailRow label="Tax Number" value={taxNumber} />}
               {zipCode && <DetailRow label="Zip Code" value={zipCode} />}
@@ -223,7 +238,9 @@ export default function CompanyDetailsPage({ company }) {
               <div className="space-y-6">
                 {hasContactInfo && (
                   <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                    <h3 className="font-semibold text-gray-600 mb-5">Contact Info</h3>
+                    <h3 className="font-semibold text-gray-600 mb-5">
+                      Contact Info
+                    </h3>
                     {phone && (
                       <DetailRow
                         label="Phone"
@@ -232,20 +249,33 @@ export default function CompanyDetailsPage({ company }) {
                     )}
                     {email && <DetailRow label="Email" value={email} />}
                     {contactPersonName && (
-                      <DetailRow label="Contact Person" value={contactPersonName} />
+                      <DetailRow
+                        label="Contact Person"
+                        value={contactPersonName}
+                      />
                     )}
                   </div>
                 )}
 
                 {hasAddress && (
                   <div className="bg-white rounded-xl hover:shadow-lg transition p-6">
-                    <h3 className="font-semibold text-gray-600 mb-5">Company Address</h3>
+                    <h3 className="font-semibold text-gray-600 mb-5">
+                      Company Address
+                    </h3>
                     <div className="flex gap-3 mb-3">
-                      <Building2 size={18} className="text-[#1565c0] mt-1 shrink-0" />
-                      <div className="font-medium text-gray-900">{companyName}</div>
+                      <Building2
+                        size={18}
+                        className="text-[#1565c0] mt-1 shrink-0"
+                      />
+                      <div className="font-medium text-gray-900">
+                        {companyName}
+                      </div>
                     </div>
                     <div className="flex gap-3">
-                      <MapPin size={18} className="text-[#1565c0] mt-1 shrink-0" />
+                      <MapPin
+                        size={18}
+                        className="text-[#1565c0] mt-1 shrink-0"
+                      />
                       <div className="text-gray-700 leading-relaxed">
                         {[addressLine1, addressLine2, city, state, country]
                           .filter(Boolean)
@@ -265,7 +295,9 @@ export default function CompanyDetailsPage({ company }) {
                     name={addedByName}
                     date={addedDateFormatted}
                     userId={addedBy}
-                    onOpenUser={() => setSelectedUserForDetails({ userId: addedBy })}
+                    onOpenUser={() =>
+                      setSelectedUserForDetails({ userId: addedBy })
+                    }
                   />
                 )}
                 {hasUpdatedInfo && (
@@ -274,7 +306,9 @@ export default function CompanyDetailsPage({ company }) {
                     name={updatedByName}
                     date={updatedDateFormatted}
                     userId={updatedBy}
-                    onOpenUser={() => setSelectedUserForDetails({ userId: updatedBy })}
+                    onOpenUser={() =>
+                      setSelectedUserForDetails({ userId: updatedBy })
+                    }
                   />
                 )}
               </div>
@@ -288,7 +322,11 @@ export default function CompanyDetailsPage({ company }) {
         onClose={() => setSelectedCompanyForDetails(null)}
         moduleName="Company"
         mode="details"
-        data={selectedCompanyForDetails ? { id: selectedCompanyForDetails.companyId } : null}
+        data={
+          selectedCompanyForDetails
+            ? { id: selectedCompanyForDetails.companyId }
+            : null
+        }
       />
 
       <SideDrawer
@@ -296,7 +334,9 @@ export default function CompanyDetailsPage({ company }) {
         onClose={() => setSelectedUserForDetails(null)}
         moduleName="User"
         mode="details"
-        data={selectedUserForDetails ? { id: selectedUserForDetails.userId } : null}
+        data={
+          selectedUserForDetails ? { id: selectedUserForDetails.userId } : null
+        }
       />
     </div>
   );

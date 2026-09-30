@@ -9,6 +9,8 @@ import { getStatusDisplay } from "@/utils/status-formatter";
 import StatusBadge from "@/components/common/StatusBadge";
 import { formatQuantityWithUom } from "@/utils/number-formatter";
 import { displayFormat } from "@/utils/no-data-formatter";
+import { useAuth } from "@/context/AuthContext";
+import { CAPABILITIES } from "@/config/capabilities.config";
 
 const ProcessFlowchartContainer = dynamic(
   () =>
@@ -28,6 +30,8 @@ export default function ProductionBatchSummaryTab({
   handleOpenProcessDrawer,
   onOpenDrawer,
 }) {
+  const { can } = useAuth();
+  const canViewPlant = can(CAPABILITIES.PLANT?.VIEW || "PLANT_VIEW");
   const [isFlowchartModalOpen, setIsFlowchartModalOpen] = useState(false);
   const batchCost = batchData?.batchCost;
   console.log("batchCost", batchCost);
@@ -78,8 +82,26 @@ export default function ProductionBatchSummaryTab({
 
               <div>
                 <span className="text-gray-400 block mb-1">Customer Name</span>
+                {batchData?.customerId ? (
+                  <ModuleLink
+                    moduleName="CustomerCompany"
+                    id={batchData.customerId}
+                    className="text-[#1565c0] hover:underline"
+                    onOpenDrawer={onOpenDrawer}
+                  >
+                    {displayFormat(batchData.customerName)}
+                  </ModuleLink>
+                ) : (
+                  <span className="text-gray-900 text-[14px]">
+                    {displayFormat(batchData?.customerName)}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <span className="text-gray-400 block mb-1">Plant Name</span>
                 <span className="text-gray-900 text-[14px]">
-                  {displayFormat(batchData?.customerName)}
+                  {displayFormat(batchData?.plantName)}
                 </span>
               </div>
 
@@ -174,7 +196,7 @@ export default function ProductionBatchSummaryTab({
               </div>
 
               <div>
-                <span className="text-gray-400 block mb-1">MR Status</span>
+                <span className="text-gray-400 block mb-1">Status</span>
                 <StatusBadge status={batchData?.materialStatus} />
               </div>
             {batchData?.completedBy && (

@@ -405,6 +405,28 @@ export default function BomDetailPage({ data }) {
 
                     <div className="flex justify-between py-1 items-center">
                       <span className="text-gray-500 font-medium">
+                        Customer Name
+                      </span>
+                      {customerId ? (
+                        <ModuleLink
+                          moduleName="CustomerCompany"
+                          id={customerId}
+                          onClick={() =>
+                            handleOpenDrawer("CustomerCompany", customerId)
+                          }
+                          className="text-[#1565c0] font-semibold hover:underline text-right truncate max-w-[170px] cursor-pointer"
+                        >
+                          {displayFormat(customerName)}
+                        </ModuleLink>
+                      ) : (
+                        <span className="font-semibold text-gray-800 text-right truncate max-w-[170px]">
+                          {displayFormat(customerName)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex justify-between py-1 items-center">
+                      <span className="text-gray-500 font-medium">
                         Production Method
                       </span>
                       <span className="font-semibold text-gray-800 capitalize">

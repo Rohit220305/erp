@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { MaterialType } from '../enum/bom.enum';
 import { GeneralUtilities } from '../../package/utilities/general.utilities';
 
@@ -53,8 +54,11 @@ export interface CategorizedItemsResult {
   finishedProducts: CategorizedItemDetail[];
 }
 
-export class BomItemCategorizerUtility {
-  static categorizeItems(
+@Injectable()
+export class BomItemCategorizerService {
+  constructor(private readonly generalUtil: GeneralUtilities) {}
+
+  categorizeItems(
     items: BomProcessItemCategorizationInput[],
     packageQuantity: number = 1,
     currencySymbol: string = '',
@@ -62,7 +66,6 @@ export class BomItemCategorizerUtility {
     const rawMaterials: CategorizedItemDetail[] = [];
     const semiFinished: CategorizedItemDetail[] = [];
     const finishedProducts: CategorizedItemDetail[] = [];
-    const generalUtil = new GeneralUtilities();
 
     for (const item of items) {
       const isEntry = item.materialType === MaterialType.Entry || item.materialType === 'Entry';
@@ -91,12 +94,12 @@ export class BomItemCategorizerUtility {
         processName: item.processName || '',
         processCode: item.processCode || '',
         qtyPerUnit: numQtyPerUnit,
-        qtyPerUnitDisplay: generalUtil.formatQuantityWithUom(numQtyPerUnit, uomName),
+        qtyPerUnitDisplay: this.generalUtil.formatQuantityWithUom(numQtyPerUnit, uomName),
         unitPrice,
         uomName,
         unitPriceFormatted: (isEntry && !isInternal && unitPrice > 0) ? `${symbolPrefix}${Number(unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'NA',
         totalRequiredQty,
-        totalRequiredQtyDisplay: generalUtil.formatQuantityWithUom(totalRequiredQty, uomName),
+        totalRequiredQtyDisplay: this.generalUtil.formatQuantityWithUom(totalRequiredQty, uomName),
         totalCost,
         totalCostFormatted: isEntry && !isInternal && totalCost > 0 ? `${symbolPrefix}${Number(totalCost).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'NA',
         itemImageUrl: item.itemImageUrl || null,

@@ -37,6 +37,11 @@ import { ProductionBatchProcessTimelineEntity } from 'src/production-batch/entit
 
 import { MaterialRequestEntity } from 'src/material-request/entity/material-request.entity';
 import { MaterialRequestItemEntity } from 'src/material-request/entity/material-request-item.entity';
+import { ModSettingEntity } from "src/mod-setting/entity/mod-setting.entity";
+import { PlantEntity } from "src/plant/entity/plant.entity";
+import { CustomerCompanyEntity } from "src/customer-company/entity/customer-company.entity";
+import { AddressEntity } from "src/customer-company/entity/address.entity";
+import { CustomerCompanyUserEntity } from "src/customer-company/entity/customer-company-user.entity";
 dotenv.config();
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -84,6 +89,11 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
 
     MaterialRequestEntity,
     MaterialRequestItemEntity,
+    ModSettingEntity,
+    PlantEntity,
+    CustomerCompanyEntity,
+    AddressEntity,
+    CustomerCompanyUserEntity,
   ],
   synchronize: false,
   migrationsRun: false,

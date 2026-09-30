@@ -14,10 +14,16 @@ import StatusBadge from "@/components/common/StatusBadge";
 
 function DetailRow({ label, value, href, onClick, valueNode }) {
   return (
-    <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
+    <div className="flex items-start justify-between py-2.5 border-b border-gray-50 last:border-0">
       <span className="text-gray-500 font-medium">{label}</span>
-      {valueNode ? valueNode : href ? (
-        <ModuleLink href={href} onClick={onClick} className="text-[#1565c0] font-medium">
+      {valueNode ? (
+        valueNode
+      ) : href ? (
+        <ModuleLink
+          href={href}
+          onClick={onClick}
+          className="text-[#1565c0] font-medium"
+        >
           {displayFormat(value)}
         </ModuleLink>
       ) : (
@@ -93,9 +99,6 @@ export default function ItemUomDetailPage({ data }) {
                 <h2 className="font-semibold text-lg text-gray-900 leading-tight">
                   {data.uomName}
                 </h2>
-                <p className="text-gray-500 text-sm mt-0.5">
-                  {data.isoCode}
-                </p>
               </div>
             </div>
 
@@ -116,7 +119,7 @@ export default function ItemUomDetailPage({ data }) {
               <h3 className="font-semibold text-gray-900 mb-5 text-base border-b border-gray-100 pb-3">
                 Core Information
               </h3>
-              <DetailRow label="Item UOM Name" value={data.uomName} />
+              <DetailRow label="Name" value={data.uomName} />
               {user?.isSuperAdmin && (
                 <DetailRow
                 label="Company"
@@ -126,13 +129,10 @@ export default function ItemUomDetailPage({ data }) {
               />
               )}
               <DetailRow label="ISO Code" value={data.isoCode} />
-              <DetailRow label="Item UOM Code" value={data.itemUomCode} />
+              <DetailRow label="Code" value={data.itemUomCode} />
               <DetailRow label="Abbreviation" value={data.abbreviation} />
               <DetailRow label="Unit Type" value={data.unitType} />
-              <DetailRow
-                label="Status"
-                valueNode={<StatusBadge status={data.status} />}
-              />
+              
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 break-inside-avoid">

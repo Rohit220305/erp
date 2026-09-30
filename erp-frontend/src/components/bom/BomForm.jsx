@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useHeader } from "@/context/HeaderContext";
 import { listCompanies, getCompany } from "@/lib/api/company-api";
+import { listCustomerCompanies } from "@/lib/api/customer-company-api";
 import { listItems } from "@/lib/api/item-api";
 import { listProcessTemplates, getProcessTemplate } from "@/lib/api/process-template-api";
 import { createBom, updateBom } from "@/lib/api/bom-api";
@@ -47,6 +48,7 @@ export default function BomForm({
   const [itemOptions, setItemOptions] = useState([]);
   const [rawItemOptions, setRawItemOptions] = useState([]);
   const [processTemplateOptions, setProcessTemplateOptions] = useState([]);
+  const [customerOptions, setCustomerOptions] = useState([]);
   const [currencySymbol, setCurrencySymbol] = useState("$");
 
   const [formData, setFormData] = useState({ ...BASE_DEFAULTS, ...initialData });
@@ -109,6 +111,12 @@ export default function BomForm({
         const ptList = ptRes?.settings?.data?.list || ptRes?.data?.list || ptRes?.data || [];
         setProcessTemplateOptions(
           ptList.map((pt) => ({ label: pt.templateName, value: pt.id }))
+        );
+
+        const custRes = await listCustomerCompanies({ page: 1, limit: 1000 });
+        const custList = custRes?.settings?.data?.list || custRes?.data?.list || custRes?.data || [];
+        setCustomerOptions(
+          custList.map((c) => ({ label: c.name || c.customerName, value: c.id }))
         );
       } catch (err) {
         console.error("Failed to load select options", err);
@@ -413,6 +421,7 @@ export default function BomForm({
               companyOptions={companyOptions}
               itemOptions={itemOptions}
               processTemplateOptions={processTemplateOptions}
+              customerOptions={customerOptions}
               newFiles={newFiles}
               setNewFiles={setNewFiles}
               existingFiles={existingFiles}

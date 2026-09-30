@@ -31,10 +31,34 @@ export class CreateMaterialRequestDto {
   @Type(() => Number)
   companyId?: number;
 
+  @IsOptional()
   @IsInt()
   @Type(() => Number)
-  @IsNotEmpty()
-  productionBatchId: number;
+  productionBatchId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  productionOrderId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  plantId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  warehouseId?: number;
+
+  @IsOptional()
+  @IsString()
+  warehouseName?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  isGlobal?: number;
 
   @IsOptional()
   @IsString()
@@ -81,6 +105,13 @@ export class MaterialRequestSuggestDto {
   productionBatchId: number;
 }
 
+export class MaterialRequestDetailsDto {
+  @IsInt()
+  @Transform(({ value }) => Number(value))
+  @IsNotEmpty()
+  id: number;
+}
+
 export class MaterialRequestListDto {
   @IsOptional()
   @Type(() => Number)
@@ -100,6 +131,16 @@ export class MaterialRequestListDto {
   @Type(() => Number)
   @IsInt()
   productionBatchId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  plantId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  isGlobal?: number;
 
   @IsOptional()
   @IsEnum(MaterialRequestStatus)

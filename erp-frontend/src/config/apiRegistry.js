@@ -16,6 +16,8 @@ import { getProcessTemplate } from "@/lib/api/process-template-api";
 import { getBom } from "@/lib/api/bom-api";
 import { getProductionOrder } from "@/lib/api/production-order-api";
 import { getProductionBatchDetails } from "@/lib/api/production-batch-api";
+import { getMaterialRequest } from "@/lib/api/material-request-api";
+import { getCustomerCompany } from "@/lib/api/customer-company-api";
 
 export const apiRegistry = {
   WorkCentreCategory: { fetchItem: getWorkCentreCategory }, 
@@ -36,5 +38,8 @@ export const apiRegistry = {
   "Bom": { fetchItem: getBom },
   "ProductionOrder": { fetchItem: getProductionOrder },
   "ProductionBatch": { fetchItem: getProductionBatchDetails },
+  "MaterialRequest": { fetchItem: getMaterialRequest },
+  "CustomerCompany": { fetchItem: getCustomerCompany },
 };
+
 

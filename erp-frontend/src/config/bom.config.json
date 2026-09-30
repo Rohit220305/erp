@@ -11,7 +11,7 @@
   },
   "columns": [
     {
-      "label": "BoM Name",
+      "label": "BOM Name",
       "key": "bomName",
       "type": "link",
       "linkPath": "/bom/{id}",
@@ -20,7 +20,7 @@
       "width": "200px"
     },
     {
-      "label": "BoM Code",
+      "label": "BOM Code",
       "key": "bomCode",
       "type": "text",
       "searchable": true,

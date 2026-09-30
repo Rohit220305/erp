@@ -62,7 +62,7 @@ function UserInfoCard({ title, name, date, href, onClick }) {
 export default function StorageDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null);
@@ -182,12 +182,14 @@ export default function StorageDetailPage({ data }) {
               <div className="space-y-1">
                 <DetailRow label="Storage Name" value={storageName} />
                 <DetailRow label="Storage Code" value={storageCode} />
-                <DetailRow
-                  label="Company"
-                  value={companyName}
-                  href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
-                  onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
-                />
+                {user?.isSuperAdmin && (
+                  <DetailRow
+                    label="Company"
+                    value={companyName}
+                    href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
+                    onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
+                  />
+                )}
                 <DetailRow 
                   label="Status" 
                   valueNode={<StatusBadge status={status} />} 

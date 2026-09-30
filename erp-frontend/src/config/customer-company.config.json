@@ -1,0 +1,159 @@
+{
+  "moduleName": "CustomerCompany",
+  "parentModule": "Sales",
+  "title": "Customer",
+  "permissions": {
+    "list": "CUSTOMER_COMPANY_LIST",
+    "create": "CUSTOMER_COMPANY_CREATE",
+    "view": "CUSTOMER_COMPANY_VIEW",
+    "update": "CUSTOMER_COMPANY_UPDATE",
+    "delete": "CUSTOMER_COMPANY_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Logo",
+      "key": "logoUrl",
+      "type": "image",
+      "searchable": false,
+      "sortable": false,
+      "width": "80px"
+    },
+    {
+      "label": "Customer Name",
+      "key": "name",
+      "type": "link",
+      "linkPath": "/customer-company/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "220px"
+    },
+    {
+      "label": "Customer Code",
+      "key": "code",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Email",
+      "key": "email",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px"
+    },
+    {
+      "label": "Company",
+      "key": "companyName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "200px",
+      "showForSuperAdminOnly": true
+    },
+    {
+      "label": "Added Date",
+      "key": "addedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "150px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "110px",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Customer",
+        "type": "redirect",
+        "path": "/customer-company/add",
+        "permission": "CUSTOMER_COMPANY_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editRedirect",
+        "path": "/customer-company/edit/{id}",
+        "icon": "Edit",
+        "permission": "CUSTOMER_COMPANY_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "CUSTOMER_COMPANY_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "sidebarFields": [
+    { "label": "Customer Name", "value": "name", "type": "text" },
+    { "label": "Customer Code", "value": "code", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "searchFields": [
+    { "label": "Customer Name", "value": "name", "type": "text" },
+    { "label": "Customer Code", "value": "code", "type": "text" },
+    {
+      "label": "Company",
+      "value": "companyId",
+      "type": "select",
+      "isMultiSelect": true,
+      "showForSuperAdminOnly": true,
+      "dynamicOptions": "companies",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        { "label": "Active", "value": "Active" },
+        { "label": "Inactive", "value": "Inactive" }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "name": "",
+    "code": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    { "label": "Active", "value": "Active" },
+    { "label": "Inactive", "value": "Inactive" }
+  ]
+}

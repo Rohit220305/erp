@@ -141,6 +141,7 @@ export default function BomStep1Details({
   companyOptions = [],
   itemOptions = [],
   processTemplateOptions = [],
+  customerOptions = [],
   newFiles = [],
   setNewFiles,
   existingFiles = [],
@@ -378,6 +379,34 @@ export default function BomStep1Details({
           {errors?.processTemplateId && (
             <p className="mt-1 text-xs text-red-500">
               {errors.processTemplateId}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 tracking-wide mb-2">
+            Customer Name
+          </label>
+          <Select
+            instanceId="select-customer"
+            value={
+              customerOptions?.find(
+                (c) => Number(c.value) === Number(formData.customerId),
+              ) || null
+            }
+            onChange={(opt) =>
+              handleChange("customerId", opt ? opt.value : "")
+            }
+            options={customerOptions}
+            isClearable={true}
+            isSearchable={true}
+            placeholder="Select Customer"
+            classNamePrefix="react-select"
+            styles={customSelectStyles(errors?.customerId)}
+          />
+          {errors?.customerId && (
+            <p className="mt-1 text-xs text-red-500">
+              {errors.customerId}
             </p>
           )}
         </div>

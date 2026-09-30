@@ -14,6 +14,7 @@ import { AttachmentMasterModule } from '../attachment-master/attachment-master.m
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { GeneralUtilities } from '../package/utilities/general.utilities';
 import { CommonFileService } from '../package/service/common-file.service';
+import { BomItemCategorizerService } from '../bom/utility/bom-item-categorizer.utility';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { CommonFileService } from '../package/service/common-file.service';
     ProductionOrderListService,
     GeneralUtilities,
     CommonFileService,
+    BomItemCategorizerService,
   ],
   exports: [ProductionOrderService, ProductionOrderListService],
 })

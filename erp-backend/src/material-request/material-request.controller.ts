@@ -10,6 +10,7 @@ import {
   CancelMaterialRequestDto,
   CreateMaterialRequestDto,
   MarkMaterialRequestDeliveredDto,
+  MaterialRequestDetailsDto,
   MaterialRequestListDto,
   MaterialRequestSuggestDto,
 } from './dto/material-request.dto';
@@ -23,6 +24,15 @@ export class MaterialRequestController {
     private readonly materialRequestListService: MaterialRequestListService,
     private readonly commonFileService: CommonFileService,
   ) {}
+
+  @Get('get-material-request')
+  @RequirePermission(CAPABILITIES.MATERIAL_REQUEST.VIEW)
+  async getMaterialRequest(
+    @AppRequest() req: IAppRequest,
+    @Query() query: MaterialRequestDetailsDto,
+  ) {
+    return await this.materialRequestListService.startMaterialRequestDetails(req, query);
+  }
 
   @Get('suggest-material-request')
   @RequirePermission(CAPABILITIES.MATERIAL_REQUEST.VIEW)

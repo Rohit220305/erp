@@ -50,14 +50,11 @@ export class ProductionOrderEntity extends AbstractBaseEntity {
   @Column({ type: 'text', nullable: true })
   remark: string | null;
 
-  @Column({ type: 'int', nullable: true })
-  plantId: number | null;
+  @Column({ type: 'int' })
+  plantId: number;
 
   @Column({ type: 'int', nullable: true })
   customerId: number | null;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  customerName: string | null;
 
   @Column({
     type: 'enum',

@@ -10,7 +10,7 @@ import { ProductionBatchItemEntity } from '../../production-batch/entity/product
 import { ProductionBatchProcessEntity } from '../../production-batch/entity/production-batch-process.entity';
 import { ProductionBatchEntity } from '../../production-batch/entity/production-batch.entity';
 import { UserEntity } from '../../user/entity/user.entity';
-import { MaterialRequestListDto, MaterialRequestSuggestDto } from '../dto/material-request.dto';
+import { MaterialRequestDetailsDto, MaterialRequestListDto, MaterialRequestSuggestDto } from '../dto/material-request.dto';
 import { MaterialRequestItemEntity } from '../entity/material-request-item.entity';
 import { MaterialRequestEntity } from '../entity/material-request.entity';
 import { MaterialType } from '../../production-batch/enum/production-batch.enum';
@@ -200,7 +200,7 @@ export class MaterialRequestListService {
 
       const suggestions = Array.from(consolidatedMap.values()).map((item) => {
         const shortage = Math.max(0, item.requiredQty - item.availableStock);
-        const suggestedQty = Math.max(0, item.requiredQty - item.availableStock );
+        const suggestedQty = Math.max(0, item.requiredQty - item.availableStock);
         return {
           ...item,
           shortage,
@@ -217,6 +217,149 @@ export class MaterialRequestListService {
         data: {
           batchData,
           suggestions,
+        },
+      };
+    } catch (err: any) {
+      if (err instanceof ForbiddenException) throw err;
+      return_data = { success: 0, message: err.message };
+    }
+    return return_data;
+  }
+
+  async startMaterialRequestDetails(req: IAppRequest, query: MaterialRequestDetailsDto) {
+    const response = await this.getMaterialRequestDetails(req, query);
+    if (response.success === 1) {
+      return await this.finishSuccess(response);
+    }
+    return await this.finishFailure(response);
+  }
+
+  async getMaterialRequestDetails(req: IAppRequest, query: MaterialRequestDetailsDto) {
+    let return_data: any = {};
+    try {
+      if (!query.id) {
+        throw new Error('Material Request ID is required');
+      }
+
+      const qb = this.materialRequestRepo
+        .createQueryBuilder('materialRequest')
+        .leftJoin('users', 'u', 'u.id = materialRequest.requestedBy')
+        .leftJoin('production_batch', 'pb', 'pb.id = materialRequest.productionBatchId')
+        .leftJoin('production_order', 'po', 'po.id = materialRequest.productionOrderId')
+        .leftJoin('plant_master', 'plant', 'plant.id = materialRequest.plantId')
+        .select([
+          'materialRequest.id AS id',
+          'materialRequest.companyId AS companyId',
+          'materialRequest.productionBatchId AS productionBatchId',
+          'pb.batchCode AS batchCode',
+          'materialRequest.productionOrderId AS productionOrderId',
+          'po.productionOrderCode AS productionOrderCode',
+          'materialRequest.plantId AS plantId',
+          'plant.name AS plantName',
+          'plant.code AS plantCode',
+          'materialRequest.warehouseId AS warehouseId',
+          'materialRequest.warehouseName AS warehouseName',
+          'materialRequest.isGlobal AS isGlobal',
+          'materialRequest.code AS code',
+          'materialRequest.remark AS remark',
+          'materialRequest.status AS status',
+          'materialRequest.requestedBy AS requestedBy',
+          'materialRequest.requestedDate AS requestedDate',
+          'materialRequest.deliveredDate AS deliveredDate',
+          'CONCAT(u.firstName, " ", u.lastName) AS requestedByName',
+        ])
+        .where('materialRequest.id = :id', { id: Number(query.id) })
+        .andWhere('materialRequest.sysRecDeleted = :sysRecDeleted', { sysRecDeleted: false });
+
+      const materialRequest = await qb.getRawOne();
+      if (!materialRequest) {
+        throw new Error('Material Request not found');
+      }
+
+      this.general.assertCompanyAccess(req, materialRequest.companyId, 'view', 'Material Request');
+
+      materialRequest.requestedDateFormatted = await this.general.dateFormat(materialRequest.requestedDate);
+      if (materialRequest.deliveredDate) {
+        materialRequest.deliveredDateFormatted = await this.general.dateFormat(materialRequest.deliveredDate);
+      }
+
+      const materialRequestItems = await this.materialRequestItemRepo
+        .createQueryBuilder('mri')
+        .leftJoin(ItemEntity, 'item', 'item.id = mri.itemId')
+        .leftJoin(ItemUomEntity, 'uom', 'uom.id = item.itemUomId')
+        .select([
+          'mri.id AS id',
+          'mri.itemId AS itemId',
+          'mri.requestedQty AS requestedQty',
+          'mri.receivedQty AS receivedQty',
+          'item.itemName AS itemName',
+          'item.itemCode AS itemCode',
+          'uom.uomName AS uomName',
+        ])
+        .where('mri.materialRequestId = :materialRequestId', { materialRequestId: materialRequest.id })
+        .getRawMany();
+
+      const itemIds = Array.from(new Set(materialRequestItems.map((i) => Number(i.itemId)).filter(Boolean)));
+      const itemImageMap = new Map<number, string>();
+      if (itemIds.length > 0) {
+        const itemImages = await this.materialRequestItemRepo.manager
+          .createQueryBuilder()
+          .select(['img.itemId AS itemId', 'img.fileName AS fileName'])
+          .from('item_images', 'img')
+          .where('img.itemId IN (:...itemIds)', { itemIds })
+          .andWhere('img.sysRecDeleted = 0')
+          .orderBy('img.isPrimary', 'DESC')
+          .addOrderBy('img.id', 'ASC')
+          .getRawMany();
+
+        await Promise.all(
+          itemImages.map(async (img) => {
+            const id = Number(img.itemId);
+            if (!itemImageMap.has(id)) {
+              try {
+                const url = await this.general.generateUrl('item', `${id}`, img.fileName);
+                itemImageMap.set(id, url);
+              } catch (e) {
+                itemImageMap.set(id, '');
+              }
+            }
+          }),
+        );
+      }
+
+      const attachments = await this.attachmentMasterService.getAttachmentsByEntity(
+        materialRequest.companyId,
+        AttachmentModule.MATERIAL_REQUEST,
+        materialRequest.id,
+      );
+
+      const items = materialRequestItems.map((i) => {
+        const reqQty = Number(i.requestedQty) || 0;
+        const recQty = Number(i.receivedQty) || 0;
+        return {
+          ...i,
+          requestedQty: reqQty,
+          receivedQty: recQty,
+          requestedQtyFormatted: this.general.formatQuantityWithUom(reqQty, i.uomName),
+          receivedQtyFormatted: this.general.formatQuantityWithUom(recQty, i.uomName),
+          itemImageUrl: itemImageMap.get(Number(i.itemId)) || null,
+        };
+      });
+
+      const requestedQtySum = items.reduce((acc, i) => acc + i.requestedQty, 0);
+      const receivedQtySum = items.reduce((acc, i) => acc + i.receivedQty, 0);
+
+      return_data = {
+        success: 1,
+        message: 'Material request details fetched successfully.',
+        data: {
+          ...materialRequest,
+          requestedQtySum,
+          requestedQtySumFormatted: this.general.formatNumber(requestedQtySum),
+          receivedQtySum,
+          receivedQtySumFormatted: this.general.formatNumber(receivedQtySum),
+          items,
+          attachments,
         },
       };
     } catch (err: any) {
@@ -243,10 +386,22 @@ export class MaterialRequestListService {
       const qb = this.materialRequestRepo
         .createQueryBuilder('materialRequest')
         .leftJoin('users', 'u', 'u.id = materialRequest.requestedBy')
+        .leftJoin('production_batch', 'pb', 'pb.id = materialRequest.productionBatchId')
+        .leftJoin('production_order', 'po', 'po.id = materialRequest.productionOrderId')
+        .leftJoin('plant_master', 'plant', 'plant.id = materialRequest.plantId')
         .select([
           'materialRequest.id AS id',
           'materialRequest.companyId AS companyId',
           'materialRequest.productionBatchId AS productionBatchId',
+          'pb.batchCode AS batchCode',
+          'materialRequest.productionOrderId AS productionOrderId',
+          'po.productionOrderCode AS productionOrderCode',
+          'materialRequest.plantId AS plantId',
+          'plant.name AS plantName',
+          'plant.code AS plantCode',
+          'materialRequest.warehouseId AS warehouseId',
+          'materialRequest.warehouseName AS warehouseName',
+          'materialRequest.isGlobal AS isGlobal',
           'materialRequest.code AS code',
           'materialRequest.remark AS remark',
           'materialRequest.status AS status',
@@ -263,15 +418,20 @@ export class MaterialRequestListService {
       if (query.productionBatchId) {
         qb.andWhere('materialRequest.productionBatchId = :pbId', { pbId: Number(query.productionBatchId) });
       }
+      if (query.plantId) {
+        qb.andWhere('materialRequest.plantId = :plantId', { plantId: Number(query.plantId) });
+      }
+      if (query.isGlobal !== undefined) {
+        qb.andWhere('materialRequest.isGlobal = :isGlobal', { isGlobal: Number(query.isGlobal) });
+      }
       if (query.status) {
         qb.andWhere('materialRequest.status = :status', { status: query.status });
       }
       if (query.search) {
-        qb.andWhere('(materialRequest.code LIKE :search OR materialRequest.remark LIKE :search)', { search: `%${query.search}%` });
+        qb.andWhere('(materialRequest.code LIKE :search OR materialRequest.remark LIKE :search OR plant.name LIKE :search OR pb.batchCode LIKE :search)', { search: `%${query.search}%` });
       }
 
       qb.orderBy('materialRequest.id', 'DESC');
-
 
       const page = Number(query.page) || 1;
       const limit = Number(query.limit) || 10;
@@ -289,6 +449,7 @@ export class MaterialRequestListService {
               'mri.id AS id',
               'mri.itemId AS itemId',
               'mri.requestedQty AS requestedQty',
+              'mri.receivedQty AS receivedQty',
               'item.itemName AS itemName',
               'item.itemCode AS itemCode',
             ])
@@ -300,21 +461,22 @@ export class MaterialRequestListService {
             AttachmentModule.MATERIAL_REQUEST,
             materialRequest.id,
           );
-
+          
           return {
             ...materialRequest,
             requestedQtySum: materialRequestItems.reduce((acc, i) => acc + (Number(i.requestedQty) || 0), 0),
             requestedQtySumFormatted: this.general.formatNumber(materialRequestItems.reduce((acc, i) => acc + (Number(i.requestedQty) || 0), 0)),
+            requestedDateFormatted: await this.general.dateFormat(materialRequest.requestedDate),
             items: materialRequestItems.map((i) => ({
               ...i,
               requestedQty: Number(i.requestedQty) || 0,
+              receivedQty: Number(i.receivedQty) || 0,
               requestedQtyFormatted: this.general.formatNumber(i.requestedQty || 0),
             })),
             attachments,
           };
         }),
       );
-
       return_data = {
         success: 1,
         message: 'Material requests fetched successfully.',

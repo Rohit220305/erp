@@ -260,7 +260,7 @@ export default function ProductionBatchForm({ orderId }) {
 
               <div>
                 <span className="block text-gray-500 text-sm mb-1">
-                  BoM
+                  BOM
                 </span>
                 {batchData.bomId ? (
                   <ModuleLink

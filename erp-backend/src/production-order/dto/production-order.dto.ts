@@ -45,19 +45,15 @@ export class ProductionOrderAddDto {
   @IsString()
   remark?: string;
 
-  @IsOptional()
   @IsInt()
   @Type(() => Number)
-  plantId?: number;
+  @IsNotEmpty()
+  plantId: number;
 
   @IsOptional()
   @IsInt()
   @Type(() => Number)
   customerId?: number;
-
-  @IsOptional()
-  @IsString()
-  customerName?: string;
 
   @IsOptional()
   @IsEnum(ProductionOrderStatus)

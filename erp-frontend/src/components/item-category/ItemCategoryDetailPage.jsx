@@ -15,14 +15,22 @@ import StatusBadge from "@/components/common/StatusBadge";
 
 const DetailRow = ({ label, value, href, onClick, valueClassName = "", valueNode }) => {
   return (
-    <div className="grid grid-cols-[140px_1fr] items-center py-2.5 border-b border-gray-50 last:border-0">
+    <div className="flex items-start justify-between py-2.5 border-b border-gray-50 last:border-0">
       <span className="text-gray-500 font-medium">{label}</span>
-      {valueNode ? valueNode : href ? (
-        <ModuleLink href={href} onClick={onClick} className="text-[#1565c0] font-medium text-sm">
+      {valueNode ? (
+        valueNode
+      ) : href ? (
+        <ModuleLink
+          href={href}
+          onClick={onClick}
+          className="text-[#1565c0] font-medium text-sm"
+        >
           {displayFormat(value)}
         </ModuleLink>
       ) : (
-        <span className={`text-gray-900 ${valueClassName}`}>{displayFormat(value)}</span>
+        <span className={`text-gray-900 ${valueClassName}`}>
+          {displayFormat(value)}
+        </span>
       )}
     </div>
   );
@@ -56,8 +64,8 @@ export default function ItemCategoryDetailPage({ data }) {
       navbar: {
         title: "Details",
         breadcrumbs: [
-          { label: "Home", href: buildRoute("home", "list") },
-          { label: "Item Category Master", href: buildRoute("item-category", "list") },
+          { label: "Master", href: buildRoute("home", "list") },
+          { label: "Item Category", href: buildRoute("item-category", "list") },
         ],
         actionButton: can(CAPABILITIES.ITEM_CATEGORY?.UPDATE || "ITEM_CATEGORY_UPDATE")
           ? {

@@ -1,0 +1,252 @@
+{
+  "moduleName": "MaterialRequest",
+  "parentModule": "Production",
+  "title": "Material Requests",
+  "permissions": {
+    "list": "MATERIAL_REQUEST_LIST",
+    "create": "MATERIAL_REQUEST_CREATE",
+    "view": "MATERIAL_REQUEST_VIEW",
+    "update": "MATERIAL_REQUEST_UPDATE",
+    "delete": "MATERIAL_REQUEST_DELETE"
+  },
+  "columns": [
+    {
+      "label": "Material Transfer Request",
+      "key": "code",
+      "type": "link",
+      "linkPath": "/material-request/{id}",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Production Request",
+      "key": "productionOrderCode",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },  
+    {
+      "label": "Plant",
+      "key": "plantName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Warehouse",
+      "key": "warehouseName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "180px"
+    },
+    {
+      "label": "Requested By",
+      "key": "requestedByName",
+      "type": "text",
+      "searchable": true,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Requested Date",
+      "key": "requestedDateFormatted",
+      "type": "text",
+      "searchable": false,
+      "sortable": true,
+      "width": "160px"
+    },
+    {
+      "label": "Status",
+      "key": "status",
+      "type": "statusBadge",
+      "searchable": true,
+      "sortable": true,
+      "width": "130px",
+      "options": [
+        {
+          "label": "Pending",
+          "value": "Pending"
+        },
+        {
+          "label": "Delivered",
+          "value": "Delivered"
+        },
+        {
+          "label": "Cancelled",
+          "value": "Cancelled"
+        }
+      ]
+    }
+  ],
+  "actions": {
+    "header": [
+      {
+        "label": "Add Material Request",
+        "type": "redirect",
+        "path": "/material-request/add",
+        "permission": "MATERIAL_REQUEST_CREATE"
+      }
+    ],
+    "row": [
+      {
+        "label": "Edit",
+        "type": "editRedirect",
+        "path": "/material-request/edit/{id}",
+        "icon": "Edit",
+        "permission": "MATERIAL_REQUEST_UPDATE"
+      },
+      {
+        "label": "Delete",
+        "type": "deleteModal",
+        "icon": "Trash2",
+        "permission": "MATERIAL_REQUEST_DELETE",
+        "danger": true
+      },
+      {
+        "label": "View Details",
+        "type": "viewDrawer"
+      }
+    ]
+  },
+  "listCard": {
+    "primary": {
+      "title": "code",
+      "subtitle": "plantName"
+    },
+    "columns": [
+      {
+        "label": "Warehouse",
+        "key": "warehouseName"
+      },
+      {
+        "label": "Requested By",
+        "key": "requestedByName"
+      },
+      {
+        "label": "Date",
+        "key": "requestedDateFormatted"
+      },
+      {
+        "label": "Status",
+        "key": "status"
+      }
+    ],
+    "expanded": [
+      {
+        "label": "Total Quantity",
+        "key": "requestedQtySumFormatted"
+      },
+      {
+        "label": "Remarks",
+        "key": "remark"
+      }
+    ]
+  },
+  "gridCard": {
+    "header": {
+      "title": "code",
+      "subtitle": "plantName",
+      "badge": "status"
+    },
+    "details": [
+      {
+        "label": "Warehouse",
+        "key": "warehouseName"
+      },
+      {
+        "label": "Requested By",
+        "key": "requestedByName"
+      },
+      {
+        "label": "Quantity",
+        "key": "requestedQtySumFormatted"
+      }
+    ],
+    "footer": {
+      "date": "requestedDateFormatted"
+    }
+  },
+  "sidebarFields": [
+    
+    {
+      "label": "Plant",
+      "value": "plantId",
+      "type": "select",
+      "isMultiSelect": true,
+      "dynamicOptions": "plants",
+      "options": []
+    },
+    
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Pending",
+          "value": "Pending"
+        },
+        {
+          "label": "Delivered",
+          "value": "Delivered"
+        },
+        {
+          "label": "Cancelled",
+          "value": "Cancelled"
+        }
+      ]
+    }
+  ],
+  "searchFields": [
+    
+    {
+      "label": "Plant",
+      "value": "plantId",
+      "type": "select",
+      "isMultiSelect": true,
+      "dynamicOptions": "plants",
+      "options": []
+    },
+    {
+      "label": "Status",
+      "value": "status",
+      "type": "select",
+      "options": [
+        {
+          "label": "Pending",
+          "value": "Pending"
+        },
+        {
+          "label": "Delivered",
+          "value": "Delivered"
+        },
+        {
+          "label": "Cancelled",
+          "value": "Cancelled"
+        }
+      ]
+    }
+  ],
+  "defaultFilters": {
+    "plantId": "",
+    "status": ""
+  },
+  "sidebarStatuses": [
+    {
+      "label": "Pending",
+      "value": "Pending"
+    },
+    {
+      "label": "Delivered",
+      "value": "Delivered"
+    },
+    {
+      "label": "Cancelled",
+      "value": "Cancelled"
+    }
+  ]
+}

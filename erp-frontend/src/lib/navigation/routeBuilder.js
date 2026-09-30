@@ -23,6 +23,9 @@ const ROUTES = {
   bom: { list: "/bom", add: "/bom/add", edit: "/bom/edit/{id}", detail: "/bom/{id}" },
   "production-order": { list: "/production-order", add: "/production-order/add", edit: "/production-order/edit/{id}", detail: "/production-order/{id}" },
   "production-batch": { list: "/production-batch", add: "/production-batch/create/{orderId}", edit: "/production-batch/edit/{id}", detail: "/production-batch/{id}", materialRequestCreate: "/production-batch/{id}/material-request/create" },
+  "material-request": { list: "/material-request", add: "/material-request/add", edit: "/material-request/edit/{id}", detail: "/material-request/{id}" },
+  "plant": { list: "/plant", add: "/plant/add", edit: "/plant/edit/{id}", detail: "/plant/{id}" },
+  "customer-company": { list: "/customer-company", add: "/customer-company/add", edit: "/customer-company/edit/{id}", detail: "/customer-company/{id}" },
 };
 
 
@@ -37,6 +40,8 @@ const ALIASES = {
   workcentre: "work-centre",
   productionorder: "production-order",
   productionbatch: "production-batch",
+  materialrequest: "material-request",
+  plant: "plant",
 };
 
 function resolveModuleName(name) {
@@ -73,7 +78,7 @@ export function buildRoute(moduleName, action = "list", params = {}) {
     }
     usedParams.add(paramKey);
     return encodeURIComponent(params[paramKey]);
-  }); 
+  });
 
   const queryParts = [];
   for (const [k, v] of Object.entries(params)) {

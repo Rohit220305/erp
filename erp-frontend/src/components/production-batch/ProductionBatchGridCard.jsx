@@ -68,6 +68,8 @@ export default function ProductionBatchGridCard({
     item.status !== "Cancelled" &&
     can(CAPABILITIES.MATERIAL_REQUEST?.CREATE || "MATERIAL_REQUEST_CREATE");
 
+  const canViewPlant = can(CAPABILITIES.PLANT?.VIEW || "PLANT_VIEW");
+
   const batchId = item.id || item.productionBatchId || item.batchId;
   const materialRequestUrl = batchId
     ? buildRoute("production-batch", "materialRequestCreate", { id: batchId })
@@ -104,7 +106,7 @@ export default function ProductionBatchGridCard({
       <div className="flex items-center justify-between pb-3 border-b border-gray-100 relative">
         <div>
           <span className="text-[11px] font-semibold text-gray-400 block mb-0.5">
-            MR Status
+            Status
           </span>
           <StatusBadge status={item.materialStatus || "Yet to Request"} />
         </div>
@@ -176,6 +178,22 @@ export default function ProductionBatchGridCard({
       {/* 3. Details Section */}
       <div className="space-y-2">
         <div>
+          <span className="text-[11px] font-semibold text-gray-400 tracking-wider block mb-0.5">
+            Customer Name
+          </span>
+          <span className="text-xs font-bold text-gray-800 block truncate w-full" title={item.customerName}>
+            {displayFormat(item.customerName)}
+          </span>
+        </div>
+        <div>
+          <span className="text-[11px] font-semibold text-gray-400 tracking-wider block mb-0.5">
+            Plant Name
+          </span>
+          <span className="text-xs font-bold text-gray-800 block truncate w-full" title={item.plantName}>
+            {displayFormat(item.plantName)}
+          </span>
+        </div>
+        <div className="pt-1">
           <span className="text-[11px] font-semibold text-gray-400 tracking-wider block mb-0.5">
             BOM
           </span>

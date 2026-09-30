@@ -63,7 +63,7 @@ function UserInfoCard({ title, name, date, href, onClick }) {
 export default function BrandDetailPage({ data }) {
   const { setConfig, resetConfig } = useHeader();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [selectedCompanyForDetails, setSelectedCompanyForDetails] = useState(null);
   const [selectedManufacturerForDetails, setSelectedManufacturerForDetails] = useState(null);
@@ -185,12 +185,14 @@ export default function BrandDetailPage({ data }) {
               <div className="space-y-1">
                 <DetailRow label="Brand Name" value={brandName} />
                 <DetailRow label="Brand Code" value={brandCode} />
-                <DetailRow
-                  label="Company"
-                  value={companyName}
-                  href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
-                  onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
-                />
+                {user?.isSuperAdmin && (
+                  <DetailRow
+                    label="Company"
+                    value={companyName}
+                    href={canViewCompany && data?.companyId ? buildRoute("company", "detail", { id: data.companyId }) : null}
+                    onClick={canViewCompany && data?.companyId ? () => setSelectedCompanyForDetails({ companyId: data.companyId }) : null}
+                  />
+                )}
                 <DetailRow
                   label="Manufacturer"
                   value={manufacturerName}

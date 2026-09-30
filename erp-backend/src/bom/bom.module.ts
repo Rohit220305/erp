@@ -12,6 +12,7 @@ import { BomListService } from './service/bom.list.service';
 import { AttachmentMasterModule } from '../attachment-master/attachment-master.module';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { GeneralUtilities } from 'src/package/utilities/general.utilities';
+import { BomItemCategorizerService } from './utility/bom-item-categorizer.utility';
 import { CommonFileService } from 'src/package/service/common-file.service';
 
 @Module({
@@ -28,8 +29,8 @@ import { CommonFileService } from 'src/package/service/common-file.service';
     ActivityLogModule,
   ],
   controllers: [BomController],
-  providers: [BomService, BomListService, GeneralUtilities, CommonFileService],
-  exports: [BomService, BomListService],
+  providers: [BomService, BomListService, GeneralUtilities, CommonFileService, BomItemCategorizerService],
+  exports: [BomService, BomListService, BomItemCategorizerService],
 })
 export class BomModule {}
 

@@ -108,7 +108,7 @@
   "actions": {
     "header": [
       {
-        "label": "Add Order",
+        "label": "Add Production Order",
         "type": "redirect",
         "path": "/production-order/add",
         "permission": "PRODUCTION_ORDER_CREATE"

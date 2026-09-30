@@ -142,9 +142,34 @@ export default function ProductionMaterialRequestForm({
     };
   }, [isUploading, uploadProgress, pendingFiles]);
 
+  const ALLOWED_EXTENSIONS = [
+    "pdf",
+    "doc",
+    "docx",
+    "xls",
+    "xlsx",
+    "png",
+    "jpg",
+    "jpeg",
+    "webp",
+  ];
+
   const handleFilesAdded = (filesList) => {
     if (!filesList || filesList.length === 0) return;
-    setPendingFiles(Array.from(filesList));
+    const filesArray = Array.from(filesList);
+
+    const validFiles = filesArray.filter((file) => {
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      return ALLOWED_EXTENSIONS.includes(ext);
+    });
+
+    if (validFiles.length < filesArray.length) {
+      toast.error("Invalid file format. Allowed: pdf, doc, docx, xls, xlsx, png, jpg, jpeg, webp");
+    }
+
+    if (validFiles.length === 0) return;
+
+    setPendingFiles(validFiles);
     setIsUploading(true);
     setUploadProgress(0);
   };
@@ -302,19 +327,32 @@ export default function ProductionMaterialRequestForm({
     const { payloadItems } = confirmModal.data;
     setConfirmModal({ isOpen: false, type: "", data: null });
     setIsSubmitting(true);
+    
     try {
-      const formData = new FormData();
-      formData.append("productionBatchId", String(batchData.id));
-      if (remark) formData.append("remark", remark);
-      formData.append("items", JSON.stringify(payloadItems));
+      let payload;
 
       if (attachments && attachments.length > 0) {
+        payload = new FormData();
+        payload.append("productionBatchId", String(batchData.id));
+        if (remark) payload.append("remark", remark);
+        
+        payload.append("items", JSON.stringify(payloadItems));
+        
         attachments.forEach((file) => {
-          formData.append("attachments", file);
+          payload.append("attachments", file);
         });
+      } else {
+        payload = {
+          productionBatchId: batchData.id,
+          items: payloadItems,
+          productionOrderId: batchData.productionOrderId || null,
+        };
+        if (remark) payload.remark = remark;
       }
 
-      const res = await createMaterialRequest(formData);
+      console.log("Submitting Material Request with payload:", payload);
+
+      const res = await createMaterialRequest(payload);
       const success = res?.success === 1 || res?.settings?.success === 1;
 
       if (success) {
@@ -492,7 +530,7 @@ export default function ProductionMaterialRequestForm({
                 />
                 <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 hidden group-hover:block bg-[#1565c0] text-white text-xs rounded shadow-lg z-20 whitespace-nowrap p-3 leading-relaxed">
                   <div className="absolute left-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-[#1565c0]"></div>
-                  Valid extensions : pdf, doc, docx, png, jpg, jpeg.
+                  Valid extensions : pdf, doc, docx, xls, xlsx, png, jpg, jpeg, webp.
                   <br />
                   Valid size : Less than (&lt;) 100 MB.
                 </div>
@@ -500,6 +538,7 @@ export default function ProductionMaterialRequestForm({
               <input
                 id="mr-form-file-input"
                 type="file"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/png,image/jpeg,image/webp"
                 multiple
                 className="hidden"
                 onChange={(e) =>

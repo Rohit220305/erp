@@ -114,10 +114,10 @@ export default function BomCloneDrawer({ open, onClose, onSuccess }) {
   const validateForm = () => {
     const fieldErrors = {};
     if (!formData.sourceBomId) {
-      fieldErrors.sourceBomId = "Please select From BoM.";
+      fieldErrors.sourceBomId = "Please select From BOM.";
     }
     if (!formData.newBomName || !formData.newBomName.trim()) {
-      fieldErrors.newBomName = "Please enter To BoM.";
+      fieldErrors.newBomName = "Please enter To BOM.";
     }
 
     if (Object.keys(fieldErrors).length > 0) {
@@ -184,10 +184,9 @@ export default function BomCloneDrawer({ open, onClose, onSuccess }) {
           className="flex h-full flex-col"
         >
           <div className="flex-1 overflow-y-auto px-6 py-6">
-            {/* Field 1: From BoM */}
             <div className="mb-5">
               <label className="mb-2 block text-sm font-medium text-gray-700">
-                From BoM <span className="text-red-500">*</span>
+                From BOM <span className="text-red-500">*</span>
               </label>
               <Select
                 instanceId="select-source-bom"
@@ -217,7 +216,7 @@ export default function BomCloneDrawer({ open, onClose, onSuccess }) {
             {/* Field 2: To BoM */}
             <div className="mb-5">
               <label className="mb-2 block text-sm font-medium text-gray-700">
-                To BoM <span className="text-red-500">*</span>
+                To BOM <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"

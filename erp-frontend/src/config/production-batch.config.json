@@ -53,7 +53,7 @@
       "label": "Production Quantity",
       "key": "batchQuantity",
       "type": "text",
-      "searchable": false,
+      "searchable": true,
       "sortable": true,
       "width": "140px"
     },

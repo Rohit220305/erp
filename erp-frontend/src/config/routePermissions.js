@@ -91,6 +91,16 @@ const routes = [
   { path: "/production-batch/create/:id", permission: CAPABILITIES.PRODUCTION_BATCH.CREATE },
   { path: "/production-batch/:id", permission: CAPABILITIES.PRODUCTION_BATCH.VIEW },
 
+  { path: "/material-request", permission: CAPABILITIES.MATERIAL_REQUEST.LIST },
+  { path: "/material-request/add", permission: CAPABILITIES.MATERIAL_REQUEST.CREATE },
+  { path: "/material-request/edit/:id", permission: CAPABILITIES.MATERIAL_REQUEST.UPDATE },
+  { path: "/material-request/:id", permission: CAPABILITIES.MATERIAL_REQUEST.VIEW },
+
+  { path: "/customer-company", permission: CAPABILITIES.CUSTOMER_COMPANY.LIST },
+  { path: "/customer-company/add", permission: CAPABILITIES.CUSTOMER_COMPANY.CREATE },
+  { path: "/customer-company/edit/:id", permission: CAPABILITIES.CUSTOMER_COMPANY.UPDATE },
+  { path: "/customer-company/:id", permission: CAPABILITIES.CUSTOMER_COMPANY.VIEW },
+
   { path: "/admin", permission: CAPABILITIES.USER.LIST },
 ];
 

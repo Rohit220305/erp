@@ -26,7 +26,10 @@ export const productionOrderSchema = z.object({
       { message: "Please enter a valid Production Date." },
     ),
   referenceNumber: z.string().optional().nullable(),
-  customerName: z.string().optional().nullable(),
+  customerId: z.coerce.number().optional().nullable(),
+  plantId: z.coerce
+    .number({ invalid_type_error: "Please select Plant." })
+    .min(1, "Please select Plant."),
   remark: z.string().optional().nullable(),
   status: z
     .enum(["Pending", "Cancelled", "PartialCancelled", "Completed"])

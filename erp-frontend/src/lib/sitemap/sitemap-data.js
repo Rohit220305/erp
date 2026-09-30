@@ -15,6 +15,11 @@ export const sitemapData = [
     menus: [
       { label: "Users", path: "/admin", permission: "USER_LIST" },
       { label: "Groups", path: "/group", permission: "GROUP_LIST" },
+      {
+        label: "Customer",
+        path: "/customer-company",
+        permission: "CUSTOMER_COMPANY_LIST",
+      },
     ],
   },
 
@@ -77,7 +82,6 @@ export const sitemapData = [
         path: "/process-template",
         permission: "PROCESS_TEMPLATE_LIST",
       },
-      
     ],
   },
   {
@@ -94,24 +98,15 @@ export const sitemapData = [
         permission: "PRODUCTION_ORDER_LIST",
       },
       {
-        label: "Production Batch",  
+        label: "Production Batch",
         path: "/production-batch",
         permission: "PRODUCTION_BATCH_LIST",
       },
-      
-      
+      {
+        label: "Material Request",
+        path: "/material-request",
+        permission: "MATERIAL_REQUEST_LIST",
+      },
     ],
-  }
-
-
-
+  },
 ];
-
-
-
-
-
-
-
-
-
