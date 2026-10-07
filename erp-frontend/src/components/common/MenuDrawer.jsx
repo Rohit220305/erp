@@ -26,7 +26,7 @@ import {
   Heart,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { menuCategories } from "@/lib/menu/menu-data";
+import { menuCategories } from "@/lib/menu/menu-data-v2";
 
 const iconComponents = {
   LayoutDashboard,
@@ -185,8 +185,8 @@ export default function MenuDrawer({ open, onClose }) {
                     </div>
 
                     <ul>
-                      {group.items.map((item) => (
-                        <li key={item.label} className="py-2">
+                      {group.items.map((item, itemIndex) => (
+                        <li key={`${item.label}-${itemIndex}`} className="py-2">
                           <Link
                             href={item.path}
                             onClick={() => onClose?.()}

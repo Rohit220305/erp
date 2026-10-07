@@ -1,4 +1,4 @@
-import { useState, useEffect,  } from "react";
+import { useState, useEffect, } from "react";
 import { useListing } from "@/context/ListingContext";
 import { FiChevronUp, FiChevronDown } from "react-icons/fi";
 
@@ -31,7 +31,7 @@ export default function DynamicTable({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      
+
       if (JSON.stringify(localFilters) !== JSON.stringify(columnFilters)) {
         const cleanedFilters = {};
         Object.entries(localFilters).forEach(([k, v]) => {
@@ -48,7 +48,7 @@ export default function DynamicTable({
   const handleSelectChange = (key, value) => {
     const updated = { ...localFilters, [key]: value };
     setLocalFilters(updated);
-    
+
     const cleanedFilters = {};
     Object.entries(updated).forEach(([k, v]) => {
       if (v !== "" && v !== undefined && v !== null) {
@@ -66,7 +66,7 @@ export default function DynamicTable({
             {headers.map((header, index) => {
               const isSortable = header.sortable !== false;
               const isActiveSort = sortField === header.key;
-              const widthStyle = header.width ? { width: header.width } : {};
+              const widthStyle = header.width ? { width: header.width, minWidth: header.width, maxWidth: header.width } : {};
               return (
                 <th
                   key={index}
@@ -88,13 +88,12 @@ export default function DynamicTable({
           </tr>
           <tr className="bg-gray-50/50">
             {headers.map((header, index) => {
-              const widthStyle = header.width ? { width: header.width } : {};
+              const widthStyle = header.width ? { width: header.width, minWidth: header.width, maxWidth: header.width } : {};
               return (
                 <th key={`filter-${index}`} style={widthStyle} className="p-0 border-b border-gray-200">
                   <div
-                    className={`grid transition-all duration-300 ease-in-out ${
-                      showColumnSearch ? "grid-rows-[1fr] opacity-100 py-2 px-4" : "grid-rows-[0fr] opacity-0 py-0 px-4"
-                    }`}
+                    className={`grid transition-all duration-300 ease-in-out ${showColumnSearch ? "grid-rows-[1fr] opacity-100 py-2 px-4" : "grid-rows-[0fr] opacity-0 py-0 px-4"
+                      }`}
                   >
                     <div className="overflow-hidden">
                       {header.searchable !== false && (

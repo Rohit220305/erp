@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
-
+import { cn } from "@/lib/utils";
 
 export default function ModuleLink({
   href: hrefProp,
@@ -59,7 +59,7 @@ export default function ModuleLink({
       href={computedHref}
       onClick={handleClick}
       prefetch={prefetch}
-      className={`text-[#1565c0] hover:underline font-medium cursor-pointer ${className}`}
+      className={cn("text-[#1565c0] hover:underline font-medium cursor-pointer", className)}
       {...rest}
     >
       {children}

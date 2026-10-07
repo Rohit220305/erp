@@ -138,7 +138,10 @@ export default function ProductionOrderMaterialTabs({
                   : null;
 
                 return (
-                  <tr key={item.id || idx} className="hover:bg-gray-50/50 transition-colors">
+                  <tr
+                    key={item.id || idx}
+                    className="hover:bg-gray-50/50 transition-colors"
+                  >
                     <td className="py-3 px-4 text-center font-medium text-gray-500">
                       {idx + 1}
                     </td>
@@ -156,22 +159,30 @@ export default function ProductionOrderMaterialTabs({
                     <td className="py-3 px-4">
                       {item.itemId ? (
                         <ModuleLink
-                          href={buildRoute("item", "detail", { id: item.itemId })}
-                          onClick={onOpenDrawer ? () => onOpenDrawer("Item", item.itemId) : null}
+                          href={buildRoute("item", "detail", {
+                            id: item.itemId,
+                          })}
+                          onClick={
+                            onOpenDrawer
+                              ? () => onOpenDrawer("Item", item.itemId)
+                              : null
+                          }
                           className="font-medium text-[#1565c0] hover:underline text-left cursor-pointer"
                         >
                           {displayFormat(item.itemName)}
                         </ModuleLink>
                       ) : (
-                        <span className="font-medium text-gray-900">{displayFormat(item.itemName)}</span>
+                        <span className="font-medium text-gray-900">
+                          {displayFormat(item.itemName)}
+                        </span>
                       )}
                       <p className="text-[11px] text-gray-400 font-mono mt-0.5">
                         ({displayFormat(item.itemCode)})
                       </p>
                     </td>
-                      <td className="py-3 px-4 text-center font-mono">
-                        {displayFormat(item.uomName)}
-                      </td>
+                    <td className="py-3 px-4 text-center font-mono">
+                      {displayFormat(item.uomName)}
+                    </td>
                     <td className="py-3 px-4 text-center font-mono">
                       {displayFormat(isFinishedTab ? "NA" : item.qtyPerUnit)}
                     </td>
@@ -183,9 +194,8 @@ export default function ProductionOrderMaterialTabs({
                     <td className="py-3 px-4 text-center font-mono">
                       <div>
                         <span className=" text-gray-900">
-                          {displayFormat(item.totalRequiredQty)}
+                          {displayFormat(item.totalRequiredQtyDisplay)}
                         </span>
-                        
                       </div>
                     </td>
 

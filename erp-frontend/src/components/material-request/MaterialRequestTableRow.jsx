@@ -13,7 +13,7 @@ export default function MaterialRequestTableRow({
   setSelectedItemForDetails,
   setSelectedPlantForDetails,
   setSelectedUserForDetails,
-  setSelectedProductionRequestForDetails,
+  setSelectedOrderForDetails,
 }) {
   const { can, user } = useAuth();
   const canView = can(CAPABILITIES.MATERIAL_REQUEST?.VIEW || "MATERIAL_REQUEST_VIEW");
@@ -49,7 +49,7 @@ export default function MaterialRequestTableRow({
               id: item?.productionOrderId,
             })}
             onClick={() =>
-              setSelectedProductionRequestForDetails?.({id: item?.productionOrderId})
+              setSelectedOrderForDetails?.({ id: item?.productionOrderId })
             }
             className="text-[#1565c0] font-medium text-sm"
           >

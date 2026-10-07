@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { routePermissions } from "@/config/routePermissions";
+import { routePermissions } from "@/config/routePermissionsV2";
 import AccessDenied from "./AccessDenied";
 import { useEffect, useState } from "react";
 

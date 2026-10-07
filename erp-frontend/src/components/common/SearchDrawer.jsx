@@ -14,6 +14,7 @@ export default function SearchDrawer({
   setLogicalOperator,
   fields = [],
 }) {
+  const getFieldKey = (f) => f.value || f.field || f.key;
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") onClose?.();
@@ -31,7 +32,7 @@ export default function SearchDrawer({
     const defaultVal = defaultField.type === "select" ? (defaultField.options[0]?.value || "") : "";
     setFilters((prev) => [
       ...prev,
-      { field: defaultField.value, operator: "equal", value: defaultVal },
+      { field: getFieldKey(defaultField), operator: "equal", value: defaultVal },
     ]);
   };
 
@@ -45,7 +46,7 @@ export default function SearchDrawer({
         if (i !== idx) return row;
         
         if (key === "field") {
-          const targetDef = fields.find((f) => f.value === value);
+          const targetDef = fields.find((f) => getFieldKey(f) === value);
           const newVal = targetDef?.type === "select" ? (targetDef.options[0]?.value || "") : "";
           return { ...row, field: value, value: newVal };
         }
@@ -109,7 +110,7 @@ export default function SearchDrawer({
             ) : (
               filters.map((row, idx) => {
                 const currentFieldDef = fields.find(
-                  (f) => f.value === row.field,
+                  (f) => getFieldKey(f) === row.field,
                 );
 
                 return (
@@ -119,11 +120,14 @@ export default function SearchDrawer({
                       onChange={(e) => updateRow(idx, "field", e.target.value)}
                       className="w-1/3  cursor-pointer rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#1565c0]"
                     >
-                      {fields.map((f) => (
-                        <option key={f.value} value={f.value}>
-                          {f.label}
-                        </option>
-                      ))}
+                      {fields.map((f, i) => {
+                        const fk = getFieldKey(f);
+                        return (
+                          <option key={fk || i} value={fk}>
+                            {f.label}
+                          </option>
+                        );
+                      })}
                     </select>
 
                     <select

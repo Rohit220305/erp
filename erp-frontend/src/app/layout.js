@@ -10,7 +10,7 @@ export const metadata = {
   },
   description: "Production Planning ERP System",
 };
-
+  
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

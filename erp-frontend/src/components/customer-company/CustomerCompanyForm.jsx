@@ -500,7 +500,6 @@ export default function CustomerCompanyForm({
               <div className=" ">
                 <SectionHeader icon={Briefcase} title="Company Details" />
                 <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                       Company Name <span className="text-red-400 ml-1">*</span>
@@ -516,7 +515,6 @@ export default function CustomerCompanyForm({
                       <p className="text-xs text-red-500">{errors.name}</p>
                     )}
                   </div>
-
 
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-500 tracking-wide">
@@ -567,7 +565,6 @@ export default function CustomerCompanyForm({
                     </div>
                   </div>
 
-
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                       Company Short Name{" "}
@@ -587,7 +584,6 @@ export default function CustomerCompanyForm({
                     )}
                   </div>
 
-
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                       Company Code <span className="text-red-400 ml-1">*</span>
@@ -605,7 +601,6 @@ export default function CustomerCompanyForm({
                     )}
                   </div>
 
-
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                       Company Email <span className="text-red-400 ml-1">*</span>
@@ -621,7 +616,6 @@ export default function CustomerCompanyForm({
                       <p className="text-xs text-red-500">{errors.email}</p>
                     )}
                   </div>
-
 
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-500 tracking-wide">
@@ -646,7 +640,6 @@ export default function CustomerCompanyForm({
                       </p>
                     )}
                   </div>
-
 
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-500 tracking-wide">
@@ -756,7 +749,6 @@ export default function CustomerCompanyForm({
               <div className="">
                 <SectionHeader icon={MapPin} title="Company Address" />
                 <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-
                   <div className="col-span-1 md:col-span-2 space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-500 tracking-wide">
                       Address <span className="text-red-400 ml-1">*</span>
@@ -1198,14 +1190,14 @@ export default function CustomerCompanyForm({
             <button
               type="button"
               onClick={handleNext}
-              className="px-8 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
+              className="px-8 py-2 bg-blue-600  cursor-pointer text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
             >
               Next
             </button>
             <button
               type="button"
               onClick={handleDiscard}
-              className="px-6 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
+              className="px-6 py-2 border  cursor-pointer border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
             >
               Discard
             </button>
@@ -1216,7 +1208,7 @@ export default function CustomerCompanyForm({
             <button
               type="button"
               onClick={handleBack}
-              className="px-6 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
+              className="px-6 py-2 border  cursor-pointer border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
             >
               Back
             </button>
@@ -1224,14 +1216,14 @@ export default function CustomerCompanyForm({
               type="button"
               onClick={handleFormSubmit}
               disabled={loading}
-              className="px-8 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
+              className="px-8 py-2 bg-blue-600 cursor-pointer text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
             >
               {loading ? "Saving..." : "Save"}
             </button>
             <button
               type="button"
               onClick={handleDiscard}
-              className="px-6 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
+              className="px-6 py-2 border border-gray-200  cursor-pointer text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
             >
               Discard
             </button>

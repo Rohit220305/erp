@@ -1,6 +1,6 @@
 {
   "moduleName": "CustomerCompany",
-  "parentModule": "Sales",
+  "parentModule": "Users",
   "title": "Customer",
   "permissions": {
     "list": "CUSTOMER_COMPANY_LIST",

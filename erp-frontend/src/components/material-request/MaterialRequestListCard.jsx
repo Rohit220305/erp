@@ -16,6 +16,7 @@ export default function MaterialRequestListCard({
   setSelectedItemForDetails,
   setSelectedPlantForDetails,
   setSelectedUserForDetails,
+  setSelectedOrderForDetails
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { can } = useAuth();
@@ -102,18 +103,16 @@ export default function MaterialRequestListCard({
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <ChevronDown
-              className={`text-[#1565c0] transition-transform duration-400 ${
-                isExpanded ? "rotate-180" : ""
-              }`}
+              className={`text-[#1565c0] transition-transform duration-400 ${isExpanded ? "rotate-180" : ""
+                }`}
               size={20}
             />
           </div>
         </div>
 
         <div
-          className={`transition-all duration-400 ease-in-out overflow-hidden ${
-            isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-          }`}
+          className={`transition-all duration-400 ease-in-out overflow-hidden ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+            }`}
         >
           <div className="px-6 py-5 bg-gray-50/50 border-t border-gray-100">
             <div className="grid grid-cols-5 gap-4 items-start pr-[52px]">
@@ -122,8 +121,8 @@ export default function MaterialRequestListCard({
                   Requested By
                 </p>
                 {item.requestedBy &&
-                canViewUser &&
-                setSelectedUserForDetails ? (
+                  canViewUser &&
+                  setSelectedUserForDetails ? (
                   <ModuleLink
                     href={buildRoute("user", "detail", {
                       id: item.requestedBy,

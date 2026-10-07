@@ -255,9 +255,9 @@ export default function CustomerCompanyDetailPage({ id, initialData = null }) {
               </div>
 
               <div className="space-y-1">
-                <DetailRow label="Company Short Name" value={data.shortName} />
-                <DetailRow label="Company Code" value={data.code} />
-                <DetailRow label="Company Email" value={data.email} />
+                <DetailRow label="Short Name" value={data.shortName} />
+                <DetailRow label="Code" value={data.code} />
+                <DetailRow label="Email" value={data.email} />
                 <DetailRow
                   label="Incorporation Date"
                   value={data.incorporationDateFormatted}

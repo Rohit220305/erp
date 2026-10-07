@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import Select from "react-select";
+import AsyncSelect from "react-select/async";
 
 export default function FilterDrawer({
   open,
@@ -54,29 +55,45 @@ export default function FilterDrawer({
 
         <div className="flex h-[calc(100%-72px)] flex-col">
           <div className="flex-1 overflow-y-auto px-6 py-6">
-            {fields?.map((field) => {
+            {fields?.map((field, idx) => {
+              const fieldKey = field.value || field.field || field.key;
               if (field.type === "select") {
                 return (
                   <SelectField
-                    key={field.value}
+                    key={fieldKey || idx}
                     label={field.label}
                     placeholder={`Select ${field.label}`}
-                    value={filters[field.value]}
+                    value={filters[fieldKey]}
                     onChange={(v) =>
-                      setFilters((p) => ({ ...p, [field.value]: v }))
+                      setFilters((p) => ({ ...p, [fieldKey]: v }))
                     }
                     options={field.options || []}
                     isMultiSelect={field.isMultiSelect}
                   />
                 );
               }
+              if (field.type === "async-select") {
+                return (
+                  <AsyncSelectField
+                    key={fieldKey || idx}
+                    label={field.label}
+                    placeholder={`Select ${field.label}`}
+                    value={filters[fieldKey]}
+                    onChange={(v) =>
+                      setFilters((p) => ({ ...p, [fieldKey]: v }))
+                    }
+                    loadOptions={field.loadOptions}
+                    isMultiSelect={field.isMultiSelect}
+                  />
+                );
+              }
               return (
                 <FilterField
-                  key={field.value}
+                  key={fieldKey || idx}
                   label={field.label}
                   placeholder={`Enter ${field.label}`}
-                  value={filters[field.value] || ""}
-                  onChange={(v) => setFilters((p) => ({ ...p, [field.value]: v }))}
+                  value={filters[fieldKey] || ""}
+                  onChange={(v) => setFilters((p) => ({ ...p, [fieldKey]: v }))}
                 />
               );
             })}
@@ -192,6 +209,82 @@ function SelectField({ label, placeholder, value, onChange, options, isMultiSele
         placeholder={placeholder}
         isClearable={true}
         isSearchable={true}
+        styles={customSelectStyles}
+        classNamePrefix="react-select"
+      />
+    </div>
+  );
+}
+
+function AsyncSelectField({ label, placeholder, value, onChange, loadOptions, isMultiSelect }) {
+  // Try to safely handle raw values without full option objects
+  // This is a naive value-mapping, but typically async selects in filters might need full objects or simpler handling.
+  // For basic filtering, we pass the value back to onChange.
+  const handleChange = (selected) => {
+    if (isMultiSelect) {
+      onChange(selected ? selected.map((item) => item.value) : []);
+    } else {
+      onChange(selected ? selected.value : "");
+    }
+  };
+
+  const customSelectStyles = {
+    control: (base) => ({
+      ...base,
+      borderColor: "#d1d5db",
+      borderRadius: "0.375rem",
+      minHeight: "48px",
+      backgroundColor: "#f9fafb",
+      boxShadow: "none",
+      cursor: "pointer",
+      fontSize: "0.875rem",
+      "&:hover": {
+        borderColor: "#1565c0",
+      },
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "0.875rem",
+      cursor: "pointer",
+      backgroundColor: state.isSelected
+        ? "#1565c0"
+        : state.isFocused
+          ? "#eff6ff"
+          : "#ffffff",
+      color: state.isSelected ? "#ffffff" : "#1f2937",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#1f2937",
+    }),
+    placeholder: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#9ca3af",
+    }),
+    dropdownIndicator: (base, state) => ({
+      ...base,
+      transition: "all .2s ease",
+      transform: state.selectProps.menuIsOpen ? "rotate(180deg)" : null,
+    }),
+  };
+
+  return (
+    <div className="mb-5">
+      <label className="mb-2 block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      <AsyncSelect
+        isMulti={isMultiSelect}
+        // Since we only have the value string/array (not the label), AsyncSelect might show it raw.
+        // It's generally expected that for async filters, we might just fetch dynamically when typed.
+        // But if they have a value, we can try to render it if loadOptions was provided or leave it blank until fetched.
+        onChange={handleChange}
+        loadOptions={loadOptions}
+        defaultOptions={true}
+        placeholder={placeholder}
+        isClearable={true}
         styles={customSelectStyles}
         classNamePrefix="react-select"
       />

@@ -218,7 +218,7 @@ export default function GroupForm({ mode = "create", defaultValues: initialValue
               </label>
               <input
                 type="text"
-                placeholder="e.g. SALES_TEAM"
+                placeholder="e.g. GRP001"
                 disabled={mode === "edit"}
                 value={formData.groupCode}
                 onChange={(e) => handleChange("groupCode", e.target.value)}

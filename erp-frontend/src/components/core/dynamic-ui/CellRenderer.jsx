@@ -80,7 +80,7 @@ export default function CellRenderer({
 
     case "statusBadge":
     case "status":
-      return <StatusBadge status={value} />;
+      return <StatusBadge status={value} className={column.className} variant={column.variant} />;
 
     case "number":
       return <span>{formatNumber(value, column.formatOptions)}</span>;

@@ -16,10 +16,7 @@ import SearchDrawer from "@/components/common/SearchDrawer";
 import Pagination from "@/components/listing/Pagination";
 import toast from "react-hot-toast";
 import SideDrawer from "@/components/common/SideDrawer";
-import DynamicTableView from "./DynamicTableView";
-import { listCompanies } from "@/lib/api/company-api";
-import { listWorkCentreCategories } from "@/lib/api/work-centre-category-api";
-import { DynamicListView, DynamicGridView } from "./DynamicViews";
+import { DynamicTableView, DynamicListView, DynamicGridView } from "./DynamicViews";
 
 export default function DynamicListing({
   schema,
@@ -61,56 +58,6 @@ export default function DynamicListing({
         }
         if (clonedSchema.searchFields) {
           clonedSchema.searchFields = clonedSchema.searchFields.filter((f) => !f.showForSuperAdminOnly);
-        }
-      }
-
-      const needsCompanyOptions =
-        clonedSchema.sidebarFields?.some((f) => f.dynamicOptions === "companies") ||
-        clonedSchema.searchFields?.some((f) => f.dynamicOptions === "companies");
-
-      if (needsCompanyOptions) {
-        try {
-          const compRes = await listCompanies({ page: 1, limit: 1000 });
-          const compData = compRes?.settings?.data?.list || compRes?.data?.list || [];
-          const companyOptions = compData.map((c) => ({ label: c.companyName, value: String(c.id) }));
-
-          if (clonedSchema.sidebarFields) {
-            clonedSchema.sidebarFields.forEach((field) => {
-              if (field.dynamicOptions === "companies") field.options = companyOptions;
-            });
-          }
-          if (clonedSchema.searchFields) {
-            clonedSchema.searchFields.forEach((field) => {
-              if (field.dynamicOptions === "companies") field.options = companyOptions;
-            });
-          }
-        } catch (error) {
-          console.error("Failed to fetch companies for dynamic options:", error);
-        }
-      }
-
-      const needsWorkCentreCatOptions =
-        clonedSchema.sidebarFields?.some((f) => f.dynamicOptions === "workCentreCategories") ||
-        clonedSchema.searchFields?.some((f) => f.dynamicOptions === "workCentreCategories");
-
-      if (needsWorkCentreCatOptions) {
-        try {
-          const catRes = await listWorkCentreCategories({ page: 1, limit: 1000 });
-          const catData = catRes?.settings?.data?.list || catRes?.data?.list || [];
-          const catOptions = catData.map((c) => ({ label: c.categoryName, value: String(c.id) }));
-
-          if (clonedSchema.sidebarFields) {
-            clonedSchema.sidebarFields.forEach((field) => {
-              if (field.dynamicOptions === "workCentreCategories") field.options = catOptions;
-            });
-          }
-          if (clonedSchema.searchFields) {
-            clonedSchema.searchFields.forEach((field) => {
-              if (field.dynamicOptions === "workCentreCategories") field.options = catOptions;
-            });
-          }
-        } catch (error) {
-          console.error("Failed to fetch work centre category for dynamic options:", error);
         }
       }
 

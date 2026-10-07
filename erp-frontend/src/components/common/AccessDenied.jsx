@@ -17,6 +17,11 @@ export default function AccessDenied({ missingPermission }) {
         
         <p className="text-sm text-gray-500 mb-6 leading-relaxed">
           You do not have sufficient permissions to access this page or perform this action.
+          {missingPermission && (
+            <span className="block mt-2 text-xs font-mono bg-red-50 text-red-600 p-1.5 rounded border border-red-100">
+              Missing: {missingPermission}
+            </span>
+          )}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
