@@ -124,6 +124,19 @@ export const menuCategories = [
           },
         ],
       },
+      {
+        title: "Dynamic Master",
+        icon: "MapPin",
+        iconBg: "#1565c0",
+        permission: "MASTER_DATA_LIST",
+        items: [
+          {
+            label: "Region Master",
+            path: buildRoute("region", "list"),
+            permission: "MASTER_DATA_LIST",
+          },
+        ],
+      },
 
       {
         title: "Process Management",

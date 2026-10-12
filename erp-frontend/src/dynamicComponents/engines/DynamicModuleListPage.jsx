@@ -17,11 +17,25 @@ export const DynamicModuleListPage = ({
   if (!moduleConfig) return null;
 
   const moduleName = moduleConfig.identity?.moduleName || moduleSlug;
+  const surfaces = moduleConfig.surfaces || { hasTable: true, hasGrid: false, hasList: false };
+  const hasDrawerDetails =
+    moduleConfig.surfaces?.hasDrawerDetails === false ||
+    moduleConfig.surfaces?.drawerDetails === false ||
+    moduleConfig.drawerDetails === false ||
+    moduleConfig.surfaces?.detailMode === false ||
+    moduleConfig.surfaces?.detailMode === 'page'
+      ? false
+      : (moduleConfig.surfaces?.hasDrawerDetails === true ||
+         moduleConfig.surfaces?.drawerDetails === true ||
+         moduleConfig.drawerDetails === true ||
+         moduleConfig.surfaces?.detailMode === 'drawer');
+
   const schema = {
     title: moduleName,
     moduleName: moduleName,
     modulePath: moduleConfig.list?.path || `/${moduleSlug.toLowerCase().replace(/\s+/g, '-')}`,
     parentModule: moduleConfig.menu?.category || moduleConfig.parentModule || 'Master',
+    hasDrawerDetails,
 
     permissions: moduleConfig.permissions || {},
 
@@ -29,7 +43,9 @@ export const DynamicModuleListPage = ({
     primaryAction: moduleConfig.list?.primaryAction || (
       moduleConfig.surfaces?.detailMode === 'page'
         ? { type: 'page', path: moduleConfig.list?.detailPath || `/${moduleSlug.toLowerCase()}/details/{id}` }
-        : { type: 'drawer' }
+        : hasDrawerDetails
+          ? { type: 'drawer' }
+          : null
     ),
 
     columns: (moduleConfig.list?.tableView?.columns || moduleConfig.list?.columns || []).filter(
@@ -46,7 +62,6 @@ export const DynamicModuleListPage = ({
     gridCard: moduleConfig.list?.gridView || moduleConfig.list?.gridCard,
   };
 
-  const surfaces = moduleConfig.surfaces || { hasTable: true, hasGrid: false, hasList: false };
   const viewCount = [surfaces.hasTable, surfaces.hasGrid, surfaces.hasList].filter(Boolean).length;
   
   if (!schema.headerIcons) {
@@ -61,27 +76,36 @@ export const DynamicModuleListPage = ({
 
   const handleRenderTableRow = (record, onRowAction, setSelectedItemForDetails) => (
     <tr key={record.id} className="border-b border-gray-100 hover:bg-gray-50">
-      {schema.columns.map((col, colIndex) => (
-        <td key={colIndex} className="px-4 py-3 text-sm whitespace-nowrap">
-          {col.type === 'actions' ? (
-            <ActionRenderer
-              item={record}
-              actions={schema.actions?.row || []}
-              onActionClick={onRowAction}
-            />
-          ) : (
-            <FieldFormatter 
-              field={col} 
-              rowData={record} 
-              onOpenDrawer={
-                col.type === 'reference' && col.referenceModule !== moduleSlug
-                  ? undefined
-                  : setSelectedItemForDetails
-              } 
-            />
-          )}
-        </td>
-      ))}
+      {schema.columns.map((col, colIndex) => {
+        const isSelfReference = !col.referenceModule || col.referenceModule.toLowerCase() === moduleSlug.toLowerCase();
+        const allowDrawer = isSelfReference ? hasDrawerDetails : true;
+
+        return (
+          <td key={colIndex} className="px-4 py-3 text-sm whitespace-nowrap">
+            {col.type === 'actions' ? (
+              <ActionRenderer
+                item={record}
+                actions={schema.actions?.row || []}
+                onActionClick={onRowAction}
+              />
+            ) : (
+              <FieldFormatter 
+                field={col} 
+                rowData={record} 
+                onOpenDrawer={
+                  !allowDrawer
+                    ? undefined
+                    : (targetRecord, targetModule) =>
+                        setSelectedItemForDetails(
+                          targetRecord || record,
+                          targetModule || col.referenceModule || moduleSlug
+                        )
+                } 
+              />
+            )}
+          </td>
+        );
+      })}
     </tr>
   );
 

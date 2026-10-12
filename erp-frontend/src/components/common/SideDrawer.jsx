@@ -2,8 +2,7 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { formRegistry } from "@/config/forms/formRegistry";
-import { drawerRegistry } from "@/config/drawers/drawerRegistry";
-import { apiRegistry } from "@/config/apiRegistry";
+import { getModule } from "@/config/modules";
 import DetailDrawerContent from "@/components/common/dynamic/DetailDrawerContent";
 
 export default function SideDrawer({
@@ -23,9 +22,11 @@ export default function SideDrawer({
     return () => window.removeEventListener("keydown", handleEsc);
   }, [open, onClose]);
 
-  const formattedModuleName = moduleName ? moduleName.replace(/([A-Z])/g, ' $1').trim() : "";
+  const dynamicModule = moduleName ? getModule(moduleName) : null;
+  const formattedModuleName = dynamicModule?.identity?.moduleName
+    || (moduleName ? moduleName.replace(/([A-Z])/g, ' $1').trim() : "");
 
-  const drawerTitle = customTitle || formattedModuleName;
+  const drawerTitle = customTitle || dynamicModule?.drawer?.title || formattedModuleName;
 
   const FormComponent = moduleName && (mode === "add" || mode === "edit") ? formRegistry[moduleName] : null;
 
@@ -33,14 +34,13 @@ export default function SideDrawer({
     if (children) return children;
 
     if (mode === "details" && moduleName) {
-      const fetchFunction = apiRegistry[moduleName]?.fetchItem;
       return (
         <DetailDrawerContent
           open={open}
           onClose={onClose}
           item={data}
+          id={data?.id || (typeof data === "string" || typeof data === "number" ? data : null)}
           moduleName={moduleName}
-          fetchItem={fetchFunction}
         />
       );
     }

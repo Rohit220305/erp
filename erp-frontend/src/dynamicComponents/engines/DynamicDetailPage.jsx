@@ -36,11 +36,6 @@ export const DynamicDetailPage = ({ moduleSlug, entityId }) => {
   const moduleConfig = getModule(moduleSlug);
   const { setConfig, resetConfig } = useHeader();
   
-  if (moduleConfig?.detailPage?.type === "custom" && moduleConfig.detailPage.component) {
-    const CustomDetail = moduleConfig.detailPage.component;
-    return <CustomDetail entityId={entityId} />;
-  }
-
   const [entityData, setEntityData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -101,9 +96,18 @@ export const DynamicDetailPage = ({ moduleSlug, entityId }) => {
   });
 
   const [drawerState, setDrawerState] = useState({ isOpen: false, moduleName: null, id: null });
-  const handleOpenDrawer = (moduleName, id) => {
-    setDrawerState({ isOpen: true, moduleName, id });
+  const handleOpenDrawer = (moduleOrItem, idOrModule) => {
+    if (typeof moduleOrItem === "string") {
+      setDrawerState({ isOpen: true, moduleName: moduleOrItem, id: idOrModule });
+    } else if (typeof moduleOrItem === "object" && moduleOrItem !== null) {
+      setDrawerState({ isOpen: true, moduleName: idOrModule, id: moduleOrItem.id });
+    }
   };
+
+  if (moduleConfig?.detailPage?.type === "custom" && moduleConfig.detailPage.component) {
+    const CustomDetail = moduleConfig.detailPage.component;
+    return <CustomDetail entityId={entityId} />;
+  }
 
   if (isLoading) {
     return (

@@ -26,6 +26,7 @@ const ROUTES = {
   "material-request": { list: "/material-request", add: "/material-request/add", edit: "/material-request/edit/{id}", detail: "/material-request/{id}" },
   "plant": { list: "/plant", add: "/plant/add", edit: "/plant/edit/{id}", detail: "/plant/{id}" },
   "customer-company": { list: "/customer-company", add: "/customer-company/add", edit: "/customer-company/edit/{id}", detail: "/customer-company/{id}" },
+  region: { list: "/region", add: "/region/add", edit: "/region/edit/{id}", detail: "/region/{id}" },
 };
 
 
@@ -42,6 +43,7 @@ const ALIASES = {
   productionbatch: "production-batch",
   materialrequest: "material-request",
   plant: "plant",
+  region: "region",
 };
 
 function resolveModuleName(name) {
@@ -60,7 +62,21 @@ function resolveModuleName(name) {
 
 export function buildRoute(moduleName, action = "list", params = {}) {
   const key = resolveModuleName(moduleName);
-  const moduleRoutes = ROUTES[key];
+  let moduleRoutes = ROUTES[key];
+
+  // Dynamic fallback: Generate standard CRUD routes if not explicitly declared
+  if (!moduleRoutes) {
+    const slug = (key || moduleName || "").toLowerCase().replace(/([a-z0-9])([A-Z])/g, "$1-$2");
+    if (slug) {
+      moduleRoutes = {
+        list: `/${slug}`,
+        add: `/${slug}/add`,
+        edit: `/${slug}/edit/{id}`,
+        detail: `/${slug}/{id}`,
+      };
+    }
+  }
+
   if (!moduleRoutes) {
     throw new Error(`[routeBuilder] Unknown module "${moduleName}"`);
   }

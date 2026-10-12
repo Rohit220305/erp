@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { buildRoute } from "@/lib/navigation/routeBuilder";
 import { useAuth } from "@/context/AuthContext";
@@ -79,8 +79,35 @@ export default function DynamicListing({
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [drawerState, setDrawerState] = useState({ mode: null, data: null });
-  const openDetails = (item) => setDrawerState({ mode: "details", data: item });
+  const [drawerState, setDrawerState] = useState({ mode: null, data: null, moduleName: null });
+  const openDetails = (itemOrModule, targetModuleOrId) => {
+    if (typeof itemOrModule === "string") {
+      const targetModuleName = itemOrModule;
+      const targetData = typeof targetModuleOrId === "object" ? targetModuleOrId : { id: targetModuleOrId };
+      setDrawerState({ mode: "details", data: targetData, moduleName: targetModuleName });
+    } else {
+      const targetData = itemOrModule;
+      const targetModuleName = typeof targetModuleOrId === "string" ? targetModuleOrId : activeSchema.moduleName;
+      setDrawerState({ mode: "details", data: targetData, moduleName: targetModuleName });
+    }
+  };
+
+  const handleItemDetails = (itemOrModule, targetModuleOrId) => {
+    if (typeof itemOrModule === "string") {
+      openDetails(itemOrModule, targetModuleOrId);
+      return;
+    }
+    const currentModule = (activeSchema.moduleName || "").toLowerCase();
+    const targetModule = (typeof targetModuleOrId === "string" ? targetModuleOrId : "").toLowerCase();
+    if (targetModule && targetModule !== currentModule) {
+      openDetails(itemOrModule, targetModuleOrId);
+      return;
+    }
+    if (activeSchema.hasDrawerDetails === false) {
+      return;
+    }
+    openDetails(itemOrModule, targetModuleOrId);
+  };
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sidebarFilters, setSidebarFilters] = useState(activeSchema.defaultFilters || {});
@@ -95,31 +122,26 @@ export default function DynamicListing({
   const listPermission = activeSchema.permissions?.list;
   const deletePermission = activeSchema.permissions?.delete;
 
-  const handleOpenSearch = () => {
-    setIsSearchOpen(true);
-  };
-
-  useEffect(() => {
-    if (isSearchOpen) {
-      if (appliedFilters.length > 0) {
-        setTempFilters(JSON.parse(JSON.stringify(appliedFilters)));
-        setTempLogicalOperator(appliedLogicalOperator);
-      } else if (activeSchema.searchFields?.length > 0) {
-        const defaultField = activeSchema.searchFields[0];
-        setTempFilters([{
-          field: defaultField.value,
-          operator: "equal",
-          value: defaultField.type === "select" ? (defaultField.options?.[0]?.value || "") : "",
-        }]);
-        setTempLogicalOperator("AND");
-      } else {
-        setTempFilters([]);
-        setTempLogicalOperator("AND");
-      }
+  const handleOpenSearch = useCallback(() => {
+    if (appliedFilters.length > 0) {
+      setTempFilters(JSON.parse(JSON.stringify(appliedFilters)));
+      setTempLogicalOperator(appliedLogicalOperator);
+    } else if (activeSchema.searchFields?.length > 0) {
+      const defaultField = activeSchema.searchFields[0];
+      setTempFilters([{
+        field: defaultField.value,
+        operator: "equal",
+        value: defaultField.type === "select" ? (defaultField.options?.[0]?.value || "") : "",
+      }]);
+      setTempLogicalOperator("AND");
+    } else {
+      setTempFilters([]);
+      setTempLogicalOperator("AND");
     }
-  }, [isSearchOpen, appliedFilters, appliedLogicalOperator, activeSchema.searchFields]);
+    setIsSearchOpen(true);
+  }, [appliedFilters, appliedLogicalOperator, activeSchema.searchFields]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!fetchData) {
       console.warn("DynamicListing: no fetchData prop provided.");
       setInitialLoad(false);
@@ -185,7 +207,22 @@ export default function DynamicListing({
       setLoading(false);
       setInitialLoad(false);
     }
-  };
+  }, [
+    fetchData,
+    appliedSidebarFilters,
+    appliedFilters,
+    appliedLogicalOperator,
+    columnFilters,
+    page,
+    limit,
+    search,
+    sortField,
+    sortOrder,
+    extraApiParams,
+    activeSchema.title,
+    setTotal,
+    setLimit,
+  ]);
 
   useEffect(() => {
     const headerAction = activeSchema.actions?.header?.[0];
@@ -197,19 +234,19 @@ export default function DynamicListing({
 
     const mainActionButton = canDoAction
       ? {
-          label: headerAction.label,
-          onClick: () => {
-            if (
-              (headerAction.type === "redirect" ||
-                headerAction.type === "addRedirect") &&
-              headerAction.path
-            ) {
-              router.push(headerAction.path);
-            } else if (headerAction.type === "addDrawer") {
-              setDrawerState({ mode: "add", data: null });
-            }
-          },
-        }
+        label: headerAction.label,
+        onClick: () => {
+          if (
+            (headerAction.type === "redirect" ||
+              headerAction.type === "addRedirect") &&
+            headerAction.path
+          ) {
+            router.push(headerAction.path);
+          } else if (headerAction.type === "addDrawer") {
+            setDrawerState({ mode: "add", data: null, moduleName: activeSchema.moduleName });
+          }
+        },
+      }
       : null;
 
     const navActionButtons = [
@@ -252,25 +289,24 @@ export default function DynamicListing({
       },
     });
     return () => resetConfig();
-  }, [setConfig, can, router, activeSchema, toggleColumnSearch, setIsFilterDrawerOpen, extraNavButtons]);
+  }, [setConfig, resetConfig, can, router, activeSchema, toggleColumnSearch, setIsFilterDrawerOpen, handleOpenSearch, extraNavButtons]);
 
   useEffect(() => {
-    loadData();
-  }, [
-    page, limit, search,
-    appliedFilters, appliedLogicalOperator, appliedSidebarFilters,
-    columnFilters, sortField, sortOrder,
-    fetchData, activeSchema.title
-  ]);
+    let isMounted = true;
+    const executeLoad = async () => {
+      if (isMounted) await loadData();
+    };
+    executeLoad();
+    return () => {
+      isMounted = false;
+    };
+  }, [loadData]);
 
   const handleRowClick = (row) => {
     if (!activeSchema.primaryAction) return;
 
     if (activeSchema.primaryAction.type === "drawer") {
-      setDrawerState({
-        mode: "details",
-        data: { id: row.id }
-      });
+      openDetails(row, activeSchema.moduleName);
     } else if (activeSchema.primaryAction.type === "page") {
       router.push(activeSchema.primaryAction.path.replace("{id}", row.id));
     }
@@ -282,7 +318,7 @@ export default function DynamicListing({
       if (path.includes("{id}")) path = path.replace("{id}", item.id);
       router.push(path);
     } else if (action.type === "editDrawer") {
-      setDrawerState({ mode: "edit", data: item });
+      setDrawerState({ mode: "edit", data: item, moduleName: activeSchema.moduleName });
     } else if (action.type === "deleteModal") {
       if (deletePermission && !can(deletePermission)) {
         toast.error("You do not have permission to delete this record.");
@@ -290,7 +326,7 @@ export default function DynamicListing({
       }
       setDeleteTarget(item);
     } else if (action.type === "viewDrawer") {
-      openDetails(item);
+      openDetails(item, activeSchema.moduleName);
     }
   };
 
@@ -339,7 +375,7 @@ export default function DynamicListing({
               config={activeSchema}
               onRowAction={handleRowAction}
               loading={loading}
-              setSelectedItemForDetails={openDetails}
+              setSelectedItemForDetails={handleItemDetails}
               renderTableRow={renderTableRow}
             />
           )}
@@ -354,10 +390,10 @@ export default function DynamicListing({
               <DynamicListView
                 data={items}
                 config={activeSchema}
-                setSelectedItemForDetails={openDetails}
+                setSelectedItemForDetails={handleItemDetails}
                 renderCard={
                   renderListCard
-                    ? (item) => renderListCard(item, openDetails)
+                    ? (item) => renderListCard(item, handleItemDetails)
                     : undefined
                 }
               />
@@ -373,10 +409,10 @@ export default function DynamicListing({
               <DynamicGridView
                 data={items}
                 config={activeSchema}
-                setSelectedItemForDetails={openDetails}
+                setSelectedItemForDetails={handleItemDetails}
                 renderCard={
                   renderGridCard
-                    ? (item) => renderGridCard(item, openDetails)
+                    ? (item) => renderGridCard(item, handleItemDetails)
                     : undefined
                 }
               />
@@ -454,12 +490,12 @@ export default function DynamicListing({
 
       <SideDrawer
         open={drawerState.mode !== null}
-        onClose={() => setDrawerState({ mode: null, data: null })}
-        moduleName={activeSchema.moduleName}
+        onClose={() => setDrawerState({ mode: null, data: null, moduleName: null })}
+        moduleName={drawerState.moduleName || activeSchema.moduleName}
         mode={drawerState.mode}
         data={drawerState.data}
         onSuccess={() => {
-          setDrawerState({ mode: null, data: null });
+          setDrawerState({ mode: null, data: null, moduleName: null });
           loadData();
         }}
       />

@@ -32,6 +32,7 @@ import { MaterialRequestModule } from './material-request/material-request.modul
 import { ModSettingModule } from './mod-setting/mod-setting.module';
 import { PlantModule } from './plant/plant.module';
 import { CustomerCompanyModule } from './customer-company/customer-company.module';
+import { MasterModule } from './master/master.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { CustomerCompanyModule } from './customer-company/customer-company.modul
     ModSettingModule,
     PlantModule,
     CustomerCompanyModule,
+    MasterModule,
   ],
 
   controllers: [AppController],

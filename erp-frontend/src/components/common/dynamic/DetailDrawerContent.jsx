@@ -1,23 +1,112 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import Loader from "@/components/common/Loader";
 import StatusBadge from "@/components/common/StatusBadge";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { getModule } from "@/config/modules";
 import { drawerRegistry } from "@/config/drawers/drawerRegistry";
+import { apiRegistry } from "@/config/apiRegistry";
 
 const getEntityId = (obj, moduleName) => {
   if (!obj) return null;
+  if (typeof obj === "string" || typeof obj === "number") return obj;
   if (obj.id) return obj.id;
   if (moduleName) {
     const dynamicId = moduleName.charAt(0).toLowerCase() + moduleName.slice(1) + "Id";
     if (obj[dynamicId]) return obj[dynamicId];
   }
   return null;
+};
+
+const resolveGenericDrawerConfig = (name) => {
+  if (!name) return null;
+  if (drawerRegistry[name]) return drawerRegistry[name];
+  const matchKey = Object.keys(drawerRegistry).find(
+    (k) => k.toLowerCase() === name.toLowerCase()
+  );
+  return matchKey ? drawerRegistry[matchKey] : null;
+};
+
+const resolveGenericApiFetcher = (name) => {
+  if (!name) return null;
+  if (apiRegistry[name]?.fetchItem) return apiRegistry[name].fetchItem;
+  const matchKey = Object.keys(apiRegistry).find(
+    (k) => k.toLowerCase() === name.toLowerCase()
+  );
+  return matchKey ? apiRegistry[matchKey]?.fetchItem : null;
+};
+
+const deriveDrawerConfigFromModule = (moduleConfig, moduleName) => {
+  if (!moduleConfig) return null;
+  if (moduleConfig.drawer) return moduleConfig.drawer;
+
+  const detailPage = moduleConfig.detailPage;
+  const identity = moduleConfig.identity || {};
+  const nameField =
+    moduleConfig.nameField ||
+    moduleConfig.list?.tableView?.columns?.[0]?.key ||
+    "name";
+
+  const titleConfig = detailPage?.sidebar?.identity?.title || { key: nameField };
+  const badgeConfig = detailPage?.sidebar?.identity?.badge || {
+    key: "status",
+    type: "statusBadge",
+  };
+
+  const sections = [];
+  const firstTab = detailPage?.tabs?.[0];
+
+  if (firstTab?.boxes?.length) {
+    firstTab.boxes.forEach((box) => {
+      if (box.type === "fields" && box.fields?.length) {
+        sections.push({
+          title: box.title || "Information",
+          fields: box.fields,
+        });
+      } else if (box.type === "column" && box.boxes?.length) {
+        box.boxes.forEach((childBox) => {
+          if (childBox.type === "auditUser" && childBox.fields?.length) {
+            sections.push({
+              title: childBox.title || "Audit Info",
+              fields: childBox.fields,
+            });
+          }
+        });
+      }
+    });
+  }
+
+  if (sections.length === 0 && moduleConfig.list?.tableView?.columns?.length) {
+    sections.push({
+      title: `${identity.moduleName || moduleName} Details`,
+      fields: moduleConfig.list.tableView.columns
+        .filter((col) => col.type !== "actions")
+        .map((col) => ({
+          label: col.label,
+          key: col.key,
+          type: col.type || "text",
+        })),
+    });
+  }
+
+  return {
+    title: `${identity.moduleName || moduleName} Details`,
+    header: {
+      title: titleConfig,
+      badge: badgeConfig,
+    },
+    primaryAction: {
+      label: "More Details",
+      path:
+        moduleConfig.list?.detailPath ||
+        `/${(identity.slug || moduleName).toLowerCase()}/{id}`,
+      permission: moduleConfig.permissions?.view,
+    },
+    sections,
+  };
 };
 
 const getTitle = (titleConfig, data) => {
@@ -114,47 +203,78 @@ function HeaderStatusBadge({ badgeConfig, data }) {
   );
 }
 
-export default function DetailDrawerContent({ open, onClose, item, moduleName, fetchItem }) {
-  const router = useRouter();
+export default function DetailDrawerContent({
+  open,
+  onClose,
+  item,
+  id: idProp,
+  moduleName,
+  fetchItem: customFetchItem,
+}) {
   const { can, user } = useAuth();
 
-  const [isVisible, setIsVisible] = useState(false);
   const [delayedItem, setDelayedItem] = useState(null);
 
   const { execute, isLoading } = useAsyncAction();
-  const drawerConfig = drawerRegistry[moduleName];
-  const itemId = getEntityId(item, moduleName);
+
+  const dynamicModule = moduleName ? getModule(moduleName) : null;
+  const isDynamic = Boolean(dynamicModule);
+
+  const drawerConfig = isDynamic
+    ? deriveDrawerConfigFromModule(dynamicModule, moduleName)
+    : resolveGenericDrawerConfig(moduleName);
+
+  const itemId = idProp || getEntityId(item, moduleName);
 
   useEffect(() => {
     if (!open) {
-      setIsVisible(false);
       const timer = setTimeout(() => setDelayedItem(null), 300);
       return () => clearTimeout(timer);
     }
 
-    if (!item) return;
-    setDelayedItem(null);
+    if (!item && !itemId) return;
 
     const loadData = async () => {
-      if (!fetchItem || !itemId) {
-        return setDelayedItem(item);
+      let fetcher = customFetchItem;
+      if (!fetcher) {
+        if (isDynamic) {
+          fetcher = (payload) => {
+            const targetId =
+              typeof payload === "object" && payload !== null
+                ? payload.id || payload.itemId
+                : payload;
+            return dynamicModule?.api?.getOne
+              ? dynamicModule.api.getOne(targetId)
+              : null;
+          };
+        } else {
+          fetcher = resolveGenericApiFetcher(moduleName);
+        }
       }
+
+      if (!fetcher || !itemId) {
+        setDelayedItem(item);
+        return;
+      }
+
       try {
-        const res = await fetchItem({ id: itemId });
-        const data = (res && (res.success !== 0 || res.settings?.success !== 0))
-          ? (res.data || res.settings?.data || res)
-          : item;
+        const res = await fetcher(isDynamic ? itemId : { id: itemId });
+        const data =
+          res && (res.success !== 0 || res.settings?.success !== 0)
+            ? res.data || res.settings?.data || res
+            : item;
         setDelayedItem(data);
-      } catch {
+      } catch (err) {
+        console.error(
+          `DetailDrawerContent: Failed to load data for ${moduleName}`,
+          err
+        );
         setDelayedItem(item);
       }
     };
 
     execute(loadData);
-
-    const animationTimer = setTimeout(() => requestAnimationFrame(() => setIsVisible(true)), 20);
-    return () => clearTimeout(animationTimer);
-  }, [open, item, itemId, fetchItem, execute]);
+  }, [open, item, itemId, moduleName, customFetchItem, isDynamic, dynamicModule, execute]);
 
   const hasFullData = delayedItem && Object.keys(delayedItem).length > 1;
 
@@ -173,9 +293,11 @@ export default function DetailDrawerContent({ open, onClose, item, moduleName, f
     : true;
 
   const getActionHref = () => {
+    if (!drawerConfig?.primaryAction?.path) return "#";
     let path = drawerConfig.primaryAction.path;
+    const targetId = getEntityId(delayedItem, moduleName) || itemId;
     if (path.includes("{id}")) {
-      path = path.replace("{id}", getEntityId(delayedItem, moduleName));
+      path = path.replace("{id}", targetId);
     }
     return path;
   };

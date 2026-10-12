@@ -44,10 +44,10 @@ export default function CellRenderer({
 
       const viewPermission = cfg?.permissions?.view || "COMPANY_VIEW";
 
-      if (openDetails) {
+      if (openDetails && (cfg?.hasDrawerDetails !== false || column.referenceModule || column.module)) {
         return can(viewPermission) ? (
           <span
-            onClick={() => openDetails(data)}
+            onClick={() => openDetails(data, column.referenceModule || column.module || cfg?.moduleName)}
             className="text-sm font-medium text-[#1565c0] hover:underline cursor-pointer"
           >
             {value || "—"}

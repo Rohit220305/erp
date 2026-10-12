@@ -24,6 +24,7 @@ import {
   Building,
   Bell,
   Heart,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { menuCategories } from "@/lib/menu/menu-data-v2";
@@ -46,6 +47,7 @@ const iconComponents = {
   Scale,
   Boxes,
   Building,
+  MapPin,
 };
 
 export default function MenuDrawer({ open, onClose }) {

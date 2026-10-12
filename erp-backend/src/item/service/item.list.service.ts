@@ -205,6 +205,7 @@ export class ItemListService {
   }
 
   async getItemList(req, params) {
+    console.log('params', params);
     let return_data: any = {};
     try {
       const { page, limit, skip } = this.general.parsePagination(params);

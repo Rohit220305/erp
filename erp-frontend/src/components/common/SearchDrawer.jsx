@@ -24,12 +24,13 @@ export default function SearchDrawer({
     return () => window.removeEventListener("keydown", handleEsc);
   }, [open, onClose]);
 
-  if (!open) return null; 
+  if (!open) return null;
 
   const addRow = () => {
     if (fields.length === 0) return;
     const defaultField = fields[0];
-    const defaultVal = defaultField.type === "select" ? (defaultField.options[0]?.value || "") : "";
+    const options = defaultField.options || defaultField.props?.options || [];
+    const defaultVal = defaultField.type === "select" ? (options[0]?.value || "") : "";
     setFilters((prev) => [
       ...prev,
       { field: getFieldKey(defaultField), operator: "equal", value: defaultVal },
@@ -44,13 +45,14 @@ export default function SearchDrawer({
     setFilters((prev) =>
       prev.map((row, i) => {
         if (i !== idx) return row;
-        
+
         if (key === "field") {
           const targetDef = fields.find((f) => getFieldKey(f) === value);
-          const newVal = targetDef?.type === "select" ? (targetDef.options[0]?.value || "") : "";
+          const options = targetDef?.options || targetDef?.props?.options || [];
+          const newVal = targetDef?.type === "select" ? (options[0]?.value || "") : "";
           return { ...row, field: value, value: newVal };
         }
-        
+
         return { ...row, [key]: value };
       })
     );
@@ -99,7 +101,7 @@ export default function SearchDrawer({
                 className="flex h-8 w-8  cursor-pointer items-center justify-center rounded bg-[#1565c0] text-white hover:bg-[#0f57a6] transition"
               >
                 <Plus size={16} />
-                
+
               </button>
             </div>
 
@@ -138,7 +140,7 @@ export default function SearchDrawer({
                       className="w-1/4 cursor-pointer  rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#1565c0]"
                     >
                       <option value="equal">equal</option>
-                      <option value="like">match with</option>  
+                      <option value="like">match with</option>
                       <option value="not equal">not equal</option>
                       <option value="greater than">greater than</option>
                       <option value="less than">less than</option>
@@ -157,7 +159,7 @@ export default function SearchDrawer({
                           }
                           className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#1565c0]"
                         >
-                          {currentFieldDef.options.map((opt) => (
+                          {(currentFieldDef.options || currentFieldDef.props?.options || []).map((opt) => (
                             <option key={opt.value} value={opt.value}>
                               {opt.label}
                             </option>

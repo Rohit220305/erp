@@ -31,7 +31,7 @@ export const FieldFormatter = ({ field, rowData, onOpenDrawer }) => {
     case 'image':
       return (
         <SharedImageZoom
-          id={`${field.key}-${rowData.id || Math.random()}`}
+          id={`${field.key}-${rowData.id || 'preview'}`}
           src={value}
           alt={rowData[field.altKey || 'name'] || 'Image'}
           placeholderText={<Package size={18} />}
@@ -51,14 +51,28 @@ export const FieldFormatter = ({ field, rowData, onOpenDrawer }) => {
       
     case 'reference': {
       const linkId = field.idKey ? rowData[field.idKey] : value;
+      const targetLabel = rowData[field.labelKey || field.key] || value;
       return (
         <ModuleLink
           moduleName={field.referenceModule}
           id={linkId}
-          onOpenDrawer={onOpenDrawer ? () => onOpenDrawer(rowData) : undefined}
+          onOpenDrawer={
+            onOpenDrawer
+              ? (modName, targetId) => {
+                  const resolvedModule = modName || field.referenceModule;
+                  const resolvedId = targetId !== undefined && targetId !== null ? targetId : linkId;
+                  const targetRecord = {
+                    id: resolvedId,
+                    name: targetLabel,
+                    [field.key]: value,
+                  };
+                  onOpenDrawer(targetRecord, resolvedModule);
+                }
+              : undefined
+          }
           className={field.className || "font-medium text-[#1565c0] hover:underline"}
         >
-          {rowData[field.labelKey || field.key] || value}
+          {targetLabel}
         </ModuleLink>
       );
     }
