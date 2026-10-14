@@ -31,7 +31,7 @@ export class MasterService {
 
   async insertMaster(module: string, req: IAppRequest, params: any) {
     let return_data: any = {};
-
+    console.log('params', params, module, req.user);
     try {
       const config = this.masterConfigService.getConfig(module);
       const cleanData = this.masterValidatorService.validateAndClean(params, config);

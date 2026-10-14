@@ -14,19 +14,20 @@ export const FormField = ({ name, label, required, error, hint, info, action, cl
           {info && (
             <span className="relative group inline-block ml-1.5 align-middle">
               <Info size={14} className="text-gray-400 hover:text-gray-600 cursor-pointer transition" />
-              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-[#1565c0] text-white text-xs rounded shadow-lg z-20 whitespace-nowrap p-2">
+              <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-[#1565c0] text-white text-xs rounded shadow-lg z-30 whitespace-normal w-max max-w-xs p-2.5 leading-relaxed pointer-events-none">
                 {info}
+                <span className="absolute top-full left-1.5 border-4 border-transparent border-t-[#1565c0]" />
               </span>
             </span>
           )}
         </label>
       )}
-      
+
       <div className="relative">
         {children}
         {action && <div className="absolute right-3 top-1/2 -translate-y-1/2">{action}</div>}
       </div>
-      
+
       {error && (
         <p className={cn("text-xs text-red-500 mt-1", classes.error)}>{error}</p>
       )}
@@ -68,11 +69,11 @@ export const FormSection = ({ title, description, divider = true, children, clas
   );
 };
 
-export const FormActions = ({ 
-  loading, 
-  submitLabel = 'Submit', 
-  onSubmit, 
-  discardLabel = 'Cancel', 
+export const FormActions = ({
+  loading,
+  submitLabel = 'Submit',
+  onSubmit,
+  discardLabel = 'Cancel',
   onDiscard,
   multiStep = false,
   onNext,

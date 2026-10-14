@@ -5,12 +5,25 @@ import DetailRow from "@/dynamicComponents/display/DetailRow";
 import { FieldFormatter } from "@/dynamicComponents/display/FieldFormatter";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 export default function FieldsBox({ config, data, onOpenDrawer }) {
+  const { user } = useAuth();
   if (!config || !data) return null;
 
   const { title, icon, fieldLayout = { columns: 1 }, fields = [] } = config;
   const IconComponent = icon && LucideIcons[icon] ? LucideIcons[icon] : null;
+
+  const visibleFields = fields.filter((field) => {
+    if (field.condition && !field.condition(data)) return false;
+    if (field.showForSuperAdminOnly && user?.role !== "SUPER_ADMIN" && !user?.isSuperAdmin) return false;
+    const val = data[field.key];
+    const isEmpty = val === null || val === undefined || val === "";
+    if (field.hideIfEmpty && isEmpty) return false;
+    return true;
+  });
+
+  if (config.hideIfEmpty && visibleFields.length === 0) return null;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-full">
@@ -22,7 +35,7 @@ export default function FieldsBox({ config, data, onOpenDrawer }) {
       )}
 
       <div className={`grid grid-cols-${fieldLayout.columns} gap-x-8`}>
-        {fields.map((field, idx) => (
+        {visibleFields.map((field, idx) => (
           <DetailRow
             key={field.key || idx}
             label={field.label}

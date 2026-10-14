@@ -29,6 +29,23 @@ function resolveTabsFromConfig(detailPage) {
     }];
   }
 
+  if (detailPage?.sections?.length) {
+    return [{
+      id: "summary",
+      label: "Summary",
+      icon: "FileText",
+      isDefault: true,
+      layout: { columns: 3 },
+      boxes: detailPage.sections.map((section, idx) => ({
+        id: section.title?.toLowerCase().replace(/\s+/g, '_') || `section_${idx}`,
+        type: "fields",
+        title: section.title,
+        colSpan: section.title?.toLowerCase().includes("audit") ? 1 : 2,
+        fields: section.fields,
+      }))
+    }];
+  }
+
   return [{ id: "summary", label: "Summary", isDefault: true, boxes: [] }];
 }
 

@@ -29,6 +29,7 @@ export class MasterController {
     @AppRequest() req: IAppRequest,
     @Body() body: any,
   ) {
+    
     return await this.masterService.startInsertMaster(module, req, body);
   }
 

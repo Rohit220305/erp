@@ -39,6 +39,7 @@ export const generateZodSchema = (fields = [], context = {}) => {
           break;
 
         case 'number':
+        case 'currency':
           fieldSchema = isRequired
             ? requiredNumber(msg)
             : z.coerce.number().optional().nullable();

@@ -9,11 +9,7 @@ export const regionModuleConfig = {
 
   drawerDetails: true,
 
-  // menu: {
-  //   category: "Master",
-  //   group: "Region",
-  //   icon: "MapPin",
-  // },
+
 
   surfaces: {
     hasTable: true,

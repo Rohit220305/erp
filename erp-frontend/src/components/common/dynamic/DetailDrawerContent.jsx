@@ -118,16 +118,24 @@ const getTitle = (titleConfig, data) => {
 };
 
 const getFieldValue = (field, data, user) => {
-  if (field.condition && data[field.condition.key] !== field.condition.value) {
+  if (field.condition) {
+    if (typeof field.condition === "function" && !field.condition(data)) {
+      return null;
+    }
+    if (typeof field.condition === "object" && field.condition !== null && data[field.condition.key] !== field.condition.value) {
+      return null;
+    }
+  }
+  if (field.showForSuperAdminOnly && !user?.isSuperAdmin && user?.role !== "SUPER_ADMIN") {
     return null;
   }
-  if (field.showForSuperAdminOnly && !user?.isSuperAdmin) {
+  const val = data[field.key];
+  if (field.hideIfEmpty && (val === null || val === undefined || val === "")) {
     return null;
   }
   if (field.type === "compositeText") {
     return field.keys.map((k) => data[k]).filter(Boolean).join(field.separator || " ") || "-";
   }
-  const val = data[field.key];
   return (val !== null && val !== undefined && val !== "") ? String(val) : "-";
 };
 
@@ -369,11 +377,28 @@ export default function DetailDrawerContent({
                 );
               }
 
+              if (section.condition) {
+                if (typeof section.condition === "function" && !section.condition(delayedItem)) {
+                  return null;
+                }
+                if (typeof section.condition === "object" && section.condition !== null && delayedItem[section.condition.key] !== section.condition.value) {
+                  return null;
+                }
+              }
+
+              const visibleFields = section.fields?.filter(
+                (field) => getFieldValue(field, delayedItem, user) !== null
+              ) || [];
+
+              if (visibleFields.length === 0) {
+                return null;
+              }
+
               return (
                 <div key={idx}>
                   {section.title && <h3 className="text-sm font-semibold text-gray-800 mb-3">{section.title}</h3>}
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                    {section.fields?.map((field, fIdx) => (
+                    {visibleFields.map((field, fIdx) => (
                       <DetailField key={fIdx} field={field} data={delayedItem} user={user} />
                     ))}
                   </div>

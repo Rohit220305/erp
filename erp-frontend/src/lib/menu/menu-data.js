@@ -135,6 +135,16 @@ export const menuCategories = [
             path: buildRoute("region", "list"),
             permission: "MASTER_DATA_LIST",
           },
+          {
+            label: "Expense Master",
+            path: buildRoute("expense", "list"),
+            permission: "MASTER_DATA_LIST",
+          },
+          {
+            label: "Department Master",
+            path: buildRoute("department", "list"),
+            permission: "MASTER_DATA_LIST",
+          },
         ],
       },
 

@@ -9,15 +9,15 @@ import NumericInput from '@/components/common/NumericInput';
 export const getInputClasses = (error, disabled, isReadOnly) => {
   const baseClasses =
     'w-full p-4 border rounded-lg text-sm transition outline-none focus:ring-2 focus:ring-[#1565c0]/20';
-  
+
   if (disabled || isReadOnly) {
     return `${baseClasses} bg-gray-50 text-gray-500 border-gray-200 cursor-not-allowed`;
   }
-  
+
   if (error) {
     return `${baseClasses} bg-white border-red-400`;
   }
-  
+
   return `${baseClasses} bg-white border-gray-300 focus:border-[#1565c0]`;
 };
 
@@ -35,6 +35,10 @@ export const customSelectStyles = (error, disabled) => ({
       borderColor: error ? '#f87171' : '#1565c0',
     },
   }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 50,
+  }),
   option: (base, state) => ({
     ...base,
     fontSize: '0.875rem',
@@ -42,8 +46,8 @@ export const customSelectStyles = (error, disabled) => ({
     backgroundColor: state.isSelected
       ? '#1565c0'
       : state.isFocused
-      ? '#eff6ff'
-      : '#ffffff',
+        ? '#eff6ff'
+        : '#ffffff',
     color: state.isSelected ? '#ffffff' : '#1f2937',
   }),
   singleValue: (base, state) => ({
@@ -116,7 +120,7 @@ export const UnitInput = ({ name, value, onChange, placeholder, disabled, readOn
         min={min}
         max={max}
         step={step}
-        className={cn(getInputClasses(error, disabled, readOnly), "pr-12")} 
+        className={cn(getInputClasses(error, disabled, readOnly), "pr-12")}
       />
       {unit && (
         <span className="absolute right-4 text-sm text-gray-500 font-medium select-none pointer-events-none">
@@ -143,7 +147,7 @@ export const TextareaInput = ({ name, value, onChange, placeholder, disabled, re
 };
 
 export const SelectInput = ({ name, value, onChange, options = [], placeholder, disabled, error, isClearable = true, className = '' }) => {
-  
+
   const selectedOption = options.find(opt => opt.value === value) || null;
 
   return (
@@ -281,3 +285,46 @@ export const FormattedNumericInput = ({
   );
 };
 
+export const CurrencyInput = ({
+  name,
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  disabled,
+  readOnly,
+  error,
+  currencySymbol = "",
+  min = 0,
+  max,
+  maxDecimals = 4,
+  className = "",
+  ...extraProps
+}) => {
+  return (
+    <div className="relative flex items-center">
+      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-[2]">
+        <span className="text-gray-500 font-semibold text-sm">
+          {currencySymbol}
+        </span>
+      </div>
+      <NumericInput
+        name={name}
+        value={value}
+        onChange={onChange}
+        onBlur={onBlur}
+        disabled={disabled || readOnly}
+        min={min}
+        max={max}
+        maxDecimals={maxDecimals}
+        placeholder={placeholder}
+        className={cn(
+          getInputClasses(error, disabled, readOnly),
+          "pl-9",
+          className,
+        )}
+        {...extraProps}
+      />
+    </div>
+  );
+};

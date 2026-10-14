@@ -5,21 +5,22 @@ import { useWatch } from 'react-hook-form';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { FormField } from '../forms/FormCompositions';
-import { 
-  TextInput, 
-  NumberInput, 
+import {
+  TextInput,
+  NumberInput,
   UnitInput,
-  TextareaInput, 
+  TextareaInput,
   SelectInput,
   DateInput,
   ToggleInput,
   RadioGroupInput,
   SearchInput,
-  FormattedNumericInput
+  FormattedNumericInput,
+  CurrencyInput
 } from '../inputs/FormInputs';
-import { 
-  AsyncSelectInput, 
-  PhoneInput, 
+import {
+  AsyncSelectInput,
+  PhoneInput,
   ImageUploadInput,
   PasswordInput,
   MultiSelectInput,
@@ -30,7 +31,7 @@ import {
 
 export const FieldRenderer = ({ fieldConfig, value, onChange, onBlur, error, disabled, mode, control, form }) => {
   const { user } = useAuth();
-  
+
   const conditionField = fieldConfig.condition?.field;
   const watchedValue = useWatch({ control, name: conditionField, disabled: !conditionField });
 
@@ -56,22 +57,56 @@ export const FieldRenderer = ({ fieldConfig, value, onChange, onBlur, error, dis
   const { type, label, required, hint, info, action, classes = {}, props: extraProps = {} } = fieldConfig;
   const name = fieldConfig.key;
 
+  const handleValueChange = (eOrValue) => {
+    const rawValue = (eOrValue && typeof eOrValue == 'object' && 'target' in eOrValue) ? eOrValue.target.value : eOrValue;
+
+
+    let finalValue = rawValue;
+    if (fieldConfig.transform === "UPPERCASE_UNDERSCORE" && typeof rawValue === "string") {
+      finalValue = rawValue.trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
+    }
+    onChange(finalValue);
+
+    if (mode === "create" && fieldConfig.autoGenerateCode && form) {
+      const targetCodeField = typeof fieldConfig.autoGenerateCode === "string"
+        ? fieldConfig.autoGenerateCode
+        : fieldConfig.autoGenerateCode.targetField;
+
+      if (targetCodeField) {
+        const generateCode = String(finalValue || "")
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "_");
+
+        form.setValue(targetCodeField, generateCode, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+
+        if (form.clearErrors) {
+          form.clearErrors(targetCodeField);
+        }
+      }
+    }
+
+  }
+
   let InputComponent;
 
   switch (type) {
     case 'text':
     case 'email':
       InputComponent = (
-        <TextInput 
-          type={type} 
+        <TextInput
+          type={type}
           name={name}
-          value={value} 
-          onChange={onChange}
+          value={value}
+          onChange={handleValueChange}
           onBlur={onBlur}
-          error={error} 
+          error={error}
+          placeholder={fieldConfig.placeholder}
           disabled={finalDisabled}
           readOnly={finalReadOnly}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
@@ -91,56 +126,83 @@ export const FieldRenderer = ({ fieldConfig, value, onChange, onBlur, error, dis
       break;
     case 'number':
       InputComponent = (
-        <FormattedNumericInput 
+        <FormattedNumericInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
           onBlur={onBlur}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
           readOnly={finalReadOnly}
           min={extraProps.min}
           max={extraProps.max}
           maxDecimals={extraProps.maxDecimals}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
-    case 'textarea':
+    case 'currency': {
+      const currencySymbol =
+        fieldConfig.currencySymbol ||
+        user?.company?.currencySymbol ||
+        process.env.NEXT_PUBLIC_BASE_CURRENCY_SYMBOL
+
       InputComponent = (
-        <TextareaInput 
+        <CurrencyInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
           onBlur={onBlur}
-          error={error} 
+          error={error}
+          disabled={finalDisabled}
+          readOnly={finalReadOnly}
+          currencySymbol={currencySymbol}
+          placeholder={fieldConfig.placeholder}
+          min={extraProps.min}
+          max={extraProps.max}
+          maxDecimals={extraProps.maxDecimals}
+          {...extraProps}
+        />
+      );
+      break;
+    }
+    case 'textarea':
+      InputComponent = (
+        <TextareaInput
+          name={name}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          error={error}
+          placeholder={fieldConfig.placeholder}
           disabled={finalDisabled}
           readOnly={finalReadOnly}
           rows={extraProps.rows}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'select':
       InputComponent = (
-        <SelectInput 
+        <SelectInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
+          placeholder={fieldConfig.placeholder}
           options={extraProps.options || []}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'async-select':
       InputComponent = (
-        <AsyncSelectInput 
+        <AsyncSelectInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
           control={control}
           form={form}
@@ -149,137 +211,137 @@ export const FieldRenderer = ({ fieldConfig, value, onChange, onBlur, error, dis
           api={fieldConfig.api}
           labelKey={fieldConfig.labelKey}
           valueKey={fieldConfig.valueKey}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'multi-select':
       InputComponent = (
-        <MultiSelectInput 
+        <MultiSelectInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
           options={extraProps.options || []}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'date':
       InputComponent = (
-        <DateInput 
+        <DateInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
           onBlur={onBlur}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
           readOnly={finalReadOnly}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'toggle':
       InputComponent = (
-        <ToggleInput 
+        <ToggleInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
           disabled={finalDisabled}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'radio':
       InputComponent = (
-        <RadioGroupInput 
+        <RadioGroupInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
           options={extraProps.options || []}
           disabled={finalDisabled}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'phone':
       InputComponent = (
-        <PhoneInput 
+        <PhoneInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
           onBlur={onBlur}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
           readOnly={finalReadOnly}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'image-upload':
       InputComponent = (
-        <ImageUploadInput 
+        <ImageUploadInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'multi-image-upload':
       InputComponent = (
-        <MultiImageUploadInput 
+        <MultiImageUploadInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
           accept={extraProps.accept}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     case 'file-upload':
       InputComponent = (
-        <FileUploadInput 
+        <FileUploadInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
           accept={extraProps.accept}
-          {...extraProps} 
+          {...extraProps}
         />
       );
       break;
     default:
       InputComponent = (
-        <TextInput 
+        <TextInput
           name={name}
-          value={value} 
+          value={value}
           onChange={onChange}
           onBlur={onBlur}
-          error={error} 
+          error={error}
           disabled={finalDisabled}
           readOnly={finalReadOnly}
-          {...extraProps} 
+          {...extraProps}
         />
       );
   }
 
   return (
     <div className={fieldConfig.colSpan === 2 ? 'md:col-span-2' : ''}>
-      <FormField 
+      <FormField
         name={name}
-        label={label} 
-        required={required} 
-        hint={hint} 
-        info={info} 
-        action={typeof action === 'function' ? action(form) : action} 
-        error={error} 
+        label={label}
+        required={required}
+        hint={hint}
+        info={info}
+        action={typeof action === 'function' ? action(form) : action}
+        error={error}
         classes={classes}
       >
         {InputComponent}

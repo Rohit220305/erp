@@ -6,7 +6,7 @@ import { displayFormat } from "@/utils/no-data-formatter";
 import { cn } from "@/lib/utils";
 
 export default function DetailRow({ label, value, valueNode, href, onClick, valueClassName = "", labelClassName = "" }) {
-  if (value === undefined && value === null && !valueNode) {
+  if ((value === undefined || value === null) && !valueNode) {
     return null;
   }
 
